@@ -1,0 +1,30 @@
+---
+description: Server actions, queries, route handlers and auth — ownership scoping, ActionResult, pipeline side effects
+globs: src/features/**/actions.ts,src/features/**/queries.ts,src/features/**/pipeline.ts,src/app/api/**,src/lib/auth.ts,src/app/**/page.tsx,src/app/**/layout.tsx
+alwaysApply: false
+---
+# Data access rules
+
+Pattern reference: docs/03-ARCHITECTURE.md → "Core patterns".
+
+## Server actions (`actions.ts`)
+- File starts with `"use server";`. Order: `requireUser()` → `schema.safeParse(input)` → scoped DB work → side effects → `revalidatePath` → `return ok(data)`.
+- Accept `input: unknown`. Never trust ids, userIds, plans, prices or statuses' side effects from the client.
+- Return `ActionResult<T>` via `ok()` / `fail(code, fields?)`. Codes: VALIDATION, NOT_FOUND, UNAUTHENTICATED, QUOTA_EXCEEDED, PRO_REQUIRED, AI_FAILED, CONFLICT, RATE_LIMITED, CAPTCHA_FAILED, INTERNAL.
+- Updates/deletes: `updateMany` / `deleteMany` with `{ id, userId: user.id }`; `count === 0` → `fail("NOT_FOUND")`.
+- Multi-row writes use `db.$transaction`.
+
+## Job status
+- NEVER write `Job.status` directly. Always call `applyStatusChange(userId, jobId, toStatus, opts)` from `features/jobs/pipeline.ts`; it sets appliedAt/firstResponseAt/closedAt, timeline events and reminders (docs/04-DATA-MODEL.md → Automatic side effects).
+- Interview and offer creation call the pipeline hooks too.
+
+## Queries (`queries.ts`)
+- `import "server-only";`, `userId` first parameter, `findFirst({ where: { id, userId } })` — never `findUnique({ where: { id } })` on user-owned models.
+- Parse JSON columns with their Zod schema before returning.
+
+## Pages and route handlers
+- Protected pages call `requireUser()`; admin pages `requireAdmin()`. Not owned → `notFound()`.
+- Route handlers only for: Stripe webhook, file downloads (PDF/DOCX/JSON export), auth callback, cron (require `Authorization: Bearer CRON_SECRET`), OG/sitemap/robots.
+
+## Never
+- Use the Supabase JS client for data. Accept `userId` from the client. Log request bodies or user content.

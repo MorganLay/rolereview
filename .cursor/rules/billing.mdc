@@ -1,0 +1,17 @@
+---
+description: Plans, quotas, bonus credits, entitlements, Stripe checkout/portal and webhook
+globs: src/features/billing/**,src/app/api/stripe/**,src/lib/stripe.ts
+alwaysApply: false
+---
+# Billing rules
+
+Spec: docs/01-PRODUCT.md (Pricing), docs/03-ARCHITECTURE.md (Payments), docs/04-DATA-MODEL.md (Quotas).
+
+- All limits, periods, entitlements and Stripe price ids live ONLY in `src/features/billing/plans.ts`. Never hard-code numbers elsewhere.
+- Quota: `checkQuota(user, kind)` → `{ allowed, useBonus }`. Used = successful `AiCall` rows for the kind in the period (UTC month; UTC day for ANALYZE) with `usedBonusCredit = false`. If over the allowance, an unexpired `BonusCredit` with `remaining > 0` may be used; decrement it in the same transaction as the successful AiCall.
+- Failed AI calls never consume quota or bonus credits.
+- Pro-only features go through `can(user, feature)` from `entitlements.ts`; deny with `fail("PRO_REQUIRED")`.
+- `User.plan`, `billingInterval`, `subscriptionStatus`, `currentPeriodEnd`, `cancelAtPeriodEnd`, `foundingMember` are changed ONLY by the Stripe webhook.
+- Webhook: raw body (`await req.text()`), `stripe.webhooks.constructEvent`, insert `StripeEvent` first (duplicate → 200), then handle checkout.session.completed, customer.subscription.created/updated/deleted, invoice.payment_failed.
+- PRO when subscription status is `active` or `trialing`; otherwise FREE. Interval from the price id.
+- Checkout: `client_reference_id = user.id`, reuse `stripeCustomerId`, `allow_promotion_codes: true`, founding coupon only for eligible users.

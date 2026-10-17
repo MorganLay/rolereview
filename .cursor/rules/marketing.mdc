@@ -1,0 +1,17 @@
+---
+description: Marketing site, free tools, waitlist, SEO and email — honesty, CTA, consent and performance rules
+globs: src/app/(marketing)/**,src/features/marketing/**,src/features/growth/**,src/lib/email/**,src/components/marketing/**,content/**
+alwaysApply: false
+---
+# Marketing rules
+
+Spec: docs/09-MARKETING.md.
+
+- Honesty: no fake testimonials, user counts, ratings, logos or outcome stats. Testimonials only from `Testimonial` where `approved` (and consent recorded). Competitor facts must be dated and sourced.
+- One primary CTA label everywhere: "Tailor your first resume — free" (short form "Start free") → `/sign-in?next=/library/import`; signed-in users see "Go to Dashboard". Secondary: "Try the live demo". Max two buttons per block.
+- The homepage demo uses pre-generated fixtures in `src/features/marketing/demo/` — never live AI calls.
+- Every page exports `metadata` (title, description, canonical, OG image). Marketing routes are statically rendered where possible. Keep LCP < 2.5s; images via `next/image` with sizes.
+- Forms (waitlist, newsletter, free tools): Turnstile verification server-side, Zod validation, IP-hash rate limit for AI tools.
+- Marketing email consent (CASL): unticked checkbox, store `marketingConsentAt` + exact `consentText`. Marketing templates must refuse to send without consent. Every email has unsubscribe/preferences link and the mailing address.
+- Analytics events: ids, enums and counts only — never emails, resume or posting text.
+- Copy voice: playful headings, plain buttons/legal/pricing. Pricing values come from `plans.ts`, never hard-coded in JSX.

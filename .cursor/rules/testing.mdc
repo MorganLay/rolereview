@@ -1,0 +1,12 @@
+---
+description: Testing conventions (Vitest unit tests, Playwright e2e, evals)
+globs: tests/**,**/*.test.ts,**/*.spec.ts,evals/**
+alwaysApply: false
+---
+# Testing rules
+
+- Unit tests (Vitest) in `tests/unit/<area>-<module>.test.ts`. Required for: tailor validate/assemble/score/keywords/plainText, letters validate/assemble, library serialize/strength, import extract, billing quota (incl. bonus credits)/entitlements, jobs pipeline (every side effect) and board-order, Insights metrics, lib/result, ai/run error mapping, email idempotency.
+- Table-driven tests with nasty cases (empty arrays, unknown refs, numbers with commas/%/$, timezone boundaries for periods and reminders).
+- Never call the real Anthropic, Stripe or Resend APIs in unit tests — mock them.
+- E2E (Playwright): happy path only; run manually/nightly.
+- Fixtures are fake people only. Never commit a real resume.

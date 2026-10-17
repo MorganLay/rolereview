@@ -1,0 +1,14 @@
+---
+description: Prisma 7 schema, migrations, and DB client conventions
+globs: prisma/**,prisma.config.ts,src/lib/db.ts
+alwaysApply: false
+---
+# Database rules
+
+- Prisma 7: generator `prisma-client`, output `../src/generated/prisma`; import from `@/generated/prisma/client`. Datasource URL in `prisma.config.ts` (DIRECT_URL); runtime uses `@prisma/adapter-pg` with pooled DATABASE_URL. No `url` in schema.prisma. Pin `^7`.
+- Every user-owned model: `userId String @db.Uuid`, relation to User with `onDelete: Cascade` (Feedback/Testimonial use SetNull), index starting with `userId`.
+- Every NEW table needs `ALTER TABLE "<Name>" ENABLE ROW LEVEL SECURITY;` in its migration (no policies). Create with `prisma migrate dev --create-only`, add the line, apply. The initial migration covers all 25 tables (docs/04-DATA-MODEL.md).
+- Never edit an applied migration.
+- JSON columns have a Zod schema in the owning feature's `schemas.ts` (docs/04-DATA-MODEL.md); update the doc when a shape changes and bump `schemaVersion` where present.
+- Resume entry dates are strings "YYYY-MM" | "YYYY". Archive = `archivedAt` timestamp, not a status.
+- Keep `prisma/seed.ts` in step with new tables so every screen has realistic dev data.

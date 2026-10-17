@@ -1,0 +1,20 @@
+---
+description: UI, copy, brand tokens, accessibility and component conventions
+globs: src/**/*.tsx,src/copy/**
+alwaysApply: false
+---
+# UI rules
+
+- Components: shadcn/ui from `@/components/ui`. Feature components live in `src/features/<area>/components/`.
+- All UI text comes from `src/copy/strings.ts` and follows the voice in docs/10-BRAND.md: plain, specific, encouraging. No hype, no emojis in UI copy.
+- Colours, fonts and radii come from the Tailwind theme tokens in docs/10-BRAND.md. No ad-hoc hex values. Serif (Source Serif 4) only for page titles, marketing headlines and resume previews; everything else Inter.
+- Exported documents (PDF, DOCX, plain text) are neutral: no RoleRefine branding, watermark or decoration.
+- Every async action shows pending state; AI waits over 3s show staged progress copy, not a bare spinner.
+- Every list has an empty state; every form shows inline Zod field errors.
+- Status is never colour-only: pair colour with an icon and text (✓ met, ◐ partial, ✗ missing).
+- Keyboard accessible, visible focus, labels on all inputs, `prefers-reduced-motion` respected.
+- Mobile-first: everything must work at 375px wide.
+- Strength tiers (Weak, Fair, Good, Strong, Excellent) always show a text label (tooltip or visible), never colour alone.
+- The job board must be operable without drag: every card has a "Move to…" menu.
+- Charts (Insights, admin) use the shadcn chart wrappers; show sample sizes and hide breakdowns under 5 data points.
+- Locked Pro features show a lock icon and open the Upgrade modal; never hide them entirely.

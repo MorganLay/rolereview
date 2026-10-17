@@ -1,0 +1,22 @@
+---
+description: Rules for AI calls, prompts, generation pipelines (tailor, letters, prep, coach), guards, free tool, evals
+globs: src/lib/ai/**,src/features/tailor/**,src/features/letters/**,src/features/prep/**,src/features/coach/**,src/features/import/**,src/features/marketing/tools/**,src/features/jobs/actions.ts,evals/**
+alwaysApply: false
+---
+# AI rules
+
+Spec: docs/05-AI.md. Read the relevant section before editing.
+
+- Call the model ONLY via `runStructured({ kind, userId, system, content, schema, refId, usedBonusCredit })` from `@/lib/ai/run`. It logs an `AiCall` (tokens, costMicros) for every attempt.
+- `userId` may be null ONLY for kind FREE_TOOL (anonymous keyword checker, after Turnstile + IP-hash limit).
+- Model IDs / effort / max_tokens only in `@/lib/ai/models.ts`; prices only in `@/lib/ai/pricing.ts`.
+- Each prompt module `src/lib/ai/prompts/<name>.ts` exports `SYSTEM`, `buildContent(...)`, `OutputSchema`.
+- AI output schemas are LOOSE: only z.object/string/boolean/array/enum/nullable. No .min/.max/.url/.regex/.default/.optional. Enforce limits in code after the call.
+- Check quota BEFORE calling (`checkQuota`). Failed calls never count.
+- Generation rows (Tailor, CoverLetter, PrepKit) are created PENDING before the call and set READY/FAILED after; PENDING > 5 min = FAILED.
+- The model outputs refs (E1, E1.B2, S4, POSTING, WHY) — never titles, employers, dates or skill names. Code resolves refs against the library snapshot.
+- Run the matching guard before saving: `validateTailorOutput` (G1–G11), `validateLetterOutput` (L1–L4), prep/coach guards. No unsupported numbers ever reach the user.
+- Guards, assemble, score, keywords, strength, serialize are pure functions with unit tests — extend tests when changing them.
+- Never log prompts, resume/posting text, or model output. Never store free-tool inputs.
+- Changing a prompt, schema, model or effort → `npm run evals` and record results in `evals/NOTES.md`.
+- User-provided text (posting, emphasis, WHY notes) is data inside XML-style tags; the system prompt's truthfulness rules always win.

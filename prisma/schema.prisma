@@ -1,0 +1,784 @@
+// RoleRefine — Prisma schema (Prisma 7)
+// Explained in docs/04-DATA-MODEL.md. Datasource URL lives in prisma.config.ts (DIRECT_URL for migrations).
+// Runtime client uses @prisma/adapter-pg with the pooled DATABASE_URL (src/lib/db.ts).
+// Every table must have RLS enabled with no policies (see docs/04-DATA-MODEL.md → Migrations).
+// "R1.1"/"R1.2" comments mark tables first USED in a later release; they exist from day one so no
+// later migration has to reshape existing data.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ═════════════════════════════ ENUMS ═════════════════════════════
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+enum BillingInterval {
+  MONTH
+  QUARTER // 90-day plan
+}
+
+enum EntryKind {
+  EXPERIENCE
+  PROJECT
+  EDUCATION
+  CERTIFICATION
+  VOLUNTEER
+  OTHER
+}
+
+enum AnalysisStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+/// Pipeline stage. Archiving is separate (Job.archivedAt) so the final stage is preserved.
+enum JobStatus {
+  SAVED
+  APPLIED
+  SCREENING
+  INTERVIEWING
+  OFFER
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+  NO_RESPONSE
+}
+
+enum JobSource {
+  LINKEDIN
+  INDEED
+  COMPANY_SITE
+  JOB_BANK // Government of Canada Job Bank
+  GC_JOBS // Canadian federal public service
+  REFERRAL
+  RECRUITER
+  NETWORKING
+  JOB_FAIR
+  OTHER
+}
+
+enum WorkMode {
+  ONSITE
+  HYBRID
+  REMOTE
+  UNKNOWN
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  TEMPORARY
+  INTERNSHIP
+  CO_OP
+  OTHER
+}
+
+enum PayPeriod {
+  HOUR
+  YEAR
+}
+
+enum JobEventType {
+  CREATED
+  STATUS_CHANGED
+  RESUME_TAILORED
+  LETTER_WRITTEN
+  APPLIED
+  FOLLOW_UP_SENT
+  RESPONSE_RECEIVED
+  INTERVIEW_SCHEDULED
+  INTERVIEW_COMPLETED
+  OFFER_RECEIVED
+  CALL
+  EMAIL
+  NOTE
+  OTHER
+}
+
+enum InterviewKind {
+  PHONE_SCREEN
+  RECRUITER
+  HIRING_MANAGER
+  TECHNICAL
+  BEHAVIOURAL
+  PANEL
+  TAKE_HOME
+  ONSITE
+  FINAL
+  OTHER
+}
+
+enum InterviewOutcome {
+  PENDING
+  ADVANCED
+  REJECTED
+  CANCELLED
+  UNKNOWN
+}
+
+enum ContactRole {
+  RECRUITER
+  HIRING_MANAGER
+  REFERRER
+  INTERVIEWER
+  PEER
+  OTHER
+}
+
+enum ReminderKind {
+  FOLLOW_UP
+  DEADLINE
+  INTERVIEW
+  THANK_YOU
+  OFFER_RESPONSE
+  CUSTOM
+}
+
+enum OfferDecision {
+  PENDING
+  NEGOTIATING
+  ACCEPTED
+  DECLINED
+}
+
+/// Shared by TailoredResume, CoverLetter and PrepKit.
+enum GenStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+enum AiCallKind {
+  IMPORT
+  ANALYZE
+  TAILOR
+  COVER_LETTER
+  PREP_KIT
+  BULLET_COACH
+  FREE_TOOL
+}
+
+enum CreditReason {
+  REFERRAL
+  PROMO
+  SUPPORT
+  MILESTONE
+  LAUNCH
+}
+
+enum ReferralStatus {
+  SIGNED_UP
+  ACTIVATED // exported first PDF
+  CONVERTED // became Pro
+}
+
+enum FreeTool {
+  KEYWORD_CHECKER
+  BULLET_STRENGTH
+}
+
+enum FeedbackKind {
+  BUG
+  IDEA
+  PRAISE
+  OTHER
+}
+
+// ═════════════════════════════ USER ═════════════════════════════
+
+/// One row per Supabase auth user (id = auth.users.id), created lazily by requireUser().
+/// Profile fields double as the resume header.
+model User {
+  id       String @id @db.Uuid
+  email    String @unique
+  role     UserRole @default(USER)
+
+  // Profile / resume header
+  fullName String?
+  headline String?
+  phone    String?
+  location String?
+  links    Json    @default("[]") /// ProfileLink[] (max 5)
+  summary  String? @db.Text
+
+  // Preferences
+  timezone              String    @default("America/Toronto") /// IANA; set from the browser on first visit
+  emailRemindersEnabled Boolean   @default(true)
+  weeklyDigestEnabled   Boolean   @default(true)
+  marketingConsentAt    DateTime? /// CASL express consent; null = no marketing email
+  marketingConsentText  String? /// Exact wording the user agreed to
+  onboardingCompletedAt DateTime?
+  lastActiveAt          DateTime?
+
+  // Billing
+  plan                 Plan             @default(FREE)
+  billingInterval      BillingInterval?
+  stripeCustomerId     String?          @unique
+  stripeSubscriptionId String?          @unique
+  subscriptionStatus   String? /// Raw Stripe status
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean          @default(false)
+  foundingMember       Boolean          @default(false)
+
+  // Growth & attribution
+  referralCode   String  @unique /// Short code for invite links (generated on creation)
+  signupSource   String? /// e.g. "homepage", "tool:keyword-checker", "waitlist"
+  signupReferrer String? /// document.referrer host
+  utmSource      String?
+  utmMedium      String?
+  utmCampaign    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entries         Entry[]
+  bullets         Bullet[]
+  skills          Skill[]
+  targetProfiles  TargetProfile[]
+  jobs            Job[]
+  jobEvents     JobEvent[]
+  interviews      Interview[]
+  contacts        Contact[]
+  jobContacts   JobContact[]
+  reminders       Reminder[]
+  offers          Offer[]
+  tailoredResumes TailoredResume[]
+  coverLetters    CoverLetter[]
+  prepKits        PrepKit[]
+  aiCalls         AiCall[]
+  bonusCredits    BonusCredit[]
+  milestones      UserMilestone[]
+  referralsMade   Referral[]        @relation("Referrer")
+  referredBy      Referral?         @relation("Referred")
+  feedback        Feedback[]
+  testimonials    Testimonial[]
+}
+
+// ═════════════════════════════ EXPERIENCE LIBRARY ═════════════════════════════
+
+/// A role, project, degree, certification, etc.
+model Entry {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  kind         EntryKind
+  title        String /// Role, project name, degree, or certification
+  organization String? /// Company, school, issuer
+  location     String?
+  startDate    String? /// "YYYY-MM" or "YYYY"
+  endDate      String? /// "YYYY-MM" or "YYYY"; null + isCurrent = Present
+  isCurrent    Boolean   @default(false)
+  url          String?
+  sortOrder    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bullets Bullet[]
+
+  @@index([userId, kind, sortOrder])
+}
+
+/// One accomplishment line. userId is denormalised so every query can scope by it.
+/// Strength (Weak→Excellent) is computed by bulletStrength(), not stored.
+model Bullet {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  entryId   String   @db.Uuid
+  text      String /// max 400 chars (Zod)
+  tags      String[] @default([])
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entry Entry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([entryId, sortOrder])
+  @@index([userId])
+}
+
+model Skill {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  name      String
+  nameKey   String /// lower(trim(name)) — case-insensitive uniqueness
+  category  String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, nameKey])
+  @@index([userId, category])
+}
+
+/// R1.1 — Saved targeting preset used when tailoring (e.g. "Data Analyst").
+model TargetProfile {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  name       String /// "Data Analyst"
+  targetRole String?
+  emphasis   String? /// Default emphasis text for tailoring (≤ 200 chars)
+  entryIds   String[] @default([]) /// Entries to prefer
+  skillIds   String[] @default([]) /// Skills to prefer
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tailoredResumes TailoredResume[]
+
+  @@index([userId])
+}
+
+// ═════════════════════════════ JOBS & TRACKING ═════════════════════════════
+
+/// A job posting the user is pursuing. Also the Jobs board card / list row.
+model Job {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+
+  // Posting
+  title           String
+  company         String
+  location        String?
+  url             String? /// Stored only. Never fetched server-side.
+  referenceNumber String? /// Requisition / competition / selection process number
+  rawText         String          @db.Text
+  analysis        Json? /// JobAnalysis
+  analysisStatus  AnalysisStatus  @default(PENDING)
+
+  // Classification
+  source         JobSource?
+  sourceDetail   String? /// e.g. referrer's name, job board name for OTHER
+  workMode       WorkMode        @default(UNKNOWN)
+  employmentType EmploymentType?
+  salaryMin      Int?
+  salaryMax      Int?
+  salaryCurrency String? /// ISO 4217, e.g. "CAD"
+  salaryPeriod   PayPeriod?
+  priority       Int? /// 1–5 stars (Zod-enforced)
+
+  // Pipeline
+  status          JobStatus @default(SAVED)
+  boardOrder      Float       @default(0) /// Position within its board column (fractional indexing)
+  appliedAt       DateTime? /// First time status reached APPLIED
+  firstResponseAt DateTime? /// First move from APPLIED to SCREENING/INTERVIEWING/OFFER/REJECTED
+  closedAt        DateTime? /// Reached ACCEPTED/REJECTED/WITHDRAWN/NO_RESPONSE
+  closeReason     String?
+  archivedAt      DateTime?
+  deadline        DateTime?
+  notes           String?     @db.Text
+
+  // Which documents were actually sent (powers "what's working" analytics)
+  submittedResumeId       String? @db.Uuid
+  submittedCoverLetterId String? @db.Uuid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user                 User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tailoredResumes      TailoredResume[] @relation("JobResumes")
+  coverLetters         CoverLetter[]  @relation("JobCoverLetters")
+  submittedResume      TailoredResume?  @relation("SubmittedResume", fields: [submittedResumeId], references: [id], onDelete: SetNull)
+  submittedCoverLetter CoverLetter?   @relation("SubmittedCoverLetter", fields: [submittedCoverLetterId], references: [id], onDelete: SetNull)
+  events               JobEvent[]
+  interviews           Interview[]
+  contacts             JobContact[]
+  reminders            Reminder[]
+  offer                Offer?
+  prepKits             PrepKit[]
+
+  @@index([userId, status, boardOrder])
+  @@index([userId, archivedAt, updatedAt])
+  @@index([userId, appliedAt])
+}
+
+/// Timeline entry. Auto-created by actions (status change, tailored resume, interview…) or added manually.
+model JobEvent {
+  id          String         @id @default(uuid()) @db.Uuid
+  userId      String         @db.Uuid
+  jobId     String         @db.Uuid
+  type        JobEventType
+  fromStatus  JobStatus?
+  toStatus    JobStatus?
+  title       String?
+  details     String?        @db.Text
+  occurredAt  DateTime       @default(now()) /// User-editable for manual events
+  interviewId String?        @db.Uuid
+  createdAt   DateTime       @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  interview Interview? @relation(fields: [interviewId], references: [id], onDelete: SetNull)
+
+  @@index([jobId, occurredAt])
+  @@index([userId, type, occurredAt])
+}
+
+model Interview {
+  id              String           @id @default(uuid()) @db.Uuid
+  userId          String           @db.Uuid
+  jobId         String           @db.Uuid
+  round           Int              @default(1)
+  kind            InterviewKind
+  scheduledAt     DateTime?
+  durationMinutes Int?
+  locationOrLink  String?
+  interviewers    String? /// Free text; link Contacts via JobContact for detail
+  prepNotes       String?          @db.Text
+  reflection      String?          @db.Text /// "What went well / what to improve"
+  outcome         InterviewOutcome @default(PENDING)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  events    JobEvent[]
+  reminders Reminder[]
+
+  @@index([jobId, round])
+  @@index([userId, scheduledAt])
+}
+
+model Contact {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  name            String
+  title           String?
+  company         String?
+  email           String?
+  phone           String?
+  linkedinUrl     String?
+  notes           String?   @db.Text
+  lastContactedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs   JobContact[]
+
+  @@index([userId, name])
+}
+
+/// Many-to-many: a contact can relate to several jobs, with a role on each.
+model JobContact {
+  userId    String      @db.Uuid
+  jobId   String      @db.Uuid
+  contactId String      @db.Uuid
+  role      ContactRole @default(OTHER)
+  createdAt DateTime    @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job     Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@id([jobId, contactId])
+  @@index([userId])
+  @@index([contactId])
+}
+
+model Reminder {
+  id          String       @id @default(uuid()) @db.Uuid
+  userId      String       @db.Uuid
+  jobId     String?      @db.Uuid
+  interviewId String?      @db.Uuid
+  kind        ReminderKind
+  title       String
+  dueAt       DateTime
+  completedAt DateTime?
+  dismissedAt DateTime?
+  emailedAt   DateTime? /// R1.1 email reminders
+  autoCreated Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job?       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  interview Interview? @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt, dueAt])
+}
+
+/// One offer per job.
+model Offer {
+  id         String        @id @default(uuid()) @db.Uuid
+  userId     String        @db.Uuid
+  jobId    String        @unique @db.Uuid
+  baseSalary Int?
+  currency   String? /// ISO 4217
+  payPeriod  PayPeriod?
+  bonus      String?
+  equity     String?
+  benefits   String?       @db.Text
+  startDate  DateTime?
+  respondBy  DateTime?
+  decision   OfferDecision @default(PENDING)
+  notes      String?       @db.Text
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ═════════════════════════════ GENERATED DOCUMENTS ═════════════════════════════
+
+/// One tailored resume version for a job.
+model TailoredResume {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @db.Uuid
+  jobId           String    @db.Uuid
+  targetProfileId         String?   @db.Uuid
+  version           Int
+  status            GenStatus @default(PENDING)
+  options           Json      @default("{}") /// TailorOptions
+  librarySnapshot Json? /// LibrarySnapshot at tailoring time
+  aiOutput          Json? /// Validated TailorOutput (immutable)
+  content           Json? /// ResumeContent (editable)
+  matchReport       Json? /// MatchReport
+  matchScore        Int? /// 0–100 match score
+  guardReverts      Int       @default(0)
+  templateId        String    @default("classic")
+  error             String? /// Error code only
+  rating            Int? /// 1 = 👍, -1 = 👎
+  ratingReason      String?
+  exportedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job         Job      @relation("JobResumes", fields: [jobId], references: [id], onDelete: Cascade)
+  targetProfile TargetProfile? @relation(fields: [targetProfileId], references: [id], onDelete: SetNull)
+  submittedTo Job[]    @relation("SubmittedResume")
+
+  @@unique([jobId, version])
+  @@index([userId, createdAt])
+}
+
+model CoverLetter {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @db.Uuid
+  jobId           String    @db.Uuid
+  version           Int
+  status            GenStatus @default(PENDING)
+  options           Json      @default("{}") /// CoverLetterOptions
+  librarySnapshot Json?
+  aiOutput          Json?
+  content           Json? /// CoverLetterContent (editable)
+  guardReverts      Int       @default(0)
+  templateId        String    @default("classic")
+  error             String?
+  rating            Int?
+  ratingReason      String?
+  exportedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job         Job     @relation("JobCoverLetters", fields: [jobId], references: [id], onDelete: Cascade)
+  submittedTo Job[]   @relation("SubmittedCoverLetter")
+
+  @@unique([jobId, version])
+  @@index([userId, createdAt])
+}
+
+/// R1.1 — Interview prep kit for a job.
+model PrepKit {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @db.Uuid
+  jobId           String    @db.Uuid
+  status            GenStatus @default(PENDING)
+  librarySnapshot Json?
+  aiOutput          Json?
+  content           Json? /// PrepKitContent (editable notes)
+  error             String?
+  rating            Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, createdAt])
+  @@index([userId])
+}
+
+// ═════════════════════════════ METERING & BILLING ═════════════════════════════
+
+/// One row per AI request. Quotas count success = true; also cost tracking.
+/// userId is null only for FREE_TOOL calls from anonymous visitors.
+model AiCall {
+  id               String     @id @default(uuid()) @db.Uuid
+  userId           String?    @db.Uuid
+  kind             AiCallKind
+  model            String
+  success          Boolean
+  errorCode        String?
+  inputTokens      Int        @default(0)
+  outputTokens     Int        @default(0)
+  cacheReadTokens  Int        @default(0)
+  cacheWriteTokens Int        @default(0)
+  durationMs       Int        @default(0)
+  costMicros       Int        @default(0) /// Estimated cost in millionths of a USD, from lib/ai/pricing.ts
+  refId            String? /// jobId / resumeId / coverLetterId / prepKitId
+  usedBonusCredit  Boolean    @default(false)
+  createdAt        DateTime   @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, success, createdAt])
+  @@index([createdAt])
+}
+
+/// Extra allowance (referrals, promos, support). Consumed after the monthly plan allowance runs out.
+model BonusCredit {
+  id        String       @id @default(uuid()) @db.Uuid
+  userId    String       @db.Uuid
+  kind      AiCallKind
+  amount    Int
+  remaining Int
+  reason    CreditReason
+  note      String?
+  expiresAt DateTime?
+  createdAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, remaining])
+}
+
+/// Processed Stripe webhook events (idempotency).
+model StripeEvent {
+  id        String   @id /// evt_...
+  type      String
+  createdAt DateTime @default(now())
+}
+
+// ═════════════════════════════ MOMENTUM (R1.1) ═════════════════════════════
+
+/// Milestone definitions live in code (features/momentum/milestones.ts), e.g. "first-tailored-resume",
+/// "ten-tailored-applications", "first-interview". Weekly streaks are derived from JobEvent + TailoredResume.
+model UserMilestone {
+  userId     String    @db.Uuid
+  key        String
+  unlockedAt DateTime  @default(now())
+  seenAt     DateTime? /// For "new milestone" toasts
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+}
+
+/// R1.1 — Referral program.
+model Referral {
+  id             String         @id @default(uuid()) @db.Uuid
+  referrerId     String         @db.Uuid
+  referredUserId String         @unique @db.Uuid
+  status         ReferralStatus @default(SIGNED_UP)
+  activatedAt    DateTime?
+  convertedAt    DateTime?
+  rewardedAt     DateTime?
+  createdAt      DateTime       @default(now())
+
+  referrer     User @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUser User @relation("Referred", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId, status])
+}
+
+/// Waitlist / newsletter / free-tool email captures (people who may not have an account).
+model Lead {
+  id                 String    @id @default(uuid()) @db.Uuid
+  email              String    @unique
+  source             String /// "waitlist", "tool:keyword-checker", "guide:<slug>"
+  utmSource          String?
+  utmMedium          String?
+  utmCampaign        String?
+  referrer           String?
+  marketingConsentAt DateTime? /// CASL express consent (checkbox, unticked by default)
+  consentText        String?
+  foundingOffer      Boolean   @default(false) /// Promised founding-member pricing
+  unsubscribedAt     DateTime?
+  convertedUserId    String?   @db.Uuid
+  createdAt          DateTime  @default(now())
+
+  @@index([source, createdAt])
+}
+
+/// Rate limiting + cost tracking for anonymous free tools. ipHash = sha256(ip + daily salt).
+model FreeToolRun {
+  id           String   @id @default(uuid()) @db.Uuid
+  tool         FreeTool
+  ipHash       String
+  success      Boolean
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([ipHash, tool, createdAt])
+}
+
+model Feedback {
+  id         String       @id @default(uuid()) @db.Uuid
+  userId     String?      @db.Uuid
+  kind       FeedbackKind
+  page       String?
+  message    String       @db.Text
+  rating     Int? /// 1–5 optional
+  resolvedAt DateTime?
+  createdAt  DateTime     @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([kind, createdAt])
+}
+
+/// Real testimonials only, shown on the site only when consentAt is set AND approved = true.
+model Testimonial {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String?  @db.Uuid
+  displayName String /// As the person wants to be credited, e.g. "Priya S."
+  roleTitle   String? /// e.g. "Junior Data Analyst"
+  quote       String   @db.Text
+  rating      Int?
+  consentAt   DateTime
+  consentText String
+  approved    Boolean  @default(false)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([approved, featured])
+}
+
+/// Sent-email log for idempotency (never send the same reminder/digest twice).
+/// recipientKey = userId, or "lead:" + leadId for non-users.
+model EmailLog {
+  id                String   @id @default(uuid()) @db.Uuid
+  recipientKey      String
+  template          String /// "reminder", "weekly-digest", "welcome", "renewal-heads-up"…
+  refKey            String /// reminderId, "2026-W42", subscription period end…
+  providerMessageId String?
+  sentAt            DateTime @default(now())
+
+  @@unique([recipientKey, template, refKey])
+}

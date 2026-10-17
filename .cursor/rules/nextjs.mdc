@@ -1,0 +1,14 @@
+---
+description: Next.js 16 App Router conventions for this project
+globs: src/app/**,src/proxy.ts,src/components/**
+alwaysApply: false
+---
+# Next.js 16 rules
+
+- `params` and `searchParams` are Promises: `const { jobId } = await params;`. `cookies()` and `headers()` are async.
+- Request interception lives in `src/proxy.ts` (Next 16 renamed middleware → proxy): session refresh, signed-out redirects for app routes, first-touch UTM/ref cookie. It is not the security boundary.
+- Default to Server Components; `"use client"` only for interactivity. Keep client components small.
+- Mutations via server actions; handle `ActionResult` (`ok` → toast/redirect; `VALIDATION` → field errors; `QUOTA_EXCEEDED`/`PRO_REQUIRED` → UpgradeModal; `CONFLICT` → info toast).
+- Pages that trigger long AI actions export `maxDuration = 120`; PENDING generations are polled with `router.refresh()`.
+- Route groups: (marketing) public, (auth) sign-in, (app) signed-in. App URLs: /dashboard, /library, /jobs, /contacts, /insights, /milestones, /settings, /admin.
+- Use `next/font`, `next/link`, `next/image`, `notFound()`/`redirect()` from `next/navigation`, `next/og` for OG images.
