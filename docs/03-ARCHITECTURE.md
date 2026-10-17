@@ -164,7 +164,7 @@ Any change to `Job.status` (board drag, dropdown, list, offer creation, intervie
 `boardOrder` is a float. Moving a card between neighbours A and B sets `(A + B) / 2` (or ±1 at the ends); when the gap gets below 1e-6, renumber that column in a transaction. Unit-tested in `board-order.ts`.
 
 ## Auth design
-- Supabase Auth session cookie; `src/proxy.ts` refreshes it and redirects signed-out users from app routes (`/dashboard`, `/library`, `/jobs`, `/contacts`, `/insights`, `/milestones`, `/settings`, `/admin`) to `/sign-in?next=…`. It also stores first-touch `utm_*`, `ref`, and referrer in a 30-day cookie.
+- Supabase Auth session cookie; `src/proxy.ts` refreshes it and redirects signed-out users from app routes (`/dashboard`, `/library`, `/jobs`, `/contacts`, `/insights`, `/milestones`, `/settings`, `/admin`) to `/sign-in?next=…`. It also stores first-touch `source`, `utm_*`, `ref`, and referrer in a 30-day cookie (`rr_ft`). `/auth/callback` exchanges a PKCE `code` or verifies a `token_hash` + `type` (admin/email links).
 - **`requireUser()` is the security boundary**, called in the `(app)` layout, every server action, and every route handler except the webhook and cron (cron uses `CRON_SECRET`).
 - `requireUser()` (wrapped in React `cache()`): `supabase.auth.getUser()` (never trust `getSession()` on the server) → upsert `User` (on create: `referralCode = nanoid(8)`, attribution from the cookie, and a `Referral` row if a valid `ref` exists) → return `{ id, email, plan, role }`. Signed-out: `redirect("/sign-in")` in pages; `fail("UNAUTHENTICATED")` in actions.
 - `requireAdmin()` = `requireUser()` + `role === "ADMIN"`, otherwise `notFound()`.

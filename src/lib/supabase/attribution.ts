@@ -6,6 +6,8 @@ export const ATTRIBUTION_COOKIE = "rr_ft";
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 export type FirstTouchAttribution = {
+  /** Maps to User.signupSource (e.g. homepage, waitlist, tool:keyword-checker). */
+  source?: string;
   utmSource?: string;
   utmMedium?: string;
   utmCampaign?: string;
@@ -39,6 +41,7 @@ export function applyFirstTouchCookie(
 
   const { searchParams } = request.nextUrl;
   const payload: FirstTouchAttribution = {
+    source: pick(searchParams.get("source")),
     utmSource: pick(searchParams.get("utm_source")),
     utmMedium: pick(searchParams.get("utm_medium")),
     utmCampaign: pick(searchParams.get("utm_campaign")),
@@ -47,6 +50,7 @@ export function applyFirstTouchCookie(
   };
 
   if (
+    !payload.source &&
     !payload.utmSource &&
     !payload.utmMedium &&
     !payload.utmCampaign &&

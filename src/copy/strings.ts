@@ -86,4 +86,11 @@ export const strings = {
     title: "Dashboard",
     signedInBody: "You’re signed in. The full app shell lands in the next tasks.",
   },
+  auth: {
+    signOut: "Sign out",
+  },
+  admin: {
+    title: "Admin",
+    body: "Admin tools arrive in a later release.",
+  },
 } as const;

@@ -37,7 +37,7 @@ Signed in — protected by src/proxy.ts AND requireUser() in the (app) layout
 
 ## Flow A — first-time user (activation)
 
-1. Homepage CTA → `/sign-in?next=/library/import` → magic link or Google → `/auth/callback` creates the User (stores `signupSource`, `utm*`, `signupReferrer` from first-touch cookies; `timezone` from the browser on first app load).
+1. Homepage CTA → `/sign-in?next=/library/import` → magic link or Google → `/auth/callback` (session only) → first app load `requireUser()` creates the User (stores `signupSource`, `utm*`, `signupReferrer` from the first-touch cookie; `timezone` from the browser via `setTimezone`).
 2. Lands on `/library/import` with a one-line welcome: "Let's start by building your experience library."
 3. After saving the import → `/dashboard` shows the **Getting started** checklist (4 steps, computed from data):
    1. Build your library (≥ 1 entry)
