@@ -8,7 +8,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 ## Phase 0 — Foundation
 - [x] **T0.1** Create the project
 - [x] **T0.2** UI kit & brand tokens
-- [ ] **T0.3** Database
+- [x] **T0.3** Database
 - [ ] **T0.4** Tests & CI
 
 ## Phase 1 — Auth & shell
@@ -95,5 +95,6 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-17 T0.3:** Prisma 7.10 + adapter-pg; `init` + `enable_rls` migrations (25 tables, RLS on). `env.ts` requires DB URLs + `NEXT_PUBLIC_APP_URL`; later-phase secrets optional. Vitest/CI still T0.4.
 - **2026-10-17 T0.2:** shadcn (Radix nova) + brand tokens; Inter/Source Serif 4; `/styleguide` gated by `NODE_ENV` until `lib/env.ts` (T0.3). Vitest still T0.4.
 - **2026-10-17 T0.1:** Next 16.4 scaffold on Node 22; remote is `MorganLay/rolereview` (`main`). `postinstall` deferred until Prisma (T0.3); Vitest lands in T0.4.
