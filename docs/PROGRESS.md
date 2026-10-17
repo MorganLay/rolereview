@@ -14,7 +14,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 ## Phase 1 — Auth & shell
 - [x] **T1.1** Supabase Auth
 - [x] **T1.2** requireUser() / requireAdmin()
-- [ ] **T1.3** App shell
+- [x] **T1.3** App shell
 
 ## Phase 2 — Brand & waitlist
 - [ ] **T2.1** Brand basics
@@ -95,6 +95,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-17 T1.3:** App shell (sidebar/mobile sheet, header, usage-pill stub, upgrade store, Feedback → DB); placeholder pages for 1.0 routes + milestones/targets stubs; `instant = false` on app layout + sign-in; `allowedDevOrigins` for 127.0.0.1. Usage pill still hard-coded 0/3 until T11.1.
 - **2026-10-17 T1.2:** `requireUser` / `requireAdmin` / `requireUserForAction`; lazy User upsert + Referral from `rr_ft` (incl. `source`); `setTimezone` + `signOut`; `(app)` layout + `/admin` stub; callback also accepts `token_hash`. Shell UI is T1.3.
 - **2026-10-17 T1.1:** `@supabase/ssr` + clients; `src/proxy.ts` (getClaims refresh, protected redirects, `rr_ft` first-touch cookie); `/sign-in` (magic link + Google); `/auth/callback`; stub `/dashboard` for accept (replace in T1.3). `requireUser` is T1.2.
 - **2026-10-17 T0.4:** Vitest 5 + Playwright smoke; `lib/result.ts` (10 codes) + 16 unit tests; CI workflow lint/typecheck/test (e2e not in CI). `@types/node` ^22 for Vitest peer.

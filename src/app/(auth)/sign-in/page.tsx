@@ -7,6 +7,9 @@ import { safeRedirectPath } from "@/lib/supabase/redirect";
 
 import { SignInForm } from "./sign-in-form";
 
+/** Session check + searchParams — not an instant static shell. */
+export const instant = false;
+
 export default async function SignInPage({
   searchParams,
 }: {

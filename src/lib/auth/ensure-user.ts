@@ -103,9 +103,19 @@ async function createUserWithAttribution(
       });
       if (raced) return raced;
 
-      if (isUniqueViolation(error) && attempt < REFERRAL_CODE_ATTEMPTS - 1) {
-        continue;
-      }
+      if (!isUniqueViolation(error)) throw error;
+
+      // Same email already linked to a different auth id (e.g. auth user
+      // recreated) — do not silently attach the wrong row.
+      const byEmail = await db.user.findUnique({
+        where: { email },
+        select: { id: true, email: true, plan: true, role: true },
+      });
+      if (byEmail?.id === id) return byEmail;
+      if (byEmail) throw error;
+
+      // Referral-code collision — retry with a new code.
+      if (attempt < REFERRAL_CODE_ATTEMPTS - 1) continue;
       throw error;
     }
   }
