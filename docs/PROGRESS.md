@@ -6,8 +6,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 
 ## Phase 0 — Foundation
-- [~] **T0.1** Create the project
-- [ ] **T0.2** UI kit & brand tokens
+- [x] **T0.1** Create the project
+- [x] **T0.2** UI kit & brand tokens
 - [ ] **T0.3** Database
 - [ ] **T0.4** Tests & CI
 
@@ -94,3 +94,6 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 ## Notes
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
+
+- **2026-10-17 T0.2:** shadcn (Radix nova) + brand tokens; Inter/Source Serif 4; `/styleguide` gated by `NODE_ENV` until `lib/env.ts` (T0.3). Vitest still T0.4.
+- **2026-10-17 T0.1:** Next 16.4 scaffold on Node 22; remote is `MorganLay/rolereview` (`main`). `postinstall` deferred until Prisma (T0.3); Vitest lands in T0.4.
