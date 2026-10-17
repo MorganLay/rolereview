@@ -128,7 +128,7 @@ export const strings = {
       legal: "Legal",
       privacy: "Privacy",
       terms: "Terms",
-      copyright: "© {year} RoleRefine",
+      copyright: "© RoleRefine",
       madeIn: "Made in Ottawa",
     },
     home: {

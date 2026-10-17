@@ -65,8 +65,6 @@ function FooterColumn({
 }
 
 export function MarketingFooter() {
-  const year = new Date().getFullYear();
-
   return (
     <footer className="border-t border-line bg-paper">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))]">
@@ -101,9 +99,7 @@ export function MarketingFooter() {
 
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-6 text-sm text-slate sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p>
-            {strings.marketing.footer.copyright.replace("{year}", String(year))}
-          </p>
+          <p>{strings.marketing.footer.copyright}</p>
           <p>{strings.marketing.footer.madeIn}</p>
         </div>
       </div>

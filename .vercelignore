@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+.git
+.next
+node_modules
+src/generated
+evals/out
+*.pdf
+*.docx
+!evals/fixtures/**/*.pdf
+!evals/fixtures/**/*.docx
