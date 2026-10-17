@@ -11,9 +11,14 @@ export default function Home() {
           {strings.home.title}
         </h1>
         <p className="text-lg text-slate">{strings.home.body}</p>
-        <Button asChild>
-          <Link href="/styleguide">{strings.home.styleguideLink}</Link>
-        </Button>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Button asChild>
+            <Link href="/sign-in">{strings.home.signInLink}</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/styleguide">{strings.home.styleguideLink}</Link>
+          </Button>
+        </div>
       </main>
     </div>
   );

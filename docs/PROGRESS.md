@@ -12,7 +12,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T0.4** Tests & CI
 
 ## Phase 1 — Auth & shell
-- [ ] **T1.1** Supabase Auth
+- [x] **T1.1** Supabase Auth
 - [ ] **T1.2** requireUser() / requireAdmin()
 - [ ] **T1.3** App shell
 
@@ -95,6 +95,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-17 T1.1:** `@supabase/ssr` + clients; `src/proxy.ts` (getClaims refresh, protected redirects, `rr_ft` first-touch cookie); `/sign-in` (magic link + Google); `/auth/callback`; stub `/dashboard` for accept (replace in T1.3). `requireUser` is T1.2.
 - **2026-10-17 T0.4:** Vitest 5 + Playwright smoke; `lib/result.ts` (10 codes) + 16 unit tests; CI workflow lint/typecheck/test (e2e not in CI). `@types/node` ^22 for Vitest peer.
 - **2026-10-17 T0.3:** Prisma 7.10 + adapter-pg; `init` + `enable_rls` migrations (25 tables, RLS on). `env.ts` requires DB URLs + `NEXT_PUBLIC_APP_URL`; later-phase secrets optional. Vitest/CI still T0.4.
 - **2026-10-17 T0.2:** shadcn (Radix nova) + brand tokens; Inter/Source Serif 4; `/styleguide` gated by `NODE_ENV` until `lib/env.ts` (T0.3). Vitest still T0.4.

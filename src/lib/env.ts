@@ -4,8 +4,10 @@ import { z } from "zod";
 
 /**
  * Validated environment. Import `env` everywhere — never read `process.env` in app code.
- * Secrets for later phases stay optional so local work (and T0.3) doesn't need fake keys.
- * Placeholder values from `.env.example` (containing `<...>`) are treated as unset.
+ * Secrets for later phases stay optional so local work doesn't need fake keys.
+ * Auth requires NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.
+ * Placeholder values from `.env.example` (containing `<...>`) are treated as unset
+ * for optional secrets only.
  */
 function readOptional(name: string): string | undefined {
   const value = process.env[name];
@@ -43,8 +45,8 @@ const serverSchema = z.object({
 
 const clientSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url(),
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   NEXT_PUBLIC_POSTHOG_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1).optional(),
@@ -74,10 +76,9 @@ function loadEnv(): Env {
     CRON_SECRET: readOptional("CRON_SECRET"),
     SEED_USER_ID: readOptional("SEED_USER_ID"),
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-    NEXT_PUBLIC_SUPABASE_URL: readOptional("NEXT_PUBLIC_SUPABASE_URL"),
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: readOptional(
-      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-    ),
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_POSTHOG_KEY: readOptional("NEXT_PUBLIC_POSTHOG_KEY"),
     NEXT_PUBLIC_POSTHOG_HOST: readOptional("NEXT_PUBLIC_POSTHOG_HOST"),
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: readOptional("NEXT_PUBLIC_TURNSTILE_SITE_KEY"),

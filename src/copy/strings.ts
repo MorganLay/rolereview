@@ -63,5 +63,27 @@ export const strings = {
     title: "RoleRefine",
     body: "Tailored resumes. Every line traced to you.",
     styleguideLink: "Open style guide",
+    signInLink: "Sign in",
+  },
+  signIn: {
+    title: "Sign in",
+    subtitle: "Magic link or Google — no password to remember.",
+    emailLabel: "Email",
+    emailPlaceholder: "you@example.com",
+    sendMagicLink: "Email me a sign-in link",
+    or: "or",
+    continueWithGoogle: "Continue with Google",
+    checkEmailTitle: "Check your email",
+    checkEmailBody:
+      "We sent a sign-in link. It expires in about an hour.",
+    errors: {
+      auth: "Sign-in didn’t finish. Try again.",
+      sendLink: "Couldn’t send the link. Check the address and try again.",
+      google: "Google sign-in didn’t start. Try again.",
+    },
+  },
+  dashboard: {
+    title: "Dashboard",
+    signedInBody: "You’re signed in. The full app shell lands in the next tasks.",
   },
 } as const;
