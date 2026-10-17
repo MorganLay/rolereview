@@ -17,7 +17,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T1.3** App shell
 
 ## Phase 2 — Brand & waitlist
-- [ ] **T2.1** Brand basics
+- [x] **T2.1** Brand basics
 - [ ] **T2.2** Waitlist page + launch
 
 ## Phase 3 — Library
@@ -95,6 +95,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-17 T2.1:** Wordmark SVG + React component; pine "R" favicon/apple-icon; shared `brandOgImage` (`next/og`) + opengraph/twitter images; marketing header/footer + `(marketing)` shell. Footer/newsletter/socials omitted until later. **Q-1 clearance (agent web check, not legal advice):** no live DNS for rolerefine.com/.ca/getrolerefine.com (likely free to register — buy them); no obvious CIPO/USPTO hit for exact "RoleRefine"; nearby: Emergent AI **RoleRefiner** (JD tool), a LinkedIn hobby "RoleRefine" JD rewriter, UK **ROLEFINE LIMITED** (unrelated). Social handles deferred until site complete. Official CIPO/USPTO knockout + domain purchase still on you.
 - **2026-10-17 T1.3:** App shell (sidebar/mobile sheet, header, usage-pill stub, upgrade store, Feedback → DB); placeholder pages for 1.0 routes + milestones/targets stubs; `instant = false` on app layout + sign-in; `allowedDevOrigins` for 127.0.0.1. Usage pill still hard-coded 0/3 until T11.1.
 - **2026-10-17 T1.2:** `requireUser` / `requireAdmin` / `requireUserForAction`; lazy User upsert + Referral from `rr_ft` (incl. `source`); `setTimezone` + `signOut`; `(app)` layout + `/admin` stub; callback also accepts `token_hash`. Shell UI is T1.3.
 - **2026-10-17 T1.1:** `@supabase/ssr` + clients; `src/proxy.ts` (getClaims refresh, protected redirects, `rr_ft` first-touch cookie); `/sign-in` (magic link + Google); `/auth/callback`; stub `/dashboard` for accept (replace in T1.3). `requireUser` is T1.2.

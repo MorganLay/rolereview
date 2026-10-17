@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { strings } from "@/copy/strings";
+import { env } from "@/lib/env";
 
 import "./globals.css";
 
@@ -20,8 +21,25 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: strings.brand.name,
+  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
+  title: {
+    default: strings.brand.name,
+    template: `%s · ${strings.brand.name}`,
+  },
   description: strings.brand.shortDescriptor,
+  applicationName: strings.brand.name,
+  openGraph: {
+    type: "website",
+    locale: "en_CA",
+    siteName: strings.brand.name,
+    title: strings.brand.name,
+    description: strings.brand.shortDescriptor,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: strings.brand.name,
+    description: strings.brand.shortDescriptor,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
