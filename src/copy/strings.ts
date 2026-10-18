@@ -144,6 +144,39 @@ export const strings = {
       featuresBody:
         "Source-cited bullets, a fabrication guard, match score, and a free jobs board. Feature pages arrive next.",
     },
+    waitlist: {
+      metaTitle: "Join the waitlist",
+      metaDescription:
+        "Be first to tailor resumes that stay honest. Founding members get 40% off Pro for as long as they stay.",
+      eyebrow: "Opening soon",
+      title: "Refine your resume for every role.",
+      body: "Import your resume once. Paste any job posting. RoleRefine tailors your resume and cover letter using only your real experience — every line traced to you.",
+      foundingOffer:
+        "First 100 Pro members get 40% off for as long as they stay.",
+      benefit1Title: "Honest tailoring",
+      benefit1Body: "Every bullet cites your library. No invented metrics.",
+      benefit2Title: "Whole search, one place",
+      benefit2Body: "Jobs board, reminders, and match score — free to track.",
+      benefit3Title: "Built for trust",
+      benefit3Body: "Fabrication guard before anything reaches your export.",
+      demoPlaceholder: "Product demo coming soon",
+      demoCaption: "A short walkthrough of library → job → tailored resume.",
+      emailLabel: "Email",
+      emailPlaceholder: "you@example.com",
+      consentLabel:
+        "Email me product updates and launch news. Unsubscribe anytime.",
+      consentRequired: "Tick the box to join the waitlist.",
+      submit: "Join the waitlist",
+      submitting: "Joining…",
+      captchaRequired: "Complete the captcha to continue.",
+      captchaFailed: "Captcha failed. Try again.",
+      error: "Couldn’t join right now. Try again in a moment.",
+      thanksTitle: "You’re on the list.",
+      thanksBody:
+        "We’ll email you when RoleRefine opens. Share your link so friends can join too.",
+      shareLabel: "Your invite link",
+      inviteHint: "Invite 3 friends for early beta access.",
+    },
   },
   signIn: {
     title: "Sign in",
