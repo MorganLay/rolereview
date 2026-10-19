@@ -108,6 +108,20 @@ export const ProfileLink = z.object({ label: z.string().trim().min(1).max(40), u
 export const ProfileLinks = z.array(ProfileLink).max(5);
 ```
 
+URLs are trimmed and must be `http` or `https`.
+
+Profile text on `User` (the library profile dialog; email is the sign-in address and is not edited here):
+
+| Field | Max | Blank saves as |
+|---|---|---|
+| `fullName` | 80 | null |
+| `headline` | 120 | null |
+| `phone` | 40 | null |
+| `location` | 80 | null |
+| `summary` | 2,000 | null |
+
+`summary` is the default professional summary — source text, not the line that prints on a tailored resume. `ResumeContent.summary` stays capped at 800 characters; tailoring condenses this field onto the page.
+
 ### `Job.analysis` → `features/jobs/schemas.ts`
 
 ```ts
