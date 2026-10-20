@@ -40,7 +40,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T5.4** Jobs board — list view
 
 ## Phase 6 — Tailor ⭐
-- [ ] **T6.1** Serialize + snapshot
+- [x] **T6.1** Serialize + snapshot
 - [ ] **T6.2** Guard, assemble, score, keywords, plainText
 - [ ] **T6.3** Tailor action + Documents tab
 - [ ] **T6.4** Workspace editor
@@ -95,6 +95,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-20 T6.1:** `serializeLibrary(library, takenAt)` is pure. Prompt text uses E/S refs. Email, phone, location, links, and entry URLs stay on the snapshot. A year-only end date sorts as December, a year-only start as January. Newlines in a summary or bullet become one space in the text; the snapshot keeps the original.
 - **2026-10-20 T5.4:** The jobs list is the page until the board (T8.1). Filters and sort stay in the URL. Default sort is last activity, newest first. Inline status uses the pipeline. Archive selected leaves status alone. Match score is the best READY tailored resume, or a dash. A deadline within 3 days in the user’s timezone is marked Soon.
 - **2026-10-20 T5.3:** Job overview: status goes through `applyStatusChange` (a closed stage asks for an optional reason). Edit details is title, company, location, and URL. The details form saves on blur; changing the deadline moves the open automatic reminder to 3 days before, and clearing it dismisses that reminder. Submitted documents wait for tailored resumes and letters.
 - **2026-10-20 T5.2:** `applyStatusChange` is the only status write. `appliedAt`, `firstResponseAt`, and `closedAt` are set once. The same status again adds no reminder and does not change `appliedAt`. The follow-up is due 7×24 hours after the first move to Applied. `submittedResumeId` is the latest exported READY resume, only on that first move. Closed statuses dismiss open reminders. `planColumnMove` is pure; the drag write waits for T8.1.

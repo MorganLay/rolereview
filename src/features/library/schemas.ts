@@ -271,5 +271,50 @@ export const reorderSkillSchema = z.object({
   direction: z.enum(["up", "down"]),
 });
 
+/** Frozen library facts stored on a tailored resume. See docs/04-DATA-MODEL.md. */
+export const LibrarySnapshot = z.object({
+  takenAt: z.string(),
+  profile: z.object({
+    fullName: z.string().nullable(),
+    headline: z.string().nullable(),
+    email: z.string(),
+    phone: z.string().nullable(),
+    location: z.string().nullable(),
+    links: ProfileLinks,
+    summary: z.string().nullable(),
+  }),
+  entries: z.array(
+    z.object({
+      ref: z.string(),
+      id: z.string(),
+      kind: EntryKindEnum,
+      title: z.string(),
+      organization: z.string().nullable(),
+      location: z.string().nullable(),
+      startDate: z.string().nullable(),
+      endDate: z.string().nullable(),
+      isCurrent: z.boolean(),
+      url: z.string().nullable(),
+      bullets: z.array(
+        z.object({
+          ref: z.string(),
+          id: z.string(),
+          text: z.string(),
+        }),
+      ),
+    }),
+  ),
+  skills: z.array(
+    z.object({
+      ref: z.string(),
+      id: z.string(),
+      name: z.string(),
+      category: z.string().nullable(),
+    }),
+  ),
+});
+
+export type LibrarySnapshot = z.infer<typeof LibrarySnapshot>;
+
 export type CreateEntryInput = z.input<typeof createEntrySchema>;
 export type UpdateEntryInput = z.input<typeof updateEntrySchema>;
