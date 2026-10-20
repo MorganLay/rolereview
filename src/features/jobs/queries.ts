@@ -4,6 +4,7 @@ import { quotaSnapshot } from "@/features/billing/quota";
 import type {
   EmploymentType,
   JobSource,
+  JobStatus,
   PayPeriod,
   Plan,
   WorkMode,
@@ -11,6 +12,7 @@ import type {
 import { db } from "@/lib/db";
 
 import { canRetryAnalysis, displayedAnalysisStatus } from "./analyze";
+import { formatDeadlineDate } from "./dates";
 import {
   JobAnalysis,
   type JobAnalysis as JobAnalysisData,
@@ -23,9 +25,12 @@ export type JobPageData = {
   company: string;
   location: string | null;
   url: string | null;
-  deadline: Date | null;
-  source: JobSource | null;
+  status: JobStatus;
   priority: number | null;
+  archived: boolean;
+  deadline: string | null;
+  source: JobSource | null;
+  sourceDetail: string | null;
   workMode: WorkMode;
   employmentType: EmploymentType | null;
   salaryMin: number | null;
@@ -33,6 +38,8 @@ export type JobPageData = {
   salaryCurrency: string | null;
   salaryPeriod: PayPeriod | null;
   referenceNumber: string | null;
+  notes: string | null;
+  rawText: string;
   analysisStatus: "PENDING" | "READY" | "FAILED";
   retryable: boolean;
   summary: string;
@@ -63,9 +70,12 @@ export async function getJob(
       company: true,
       location: true,
       url: true,
+      status: true,
+      priority: true,
+      archivedAt: true,
       deadline: true,
       source: true,
-      priority: true,
+      sourceDetail: true,
       workMode: true,
       employmentType: true,
       salaryMin: true,
@@ -73,6 +83,8 @@ export async function getJob(
       salaryCurrency: true,
       salaryPeriod: true,
       referenceNumber: true,
+      notes: true,
+      rawText: true,
       analysis: true,
       analysisStatus: true,
       updatedAt: true,
@@ -95,9 +107,12 @@ export async function getJob(
     company: row.company,
     location: row.location,
     url: row.url,
-    deadline: row.deadline,
-    source: row.source,
+    status: row.status,
     priority: row.priority,
+    archived: row.archivedAt !== null,
+    deadline: row.deadline ? formatDeadlineDate(row.deadline) : null,
+    source: row.source,
+    sourceDetail: row.sourceDetail,
     workMode: row.workMode,
     employmentType: row.employmentType,
     salaryMin: row.salaryMin,
@@ -105,6 +120,8 @@ export async function getJob(
     salaryCurrency: row.salaryCurrency,
     salaryPeriod: row.salaryPeriod,
     referenceNumber: row.referenceNumber,
+    notes: row.notes,
+    rawText: row.rawText,
     analysisStatus,
     retryable: canRetryAnalysis(row.analysisStatus, row.updatedAt, now),
     summary: analysis?.summary ?? "",

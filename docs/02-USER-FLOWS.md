@@ -103,7 +103,7 @@ Toolbar: view toggle **Board | List**, search (company/title), filters (source, 
 - Submit → `createJob` (saved PENDING → analysis → fields pre-filled from analysis) → `/jobs/[id]`. Analysis typically 3–8 s; on failure the job is saved FAILED with Retry.
 
 ### `/jobs/[jobId]` — Job detail
-**Header:** title, company, location, status select, priority stars, deadline, URL (new tab), ⋯ menu (Edit details, Archive/Unarchive, Delete with confirm). Badges: work mode, employment type, salary range, reference #.
+**Header:** title, company, location, status select, priority stars, deadline, URL (new tab), ⋯ menu (Edit details — title, company, location, and URL — Archive/Unarchive, Delete with confirm). Badges: work mode, employment type, salary range, reference #. An archived job keeps its status and shows an Archived badge. Choosing a closed status asks for an optional reason.
 
 **Tabs:**
 1. **Overview:** requirements (Must / Nice, kind icons), keywords, collapsible original posting; details form (source, sourceDetail, work mode, employment type, salary, reference #, deadline, notes with save on blur); "Submitted documents" (which tailor and letter were sent; change via select).

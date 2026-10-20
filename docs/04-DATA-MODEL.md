@@ -83,6 +83,7 @@ These keep the tracking data accurate without the user doing extra work. Put the
 | Trigger | Side effects |
 |---|---|
 | Job created | `JobEvent(CREATED)`; if `deadline` → `Reminder(DEADLINE, dueAt = deadline − 3 days)` |
+| Deadline edited | If the date changes, move each open auto `Reminder(DEADLINE)` to the new `deadline − 3 days`, or create that reminder when none is open. Clearing the deadline dismisses those open reminders. Completed or already dismissed reminders stay. |
 | Status → `APPLIED` (first time) | set `appliedAt`; `JobEvent(APPLIED)`; `Reminder(FOLLOW_UP, +7 days, autoCreated)`; if no `submittedResumeId` and a READY tailored resume exists → set it to the latest exported tailor (user can change) |
 | Status leaves `APPLIED` to SCREENING / INTERVIEWING / OFFER / REJECTED (first time) | set `firstResponseAt`; `JobEvent(RESPONSE_RECEIVED)`; complete any open auto FOLLOW_UP reminder |
 | Status → ACCEPTED / REJECTED / WITHDRAWN / NO_RESPONSE | set `closedAt`; dismiss open reminders for the job |
@@ -96,6 +97,23 @@ These keep the tracking data accurate without the user doing extra work. Put the
 | APPLIED with no change for 30 days | Dashboard shows a "No response?" nudge (computed in the query, nothing stored until the user acts) |
 
 Status ordering for "less than" comparisons: SAVED < APPLIED < SCREENING < INTERVIEWING < OFFER < ACCEPTED (closed statuses are not ordered).
+
+### Job detail fields
+
+Caps for the job page. Blank text stores null. Archive is `archivedAt`, not a status.
+
+| Field | Max | Blank saves as |
+|---|---|---|
+| `title` | 120 | required |
+| `company` | 120 | required |
+| `location` | 80 | null |
+| `url` | 2,000 | null; `http` or `https` only |
+| `sourceDetail` | 120 | null |
+| `referenceNumber` | 80 | null |
+| `notes` | 5,000 | null |
+| `closeReason` | 500 | null; stored only when the status select moves into Accepted, Rejected, Withdrawn, or No response |
+
+Salary amounts are whole numbers from 0 through 2,147,483,647. When both are set, the minimum is at most the maximum. Currency is three letters, stored uppercase. Priority is 1–5 or null. Analysis still pre-fills empty classification columns; a value the user has set stays.
 
 ## JSON column shapes
 

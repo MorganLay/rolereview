@@ -39,3 +39,33 @@ export function deadlineReminderDue(deadline: Date): Date {
   due.setUTCDate(due.getUTCDate() - 3);
   return due;
 }
+
+/** `YYYY-MM-DD` for a deadline stored as UTC midnight. */
+export function formatDeadlineDate(deadline: Date): string {
+  const year = deadline.getUTCFullYear();
+  const month = String(deadline.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(deadline.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export type DeadlineReminderPlan =
+  | { action: "keep" }
+  | { action: "upsert"; dueAt: Date }
+  | { action: "dismiss" };
+
+/**
+ * What to do with the open automatic deadline reminder when the date changes.
+ * The same instant leaves it alone. Completed and dismissed reminders are not in this plan.
+ */
+export function planDeadlineReminder(
+  previous: Date | null,
+  next: Date | null,
+): DeadlineReminderPlan {
+  const sameInstant =
+    previous === null
+      ? next === null
+      : next !== null && previous.getTime() === next.getTime();
+  if (sameInstant) return { action: "keep" };
+  if (next) return { action: "upsert", dueAt: deadlineReminderDue(next) };
+  return { action: "dismiss" };
+}

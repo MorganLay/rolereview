@@ -35,8 +35,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Phase 5 — Jobs core
 - [x] **T5.1** Create + analyse
-- [ ] **T5.2** Pipeline engine
-- [ ] **T5.3** Job detail — Overview
+- [x] **T5.2** Pipeline engine
+- [x] **T5.3** Job detail — Overview
 - [ ] **T5.4** Jobs board — list view
 
 ## Phase 6 — Tailor ⭐
@@ -95,6 +95,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-20 T5.3:** Job overview: status goes through `applyStatusChange` (a closed stage asks for an optional reason). Edit details is title, company, location, and URL. The details form saves on blur; changing the deadline moves the open automatic reminder to 3 days before, and clearing it dismisses that reminder. Submitted documents wait for tailored resumes and letters.
+- **2026-10-20 T5.2:** `applyStatusChange` is the only status write. `appliedAt`, `firstResponseAt`, and `closedAt` are set once. The same status again adds no reminder and does not change `appliedAt`. The follow-up is due 7×24 hours after the first move to Applied. `submittedResumeId` is the latest exported READY resume, only on that first move. Closed statuses dismiss open reminders. `planColumnMove` is pure; the drag write waits for T8.1.
 - **2026-10-20 T5.1:** `createJob` saves the posting first, then analyses it. A failed call leaves the job FAILED with Retry and does not use the daily analysis. Title, company, location, work mode, employment, salary, and reference number are filled only while those fields are still empty. A deadline stores a reminder for 3 days before. Checked three public postings: NearSource (hourly contract), CSIS library technician, and CSIS communications analyst.
 - **2026-10-20 T4.3:** Review saves only checked items. Replace deletes entries and skills first. Append skips a skill name already in the library. The sign-in email is never imported. Nothing checked refuses the save. While `onboardingCompletedAt` is null, save goes to Dashboard.
 - **2026-10-20 T4.2:** `extractResume` reads a PDF, DOCX, or paste and returns a review payload. Nothing is saved until T4.3. A bad file is `VALIDATION` and does not use quota. Bullets over 400 stay and are flagged `long`. `npm run ai:import -- <path>` is the dev check. Older `.doc` files need to be `.docx` first.

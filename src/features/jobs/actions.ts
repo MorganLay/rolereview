@@ -20,9 +20,24 @@ import {
   prefillFromAnalysis,
   type JobDetailColumns,
 } from "./analyze";
-import { deadlineInstant, deadlineReminderDue } from "./dates";
+import {
+  deadlineInstant,
+  deadlineReminderDue,
+  planDeadlineReminder,
+} from "./dates";
+import { applyStatusChange } from "./pipeline";
 import type { CreateJobData, JobAnalysis } from "./schemas";
-import { createJobSchema, retryAnalysisSchema } from "./schemas";
+import {
+  createJobSchema,
+  deleteJobSchema,
+  isClosedJobStatus,
+  retryAnalysisSchema,
+  setJobArchivedSchema,
+  setJobPrioritySchema,
+  updateJobDetailsSchema,
+  updateJobIdentitySchema,
+  updateJobStatusSchema,
+} from "./schemas";
 
 const placeholders = strings.jobs.placeholders;
 
@@ -295,3 +310,208 @@ function revalidateJob(jobId: string): void {
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath("/jobs");
 }
+
+/** Move the job through the pipeline. A closed status can store a reason. */
+export async function updateJobStatus(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = updateJobStatusSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const data = parsed.data;
+  const result = await applyStatusChange(user.id, data.jobId, data.status, {
+    closeReason: isClosedJobStatus(data.status) ? data.closeReason : undefined,
+  });
+  if (!result) return fail("NOT_FOUND");
+
+  revalidateJob(data.jobId);
+  return ok({ id: data.jobId });
+}
+
+/** Set priority stars, or clear them. */
+export async function setJobPriority(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = setJobPrioritySchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const written = await db.job.updateMany({
+    where: { id: parsed.data.jobId, userId: user.id },
+    data: { priority: parsed.data.priority },
+  });
+  if (written.count === 0) return fail("NOT_FOUND");
+
+  revalidateJob(parsed.data.jobId);
+  return ok({ id: parsed.data.jobId });
+}
+
+/** Hide the job from the board, or put it back. Status stays. */
+export async function setJobArchived(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = setJobArchivedSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const written = await db.job.updateMany({
+    where: { id: parsed.data.jobId, userId: user.id },
+    data: { archivedAt: parsed.data.archived ? new Date() : null },
+  });
+  if (written.count === 0) return fail("NOT_FOUND");
+
+  revalidateJob(parsed.data.jobId);
+  return ok({ id: parsed.data.jobId });
+}
+
+/** Delete one owned job. Related rows cascade. */
+export async function deleteJob(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = deleteJobSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const written = await db.job.deleteMany({
+    where: { id: parsed.data.jobId, userId: user.id },
+  });
+  if (written.count === 0) return fail("NOT_FOUND");
+
+  revalidateJob(parsed.data.jobId);
+  return ok({ id: parsed.data.jobId });
+}
+
+/** Title, company, location, and the posting link. */
+export async function updateJobIdentity(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = updateJobIdentitySchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const data = parsed.data;
+  const written = await db.job.updateMany({
+    where: { id: data.jobId, userId: user.id },
+    data: {
+      title: data.title,
+      company: data.company,
+      location: data.location,
+      url: data.url,
+    },
+  });
+  if (written.count === 0) return fail("NOT_FOUND");
+
+  revalidateJob(data.jobId);
+  return ok({ id: data.jobId });
+}
+
+/** Overview details. A changed deadline moves the automatic reminder. */
+export async function updateJobDetails(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = updateJobDetailsSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const data = parsed.data;
+  const deadline = data.deadline ? deadlineInstant(data.deadline) : null;
+
+  const written = await db.$transaction(async (tx) => {
+    const existing = await tx.job.findFirst({
+      where: { id: data.jobId, userId: user.id },
+      select: { deadline: true },
+    });
+    if (!existing) return false;
+
+    const updated = await tx.job.updateMany({
+      where: { id: data.jobId, userId: user.id },
+      data: {
+        source: data.source,
+        sourceDetail: data.sourceDetail,
+        workMode: data.workMode,
+        employmentType: data.employmentType,
+        salaryMin: data.salaryMin,
+        salaryMax: data.salaryMax,
+        salaryCurrency: data.salaryCurrency,
+        salaryPeriod: data.salaryPeriod,
+        referenceNumber: data.referenceNumber,
+        deadline,
+        notes: data.notes,
+      },
+    });
+    if (updated.count === 0) return false;
+
+    await syncDeadlineReminder(
+      tx,
+      user.id,
+      data.jobId,
+      existing.deadline,
+      deadline,
+    );
+    return true;
+  });
+
+  if (!written) return fail("NOT_FOUND");
+  revalidateJob(data.jobId);
+  return ok({ id: data.jobId });
+}
+
+async function syncDeadlineReminder(
+  tx: DeadlineTx,
+  userId: string,
+  jobId: string,
+  previous: Date | null,
+  next: Date | null,
+): Promise<void> {
+  const plan = planDeadlineReminder(previous, next);
+  if (plan.action === "keep") return;
+
+  const open = {
+    userId,
+    jobId,
+    kind: "DEADLINE" as const,
+    autoCreated: true,
+    completedAt: null,
+    dismissedAt: null,
+  };
+
+  if (plan.action === "dismiss") {
+    await tx.reminder.updateMany({
+      where: open,
+      data: { dismissedAt: new Date() },
+    });
+    return;
+  }
+
+  const moved = await tx.reminder.updateMany({
+    where: open,
+    data: { dueAt: plan.dueAt },
+  });
+  if (moved.count > 0) return;
+
+  await tx.reminder.create({
+    data: {
+      userId,
+      jobId,
+      kind: "DEADLINE",
+      title: strings.jobs.reminder.deadline,
+      dueAt: plan.dueAt,
+      autoCreated: true,
+    },
+  });
+}
+
+type DeadlineTx = Parameters<Parameters<typeof db.$transaction>[0]>[0];
