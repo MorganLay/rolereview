@@ -1,11 +1,29 @@
-import { PlaceholderPage } from "@/components/shell/placeholder-page";
 import { strings } from "@/copy/strings";
+import { NewJobForm } from "@/features/jobs/components/new-job-form";
+import { analysesRemaining } from "@/features/jobs/queries";
+import { requireUser } from "@/lib/auth";
 
-export default function NewJobPage() {
+/** Analysis calls the model and can take several seconds. */
+export const maxDuration = 120;
+
+/** The analyses-left count comes from the signed-in user. */
+export const instant = false;
+
+export default async function NewJobPage() {
+  const user = await requireUser();
+  const analysesLeft = await analysesRemaining(user.id, user.plan);
+
   return (
-    <PlaceholderPage
-      title={strings.pages.jobsNew.title}
-      body={strings.pages.jobsNew.body}
-    />
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <div>
+        <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">
+          {strings.pages.jobsNew.title}
+        </h1>
+        <p className="mt-2 max-w-xl text-sm text-slate">
+          {strings.pages.jobsNew.body}
+        </p>
+      </div>
+      <NewJobForm analysesLeft={analysesLeft} />
+    </div>
   );
 }

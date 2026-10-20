@@ -1,16 +1,29 @@
-import { PlaceholderPage } from "@/components/shell/placeholder-page";
-import { strings } from "@/copy/strings";
+import { notFound } from "next/navigation";
+
+import { JobResult } from "@/features/jobs/components/job-result";
+import { analysesRemaining, getJob } from "@/features/jobs/queries";
+import { requireUser } from "@/lib/auth";
+
+/** Retry calls the model and can take several seconds. */
+export const maxDuration = 120;
+
+/** The job comes from the signed-in user. */
+export const instant = false;
 
 export default async function JobDetailPage({
   params,
 }: {
   params: Promise<{ jobId: string }>;
 }) {
-  await params;
+  const { jobId } = await params;
+  const user = await requireUser();
+  const job = await getJob(user.id, jobId);
+  if (!job) notFound();
+  const analysesLeft = await analysesRemaining(user.id, user.plan);
+
   return (
-    <PlaceholderPage
-      title={strings.pages.jobDetail.title}
-      body={strings.pages.jobDetail.body}
-    />
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <JobResult job={job} analysesLeft={analysesLeft} />
+    </div>
   );
 }

@@ -31,10 +31,10 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 ## Phase 4 — Import
 - [x] **T4.1** AI plumbing
 - [x] **T4.2** Extraction
-- [~] **T4.3** Review & commit
+- [x] **T4.3** Review & commit
 
 ## Phase 5 — Jobs core
-- [ ] **T5.1** Create + analyse
+- [x] **T5.1** Create + analyse
 - [ ] **T5.2** Pipeline engine
 - [ ] **T5.3** Job detail — Overview
 - [ ] **T5.4** Jobs board — list view
@@ -95,6 +95,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-20 T5.1:** `createJob` saves the posting first, then analyses it. A failed call leaves the job FAILED with Retry and does not use the daily analysis. Title, company, location, work mode, employment, salary, and reference number are filled only while those fields are still empty. A deadline stores a reminder for 3 days before. Checked three public postings: NearSource (hourly contract), CSIS library technician, and CSIS communications analyst.
+- **2026-10-20 T4.3:** Review saves only checked items. Replace deletes entries and skills first. Append skips a skill name already in the library. The sign-in email is never imported. Nothing checked refuses the save. While `onboardingCompletedAt` is null, save goes to Dashboard.
 - **2026-10-20 T4.2:** `extractResume` reads a PDF, DOCX, or paste and returns a review payload. Nothing is saved until T4.3. A bad file is `VALIDATION` and does not use quota. Bullets over 400 stay and are flagged `long`. `npm run ai:import -- <path>` is the dev check. Older `.doc` files need to be `.docx` first.
 - **2026-10-20 T4.1:** `runStructured` is the only model call and writes an `AiCall` (tokens, `costMicros`) for every attempt, including failures. Quotas are a UTC month except ANALYZE (UTC day). Bonus credits are soonest-expiry first, never-expiring last. `npm run ai:analyze` is the dev check and counts as one daily analysis. Haiku prompts over 100k tokens use the higher price.
 - **2026-10-19 T3.6:** Dev seed replaces the SEED_USER_ID library only (profile header, 3 roles, 2 projects, 1 degree, 15 skills, weak through excellent bullets). Email stays the sign-in address. Jobs and the rest wait for T8.7. An account with no entries and no skills shows “Your library is empty” (Import a resume / Add manually). The seed reads env itself; `tsx` runs it. Pooler transaction flakes (P2028) retry once.
