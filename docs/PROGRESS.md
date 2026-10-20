@@ -30,7 +30,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Phase 4 — Import
 - [x] **T4.1** AI plumbing
-- [ ] **T4.2** Extraction
+- [x] **T4.2** Extraction
 - [ ] **T4.3** Review & commit
 
 ## Phase 5 — Jobs core
@@ -95,6 +95,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-20 T4.2:** `extractResume` reads a PDF, DOCX, or paste and returns a review payload. Nothing is saved until T4.3. A bad file is `VALIDATION` and does not use quota. Bullets over 400 stay and are flagged `long`. `npm run ai:import -- <path>` is the dev check. Older `.doc` files need to be `.docx` first.
 - **2026-10-20 T4.1:** `runStructured` is the only model call and writes an `AiCall` (tokens, `costMicros`) for every attempt, including failures. Quotas are a UTC month except ANALYZE (UTC day). Bonus credits are soonest-expiry first, never-expiring last. `npm run ai:analyze` is the dev check and counts as one daily analysis. Haiku prompts over 100k tokens use the higher price.
 - **2026-10-19 T3.6:** Dev seed replaces the SEED_USER_ID library only (profile header, 3 roles, 2 projects, 1 degree, 15 skills, weak through excellent bullets). Email stays the sign-in address. Jobs and the rest wait for T8.7. An account with no entries and no skills shows “Your library is empty” (Import a resume / Add manually). The seed reads env itself; `tsx` runs it. Pooler transaction flakes (P2028) retry once.
 - **2026-10-19 T3.5:** Bullet strength is deterministic (verb, metric, 8–32 words, no first person, no filler, skill or known tool). Tiers 0–2 Weak through 6 Excellent; meter fills 1–5 segments; fixes name the next tier. Health is five checks at 20% each. AI reading and analysis stays later: import (T4), posting analysis (T5), tailoring (T6), bullet coach (1.1).
