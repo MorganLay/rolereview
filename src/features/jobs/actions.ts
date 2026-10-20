@@ -28,6 +28,7 @@ import {
 import { applyStatusChange } from "./pipeline";
 import type { CreateJobData, JobAnalysis } from "./schemas";
 import {
+  archiveJobsSchema,
   createJobSchema,
   deleteJobSchema,
   isClosedJobStatus,
@@ -369,6 +370,29 @@ export async function setJobArchived(
 
   revalidateJob(parsed.data.jobId);
   return ok({ id: parsed.data.jobId });
+}
+
+/** Archive or restore several owned jobs. Status stays. Missing ids are skipped. */
+export async function archiveJobs(
+  input: unknown,
+): Promise<ActionResult<{ count: number }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = archiveJobsSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const written = await db.job.updateMany({
+    where: { id: { in: parsed.data.jobIds }, userId: user.id },
+    data: { archivedAt: parsed.data.archived ? new Date() : null },
+  });
+  if (written.count === 0) return fail("NOT_FOUND");
+
+  for (const jobId of parsed.data.jobIds) {
+    revalidatePath(`/jobs/${jobId}`);
+  }
+  revalidatePath("/jobs");
+  return ok({ count: written.count });
 }
 
 /** Delete one owned job. Related rows cascade. */

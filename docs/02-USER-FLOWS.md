@@ -16,7 +16,7 @@ Signed in — protected by src/proxy.ts AND requireUser() in the (app) layout
   /library                                   Library editor (+ strength, health)
   /library/import                            Import resume → review → save
   /library/targets [1.1]                    TargetProfiles
-  /jobs                                      Jobs board: board (default) or list (?view=list)
+  /jobs                                      Jobs board: list until T8.1, then board (default) or list (?view=list)
   /jobs/new                                  Paste a posting
   /jobs/[jobId]                            Job detail (tabs)
   /jobs/[jobId]/resumes/[resumeId]           Resume resume workspace
@@ -86,17 +86,20 @@ Client state machine `upload → reading → review`:
 List + editor: name, target role, default emphasis, preferred entries (checklist), preferred skills. Free: 1 target profile; Pro: unlimited. Picking a target profile on the tailor dialog pre-fills emphasis and guides selection.
 
 ### `/jobs` — Jobs board
-Toolbar: view toggle **Board | List**, search (company/title), filters (source, work mode, priority ≥, has deadline), "Show archived" toggle, **New job**.
+Toolbar: view toggle **Board | List**, search (company/title), filters (source, work mode, priority ≥, has deadline), "Show archived" toggle, **New job**. The toolbar is shared with the board. Choices live in the URL (`q`, `source`, `workMode`, `priority`, `deadline=1`, `archived=1`, `sort`, `dir`, `view`).
 
-**Board view (default)**
+**Board view (default once T8.1 ships)**
 - Columns: Saved · Applied · Screening · Interviewing · Offer · Closed (Closed stacks Accepted, Rejected, Withdrawn, No response, each with its own chip).
 - Card: company, title, priority stars, match score badge (best READY tailored resume), next reminder or interview date, deadline (red ≤ 3 days), tailored ✓ icon if a tailored resume was submitted.
 - Drag between columns → `moveJob({ jobId, toStatus, beforeId?, afterId? })` → runs `applyStatusChange` side effects and fractional `boardOrder`. Moving to Closed asks which closed status (+ optional reason). Keyboard alternative: each card's "Move to…" menu (accessible drag).
 - Mobile: one column at a time with a stage picker; "Move to…" menu instead of drag.
+- Until the board is built, Board in the toggle keeps the current filters and says the board comes later. `/jobs` opens the list.
 
-**List view:** sortable table (Company, Title, Status, Priority, Match score, Applied, Last activity, Deadline), inline status select, bulk archive.
+**List view** (`?view=list`, and the page until T8.1): sortable table (Company, Title, Status, Priority, Match score, Applied, Last activity, Deadline). Default sort is Last activity, newest first. Click a column to sort; click again to reverse. Status sort follows Saved through Offer, then the closed statuses. Empty match, priority, applied, and deadline cells show an em dash, and those empty values stay at the bottom of a sort. Match score is the highest score on a READY tailored resume. Inline status uses the pipeline; a closed status asks for an optional reason. Checkboxes archive or unarchive the selection without changing status. A deadline on or before three days from today, in the user’s timezone, is marked Soon; an earlier date is marked Past. Show archived includes archived jobs and marks them Archived.
 
 **Empty:** "No jobs yet. Paste a job posting to accept your first job."
+
+**Filters hide every job:** "No jobs match these filters."
 
 ### `/jobs/new`
 - Posting text (required, 200–30,000 chars), URL (optional), deadline (optional), source (select, optional), priority (stars, optional).

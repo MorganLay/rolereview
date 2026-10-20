@@ -13,6 +13,7 @@ import { db } from "@/lib/db";
 
 import { canRetryAnalysis, displayedAnalysisStatus } from "./analyze";
 import { formatDeadlineDate } from "./dates";
+import type { JobListQuery, JobListRecord } from "./list-params";
 import {
   JobAnalysis,
   type JobAnalysis as JobAnalysisData,
@@ -47,6 +48,82 @@ export type JobPageData = {
   requirements: Requirement[];
   keywords: string[];
 };
+
+export type JobListResult = {
+  jobs: JobListRecord[];
+  total: number;
+  timeZone: string;
+};
+
+/** Jobs for the list, scoped to this user. `total` counts archived jobs too. */
+export async function listJobs(
+  userId: string,
+  query: JobListQuery,
+): Promise<JobListResult> {
+  const [owner, total, rows] = await Promise.all([
+    db.user.findFirst({
+      where: { id: userId },
+      select: { timezone: true },
+    }),
+    db.job.count({ where: { userId } }),
+    db.job.findMany({
+      where: jobListWhere(userId, query),
+      select: {
+        id: true,
+        title: true,
+        company: true,
+        status: true,
+        priority: true,
+        archivedAt: true,
+        appliedAt: true,
+        updatedAt: true,
+        deadline: true,
+        tailoredResumes: {
+          where: { status: "READY", matchScore: { not: null } },
+          orderBy: { matchScore: "desc" },
+          take: 1,
+          select: { matchScore: true },
+        },
+      },
+    }),
+  ]);
+
+  return {
+    timeZone: owner?.timezone ?? "America/Toronto",
+    total,
+    jobs: rows.map((row) => ({
+      id: row.id,
+      company: row.company,
+      title: row.title,
+      status: row.status,
+      priority: row.priority,
+      matchScore: row.tailoredResumes[0]?.matchScore ?? null,
+      appliedAt: row.appliedAt ? row.appliedAt.toISOString() : null,
+      updatedAt: row.updatedAt.toISOString(),
+      deadline: row.deadline ? formatDeadlineDate(row.deadline) : null,
+      archived: row.archivedAt !== null,
+    })),
+  };
+}
+
+function jobListWhere(userId: string, query: JobListQuery) {
+  return {
+    userId,
+    ...(query.showArchived ? {} : { archivedAt: null }),
+    ...(query.source ? { source: query.source } : {}),
+    ...(query.workMode ? { workMode: query.workMode } : {}),
+    ...(query.minPriority !== null ? { priority: { gte: query.minPriority } } : {}),
+    ...(query.hasDeadline ? { deadline: { not: null } } : {}),
+    ...(query.q.length > 0
+      ? {
+          OR: [
+            { company: { contains: query.q, mode: "insensitive" as const } },
+            { title: { contains: query.q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
 
 /** Analyses still available today for this user. */
 export async function analysesRemaining(

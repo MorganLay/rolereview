@@ -37,7 +37,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T5.1** Create + analyse
 - [x] **T5.2** Pipeline engine
 - [x] **T5.3** Job detail — Overview
-- [ ] **T5.4** Jobs board — list view
+- [x] **T5.4** Jobs board — list view
 
 ## Phase 6 — Tailor ⭐
 - [ ] **T6.1** Serialize + snapshot
@@ -95,6 +95,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-20 T5.4:** The jobs list is the page until the board (T8.1). Filters and sort stay in the URL. Default sort is last activity, newest first. Inline status uses the pipeline. Archive selected leaves status alone. Match score is the best READY tailored resume, or a dash. A deadline within 3 days in the user’s timezone is marked Soon.
 - **2026-10-20 T5.3:** Job overview: status goes through `applyStatusChange` (a closed stage asks for an optional reason). Edit details is title, company, location, and URL. The details form saves on blur; changing the deadline moves the open automatic reminder to 3 days before, and clearing it dismisses that reminder. Submitted documents wait for tailored resumes and letters.
 - **2026-10-20 T5.2:** `applyStatusChange` is the only status write. `appliedAt`, `firstResponseAt`, and `closedAt` are set once. The same status again adds no reminder and does not change `appliedAt`. The follow-up is due 7×24 hours after the first move to Applied. `submittedResumeId` is the latest exported READY resume, only on that first move. Closed statuses dismiss open reminders. `planColumnMove` is pure; the drag write waits for T8.1.
 - **2026-10-20 T5.1:** `createJob` saves the posting first, then analyses it. A failed call leaves the job FAILED with Retry and does not use the daily analysis. Title, company, location, work mode, employment, salary, and reference number are filled only while those fields are still empty. A deadline stores a reminder for 3 days before. Checked three public postings: NearSource (hourly contract), CSIS library technician, and CSIS communications analyst.

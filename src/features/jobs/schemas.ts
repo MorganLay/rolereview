@@ -251,6 +251,13 @@ export const setJobArchivedSchema = z.object({
   archived: z.boolean(),
 });
 
+export const ARCHIVE_JOBS_MAX = 200;
+
+export const archiveJobsSchema = z.object({
+  jobIds: z.array(z.uuid()).min(1).max(ARCHIVE_JOBS_MAX),
+  archived: z.boolean(),
+});
+
 export const deleteJobSchema = z.object({
   jobId: z.uuid(),
 });
