@@ -15,6 +15,10 @@ vi.mock("mammoth", () => ({
   default: { extractRawText },
 }));
 
+vi.mock("@/lib/db", () => ({
+  db: {},
+}));
+
 vi.mock("@/features/billing/quota", () => ({
   checkQuota,
 }));

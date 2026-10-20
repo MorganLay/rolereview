@@ -31,7 +31,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 ## Phase 4 — Import
 - [x] **T4.1** AI plumbing
 - [x] **T4.2** Extraction
-- [ ] **T4.3** Review & commit
+- [~] **T4.3** Review & commit
 
 ## Phase 5 — Jobs core
 - [ ] **T5.1** Create + analyse

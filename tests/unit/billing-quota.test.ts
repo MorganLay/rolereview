@@ -17,6 +17,7 @@ import {
   checkQuota,
   decideQuota,
   periodBounds,
+  quotaRemaining,
   selectBonusCredit,
   type BonusCreditCandidate,
 } from "@/features/billing/quota";
@@ -115,6 +116,25 @@ describe("plan limits", () => {
     }
     expect(PLANS.FREE.limits.ANALYZE.period).toBe("day");
     expect(PLANS.FREE.limits.TAILOR.period).toBe("month");
+  });
+});
+
+describe("quotaRemaining", () => {
+  const cases: Array<{
+    name: string;
+    used: number;
+    allowance: number;
+    bonus: number;
+    remaining: number;
+  }> = [
+    { name: "plan uses left, bonus kept in reserve", used: 1, allowance: 2, bonus: 3, remaining: 4 },
+    { name: "allowance used up leaves only bonus", used: 2, allowance: 2, bonus: 3, remaining: 3 },
+    { name: "over allowance with no bonus is zero", used: 5, allowance: 2, bonus: 0, remaining: 0 },
+    { name: "nothing used", used: 0, allowance: 2, bonus: 0, remaining: 2 },
+  ];
+
+  it.each(cases)("$name", ({ used, allowance, bonus, remaining }) => {
+    expect(quotaRemaining({ used, allowance, bonus })).toBe(remaining);
   });
 });
 

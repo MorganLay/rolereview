@@ -56,6 +56,23 @@ export function decideQuota(input: {
   return { allowed: false, useBonus: false };
 }
 
+/** Plan uses still left this period, plus unused bonus credits. */
+export function quotaRemaining(input: {
+  used: number;
+  allowance: number;
+  bonus: number;
+}): number {
+  const planLeft = Math.max(0, input.allowance - input.used);
+  return planLeft + Math.max(0, input.bonus);
+}
+
+export type QuotaSnapshot = {
+  used: number;
+  allowance: number;
+  bonus: number;
+  remaining: number;
+};
+
 /**
  * Soonest expiry first. No expiry (`expiresAt` null) is last.
  * The same expiry uses the oldest `createdAt`. `expiresAt === now` is already expired.
@@ -82,11 +99,11 @@ export function selectBonusCredit<T extends BonusCreditCandidate>(
   return usable[0] ?? null;
 }
 
-export async function checkQuota(
+async function loadQuotaCounts(
   user: { id: string; plan: Plan },
   kind: MeteredKind,
-  now: Date = new Date(),
-): Promise<QuotaDecision> {
+  now: Date,
+): Promise<{ used: number; allowance: number; bonus: number }> {
   const { start, end } = periodBounds(kind, now);
   const used = await db.aiCall.count({
     where: {
@@ -106,9 +123,27 @@ export async function checkQuota(
     },
     _sum: { remaining: true },
   });
-  return decideQuota({
+  return {
     used,
     allowance: PLANS[user.plan].limits[kind].allowance,
     bonus: bonus._sum.remaining ?? 0,
-  });
+  };
+}
+
+export async function checkQuota(
+  user: { id: string; plan: Plan },
+  kind: MeteredKind,
+  now: Date = new Date(),
+): Promise<QuotaDecision> {
+  return decideQuota(await loadQuotaCounts(user, kind, now));
+}
+
+/** Used, allowance, bonus, and how many calls are left. Same counts as `checkQuota`. */
+export async function quotaSnapshot(
+  user: { id: string; plan: Plan },
+  kind: MeteredKind,
+  now: Date = new Date(),
+): Promise<QuotaSnapshot> {
+  const counts = await loadQuotaCounts(user, kind, now);
+  return { ...counts, remaining: quotaRemaining(counts) };
 }

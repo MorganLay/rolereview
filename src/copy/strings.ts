@@ -2,6 +2,17 @@
  * UI copy. Voice: plain, specific, encouraging — docs/10-BRAND.md.
  * Product vocabulary — docs/01-PRODUCT.md.
  */
+
+function countPhrase(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function joinAnd(parts: readonly string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+}
+
 export const strings = {
   brand: {
     name: "RoleRefine",
@@ -448,6 +459,90 @@ export const strings = {
       },
     },
     import: {
+      welcome: "Let’s start by building your experience library.",
+      importsLeft: (count: number) => {
+        if (count === 0) return "No imports left this month.";
+        if (count === 1) return "1 import left this month.";
+        return `${count} imports left this month.`;
+      },
+      uploadTab: "Upload a file",
+      pasteTab: "Paste text",
+      dropTitle: "Drop a PDF or Word document",
+      dropHint: "PDF or DOCX, up to 5 MB.",
+      chooseFile: "Choose a file",
+      fileChosen: (name: string) => `Selected: ${name}`,
+      pasteLabel: "Resume text",
+      pastePlaceholder: "Paste the text of your resume.",
+      read: "Read resume",
+      reading: "Reading your resume",
+      readingHint: "This usually takes 10–30 seconds.",
+      stages: [
+        "Reading your resume.",
+        "Picking out roles, projects, and education.",
+        "Listing skills.",
+      ],
+      warningsTitle: "Check these before you save",
+      longBullet: "Over 400 characters. Shorten it or leave it unchecked.",
+      include: "Include",
+      profileTitle: "Profile",
+      profileSkip: "Uncheck to leave your profile unchanged.",
+      reviewHint:
+        "Uncheck anything you don’t want in your library. An unchecked entry leaves out its bullets.",
+      emailDiffers: (resumeEmail: string) =>
+        `This resume lists ${resumeEmail}. Your library keeps the email you sign in with.`,
+      noEntries: "No entries were found.",
+      entriesTitle: "Entries",
+      noSkills: "No skills were found.",
+      dateHint: "Year, or year and month, such as 2019 or 2019-06.",
+      modeLabel: "How to save",
+      append: "Append",
+      appendHint: "Add the checked items to your library.",
+      replace: "Replace everything",
+      replaceHint:
+        "Delete the roles, projects, and skills already in your library, then save only what you leave checked.",
+      replaceTitle: "Replace your library?",
+      replaceBody:
+        "This deletes the roles, projects, and skills already in your library. Only the checked items are saved. Your sign-in email is not changed.",
+      replaceConfirm: "Replace library",
+      save: "Save to library",
+      saving: "Saving…",
+      startOver: "Start over",
+      retry: "Try again",
+      pasteInstead: "Paste text instead",
+      aiFailed:
+        "We couldn’t read that resume. You weren’t charged. Try again, or paste the text.",
+      quotaReason: "No resume imports left this month",
+      saveFailed: "Couldn’t save to your library. Try again.",
+      conflict: "Your library changed while this was saving. Review it and try again.",
+      saved: (input: {
+        entries: number;
+        bullets: number;
+        skills: number;
+        skippedSkills: number;
+        profile: boolean;
+      }) => {
+        const sentences: string[] = [];
+        if (input.profile) sentences.push("Updated your profile.");
+        const bits: string[] = [];
+        if (input.entries > 0) {
+          bits.push(countPhrase(input.entries, "entry", "entries"));
+        }
+        if (input.bullets > 0) {
+          bits.push(countPhrase(input.bullets, "bullet", "bullets"));
+        }
+        if (input.skills > 0) {
+          bits.push(countPhrase(input.skills, "skill", "skills"));
+        }
+        if (bits.length > 0) sentences.push(`Saved ${joinAnd(bits)}.`);
+        if (input.skippedSkills === 1) {
+          sentences.push("1 skill was already in your library.");
+        } else if (input.skippedSkills > 1) {
+          sentences.push(
+            `${input.skippedSkills} skills were already in your library.`,
+          );
+        }
+        return sentences.length > 0 ? sentences.join(" ") : "Saved to your library.";
+      },
       errors: {
         fileType:
           "That file isn’t a PDF or Word document. Renaming it doesn’t change the type. Try a PDF or paste the text.",
@@ -456,6 +551,7 @@ export const strings = {
         unreadable: "We couldn’t read that file. Try a PDF or paste the text.",
         textShort: "Paste at least 200 characters of the resume.",
         textLong: "That text is over 40,000 characters. Paste a shorter version.",
+        nothingSelected: "Select at least one item to save.",
       },
       warnings: {
         datesUnclear: (title: string) => `Dates for “${title}” were unclear.`,
