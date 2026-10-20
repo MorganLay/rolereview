@@ -13,7 +13,7 @@ export type { Library, LibraryProfile };
 
 /**
  * The signed-in user's library. Profile links are parsed on read.
- * Entries are grouped into sections on the library page. Skills render in a later task.
+ * Entries are grouped into sections on the library page. Skills are grouped by category there.
  */
 export async function getLibrary(userId: string): Promise<Library | null> {
   const user = await db.user.findFirst({

@@ -3,8 +3,11 @@ import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { strings } from "@/copy/strings";
+import { HealthCard } from "@/features/library/components/health-card";
 import { LibrarySections } from "@/features/library/components/library-sections";
 import { ProfileCard } from "@/features/library/components/profile-card";
+import { SkillList } from "@/features/library/components/skill-list";
+import { libraryHealth } from "@/features/library/health";
 import { getLibrary } from "@/features/library/queries";
 import { requireUser } from "@/lib/auth";
 
@@ -32,7 +35,12 @@ export default async function LibraryPage() {
         </Button>
       </div>
       <ProfileCard profile={library.profile} />
-      <LibrarySections entries={library.entries} />
+      <HealthCard health={libraryHealth(library)} />
+      <LibrarySections
+        entries={library.entries}
+        skills={library.skills.map((skill) => skill.name)}
+      />
+      <SkillList skills={library.skills} />
     </div>
   );
 }

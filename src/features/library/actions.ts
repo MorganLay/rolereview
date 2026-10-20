@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { strings } from "@/copy/strings";
 import { requireUserForAction } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fail, ok, type ActionResult } from "@/lib/result";
@@ -10,16 +11,25 @@ import { moveWithinSection } from "./order";
 import {
   createBulletSchema,
   createEntrySchema,
+  createSkillSchema,
   deleteBulletSchema,
   deleteEntrySchema,
+  deleteSkillSchema,
   profileFieldErrors,
   reorderBulletSchema,
   reorderEntrySchema,
+  reorderSkillSchema,
   updateBulletSchema,
   updateEntrySchema,
   updateProfileSchema,
+  updateSkillSchema,
   zodFieldErrors,
 } from "./schemas";
+import {
+  moveSkillWithinCategory,
+  resolveCategory,
+  skillNameKey,
+} from "./skill-state";
 
 /** Save the library profile. Email is the sign-in address and is not written here. */
 export async function updateProfile(
@@ -277,4 +287,170 @@ export async function reorderBullet(
 
   revalidatePath("/library");
   return ok({ moved: true });
+}
+
+async function listSkills(userId: string) {
+  return db.skill.findMany({
+    where: { userId },
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      nameKey: true,
+      category: true,
+      sortOrder: true,
+    },
+  });
+}
+
+function duplicateSkill() {
+  return fail("CONFLICT", { name: [strings.library.skills.duplicate] });
+}
+
+/** Append a skill. A case-insensitive name match is a conflict. */
+export async function createSkill(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = createSkillSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const existing = await listSkills(user.id);
+  const nameKey = skillNameKey(parsed.data.name);
+  if (existing.some((skill) => skill.nameKey === nameKey)) return duplicateSkill();
+
+  const category = resolveCategory(
+    parsed.data.category,
+    existing.map((skill) => skill.category),
+  );
+
+  try {
+    const created = await db.$transaction(async (tx) => {
+      const max = await tx.skill.aggregate({
+        where: { userId: user.id },
+        _max: { sortOrder: true },
+      });
+      return tx.skill.create({
+        data: {
+          userId: user.id,
+          name: parsed.data.name,
+          nameKey,
+          category,
+          sortOrder: (max._max.sortOrder ?? -1) + 1,
+        },
+        select: { id: true },
+      });
+    });
+
+    revalidatePath("/library");
+    return ok({ id: created.id });
+  } catch (error) {
+    if (isUniqueViolation(error)) return duplicateSkill();
+    throw error;
+  }
+}
+
+/** Update one owned skill's name and category. */
+export async function updateSkill(
+  input: unknown,
+): Promise<ActionResult<{ saved: true }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = updateSkillSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const existing = await listSkills(user.id);
+  const current = existing.find((skill) => skill.id === parsed.data.id);
+  if (!current) return fail("NOT_FOUND");
+
+  const nameKey = skillNameKey(parsed.data.name);
+  if (
+    existing.some((skill) => skill.id !== current.id && skill.nameKey === nameKey)
+  ) {
+    return duplicateSkill();
+  }
+
+  const category = resolveCategory(
+    parsed.data.category,
+    existing.map((skill) => skill.category),
+  );
+
+  try {
+    const result = await db.skill.updateMany({
+      where: { id: current.id, userId: user.id },
+      data: { name: parsed.data.name, nameKey, category },
+    });
+    if (result.count === 0) return fail("NOT_FOUND");
+  } catch (error) {
+    if (isUniqueViolation(error)) return duplicateSkill();
+    throw error;
+  }
+
+  revalidatePath("/library");
+  return ok({ saved: true });
+}
+
+/** Delete one owned skill. No confirmation dialog. */
+export async function deleteSkill(
+  input: unknown,
+): Promise<ActionResult<{ deleted: true }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = deleteSkillSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const result = await db.skill.deleteMany({
+    where: { id: parsed.data.id, userId: user.id },
+  });
+  if (result.count === 0) return fail("NOT_FOUND");
+
+  revalidatePath("/library");
+  return ok({ deleted: true });
+}
+
+/** Swap a skill with its neighbour in the same category. */
+export async function reorderSkill(
+  input: unknown,
+): Promise<ActionResult<{ moved: boolean }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = reorderSkillSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const existing = await listSkills(user.id);
+  const current = existing.find((skill) => skill.id === parsed.data.id);
+  if (!current) return fail("NOT_FOUND");
+
+  const next = moveSkillWithinCategory(existing, current.id, parsed.data.direction);
+  if (!next) return ok({ moved: false });
+
+  const orders = new Map(existing.map((skill) => [skill.id, skill.sortOrder]));
+  const changed = next.filter((row) => orders.get(row.id) !== row.sortOrder);
+  if (changed.length === 0) return ok({ moved: false });
+
+  await db.$transaction(async (tx) => {
+    for (const row of changed) {
+      await tx.skill.updateMany({
+        where: { id: row.id, userId: user.id },
+        data: { sortOrder: row.sortOrder },
+      });
+    }
+  });
+
+  revalidatePath("/library");
+  return ok({ moved: true });
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: string }).code === "P2002"
+  );
 }

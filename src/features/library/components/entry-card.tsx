@@ -7,6 +7,7 @@ import { BulletList } from "./bullet-list";
 
 type EntryCardProps = {
   entry: LibraryEntry;
+  skills: readonly string[];
   canMoveUp: boolean;
   canMoveDown: boolean;
   moving: boolean;
@@ -29,6 +30,7 @@ function httpUrl(value: string): string | null {
 
 export function EntryCard({
   entry,
+  skills,
   canMoveUp,
   canMoveDown,
   moving,
@@ -62,7 +64,7 @@ export function EntryCard({
           {url}
         </a>
       ) : null}
-      <BulletList entryId={entry.id} bullets={entry.bullets} />
+      <BulletList entryId={entry.id} bullets={entry.bullets} skills={skills} />
       <div className="mt-3 flex flex-wrap gap-1">
         <Button
           type="button"

@@ -12,15 +12,17 @@ import { BULLET_LIMITS, bulletTextSchema } from "@/features/library/schemas";
 import { createBullet, deleteBullet, reorderBullet, updateBullet } from "../actions";
 import { applyBulletAction } from "../bullet-state";
 import type { LibraryBullet } from "../types";
+import { StrengthMeter } from "./strength-meter";
 
 type BulletListProps = {
   entryId: string;
   bullets: LibraryBullet[];
+  skills: readonly string[];
 };
 
 const copy = strings.library.bullets;
 
-export function BulletList({ entryId, bullets }: BulletListProps) {
+export function BulletList({ entryId, bullets, skills }: BulletListProps) {
   const [optimisticBullets, addOptimistic] = useOptimistic(bullets, applyBulletAction);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -177,6 +179,9 @@ export function BulletList({ entryId, bullets }: BulletListProps) {
                   <span className="sr-only">{copy.edit}: </span>
                   {bullet.text}
                 </button>
+              )}
+              {editingId === bullet.id ? null : (
+                <StrengthMeter text={bullet.text} skills={skills} />
               )}
               {editingId === bullet.id ? null : (
                 <div className="flex flex-wrap gap-1">

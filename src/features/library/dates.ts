@@ -17,16 +17,23 @@ export type ResumeDate = {
 /**
  * Recent years first. Validation still allows through 2099; the picker starts
  * five years ahead so a new entry opens near the dates people use.
+ * Built on first use so importing this module does not read the current time
+ * during a server prerender (the health check imports the parser).
  */
-const pickerEndYear = Math.min(
-  RESUME_YEAR_MAX,
-  new Date().getUTCFullYear() + 5,
-);
+let resumeYearOptions: readonly string[] | null = null;
 
-export const RESUME_YEAR_OPTIONS: readonly string[] = Array.from(
-  { length: pickerEndYear - RESUME_YEAR_MIN + 1 },
-  (_, index) => String(pickerEndYear - index),
-);
+export function getResumeYearOptions(): readonly string[] {
+  if (resumeYearOptions) return resumeYearOptions;
+  const pickerEndYear = Math.min(
+    RESUME_YEAR_MAX,
+    new Date().getUTCFullYear() + 5,
+  );
+  resumeYearOptions = Array.from(
+    { length: pickerEndYear - RESUME_YEAR_MIN + 1 },
+    (_, index) => String(pickerEndYear - index),
+  );
+  return resumeYearOptions;
+}
 
 export function parseResumeDate(value: string): ResumeDate | null {
   const match = DATE_PATTERN.exec(value);

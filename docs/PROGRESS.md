@@ -24,8 +24,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T3.1** Library read + profile
 - [x] **T3.2** Entries CRUD
 - [x] **T3.3** Bullets
-- [ ] **T3.4** Skills
-- [ ] **T3.5** Strength & health
+- [x] **T3.4** Skills
+- [x] **T3.5** Strength & health
 - [ ] **T3.6** Seed & empty states
 
 ## Phase 4 — Import
@@ -95,6 +95,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-19 T3.5:** Bullet strength is deterministic (verb, metric, 8–32 words, no first person, no filler, skill or known tool). Tiers 0–2 Weak through 6 Excellent; meter fills 1–5 segments; fixes name the next tier. Health is five checks at 20% each. AI reading and analysis stays later: import (T4), posting analysis (T5), tailoring (T6), bullet coach (1.1).
+- **2026-10-19 T3.4:** Skills on `/library`: chips grouped by category (no category last). Name max 50, category max 40, blank category stores none. Autocomplete is the user's categories plus Languages, Frameworks, Tools, Cloud, Data, Soft skills; a case-only match keeps the existing spelling. Duplicate names ignoring case return CONFLICT. Delete has no confirm. Move up/down stays inside the category.
 - **2026-10-19 T3.3:** Bullets on `/library`: inline edit (Enter/blur saves, Esc cancels, 400 counter), add, delete with no confirm, move up/down, optimistic rollback. Text trimmed and required, max 400. `tags` stays empty. Strength meters are T3.5.
 - **2026-10-19 T3.2:** Entry sections on `/library`: add, edit, delete, move up/down. Caps title 120, organization 120, location 80, URL 300 http(s). Dates `YYYY` or `YYYY-MM` (1900–2099); current stores no end date. Bullets stay read-only until T3.3. Summary stays 2,000.
 - **2026-10-19 T3.1:** Library profile card + dialog on `/library`. Email is the sign-in address (read-only). Summary cap 2,000 (source text); tailored resume summary stays 800. Links must be http(s), max 5. Settings profile still a placeholder.

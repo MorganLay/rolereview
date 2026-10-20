@@ -5,9 +5,9 @@ import {
   composeResumeDate,
   formatResumeDate,
   formatResumeDateRange,
+  getResumeYearOptions,
   parseResumeDate,
   RESUME_YEAR_MIN,
-  RESUME_YEAR_OPTIONS,
   resumeDatesInOrder,
 } from "@/features/library/dates";
 import { moveWithinSection } from "@/features/library/order";
@@ -54,10 +54,11 @@ describe("parseResumeDate", () => {
   });
 });
 
-describe("RESUME_YEAR_OPTIONS", () => {
+describe("getResumeYearOptions", () => {
   it("starts five years ahead and ends at 1900", () => {
-    expect(RESUME_YEAR_OPTIONS[0]).toBe(String(new Date().getUTCFullYear() + 5));
-    expect(RESUME_YEAR_OPTIONS.at(-1)).toBe(String(RESUME_YEAR_MIN));
+    const years = getResumeYearOptions();
+    expect(years[0]).toBe(String(new Date().getUTCFullYear() + 5));
+    expect(years.at(-1)).toBe(String(RESUME_YEAR_MIN));
   });
 });
 

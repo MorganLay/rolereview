@@ -15,11 +15,12 @@ import { EntryDialog, type EntryEditor } from "./entry-dialog";
 
 type LibrarySectionsProps = {
   entries: LibraryEntry[];
+  skills: readonly string[];
 };
 
 const copy = strings.library.entries;
 
-export function LibrarySections({ entries }: LibrarySectionsProps) {
+export function LibrarySections({ entries, skills }: LibrarySectionsProps) {
   const [editor, setEditor] = useState<EntryEditor | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LibraryEntry | null>(null);
   const [movingId, setMovingId] = useState<string | null>(null);
@@ -60,6 +61,7 @@ export function LibrarySections({ entries }: LibrarySectionsProps) {
                   <EntryCard
                     key={entry.id}
                     entry={entry}
+                    skills={skills}
                     canMoveUp={index > 0}
                     canMoveDown={index < section.length - 1}
                     moving={movingId !== null}

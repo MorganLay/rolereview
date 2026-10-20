@@ -230,5 +230,46 @@ export const reorderBulletSchema = z.object({
   direction: z.enum(["up", "down"]),
 });
 
+/** Library skill name and category. Name cap matches import (drop over 50). */
+export const SKILL_LIMITS = {
+  name: 50,
+  category: 40,
+} as const;
+
+const skillErrors = strings.library.skills.errors;
+
+export const skillNameSchema = z
+  .string()
+  .trim()
+  .min(1, { error: skillErrors.name })
+  .max(SKILL_LIMITS.name, { error: skillErrors.nameLength });
+
+/** Blank becomes null. A case-insensitive match to an existing category is applied later. */
+export const skillCategorySchema = z
+  .string()
+  .trim()
+  .max(SKILL_LIMITS.category, { error: skillErrors.categoryLength })
+  .transform((value) => (value.length === 0 ? null : value));
+
+export const createSkillSchema = z.object({
+  name: skillNameSchema,
+  category: skillCategorySchema,
+});
+
+export const updateSkillSchema = z.object({
+  id: z.uuid(),
+  name: skillNameSchema,
+  category: skillCategorySchema,
+});
+
+export const deleteSkillSchema = z.object({
+  id: z.uuid(),
+});
+
+export const reorderSkillSchema = z.object({
+  id: z.uuid(),
+  direction: z.enum(["up", "down"]),
+});
+
 export type CreateEntryInput = z.input<typeof createEntrySchema>;
 export type UpdateEntryInput = z.input<typeof updateEntrySchema>;

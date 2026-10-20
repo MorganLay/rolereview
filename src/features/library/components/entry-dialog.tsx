@@ -19,7 +19,7 @@ import { strings } from "@/copy/strings";
 import {
   composeResumeDate,
   formatMonth,
-  RESUME_YEAR_OPTIONS,
+  getResumeYearOptions,
   splitResumeDate,
 } from "@/features/library/dates";
 import { ENTRY_LIMITS } from "@/features/library/schemas";
@@ -264,10 +264,9 @@ function DateFields({
   onYear: (value: string) => void;
   onMonth: (value: string) => void;
 }) {
+  const options = getResumeYearOptions();
   const years =
-    year.length > 0 && !RESUME_YEAR_OPTIONS.includes(year)
-      ? [year, ...RESUME_YEAR_OPTIONS]
-      : RESUME_YEAR_OPTIONS;
+    year.length > 0 && !options.includes(year) ? [year, ...options] : options;
 
   return (
     <fieldset className="grid gap-2">
