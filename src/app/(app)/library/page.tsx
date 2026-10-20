@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { strings } from "@/copy/strings";
 import { HealthCard } from "@/features/library/components/health-card";
+import { LibraryEmpty } from "@/features/library/components/library-empty";
 import { LibrarySections } from "@/features/library/components/library-sections";
 import { ProfileCard } from "@/features/library/components/profile-card";
 import { SkillList } from "@/features/library/components/skill-list";
@@ -18,6 +19,9 @@ export default async function LibraryPage() {
   const user = await requireUser();
   const library = await getLibrary(user.id);
   if (!library) notFound();
+
+  const skillNames = library.skills.map((skill) => skill.name);
+  const empty = library.entries.length === 0 && library.skills.length === 0;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
@@ -36,11 +40,18 @@ export default async function LibraryPage() {
       </div>
       <ProfileCard profile={library.profile} />
       <HealthCard health={libraryHealth(library)} />
-      <LibrarySections
-        entries={library.entries}
-        skills={library.skills.map((skill) => skill.name)}
-      />
-      <SkillList skills={library.skills} />
+      {empty ? (
+        <LibraryEmpty
+          entries={library.entries}
+          skills={library.skills}
+          skillNames={skillNames}
+        />
+      ) : (
+        <>
+          <LibrarySections entries={library.entries} skills={skillNames} />
+          <SkillList skills={library.skills} />
+        </>
+      )}
     </div>
   );
 }

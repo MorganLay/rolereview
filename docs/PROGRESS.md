@@ -26,7 +26,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T3.3** Bullets
 - [x] **T3.4** Skills
 - [x] **T3.5** Strength & health
-- [ ] **T3.6** Seed & empty states
+- [x] **T3.6** Seed & empty states
 
 ## Phase 4 — Import
 - [ ] **T4.1** AI plumbing
@@ -95,6 +95,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-19 T3.6:** Dev seed replaces the SEED_USER_ID library only (profile header, 3 roles, 2 projects, 1 degree, 15 skills, weak through excellent bullets). Email stays the sign-in address. Jobs and the rest wait for T8.7. An account with no entries and no skills shows “Your library is empty” (Import a resume / Add manually). The seed reads env itself; `tsx` runs it. Pooler transaction flakes (P2028) retry once.
 - **2026-10-19 T3.5:** Bullet strength is deterministic (verb, metric, 8–32 words, no first person, no filler, skill or known tool). Tiers 0–2 Weak through 6 Excellent; meter fills 1–5 segments; fixes name the next tier. Health is five checks at 20% each. AI reading and analysis stays later: import (T4), posting analysis (T5), tailoring (T6), bullet coach (1.1).
 - **2026-10-19 T3.4:** Skills on `/library`: chips grouped by category (no category last). Name max 50, category max 40, blank category stores none. Autocomplete is the user's categories plus Languages, Frameworks, Tools, Cloud, Data, Soft skills; a case-only match keeps the existing spelling. Duplicate names ignoring case return CONFLICT. Delete has no confirm. Move up/down stays inside the category.
 - **2026-10-19 T3.3:** Bullets on `/library`: inline edit (Enter/blur saves, Esc cancels, 400 counter), add, delete with no confirm, move up/down, optimistic rollback. Text trimmed and required, max 400. `tags` stays empty. Strength meters are T3.5.

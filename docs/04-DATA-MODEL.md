@@ -342,4 +342,6 @@ Hide a breakdown until it has at least 5 jobs per group, and label small samples
 
 ## Seed data (`prisma/seed.ts`, dev only)
 
-Sign in once locally, put your Supabase user id in `SEED_USER_ID`, then the seed creates for that user: a realistic fake library (3 roles, 2 projects, 1 degree, 15 skills, a mix of weak and strong bullets), 8 jobs across all statuses with timeline events, 3 interviews, 4 contacts, 5 reminders (2 due today), 1 offer, and 2 READY tailored resumeed resumes built from a stored fixture (no AI calls). This lets you build every screen, including the Insights, without spending money.
+Sign in once locally, put your Supabase user id in `SEED_USER_ID`, then the seed creates for that user: a realistic fake library (3 roles, 2 projects, 1 degree, 15 skills, a mix of weak and strong bullets), 8 jobs across all statuses with timeline events, 3 interviews, 4 contacts, 5 reminders (2 due today), 1 offer, and 2 READY tailored resumes built from a stored fixture (no AI calls). This lets you build every screen, including the Insights, without spending money.
+
+T3.6 seeds the library only: profile header, entries, bullets, and skills. Re-running replaces that user's entries, bullets, skills, and profile header fields. Email stays the sign-in address. Jobs and the rest are added in later tasks, starting with the dashboard seed in T8.7.

@@ -262,6 +262,11 @@ export const strings = {
   },
   library: {
     importResume: "Import resume",
+    empty: {
+      title: "Your library is empty",
+      body: "Import a resume, or add roles, projects, and skills yourself.",
+      addManually: "Add manually",
+    },
     profile: {
       edit: "Edit profile",
       title: "Edit profile",
