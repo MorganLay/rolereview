@@ -3,6 +3,8 @@ import { z } from "zod";
 import { strings } from "@/copy/strings";
 import type { FieldErrors } from "@/lib/result";
 
+import { parseResumeDate, resumeDatesInOrder } from "./dates";
+
 const errors = strings.library.profile.errors;
 
 /** Caps for the library profile dialog. See docs/04-DATA-MODEL.md. */
@@ -68,7 +70,7 @@ export type UpdateProfileInput = z.input<typeof updateProfileSchema>;
 export type UpdateProfileData = z.output<typeof updateProfileSchema>;
 
 /** Map a Zod error onto ActionResult field keys (`links.0.url`, and so on). */
-export function profileFieldErrors(error: z.ZodError): FieldErrors {
+export function zodFieldErrors(error: z.ZodError): FieldErrors {
   const fields: FieldErrors = {};
   for (const issue of error.issues) {
     const key =
@@ -82,3 +84,115 @@ export function profileFieldErrors(error: z.ZodError): FieldErrors {
   }
   return fields;
 }
+
+export function profileFieldErrors(error: z.ZodError): FieldErrors {
+  return zodFieldErrors(error);
+}
+
+/** Screen order and the `Entry.kind` enum. */
+export const ENTRY_KINDS = [
+  "EXPERIENCE",
+  "PROJECT",
+  "EDUCATION",
+  "CERTIFICATION",
+  "VOLUNTEER",
+  "OTHER",
+] as const;
+
+export const EntryKindEnum = z.enum(ENTRY_KINDS);
+
+/** Caps for the library entry dialog. See docs/04-DATA-MODEL.md. */
+export const ENTRY_LIMITS = {
+  title: 120,
+  organization: 120,
+  location: 80,
+  url: 300,
+} as const;
+
+const entryErrors = strings.library.entries.errors;
+
+function resumeDateField() {
+  return z
+    .string()
+    .trim()
+    .refine((value) => value.length === 0 || parseResumeDate(value) !== null, {
+      error: entryErrors.date,
+    })
+    .transform((value) => (value.length === 0 ? null : value));
+}
+
+function optionalUrl() {
+  return z
+    .string()
+    .trim()
+    .max(ENTRY_LIMITS.url, { error: entryErrors.urlLength })
+    .transform((value) => (value.length === 0 ? null : value))
+    .refine((value) => value === null || isHttpUrl(value), {
+      error: entryErrors.url,
+    });
+}
+
+const entryFormFields = {
+  title: z
+    .string()
+    .trim()
+    .min(1, { error: entryErrors.title })
+    .max(ENTRY_LIMITS.title, { error: entryErrors.titleLength }),
+  organization: optionalText(
+    ENTRY_LIMITS.organization,
+    entryErrors.organizationLength,
+  ),
+  location: optionalText(ENTRY_LIMITS.location, entryErrors.locationLength),
+  url: optionalUrl(),
+  startDate: resumeDateField(),
+  endDate: resumeDateField(),
+  isCurrent: z.boolean(),
+};
+
+type DatedEntry = {
+  startDate: string | null;
+  endDate: string | null;
+  isCurrent: boolean;
+};
+
+function finishEntryForm<T extends DatedEntry>(schema: z.ZodType<T>) {
+  return schema
+    .refine(
+      (data) =>
+        resumeDatesInOrder(
+          data.startDate,
+          data.isCurrent ? null : data.endDate,
+        ),
+      { error: entryErrors.dateOrder, path: ["endDate"] },
+    )
+    .transform((data) => ({
+      ...data,
+      endDate: data.isCurrent ? null : data.endDate,
+    }));
+}
+
+export const createEntrySchema = finishEntryForm(
+  z.object({
+    kind: EntryKindEnum,
+    ...entryFormFields,
+  }),
+);
+
+export const updateEntrySchema = finishEntryForm(
+  z.object({
+    id: z.uuid(),
+    ...entryFormFields,
+  }),
+);
+
+export const deleteEntrySchema = z.object({
+  id: z.uuid(),
+});
+
+export const reorderEntrySchema = z.object({
+  id: z.uuid(),
+  direction: z.enum(["up", "down"]),
+});
+
+export type CreateEntryInput = z.input<typeof createEntrySchema>;
+export type UpdateEntryInput = z.input<typeof updateEntrySchema>;

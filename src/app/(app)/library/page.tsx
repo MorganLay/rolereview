@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { strings } from "@/copy/strings";
+import { LibrarySections } from "@/features/library/components/library-sections";
 import { ProfileCard } from "@/features/library/components/profile-card";
 import { getLibrary } from "@/features/library/queries";
 import { requireUser } from "@/lib/auth";
@@ -31,6 +32,7 @@ export default async function LibraryPage() {
         </Button>
       </div>
       <ProfileCard profile={library.profile} />
+      <LibrarySections entries={library.entries} />
     </div>
   );
 }

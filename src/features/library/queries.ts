@@ -3,25 +3,17 @@ import "server-only";
 import type { EntryKind } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 
-import { ProfileLinks } from "./schemas";
+import { ENTRY_KINDS, ProfileLinks } from "./schemas";
 import type { Library, LibraryProfile } from "./types";
 
 /** Screen order for library sections. Sort order applies inside each kind. */
-const ENTRY_KIND_ORDER: readonly EntryKind[] = [
-  "EXPERIENCE",
-  "PROJECT",
-  "EDUCATION",
-  "CERTIFICATION",
-  "VOLUNTEER",
-  "OTHER",
-];
+const ENTRY_KIND_ORDER: readonly EntryKind[] = ENTRY_KINDS;
 
 export type { Library, LibraryProfile };
 
 /**
  * The signed-in user's library. Profile links are parsed on read.
- * Entries and skills are included so later tasks can render them;
- * T3.1 only shows the profile.
+ * Entries are grouped into sections on the library page. Skills render in a later task.
  */
 export async function getLibrary(userId: string): Promise<Library | null> {
   const user = await db.user.findFirst({
@@ -67,7 +59,7 @@ export async function getLibrary(userId: string): Promise<Library | null> {
     const kindDelta =
       ENTRY_KIND_ORDER.indexOf(a.kind) - ENTRY_KIND_ORDER.indexOf(b.kind);
     if (kindDelta !== 0) return kindDelta;
-    return a.sortOrder - b.sortOrder;
+    return a.sortOrder - b.sortOrder || a.id.localeCompare(b.id);
   });
 
   return {

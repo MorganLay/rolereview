@@ -122,6 +122,21 @@ Profile text on `User` (the library profile dialog; email is the sign-in address
 
 `summary` is the default professional summary — source text, not the line that prints on a tailored resume. `ResumeContent.summary` stays capped at 800 characters; tailoring condenses this field onto the page.
 
+### `Entry` → `features/library/schemas.ts`
+
+One shape for every section (`EntryKindEnum`). Caps are validation only; the columns stay plain text.
+
+| Field | Max | Blank saves as |
+|---|---|---|
+| `title` | 120 | required |
+| `organization` | 120 | null |
+| `location` | 80 | null |
+| `url` | 300 | null; `http` or `https` only |
+| `startDate`, `endDate` | — | null, `YYYY`, or `YYYY-MM` (years 1900–2099) |
+| `isCurrent` | — | when true, `endDate` is stored null |
+
+A missing month does not invent one: `2019` and `2019-06` in the same year are a valid range. If both dates include a month, the end must be on or after the start. The column is a string, so a later day (`YYYY-MM-DD`) is a validation change, not a migration. New entries append to the end of their section (`sortOrder`); move up/down rewrites that section’s order.
+
 ### `Job.analysis` → `features/jobs/schemas.ts`
 
 ```ts

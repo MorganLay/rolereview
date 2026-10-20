@@ -22,7 +22,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Phase 3 — Library
 - [x] **T3.1** Library read + profile
-- [ ] **T3.2** Entries CRUD
+- [x] **T3.2** Entries CRUD
 - [ ] **T3.3** Bullets
 - [ ] **T3.4** Skills
 - [ ] **T3.5** Strength & health
@@ -95,6 +95,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-19 T3.2:** Entry sections on `/library`: add, edit, delete, move up/down. Caps title 120, organization 120, location 80, URL 300 http(s). Dates `YYYY` or `YYYY-MM` (1900–2099); current stores no end date. Bullets stay read-only until T3.3. Summary stays 2,000.
 - **2026-10-19 T3.1:** Library profile card + dialog on `/library`. Email is the sign-in address (read-only). Summary cap 2,000 (source text); tailored resume summary stays 800. Links must be http(s), max 5. Settings profile still a placeholder.
 - **2026-10-18 T2.2:** Waitlist on `/` + `/waitlist`; Turnstile + CASL consent → `Lead` upsert; PostHog cookieless (`lead_captured` server-side, no email); demo GIF placeholder; share `?ref=waitlist-<shortid>`. Dup emails upsert without error. Prod: www.rolerefine.ca. Add rolerefine.ca to Turnstile allowed hostnames if captcha fails in prod.
 - **2026-10-17 T2.1:** Wordmark SVG + React component; pine "R" favicon/apple-icon; shared `brandOgImage` (`next/og`) + opengraph/twitter images; marketing header/footer + `(marketing)` shell. Footer/newsletter/socials omitted until later. **Q-1 clearance (agent web check, not legal advice):** no live DNS for rolerefine.com/.ca/getrolerefine.com (likely free to register — buy them); no obvious CIPO/USPTO hit for exact "RoleRefine"; nearby: Emergent AI **RoleRefiner** (JD tool), a LinkedIn hobby "RoleRefine" JD rewriter, UK **ROLEFINE LIMITED** (unrelated). Social handles deferred until site complete. Official CIPO/USPTO knockout + domain purchase still on you.
