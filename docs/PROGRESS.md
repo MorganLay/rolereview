@@ -29,7 +29,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T3.6** Seed & empty states
 
 ## Phase 4 — Import
-- [ ] **T4.1** AI plumbing
+- [~] **T4.1** AI plumbing
 - [ ] **T4.2** Extraction
 - [ ] **T4.3** Review & commit
 

@@ -284,6 +284,8 @@ on success:
   else → decrement the oldest-expiring BonusCredit with remaining > 0 (same transaction), AiCall(usedBonusCredit = true)
 ```
 
+Soonest `expiresAt` first. `expiresAt` null (no expiry) is last. The same expiry uses the oldest `createdAt`. `expiresAt` equal to now is already expired. If that credit is gone when the row is written, the successful `AiCall` is still stored with `usedBonusCredit` true so it does not also count against the plan allowance.
+
 ## Analytics definitions (Insights; computed by queries, nothing stored)
 
 | Metric | Definition |
