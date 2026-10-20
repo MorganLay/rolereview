@@ -23,7 +23,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 ## Phase 3 — Library
 - [x] **T3.1** Library read + profile
 - [x] **T3.2** Entries CRUD
-- [ ] **T3.3** Bullets
+- [x] **T3.3** Bullets
 - [ ] **T3.4** Skills
 - [ ] **T3.5** Strength & health
 - [ ] **T3.6** Seed & empty states
@@ -95,6 +95,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-19 T3.3:** Bullets on `/library`: inline edit (Enter/blur saves, Esc cancels, 400 counter), add, delete with no confirm, move up/down, optimistic rollback. Text trimmed and required, max 400. `tags` stays empty. Strength meters are T3.5.
 - **2026-10-19 T3.2:** Entry sections on `/library`: add, edit, delete, move up/down. Caps title 120, organization 120, location 80, URL 300 http(s). Dates `YYYY` or `YYYY-MM` (1900–2099); current stores no end date. Bullets stay read-only until T3.3. Summary stays 2,000.
 - **2026-10-19 T3.1:** Library profile card + dialog on `/library`. Email is the sign-in address (read-only). Summary cap 2,000 (source text); tailored resume summary stays 800. Links must be http(s), max 5. Settings profile still a placeholder.
 - **2026-10-18 T2.2:** Waitlist on `/` + `/waitlist`; Turnstile + CASL consent → `Lead` upsert; PostHog cookieless (`lead_captured` server-side, no email); demo GIF placeholder; share `?ref=waitlist-<shortid>`. Dup emails upsert without error. Prod: www.rolerefine.ca. Add rolerefine.ca to Turnstile allowed hostnames if captcha fails in prod.

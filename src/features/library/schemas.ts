@@ -194,5 +194,41 @@ export const reorderEntrySchema = z.object({
   direction: z.enum(["up", "down"]),
 });
 
+/** Library bullet text. See docs/04-DATA-MODEL.md. */
+export const BULLET_LIMITS = {
+  text: 400,
+} as const;
+
+const bulletErrors = strings.library.bullets.errors;
+
+/**
+ * Trimmed, required, and capped. Quotes and angle brackets stay as text.
+ * Unknown keys (including a client-supplied userId) are stripped.
+ */
+export const bulletTextSchema = z
+  .string()
+  .trim()
+  .min(1, { error: bulletErrors.text })
+  .max(BULLET_LIMITS.text, { error: bulletErrors.textLength });
+
+export const createBulletSchema = z.object({
+  entryId: z.uuid(),
+  text: bulletTextSchema,
+});
+
+export const updateBulletSchema = z.object({
+  id: z.uuid(),
+  text: bulletTextSchema,
+});
+
+export const deleteBulletSchema = z.object({
+  id: z.uuid(),
+});
+
+export const reorderBulletSchema = z.object({
+  id: z.uuid(),
+  direction: z.enum(["up", "down"]),
+});
+
 export type CreateEntryInput = z.input<typeof createEntrySchema>;
 export type UpdateEntryInput = z.input<typeof updateEntrySchema>;

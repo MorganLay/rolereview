@@ -3,6 +3,7 @@ import { strings } from "@/copy/strings";
 import { formatResumeDateRange } from "@/features/library/dates";
 
 import type { LibraryEntry } from "../types";
+import { BulletList } from "./bullet-list";
 
 type EntryCardProps = {
   entry: LibraryEntry;
@@ -61,15 +62,7 @@ export function EntryCard({
           {url}
         </a>
       ) : null}
-      {entry.bullets.length > 0 ? (
-        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-ink">
-          {entry.bullets.map((bullet) => (
-            <li key={bullet.id} className="whitespace-pre-wrap">
-              {bullet.text}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <BulletList entryId={entry.id} bullets={entry.bullets} />
       <div className="mt-3 flex flex-wrap gap-1">
         <Button
           type="button"

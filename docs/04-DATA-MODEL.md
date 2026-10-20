@@ -137,6 +137,15 @@ One shape for every section (`EntryKindEnum`). Caps are validation only; the col
 
 A missing month does not invent one: `2019` and `2019-06` in the same year are a valid range. If both dates include a month, the end must be on or after the start. The column is a string, so a later day (`YYYY-MM-DD`) is a validation change, not a migration. New entries append to the end of their section (`sortOrder`); move up/down rewrites that section’s order.
 
+### `Bullet` → `features/library/schemas.ts`
+
+| Field | Max | Blank saves as |
+|---|---|---|
+| `text` | 400 | required; trimmed. Empty or whitespace is rejected |
+| `tags` | — | not edited on the library page; stays `[]` |
+
+New bullets append to the entry (`sortOrder`). Move up/down rewrites that entry’s order. Delete does not ask for confirmation. The text is stored as written: quotes, angle brackets, and SQL-shaped phrases stay in the string. Zod checks the shape before the write, and Prisma sends the value as a parameter. React escapes it when the page renders.
+
 ### `Job.analysis` → `features/jobs/schemas.ts`
 
 ```ts
