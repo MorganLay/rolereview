@@ -116,6 +116,12 @@ export const ResumeContent = z.object({
   skills: z.array(ResumeSkillGroup),
 });
 
+export const saveResumeContentSchema = z.object({
+  jobId: z.uuid(),
+  resumeId: z.uuid(),
+  content: ResumeContent,
+});
+
 export const RequirementVerdict = z.object({
   requirementId: z.string(),
   verdict: Verdict,

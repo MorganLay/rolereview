@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { strings } from "@/copy/strings";
 import { checkQuota } from "@/features/billing/quota";
 import { getLibrary } from "@/features/library/queries";
-import { zodFieldErrors } from "@/features/library/schemas";
+import { LibrarySnapshot, zodFieldErrors } from "@/features/library/schemas";
 import { serializeLibrary } from "@/features/library/serialize";
 import type { Library } from "@/features/library/types";
 import { JobAnalysis } from "@/features/jobs/schemas";
@@ -17,11 +17,15 @@ import { db } from "@/lib/db";
 import { fail, ok, type ActionResult } from "@/lib/result";
 
 import { assembleResumeContent } from "./assemble";
+import { applyResumeEdit } from "./content";
 import { TAILOR_STALE_MS } from "./status";
 import { scoreMatch } from "./score";
 import {
+  ResumeContent,
   TailorOptions,
+  ValidatedTailorOutput,
   rateResumeSchema,
+  saveResumeContentSchema,
   tailorResumeSchema,
 } from "./schemas";
 import { validateTailorOutput } from "./validate";
@@ -189,6 +193,77 @@ export async function rateTailoredResume(
   return ok({ rating });
 }
 
+export type SaveResumeContentResult = {
+  content: ResumeContent;
+  savedAt: string;
+};
+
+/** Autosave the workspace. Facts stay on the snapshot. */
+export async function saveResumeContent(
+  input: unknown,
+): Promise<ActionResult<SaveResumeContentResult>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = saveResumeContentSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const existing = await db.tailoredResume.findFirst({
+    where: {
+      id: parsed.data.resumeId,
+      jobId: parsed.data.jobId,
+      userId: user.id,
+      status: "READY",
+    },
+    select: { id: true, content: true, librarySnapshot: true, aiOutput: true },
+  });
+  if (!existing) return fail("NOT_FOUND");
+
+  const stored = ResumeContent.safeParse(existing.content);
+  const snapshot = LibrarySnapshot.safeParse(existing.librarySnapshot);
+  if (!stored.success || !snapshot.success) return fail("NOT_FOUND");
+
+  const aiParsed = ValidatedTailorOutput.safeParse(existing.aiOutput);
+  const edited = applyResumeEdit({
+    stored: stored.data,
+    incoming: parsed.data.content,
+    snapshot: snapshot.data,
+    aiOutput: aiParsed.success ? aiParsed.data : null,
+  });
+  if (!edited.ok) {
+    console.info(
+      JSON.stringify({
+        event: "resume.save.rejected",
+        userId: user.id,
+        resumeId: existing.id,
+        issue: edited.issue,
+      }),
+    );
+    return fail("VALIDATION");
+  }
+
+  const updated = await db.tailoredResume.updateMany({
+    where: {
+      id: existing.id,
+      jobId: parsed.data.jobId,
+      userId: user.id,
+      status: "READY",
+    },
+    data: { content: toJson(edited.content) },
+  });
+  if (updated.count === 0) return fail("NOT_FOUND");
+
+  const saved = await db.tailoredResume.findFirst({
+    where: { id: existing.id, userId: user.id },
+    select: { updatedAt: true },
+  });
+  revalidateResume(parsed.data.jobId, existing.id);
+  return ok({
+    content: edited.content,
+    savedAt: saved?.updatedAt.toISOString() ?? new Date().toISOString(),
+  });
+}
+
 function libraryHasMaterial(library: Library): boolean {
   return library.entries.length > 0 || library.skills.length > 0;
 }
@@ -275,6 +350,11 @@ function logGuard(
 function revalidateJob(jobId: string): void {
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath("/jobs");
+}
+
+function revalidateResume(jobId: string, resumeId: string): void {
+  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(`/jobs/${jobId}/resumes/${resumeId}`);
 }
 
 function toJson(value: unknown): Prisma.InputJsonValue {

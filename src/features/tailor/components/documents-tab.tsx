@@ -218,7 +218,18 @@ function VersionCard({
   return (
     <article className="flex flex-col gap-3 rounded-lg border border-line p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-medium text-ink">{copy.version(version.version)}</h3>
+        <h3 className="text-sm font-medium text-ink">
+          {version.status === "FAILED" ? (
+            copy.version(version.version)
+          ) : (
+            <Link
+              href={`/jobs/${jobId}/resumes/${version.id}`}
+              className="rounded-sm underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            >
+              {copy.version(version.version)}
+            </Link>
+          )}
+        </h3>
         {version.submitted ? (
           <span className="rounded-full bg-pine-50 px-2 py-0.5 text-xs text-pine">
             {copy.submitted}
@@ -237,6 +248,9 @@ function VersionCard({
           </p>
           <p className="text-sm text-slate">{template}</p>
           <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/jobs/${jobId}/resumes/${version.id}`}>{copy.open}</Link>
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -262,9 +276,6 @@ function VersionCard({
             >
               <ThumbsDown aria-hidden />
               {copy.notHelpful}
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/jobs/${jobId}/resumes/${version.id}`}>{copy.open}</Link>
             </Button>
           </div>
         </>
