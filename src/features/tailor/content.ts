@@ -4,12 +4,14 @@
  * docs/02-USER-FLOWS.md → Resume workspace. docs/04-DATA-MODEL.md → ResumeContent.
  */
 
+import type { Requirement } from "@/features/jobs/schemas";
 import { ENTRY_KINDS, type LibrarySnapshot } from "@/features/library/schemas";
 
 import {
   RESUME_LIMITS,
   type ContentBullet,
   type ContentEntry,
+  type MatchReport,
   type ResumeContent,
   type ValidatedTailorOutput,
 } from "./schemas";
@@ -26,6 +28,14 @@ export type ResumeEditResult =
   | { ok: true; content: ResumeContent }
   | { ok: false; issue: ResumeEditIssue };
 
+/** A current library entry the quick-add dialog can attach a bullet to. */
+export type LibraryEntryOption = {
+  id: string;
+  title: string;
+  organization: string | null;
+  kind: LibrarySnapshot["entries"][number]["kind"];
+};
+
 export type ResumeWorkspaceData = {
   jobId: string;
   jobTitle: string;
@@ -36,6 +46,11 @@ export type ResumeWorkspaceData = {
   timeZone: string;
   content: ResumeContent;
   snapshot: LibrarySnapshot;
+  /** Stored library match. Editing the resume does not change it. */
+  match: MatchReport;
+  requirements: Requirement[];
+  keywords: string[];
+  libraryEntries: LibraryEntryOption[];
 };
 
 type SnapshotEntry = LibrarySnapshot["entries"][number];

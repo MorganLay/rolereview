@@ -44,7 +44,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T6.2** Guard, assemble, score, keywords, plainText
 - [x] **T6.3** Tailor action + Documents tab
 - [x] **T6.4** Workspace editor
-- [ ] **T6.5** Match panel
+- [x] **T6.5** Match panel
 - [ ] **T6.6** Evals harness
 
 ## Phase 7 — Export
@@ -95,6 +95,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-21 T6.5:** The match score stays the library score from tailoring. Keyword coverage updates as you edit. Add to library is only on a missing requirement, the bullet starts empty, and Tailor again opens Documents. The mobile Export tab waits for T7.1.
 - **2026-10-20 T6.4:** The workspace autosaves. Titles, employers, and dates stay on the snapshot. On Documents, Open is the left action and the version title opens the resume. PDF download waits for T7.1.
 - **2026-10-20 T6.3:** `tailorResume` saves the next version as PENDING, then READY with a `RESUME_TAILORED` event. A second tailor while one is under 5 minutes old is CONFLICT. A failed model call is FAILED and does not use quota. Documents lists the versions. Open still goes to the workspace placeholder. Cover letters stay on T9. A live model call was not run: the dev database had no users.
 - **2026-10-20 T6.2:** `validateTailorOutput` runs G1–G11. `reverts` counts G4 and G5 only. `$50` and `50` differ; `1,000` matches `1000`. A posting with no requirements scores null. Plain text is included content only, in section order, with no RoleRefine branding.

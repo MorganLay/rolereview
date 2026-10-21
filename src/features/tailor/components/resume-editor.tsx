@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
@@ -29,12 +30,20 @@ import {
   type ResumeWorkspaceData,
 } from "@/features/tailor/content";
 import {
+  bulletElementId,
+  entryElementId,
+  skillElementId,
+  SKILLS_SECTION_ID,
+} from "@/features/tailor/evidence";
+import {
   RESUME_LIMITS,
   type ContentBullet,
   type ContentEntry,
   type ResumeContent,
 } from "@/features/tailor/schemas";
 import { cn } from "@/lib/utils";
+
+import { MatchPanel } from "./match-panel";
 
 const SAVE_DELAY_MS = 1500;
 
@@ -67,6 +76,9 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   const skipBlur = useRef(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const summaryId = useId();
+  const [tab, setTab] = useState<"resume" | "match">("resume");
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const pendingScroll = useRef<string | null>(null);
 
   const snapshotByRef = new Map(
     workspace.snapshot.entries.map((entry) => [entry.ref, entry]),
@@ -152,6 +164,39 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
     if (!editingId) return;
     editorRef.current?.focus();
   }, [editingId]);
+
+  useEffect(() => {
+    if (!highlightId) return;
+    const timer = setTimeout(() => setHighlightId(null), 2000);
+    return () => clearTimeout(timer);
+  }, [highlightId]);
+
+  useEffect(() => {
+    const id = pendingScroll.current;
+    if (!id || tab !== "resume") return;
+    pendingScroll.current = null;
+    const frame = requestAnimationFrame(() => {
+      const node = document.getElementById(id);
+      if (node) scrollToElement(node);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [tab, highlightId]);
+
+  function showEvidence(elementId: string) {
+    setHighlightId(elementId);
+    setTab("resume");
+    const node = document.getElementById(elementId);
+    if (node && node.getClientRects().length > 0) {
+      pendingScroll.current = null;
+      scrollToElement(node);
+      return;
+    }
+    pendingScroll.current = elementId;
+  }
+
+  function onTab(value: string) {
+    if (value === "resume" || value === "match") setTab(value);
+  }
 
   function updateContent(recipe: (current: ResumeContent) => ResumeContent) {
     const next = recipe(contentRef.current);
@@ -316,6 +361,12 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   const usedNames = new Set(skillNamesOf(content));
   const available = availableSkills(workspace.snapshot, usedNames);
   const savedLabel = copy.saved(formatSavedTime(savedAt, workspace.timeZone));
+  const skillElementByName = new Map<string, string>();
+  for (const skill of workspace.snapshot.skills) {
+    if (!skillElementByName.has(skill.name)) {
+      skillElementByName.set(skill.name, skillElementId(skill.ref));
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -351,6 +402,22 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         <p className="text-sm text-slate">{workspace.company}</p>
       </div>
 
+      <div className="lg:hidden">
+        <Tabs value={tab} onValueChange={onTab}>
+          <TabsList aria-label={copy.panelLabel}>
+            <TabsTrigger value="resume">{copy.resumeTab}</TabsTrigger>
+            <TabsTrigger value="match">{copy.matchTab}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <div className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-8">
+        <div
+          className={cn(
+            "flex flex-col gap-6 lg:col-span-3",
+            tab !== "resume" && "max-lg:hidden",
+          )}
+        >
       <ProfileHeader profile={workspace.snapshot.profile} />
 
       <section className="grid gap-2" aria-labelledby={`${summaryId}-heading`}>
@@ -405,6 +472,8 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
                   entry={entry}
                   facts={facts}
                   skills={skillNames}
+                  highlighted={highlightId === entryElementId(entry.ref)}
+                  highlightId={highlightId}
                   editingId={editingId}
                   draft={draft}
                   fieldError={fieldError}
@@ -428,7 +497,13 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         );
       })}
 
-      <section className="grid gap-3">
+      <section
+        id={SKILLS_SECTION_ID}
+        className={cn(
+          "grid scroll-mt-20 gap-3",
+          highlightId === SKILLS_SECTION_ID && "rounded-lg bg-marigold-100 p-2",
+        )}
+      >
         <h2 className="text-base font-medium text-ink">{skillCopy.title}</h2>
         {shownSkills.length === 0 ? (
           <p className="text-sm text-slate">{copy.noSkills}</p>
@@ -440,10 +515,17 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
                   {group.category ?? skillCopy.uncategorized}
                 </h3>
                 <ul className="flex flex-wrap gap-2">
-                  {group.names.map((name) => (
+                  {group.names.map((name) => {
+                    const elementId = skillElementByName.get(name);
+                    if (elementId) skillElementByName.delete(name);
+                    return (
                     <li
                       key={name}
-                      className="inline-flex items-center gap-1 rounded-full border border-line bg-surface py-1 pr-1 pl-2.5 text-sm text-ink"
+                      id={elementId}
+                      className={cn(
+                        "inline-flex scroll-mt-20 items-center gap-1 rounded-full border border-line bg-surface py-1 pr-1 pl-2.5 text-sm text-ink",
+                        elementId && highlightId === elementId && "bg-marigold-100",
+                      )}
                     >
                       {name}
                       <button
@@ -455,7 +537,8 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
                         <XIcon aria-hidden className="size-3.5" />
                       </button>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </div>
             ))}
@@ -483,6 +566,27 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
           <p className="text-sm text-slate">{copy.skillsAllAdded}</p>
         ) : null}
       </section>
+        </div>
+        <aside
+          aria-label={copy.panelLabel}
+          className={cn(
+            "lg:sticky lg:top-20 lg:col-span-2 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto",
+            tab !== "match" && "max-lg:hidden",
+          )}
+        >
+          <MatchPanel
+            content={content}
+            snapshot={workspace.snapshot}
+            score={workspace.match.score}
+            verdicts={workspace.match.verdicts}
+            requirements={workspace.requirements}
+            keywords={workspace.keywords}
+            libraryEntries={workspace.libraryEntries}
+            jobId={workspace.jobId}
+            onEvidence={showEvidence}
+          />
+        </aside>
+      </div>
     </div>
   );
 }
@@ -543,6 +647,8 @@ function EntryBlock({
   entry,
   facts,
   skills,
+  highlighted,
+  highlightId,
   editingId,
   draft,
   fieldError,
@@ -558,6 +664,8 @@ function EntryBlock({
   entry: ContentEntry;
   facts: SnapshotEntry;
   skills: readonly string[];
+  highlighted: boolean;
+  highlightId: string | null;
   editingId: string | null;
   draft: string;
   fieldError: string | null;
@@ -584,7 +692,13 @@ function EntryBlock({
   const url = httpUrl(facts.url);
 
   return (
-    <article className="rounded-lg border border-line p-3">
+    <article
+      id={entryElementId(entry.ref)}
+      className={cn(
+        "scroll-mt-20 rounded-lg border border-line p-3",
+        highlighted && "bg-marigold-100",
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className={cn("min-w-0", !entry.included && "opacity-60")}>
           <h3 className="text-sm font-medium break-words text-ink">{title}</h3>
@@ -615,6 +729,7 @@ function EntryBlock({
               bullet={bullet}
               facts={facts}
               skills={skills}
+              highlighted={highlightId === bulletElementId(bullet.id)}
               editing={editingId === bullet.id}
               locked={editingId !== null}
               draft={draft}
@@ -641,6 +756,7 @@ function BulletRow({
   bullet,
   facts,
   skills,
+  highlighted,
   editing,
   locked,
   draft,
@@ -659,6 +775,7 @@ function BulletRow({
   bullet: ContentBullet;
   facts: SnapshotEntry;
   skills: readonly string[];
+  highlighted: boolean;
   editing: boolean;
   locked: boolean;
   draft: string;
@@ -680,7 +797,13 @@ function BulletRow({
     .filter((item): item is SnapshotEntry["bullets"][number] => item !== undefined);
 
   return (
-    <li className="grid gap-1 border-t border-line pt-3">
+    <li
+      id={bulletElementId(bullet.id)}
+      className={cn(
+        "grid scroll-mt-20 gap-1 border-t border-line pt-3",
+        highlighted && "bg-marigold-100",
+      )}
+    >
       <div className="flex items-start gap-2">
         <IncludeSwitch
           label={copy.includeBullet(bullet.text)}
@@ -900,4 +1023,9 @@ function httpUrl(value: string | null): string | null {
     return null;
   }
   return null;
+}
+
+function scrollToElement(node: HTMLElement) {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  node.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
 }

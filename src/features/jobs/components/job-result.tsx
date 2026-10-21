@@ -34,9 +34,10 @@ type JobResultProps = {
   job: JobPageData;
   analysesLeft: number;
   documents: JobDocuments;
+  initialTab: "overview" | "documents";
 };
 
-export function JobResult({ job, analysesLeft, documents }: JobResultProps) {
+export function JobResult({ job, analysesLeft, documents, initialTab }: JobResultProps) {
   const ready = job.analysisStatus === "READY";
   const must = job.requirements.filter((item) => item.importance === "must");
   const nice = job.requirements.filter((item) => item.importance === "nice");
@@ -74,7 +75,7 @@ export function JobResult({ job, analysesLeft, documents }: JobResultProps) {
         />
       ) : null}
 
-      <Tabs defaultValue={documents.pending ? "documents" : "overview"}>
+      <Tabs defaultValue={initialTab}>
         <TabsList aria-label={documentsCopy.tabsLabel}>
           <TabsTrigger value="overview">{documentsCopy.overviewTab}</TabsTrigger>
           <TabsTrigger value="documents">{documentsCopy.documentsTab}</TabsTrigger>

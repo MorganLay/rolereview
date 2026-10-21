@@ -2,12 +2,13 @@ import "server-only";
 
 import { quotaSnapshot } from "@/features/billing/quota";
 import { formatJobInstant } from "@/features/jobs/format";
-import { LibrarySnapshot } from "@/features/library/schemas";
+import { JobAnalysis } from "@/features/jobs/schemas";
+import { ENTRY_KINDS, LibrarySnapshot } from "@/features/library/schemas";
 import type { Plan } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
-import type { ResumeWorkspaceData } from "./content";
-import { ResumeContent } from "./schemas";
+import type { LibraryEntryOption, ResumeWorkspaceData } from "./content";
+import { MatchReport, ResumeContent } from "./schemas";
 import {
   displayedTailorStatus,
   type JobDocuments,
@@ -79,24 +80,41 @@ export async function getResumeWorkspace(
   jobId: string,
   resumeId: string,
 ): Promise<ResumeWorkspaceData | null> {
-  const row = await db.tailoredResume.findFirst({
-    where: { id: resumeId, jobId, userId },
-    select: {
-      id: true,
-      version: true,
-      status: true,
-      updatedAt: true,
-      content: true,
-      librarySnapshot: true,
-      job: { select: { title: true, company: true } },
-      user: { select: { timezone: true } },
-    },
-  });
+  const [row, entries] = await Promise.all([
+    db.tailoredResume.findFirst({
+      where: { id: resumeId, jobId, userId },
+      select: {
+        id: true,
+        version: true,
+        status: true,
+        updatedAt: true,
+        content: true,
+        librarySnapshot: true,
+        matchReport: true,
+        job: { select: { title: true, company: true, analysis: true } },
+        user: { select: { timezone: true } },
+      },
+    }),
+    db.entry.findMany({
+      where: { userId },
+      orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+      select: {
+        id: true,
+        title: true,
+        organization: true,
+        kind: true,
+        sortOrder: true,
+      },
+    }),
+  ]);
   if (!row || row.status !== "READY") return null;
 
   const content = ResumeContent.safeParse(row.content);
   const snapshot = LibrarySnapshot.safeParse(row.librarySnapshot);
   if (!content.success || !snapshot.success) return null;
+
+  const report = MatchReport.safeParse(row.matchReport);
+  const analysis = JobAnalysis.safeParse(row.job.analysis);
 
   return {
     jobId,
@@ -108,5 +126,27 @@ export async function getResumeWorkspace(
     timeZone: row.user.timezone || "America/Toronto",
     content: content.data,
     snapshot: snapshot.data,
+    match: report.success ? report.data : { verdicts: [], score: null },
+    requirements: analysis.success ? analysis.data.requirements : [],
+    keywords: analysis.success ? analysis.data.keywords : [],
+    libraryEntries: sortLibraryEntries(entries),
   };
+}
+
+/** Same order as the library page: section, then sort order. */
+function sortLibraryEntries(
+  entries: (LibraryEntryOption & { sortOrder: number })[],
+): LibraryEntryOption[] {
+  return [...entries]
+    .sort((a, b) => {
+      const kindDelta = ENTRY_KINDS.indexOf(a.kind) - ENTRY_KINDS.indexOf(b.kind);
+      if (kindDelta !== 0) return kindDelta;
+      return a.sortOrder - b.sortOrder || a.id.localeCompare(b.id);
+    })
+    .map((entry) => ({
+      id: entry.id,
+      title: entry.title,
+      organization: entry.organization,
+      kind: entry.kind,
+    }));
 }

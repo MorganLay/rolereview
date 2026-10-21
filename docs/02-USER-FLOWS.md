@@ -108,7 +108,7 @@ Toolbar: view toggle **Board | List**, search (company/title), filters (source, 
 ### `/jobs/[jobId]` — Job detail
 **Header:** title, company, location, status select, priority stars, deadline, URL (new tab), ⋯ menu (Edit details — title, company, location, and URL — Archive/Unarchive, Delete with confirm). Badges: work mode, employment type, salary range, reference #. An archived job keeps its status and shows an Archived badge. Choosing a closed status asks for an optional reason.
 
-**Tabs:**
+**Tabs:** Overview is the default. A visit with `?tab=documents` opens Documents. While a resume is tailoring, Documents opens on its own.
 1. **Overview:** requirements (Must / Nice, kind icons), keywords, collapsible original posting; details form (source, sourceDetail, work mode, employment type, salary, reference #, deadline, notes with save on blur); "Submitted documents" (which tailor and letter were sent; change via select).
 2. **Documents:**
    - **Resume tailored resumes:** [Tailor resume] → dialog: length (1/2 pages), emphasis, [1.1] target profile. Disabled with a reason if the library is empty or analysis isn't READY. Tailoring view: staged progress, 20–60 s; polls if the user leaves and returns. Version cards: v#, date, match score, template, 👍/👎, "Submitted" badge, Open.
@@ -124,7 +124,7 @@ Desktop: editor (~60%) + match panel (~40%). Mobile: tabs (Resume · Match · Ex
 - **Toolbar:** ← Job · v2 · save status ("Saving… / Saved 10:42 / Save failed — retry") · Template (Classic / Modern 🔒 / Compact 🔒) · Copy text · Export ▾ (PDF, DOCX 🔒) · Mark as submitted · 👍/👎.
 - **Editor:** header from profile (read-only, "Edit profile" link); summary (editable, include toggle); entries with include toggles (title/org/dates read-only, D-14); bullets with edit, include toggle, up/down, ⓘ source popover, "restored original" badge, strength meter; unselected library items appear switched off so they can be toggled in; skills chips (remove; add from library only).
 - **Autosave** debounced 1.5 s → `saveResumeContent`.
-- **Match panel:** Match score (score + breakdown: ✓ met / ◐ partial / ✗ missing, each with a note and evidence links that scroll to and highlight bullets); **Keyword coverage** (live %, covered and missing chips); "Add to library" on missing requirements (quick-add bullet dialog; suggests re-tailoring).
+- **Match panel:** Match score (the stored library score; editing this resume does not change it) plus a breakdown: ✓ met / ◐ partial / ✗ missing, each with a note and evidence links. A link scrolls to and highlights the cited bullet, or the entry or skill when that is what was cited. **Keyword coverage** updates as you edit (live %, covered and missing chips). "Add to library" on a missing requirement opens a dialog: the requirement is shown, the bullet starts empty, and you choose a current library entry. Saving adds that bullet to the library and links to Documents (`?tab=documents`) so you can tailor again.
 - **Export:** PDF/DOCX download named `First-Last-Company-Title.pdf`; sets `exportedAt`; first export shows a success modal: "Mark as submitted & move to Applied?" [Yes] [Not yet] + [1.1] referral prompt.
 
 ### `/jobs/[jobId]/letters/[letterId]` — Cover letter workspace
