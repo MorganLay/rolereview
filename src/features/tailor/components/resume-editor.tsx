@@ -41,8 +41,10 @@ import {
   type ContentEntry,
   type ResumeContent,
 } from "@/features/tailor/schemas";
+import type { ResumeTemplateId } from "@/lib/pdf/template";
 import { cn } from "@/lib/utils";
 
+import { resumeTemplateLabel } from "../template-label";
 import { MatchPanel } from "./match-panel";
 import { ExportAppliedDialog, ResumeExportBar, useResumeExport } from "./resume-export-bar";
 
@@ -90,6 +92,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
     content,
     snapshot: workspace.snapshot,
   });
+  const templateId = exportUi.barProps.templateId;
 
   const snapshotByRef = new Map(
     workspace.snapshot.entries.map((entry) => [entry.ref, entry]),
@@ -414,6 +417,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
           {workspace.jobTitle}
         </h1>
         <p className="text-sm text-slate">{workspace.company}</p>
+        <p className="text-sm text-slate">{copy.templateLook(resumeTemplateLabel(templateId))}</p>
       </div>
 
       <div className="lg:hidden">
@@ -436,15 +440,16 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
       <div className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-8">
         <div
           className={cn(
-            "flex flex-col gap-6 lg:col-span-3",
+            "flex flex-col lg:col-span-3",
+            templateId === "compact" ? "gap-4" : "gap-6",
             tab !== "resume" && "max-lg:hidden",
           )}
         >
-      <ProfileHeader profile={workspace.snapshot.profile} />
+      <ProfileHeader profile={workspace.snapshot.profile} templateId={templateId} />
 
       <section className="grid gap-2" aria-labelledby={`${summaryId}-heading`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id={`${summaryId}-heading`} className="text-base font-medium text-ink">
+          <h2 id={`${summaryId}-heading`} className={sectionHeading(templateId)}>
             {copy.summary}
           </h2>
           <IncludeSwitch
@@ -484,7 +489,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         if (entries.length === 0) return null;
         return (
           <section key={kind} className="grid gap-3">
-            <h2 className="text-base font-medium text-ink">{entryCopy.kinds[kind].title}</h2>
+            <h2 className={sectionHeading(templateId)}>{entryCopy.kinds[kind].title}</h2>
             {entries.map((entry) => {
               const facts = snapshotByRef.get(entry.ref);
               if (!facts) return null;
@@ -526,7 +531,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
           highlightId === SKILLS_SECTION_ID && "rounded-lg bg-marigold-100 p-2",
         )}
       >
-        <h2 className="text-base font-medium text-ink">{skillCopy.title}</h2>
+        <h2 className={sectionHeading(templateId)}>{skillCopy.title}</h2>
         {shownSkills.length === 0 ? (
           <p className="text-sm text-slate">{copy.noSkills}</p>
         ) : (
@@ -614,11 +619,26 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   );
 }
 
-function ProfileHeader({ profile }: { profile: LibrarySnapshot["profile"] }) {
+function sectionHeading(templateId: ResumeTemplateId): string {
+  return cn(
+    "font-medium text-ink",
+    templateId === "compact" ? "text-sm" : "text-base",
+    templateId === "modern" && "border-b border-pine pb-1 font-serif text-lg",
+  );
+}
+
+function ProfileHeader({
+  profile,
+  templateId,
+}: {
+  profile: LibrarySnapshot["profile"];
+  templateId: ResumeTemplateId;
+}) {
   const name = profile.fullName?.trim() || null;
   const contact = [profile.location, profile.email, profile.phone]
     .map((part) => part?.trim() ?? "")
     .filter((part) => part.length > 0);
+  const inlineLinks = templateId !== "classic";
 
   return (
     <section className="rounded-lg border border-line bg-surface p-4">
@@ -626,7 +646,9 @@ function ProfileHeader({ profile }: { profile: LibrarySnapshot["profile"] }) {
         <div className="min-w-0">
           <h2
             className={cn(
-              "font-serif text-xl font-semibold tracking-tight",
+              "font-semibold tracking-tight",
+              templateId === "modern" ? "font-serif text-2xl" : "font-serif text-xl",
+              templateId === "compact" && "text-lg",
               name ? "text-ink" : "text-slate",
             )}
           >
@@ -647,7 +669,7 @@ function ProfileHeader({ profile }: { profile: LibrarySnapshot["profile"] }) {
         <p className="mt-3 text-sm break-words text-ink">{contact.join(" · ")}</p>
       ) : null}
       {profile.links.length > 0 ? (
-        <ul className="mt-2 grid gap-1">
+        <ul className={inlineLinks ? "mt-2 flex flex-wrap gap-x-3 gap-y-1" : "mt-2 grid gap-1"}>
           {profile.links.map((link) => (
             <li key={`${link.label}-${link.url}`}>
               <a

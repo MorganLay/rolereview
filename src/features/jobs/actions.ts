@@ -310,6 +310,7 @@ function toJson(analysis: JobAnalysis): Prisma.InputJsonValue {
 function revalidateJob(jobId: string): void {
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath("/jobs");
+  revalidatePath("/jobs/new");
 }
 
 /** Move the job through the pipeline. A closed status can store a reason. */

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Award,
   Briefcase,
@@ -6,6 +7,7 @@ import {
   Wrench,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { strings } from "@/copy/strings";
 import { DocumentsTab, TailorPoll } from "@/features/tailor/components/documents-tab";
@@ -75,12 +77,20 @@ export function JobResult({ job, analysesLeft, documents, initialTab }: JobResul
         />
       ) : null}
 
-      <Tabs defaultValue={initialTab}>
+      <section className="flex flex-col items-start gap-2 rounded-lg border border-line bg-surface p-4">
+        <h2 className="text-base font-medium text-ink">{documentsCopy.promptTitle}</h2>
+        <p className="text-sm text-slate">{documentsCopy.promptBody}</p>
+        <Button asChild>
+          <Link href={`/jobs/${job.id}?tab=documents`}>{documentsCopy.promptAction}</Link>
+        </Button>
+      </section>
+
+      <Tabs key={initialTab} defaultValue={initialTab}>
         <TabsList aria-label={documentsCopy.tabsLabel}>
           <TabsTrigger value="overview">{documentsCopy.overviewTab}</TabsTrigger>
           <TabsTrigger value="documents">{documentsCopy.documentsTab}</TabsTrigger>
         </TabsList>
-        <TabsContent value="overview" className="flex flex-col gap-8 pt-4">
+        <TabsContent value="overview" className="flex flex-col gap-6 pt-4">
           {ready && job.summary ? (
             <section aria-labelledby="job-summary" className="flex flex-col gap-2">
               <h2 id="job-summary" className="text-base font-medium text-ink">
@@ -182,15 +192,15 @@ function RequirementGroup({
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-sm font-medium text-ink">{heading}</h3>
-      <ul className="grid gap-3">
+      <ul className="grid gap-2">
         {items.map((requirement) => {
           const Icon = kindIcons[requirement.kind];
           return (
-            <li key={requirement.id} className="flex flex-col gap-1">
-              <p className="text-sm break-words text-ink">{requirement.text}</p>
-              <p className="inline-flex items-center gap-1 text-xs text-slate">
-                <Icon aria-hidden className="size-3.5" />
-                {copy.kinds[requirement.kind]}
+            <li key={requirement.id} className="flex items-start gap-2">
+              <Icon aria-hidden className="mt-0.5 size-3.5 shrink-0 text-slate" />
+              <p className="text-sm break-words text-ink">
+                <span className="sr-only">{copy.kinds[requirement.kind]}. </span>
+                {requirement.text}
               </p>
             </li>
           );

@@ -7,7 +7,8 @@ import {
   filenameFromContentDisposition,
   resumePdfFilename,
 } from "@/lib/pdf/filename";
-import { resumePdfLines, resumePdfModel } from "@/lib/pdf/model";
+import { resumePdfLines, resumePdfModel, type ResumePdfModel } from "@/lib/pdf/model";
+import { pdfPageCount } from "@/lib/pdf/pages";
 import { renderResumePdf } from "@/lib/pdf/render";
 import { resolveResumeTemplate } from "@/lib/pdf/template";
 import { SEED_LIBRARY } from "../../prisma/library-seed";
@@ -122,12 +123,16 @@ describe("renderResumePdf", () => {
     expect(pdfPageCount(compact)).toBe(1);
     expect(pdfPageCount(modern)).toBe(1);
   }, 20000);
-});
 
-function pdfPageCount(pdf: Buffer): number {
-  const text = pdf.toString("latin1");
-  return text.match(/\/Type\s*\/Page(?!s)\b/g)?.length ?? 0;
-}
+  it("tightens a 1-page tailor that would otherwise spill onto page two", async () => {
+    const model = longResume();
+    const spilled = await renderResumePdf(model, "classic");
+    const fitted = await renderResumePdf(model, "classic", { pages: 1 });
+
+    expect(pdfPageCount(spilled)).toBeGreaterThan(1);
+    expect(pdfPageCount(fitted)).toBe(1);
+  }, 20000);
+});
 
 function sample() {
   return resumeContent({
@@ -254,4 +259,36 @@ function typicalResume() {
   };
 
   return resumePdfModel(content, snapshot);
+}
+
+/** Enough lines to spill a Classic resume, and few enough that tightening fits. */
+function longResume(): ResumePdfModel {
+  const bullets = Array.from({ length: 36 }, (_, index) =>
+    `Maintained ${index + 12} weekly reports for a 20-person team and wrote the handoff notes that cut the review from an hour to twenty minutes.`,
+  );
+  return {
+    name: "Morgan Example",
+    headline: "Data & reporting analyst",
+    contact: "Ottawa, ON · morgan@example.com · 613-555-0100",
+    links: [
+      "Portfolio: https://example.com/portfolio",
+      "LinkedIn: https://example.com/in/morgan",
+      "GitHub: https://example.com/morgan",
+    ],
+    summary: "Analyst with reporting experience across public-sector teams.",
+    sections: [
+      {
+        heading: "Experience",
+        entries: [
+          {
+            title: "Junior Program Officer",
+            meta: "Canada Revenue Agency · Ottawa, ON · Nov 2023 – Present",
+            url: "https://example.com/role",
+            bullets,
+          },
+        ],
+      },
+    ],
+    skills: ["Languages: Python, SQL"],
+  };
 }

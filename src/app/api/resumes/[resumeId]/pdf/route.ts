@@ -4,7 +4,7 @@ import { z } from "zod";
 import { can } from "@/features/billing/entitlements";
 import { LibrarySnapshot } from "@/features/library/schemas";
 import { FIRST_EXPORT_HEADER } from "@/features/tailor/export-prompt";
-import { ResumeContent } from "@/features/tailor/schemas";
+import { ResumeContent, TailorOptions } from "@/features/tailor/schemas";
 import { requireUser } from "@/lib/auth";
 import { captureServerEvent } from "@/lib/analytics";
 import { db } from "@/lib/db";
@@ -27,6 +27,7 @@ export async function GET(
     select: {
       status: true,
       templateId: true,
+      options: true,
       exportedAt: true,
       content: true,
       librarySnapshot: true,
@@ -48,7 +49,10 @@ export async function GET(
     },
   );
   const model = resumePdfModel(content.data, snapshot.data);
-  const pdf = await renderResumePdf(model, template);
+  const tailor = TailorOptions.safeParse(row.options ?? {});
+  const pdf = await renderResumePdf(model, template, {
+    pages: tailor.success ? tailor.data.length : 1,
+  });
   const filename = resumePdfFilename(
     snapshot.data.profile.fullName,
     row.job.company,

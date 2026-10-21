@@ -216,38 +216,40 @@ function VersionCard({
   const template = resumeTemplateLabel(version.templateId);
 
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-line p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-medium text-ink">
-          {version.status === "FAILED" ? (
-            copy.version(version.version)
-          ) : (
-            <Link
-              href={`/jobs/${jobId}/resumes/${version.id}`}
-              className="rounded-sm underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-            >
-              {copy.version(version.version)}
-            </Link>
-          )}
-        </h3>
+    <article
+      className={
+        version.status === "FAILED"
+          ? "flex flex-col gap-3 rounded-lg border border-line p-4"
+          : "relative flex flex-col gap-3 rounded-lg border border-line p-4 hover:border-pine"
+      }
+    >
+      {version.status === "FAILED" ? null : (
+        <Link
+          href={`/jobs/${jobId}/resumes/${version.id}`}
+          aria-label={copy.openVersion(version.version)}
+          className="absolute inset-0 rounded-lg focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        />
+      )}
+      <div className="pointer-events-none relative flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-medium text-ink">{copy.version(version.version)}</h3>
         {version.submitted ? (
           <span className="rounded-full bg-pine-50 px-2 py-0.5 text-xs text-pine">
             {copy.submitted}
           </span>
         ) : null}
       </div>
-      <p className="text-sm text-slate">{version.createdLabel}</p>
+      <p className="pointer-events-none text-sm text-slate">{version.createdLabel}</p>
       {version.status === "FAILED" ? (
         <p className="text-sm text-ink">{copy.failed}</p>
       ) : (
         <>
-          <p className="text-sm text-ink">
+          <p className="pointer-events-none text-sm text-ink">
             {version.matchScore === null
               ? copy.matchScoreEmpty
               : copy.matchScore(version.matchScore)}
           </p>
-          <p className="text-sm text-slate">{template}</p>
-          <div className="flex flex-wrap items-center gap-2">
+          <p className="pointer-events-none text-sm text-slate">{template}</p>
+          <div className="relative z-10 flex flex-wrap items-center gap-2">
             <Button asChild variant="outline" size="sm">
               <Link href={`/jobs/${jobId}/resumes/${version.id}`}>{copy.open}</Link>
             </Button>

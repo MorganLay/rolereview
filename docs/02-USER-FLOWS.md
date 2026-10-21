@@ -31,7 +31,7 @@ Signed in — protected by src/proxy.ts AND requireUser() in the (app) layout
 
 ## App shell
 
-- **Sidebar** (top bar + menu on mobile): Dashboard · Library · Jobs board · Contacts · Insights · Settings. Bottom: Usage pill ("2 / 3 tailored resumes") → Settings → Plan; [1.1] XP bar and level.
+- **Sidebar** (top bar + menu on mobile): Dashboard · Library · Jobs board · Contacts · Insights · Settings. Bottom: Usage pill ("2 / 3 tailored resumes") → Settings → Plan; [1.1] XP bar and level. The pill stays at the bottom of the screen while the page scrolls.
 - **Header:** global "New job" button; 🔔 reminders bell with the due-today count (popover list with complete/snooze); user menu (email, Invite friends [1.1], Sign out).
 - **Global:** toaster; Upgrade modal (opened by any `QUOTA_EXCEEDED` or Pro-only action); Feedback button (bottom-right, opens a small form → `Feedback`); [1.1] milestone toast.
 
@@ -102,16 +102,17 @@ Toolbar: view toggle **Board | List**, search (company/title), filters (source, 
 **Filters hide every job:** "No jobs match these filters."
 
 ### `/jobs/new`
-- Posting text (required, 200–30,000 chars), URL (optional), deadline (optional), source (select, optional), priority (stars, optional).
+- Posting text (required, 200–30,000 chars), URL (optional), deadline (optional), source (select, optional), priority (stars, optional). Pasting a long posting scrolls to the end of the paste.
+- The analyses-left count is read from the server on each visit. New job always opens a blank form, including from a job that just finished analyzing.
 - Submit → `createJob` (saved PENDING → analysis → fields pre-filled from analysis) → `/jobs/[id]`. Analysis typically 3–8 s; on failure the job is saved FAILED with Retry.
 
 ### `/jobs/[jobId]` — Job detail
 **Header:** title, company, location, status select, priority stars, deadline, URL (new tab), ⋯ menu (Edit details — title, company, location, and URL — Archive/Unarchive, Delete with confirm). Badges: work mode, employment type, salary range, reference #. An archived job keeps its status and shows an Archived badge. Choosing a closed status asks for an optional reason.
 
-**Tabs:** Overview is the default. A visit with `?tab=documents` opens Documents. While a resume is tailoring, Documents opens on its own.
-1. **Overview:** requirements (Must / Nice, kind icons), keywords, collapsible original posting; details form (source, sourceDetail, work mode, employment type, salary, reference #, deadline, notes with save on blur); "Submitted documents" (which tailor and letter were sent; change via select).
+**Tabs:** Overview is the default. A visit with `?tab=documents` opens Documents. While a resume is tailoring, Documents opens on its own. Above the tabs: "Open Documents" — that is where you tailor a resume for this posting.
+1. **Overview:** requirements (Must / Nice). Each requirement is one line, with a kind icon; the kind name is read to screen readers. Keywords, collapsible original posting; details form (source, sourceDetail, work mode, employment type, salary, reference #, deadline, notes with save on blur); "Submitted documents" (which tailor and letter were sent; change via select).
 2. **Documents:**
-   - **Resume tailored resumes:** [Tailor resume] → dialog: length (1/2 pages), emphasis, [1.1] target profile. Disabled with a reason if the library is empty or analysis isn't READY. Tailoring view: staged progress, 20–60 s; polls if the user leaves and returns. Version cards: v#, date, match score, template, 👍/👎, "Submitted" badge, Open.
+   - **Resume tailored resumes:** [Tailor resume] → dialog: length (1/2 pages), emphasis, [1.1] target profile. Disabled with a reason if the library is empty or analysis isn't READY. Tailoring view: staged progress, 20–60 s; polls if the user leaves and returns. Version cards: v#, date, match score, template, 👍/👎, "Submitted" badge, Open. The card itself opens the resume. Open and the ratings stay buttons.
    - **Cover letters:** [Write cover letter] → dialog: tone, length, recipient name, "Why this company?" (textarea, strongly encouraged with the hint "the AI won't invent reasons for you"), align with tailor v#. Version cards as above.
 3. **Interviews:** list by round; add/edit dialog (round, type, date/time with timezone, duration, link/location, interviewers, prep notes); after the date: outcome select + reflection. [1.1] "Generate prep kit" button.
 4. **Contacts:** linked contacts with role chips; "Link existing" (search) or "New contact"; "Log outreach" (→ timeline event + `lastContactedAt`).
@@ -122,10 +123,10 @@ Toolbar: view toggle **Board | List**, search (company/title), filters (source, 
 ### `/jobs/[jobId]/resumes/[resumeId]` — Resume resume workspace
 Desktop: editor (~60%) + match panel (~40%). Mobile: tabs (Resume · Match · Export).
 - **Toolbar:** ← Job · v2 · save status ("Saving… / Saved 10:42 / Save failed — retry") · Template (Classic / Modern 🔒 / Compact 🔒) · Copy text · Export ▾ (PDF, DOCX 🔒) · Mark as submitted · 👍/👎.
-- **Editor:** header from profile (read-only, "Edit profile" link); summary (editable, include toggle); entries with include toggles (title/org/dates read-only, D-14); bullets with edit, include toggle, up/down, ⓘ source popover, "restored original" badge, strength meter; unselected library items appear switched off so they can be toggled in; skills chips (remove; add from library only).
+- **Editor:** header from profile (read-only, "Edit profile" link); summary (editable, include toggle); entries with include toggles (title/org/dates read-only, D-14); bullets with edit, include toggle, up/down, ⓘ source popover, "restored original" badge, strength meter; unselected library items appear switched off so they can be toggled in; skills chips (remove; add from library only). The template control changes this screen: Classic, Modern (serif headings and a pine rule), or Compact (tighter type, links on one line). The same choice is what the PDF uses.
 - **Autosave** debounced 1.5 s → `saveResumeContent`.
 - **Match panel:** Match score (the stored library score; editing this resume does not change it) plus a breakdown: ✓ met / ◐ partial / ✗ missing, each with a note and evidence links. A link scrolls to and highlights the cited bullet, or the entry or skill when that is what was cited. **Keyword coverage** updates as you edit (live %, covered and missing chips). "Add to library" on a missing requirement opens a dialog: the requirement is shown, the bullet starts empty, and you choose a current library entry. Saving adds that bullet to the library and links to Documents (`?tab=documents`) so you can tailor again.
-- **Export:** PDF download named `First-Last-Company-Title.pdf`; sets `exportedAt`. The PDF is the last saved version. Copy text uses the resume on screen. DOCX stays locked until T11.4. The first PDF export of a resume, while the job is still Saved, shows: "Mark this version as submitted and move the job to Applied?" [Yes] [Not yet]. Yes sets this resume as `submittedResumeId`, then moves the job to Applied through the pipeline. Not yet leaves the status and the submitted resume unchanged. Mark as submitted on the toolbar sets this version and does not change status. The [1.1] referral prompt stays later.
+- **Export:** PDF download named `First-Last-Company-Title.pdf`; sets `exportedAt`. The PDF is the last saved version. Copy text uses the resume on screen. When the tailor length is 1 page, the PDF stays on one Letter page: header links move onto one line, then spacing and type tighten. Lines are not dropped. DOCX stays locked until T11.4. The first PDF export of a resume, while the job is still Saved, shows: "Mark this version as submitted and move the job to Applied?" [Yes] [Not yet]. Yes sets this resume as `submittedResumeId`, then moves the job to Applied through the pipeline. Not yet leaves the status and the submitted resume unchanged. Mark as submitted on the toolbar sets this version and does not change status. The [1.1] referral prompt stays later.
 
 ### `/jobs/[jobId]/letters/[letterId]` — Cover letter workspace
 Same layout pattern: editor with greeting, paragraphs (edit, include toggle, ⓘ source refs showing library items, "from the posting", or "from your notes"), closing, signature; side panel: requirements this letter addresses, word count, tone. Toolbar: template, copy text, export PDF / DOCX 🔒, mark as submitted, 👍/👎.

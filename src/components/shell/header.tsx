@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell, Menu, Plus } from "lucide-react";
 
 import { signOut } from "@/features/account/actions";
+import { NewJobLink } from "@/features/jobs/components/new-job-link";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -68,11 +69,11 @@ export function AppHeader({ userEmail }: AppHeaderProps) {
 
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
         <Button type="button" size="sm" asChild>
-          <Link href="/jobs/new">
+          <NewJobLink>
             <Plus data-icon="inline-start" />
             <span className="hidden sm:inline">{strings.actions.newJob}</span>
             <span className="sm:hidden">{strings.actions.addJob}</span>
-          </Link>
+          </NewJobLink>
         </Button>
 
         <Popover>

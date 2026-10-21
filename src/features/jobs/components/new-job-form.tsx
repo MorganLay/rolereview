@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
@@ -42,8 +42,44 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
   const [fields, setFields] = useState<FieldErrors>({});
   const [reading, setReading] = useState(false);
   const [stage, setStage] = useState(0);
-  const [analysesLeft, setAnalysesLeft] = useState(analysesLeftProp);
+  const [analysesAdjust, setAnalysesAdjust] = useState({
+    base: analysesLeftProp,
+    delta: 0,
+  });
+  if (analysesAdjust.base !== analysesLeftProp) {
+    setAnalysesAdjust({ base: analysesLeftProp, delta: 0 });
+  }
+  const analysesLeft = Math.max(0, analysesLeftProp - analysesAdjust.delta);
   const busy = useRef(false);
+  const live = useRef(true);
+  const postingRef = useRef<HTMLTextAreaElement>(null);
+  const scrollPosting = useRef(false);
+
+  useEffect(() => {
+    live.current = true;
+    return () => {
+      live.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    function onPageShow(event: PageTransitionEvent) {
+      if (!event.persisted) return;
+      busy.current = false;
+      setReading(false);
+    }
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
+  useEffect(() => {
+    if (!scrollPosting.current) return;
+    scrollPosting.current = false;
+    const node = postingRef.current;
+    if (!node) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    node.scrollIntoView({ block: "end", behavior: reduce ? "auto" : "smooth" });
+  }, [posting]);
 
   useEffect(() => {
     if (!reading) return;
@@ -75,10 +111,11 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
         priority,
       });
       if (!result.ok) {
+        if (!live.current) return;
         setReading(false);
         if (result.error.code === "QUOTA_EXCEEDED") {
           openUpgradeModal(copy.quotaReason);
-          setAnalysesLeft(0);
+          setAnalysesAdjust({ base: analysesLeftProp, delta: analysesLeftProp });
           return;
         }
         if (result.error.code === "VALIDATION") {
@@ -88,18 +125,26 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
         toast.error(copy.saveFailed);
         return;
       }
+      if (!live.current) return;
       if (result.data.analysisStatus === "READY") {
-        setAnalysesLeft((current) => Math.max(0, current - 1));
+        setAnalysesAdjust((current) => ({ ...current, delta: current.delta + 1 }));
       } else {
         toast.error(copy.aiFailed);
       }
       router.push(`/jobs/${result.data.jobId}`);
     } catch {
+      if (!live.current) return;
       setReading(false);
       toast.error(copy.saveFailed);
     } finally {
       busy.current = false;
     }
+  }
+
+  function onPostingChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    const next = event.target.value;
+    if (next.length > posting.length + 80) scrollPosting.current = true;
+    setPosting(next);
   }
 
   if (reading) {
@@ -138,9 +183,10 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
       <div className="grid gap-2">
         <Label htmlFor={`${formId}-posting`}>{copy.postingLabel}</Label>
         <Textarea
+          ref={postingRef}
           id={`${formId}-posting`}
           value={posting}
-          onChange={(event) => setPosting(event.target.value)}
+          onChange={(event) => onPostingChange(event)}
           placeholder={copy.postingPlaceholder}
           rows={12}
           required

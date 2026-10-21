@@ -12,7 +12,7 @@ type AppShellProps = {
 export function AppShell({ userEmail, children }: AppShellProps) {
   return (
     <div className="flex min-h-full bg-paper text-ink">
-      <aside className="hidden w-56 shrink-0 border-r border-line bg-surface md:flex md:flex-col">
+      <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 border-r border-line bg-surface md:flex md:flex-col">
         <SidebarNav />
       </aside>
 

@@ -31,7 +31,7 @@ export function SidebarNav({ onNavigate, className }: SidebarNavProps) {
 
       <nav
         aria-label={strings.nav.mainNav}
-        className="flex flex-1 flex-col gap-0.5 px-2"
+        className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2"
       >
         {APP_NAV_ITEMS.map((item) => {
           const active = isNavActive(pathname, item.href);

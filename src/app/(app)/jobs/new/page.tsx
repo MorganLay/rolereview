@@ -9,8 +9,14 @@ export const maxDuration = 120;
 /** The analyses-left count comes from the signed-in user. */
 export const instant = false;
 
-export default async function NewJobPage() {
+export default async function NewJobPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ new?: string | string[] }>;
+}) {
   const user = await requireUser();
+  const params = await searchParams;
+  const fresh = Array.isArray(params.new) ? params.new[0] : params.new;
   const analysesLeft = await analysesRemaining(user.id, user.plan);
 
   return (
@@ -23,7 +29,7 @@ export default async function NewJobPage() {
           {strings.pages.jobsNew.body}
         </p>
       </div>
-      <NewJobForm analysesLeft={analysesLeft} />
+      <NewJobForm key={fresh ?? "new"} analysesLeft={analysesLeft} />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { strings } from "@/copy/strings";
+import { NewJobLink } from "@/features/jobs/components/new-job-link";
 import { JobsTable } from "@/features/jobs/components/jobs-table";
 import { JobsToolbar } from "@/features/jobs/components/jobs-toolbar";
 import { calendarDateInTimeZone } from "@/features/jobs/dates";
@@ -62,7 +63,7 @@ function JobsEmpty() {
       </CardHeader>
       <CardContent>
         <Button asChild>
-          <Link href="/jobs/new">{strings.actions.newJob}</Link>
+          <NewJobLink>{strings.actions.newJob}</NewJobLink>
         </Button>
       </CardContent>
     </Card>

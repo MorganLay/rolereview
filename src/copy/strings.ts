@@ -731,6 +731,10 @@ export const strings = {
       tabsLabel: "Job sections",
       overviewTab: "Overview",
       documentsTab: "Documents",
+      promptTitle: "Tailor a resume",
+      promptBody: "Documents is where you tailor a resume for this posting.",
+      promptAction: "Open Documents",
+      openVersion: (version: number) => `Open v${version}`,
       title: "Tailored resumes",
       empty: "No tailored resumes yet.",
       dialogTitle: "Tailor resume",
@@ -906,6 +910,8 @@ export const strings = {
       exportBody:
         "PDF downloads the last saved version. Copy text uses the resume on screen.",
       templateLabel: "Template",
+      templateLook: (name: string) =>
+        `${name} is how this resume is set, including the PDF.`,
       copyText: "Copy text",
       copied: "Copied.",
       copyFailed: "Couldn’t copy that text. Try again.",

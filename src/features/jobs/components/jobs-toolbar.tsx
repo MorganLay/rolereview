@@ -24,6 +24,7 @@ import {
   type JobListQuery,
 } from "../list-params";
 import { JOB_SOURCES, WORK_MODES } from "../schemas";
+import { NewJobLink } from "./new-job-link";
 
 const copy = strings.jobs.board;
 const ANY = "ANY";
@@ -89,7 +90,7 @@ export function JobsToolbar({ query }: { query: JobListQuery }) {
           </Button>
         </div>
         <Button asChild className="w-full sm:w-auto">
-          <Link href="/jobs/new">{strings.actions.newJob}</Link>
+          <NewJobLink>{strings.actions.newJob}</NewJobLink>
         </Button>
       </div>
 

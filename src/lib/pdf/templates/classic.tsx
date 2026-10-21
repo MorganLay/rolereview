@@ -1,6 +1,13 @@
+import type { PdfDensity } from "../document";
 import { ResumeDocument } from "../document";
 import type { ResumePdfModel } from "../model";
 
-export function ClassicResume({ model }: { model: ResumePdfModel }) {
-  return <ResumeDocument model={model} variant="classic" />;
+export function ClassicResume({
+  model,
+  density = "regular",
+}: {
+  model: ResumePdfModel;
+  density?: PdfDensity;
+}) {
+  return <ResumeDocument model={model} variant="classic" density={density} />;
 }
