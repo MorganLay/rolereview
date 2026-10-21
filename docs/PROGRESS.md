@@ -50,7 +50,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 ## Phase 7 — Export
 - [x] **T7.1** PDF templates
 - [x] **T7.2** Finishing touches
-- [~] **M3 checkpoint** Use RoleRefine for your own applications for a week; log issues in docs/FEEDBACK.md; fix the top 3
+- [x] **M3 checkpoint** Use RoleRefine for your own applications for a week; log issues in docs/FEEDBACK.md; fix the top 3
 
 ## Phase 8 — Full tracker
 - [ ] **T8.1** Board view
@@ -93,7 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
-- **2026-10-21 M3:** Feedback fixes from real applications. Library layout stays as it is. Analyses left is a whole number of successful analyses today; the new-job page is refreshed after each one. A 1-page tailor tightens the PDF until it fits one Letter page. New job opens a blank form.
+- **2026-10-21 M3:** Checked by hand. Feedback fixes are on main. Follow-up: the library layout (controls beside the text) was left for later.
 - **2026-10-21 T7.2:** Copy text uses the resume on screen. Free locks Modern, Compact, and DOCX. Mark as submitted sets this version and does not change status. The first PDF export asks to move to Applied only while the job is still Saved, and Yes goes through the pipeline. DOCX file generation stays on T11.4.
 - **2026-10-21 T7.1:** Classic, Modern, and Compact PDFs download from `/api/resumes/[id]/pdf`. Free falls back to Classic. A seed-sized resume and the saved dev resume fit one Letter page, and copied text stays in section order. `runtime` is not exported because `cacheComponents` rejects it. Copy text, the template switch, and mark as submitted stay in T7.2.
 - **2026-10-21 T6.6:** `npm run evals` runs 4 libraries × 6 postings (ANALYZE + TAILOR + guard + score). Cover letters wait for T9.1. The first run cost about $0.48 with average reverts 0.00. Two summaries overstated tenure and "worked directly with product squads"; the prompt was not changed. Calls count against `SEED_USER_ID` quota.
