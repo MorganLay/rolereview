@@ -251,8 +251,13 @@ export const RequirementVerdict = z.object({
   requirementId: z.string(), verdict: z.enum(["met", "partial", "missing"]),
   evidenceRefs: z.array(z.string()), note: z.string().max(200),
 });
-export const MatchReport = z.object({ verdicts: z.array(RequirementVerdict), score: z.number().int().min(0).max(100) });
+export const MatchReport = z.object({
+  verdicts: z.array(RequirementVerdict),
+  score: z.number().int().min(0).max(100).nullable(), // null when the posting has no requirements
+});
 ```
+
+`score` is null when the posting has no requirements. A null score shows as an em dash on the jobs list.
 
 ### `CoverLetter.content` (CoverLetterContent) → `features/letters/schemas.ts`
 
