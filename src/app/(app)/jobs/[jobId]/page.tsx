@@ -2,9 +2,10 @@ import { notFound } from "next/navigation";
 
 import { JobResult } from "@/features/jobs/components/job-result";
 import { analysesRemaining, getJob } from "@/features/jobs/queries";
+import { getJobDocuments } from "@/features/tailor/queries";
 import { requireUser } from "@/lib/auth";
 
-/** Retry calls the model and can take several seconds. */
+/** Analysis retry and tailoring call the model and can take up to a minute. */
 export const maxDuration = 120;
 
 /** The job comes from the signed-in user. */
@@ -17,13 +18,16 @@ export default async function JobDetailPage({
 }) {
   const { jobId } = await params;
   const user = await requireUser();
-  const job = await getJob(user.id, jobId);
+  const [job, analysesLeft, documents] = await Promise.all([
+    getJob(user.id, jobId),
+    analysesRemaining(user.id, user.plan),
+    getJobDocuments(user.id, user.plan, jobId),
+  ]);
   if (!job) notFound();
-  const analysesLeft = await analysesRemaining(user.id, user.plan);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <JobResult job={job} analysesLeft={analysesLeft} />
+      <JobResult job={job} analysesLeft={analysesLeft} documents={documents} />
     </div>
   );
 }

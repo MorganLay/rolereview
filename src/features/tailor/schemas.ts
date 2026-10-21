@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { strings } from "@/copy/strings";
 import { EntryKindEnum } from "@/features/library/schemas";
 
 /** Stored resume caps. docs/04-DATA-MODEL.md. */
@@ -8,6 +9,36 @@ export const RESUME_LIMITS = {
   summary: 800,
   note: 200,
 } as const;
+
+/** Optional emphasis on the tailor dialog. docs/04-DATA-MODEL.md → TailorOptions. */
+export const EMPHASIS_MAX = 200;
+
+export const TailorOptions = z.object({
+  length: z.union([z.literal(1), z.literal(2)]).default(1),
+  emphasis: z
+    .string()
+    .trim()
+    .max(EMPHASIS_MAX, { error: strings.jobs.documents.emphasisTooLong })
+    .optional(),
+  targetProfileId: z.uuid().optional(),
+});
+
+export const tailorResumeSchema = z.object({
+  jobId: z.uuid(),
+  length: z.union([z.literal(1), z.literal(2)]).default(1),
+  emphasis: z
+    .string()
+    .trim()
+    .max(EMPHASIS_MAX, { error: strings.jobs.documents.emphasisTooLong })
+    .optional(),
+});
+
+export const rateResumeSchema = z.object({
+  resumeId: z.uuid(),
+  rating: z.union([z.literal(1), z.literal(-1)]),
+});
+
+export type TailorOptions = z.infer<typeof TailorOptions>;
 
 const Verdict = z.enum(["met", "partial", "missing"]);
 
