@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import type { LibrarySnapshot } from "@/features/library/schemas";
 import type { ResumeContent } from "@/features/tailor/schemas";
-import { contentDisposition, resumePdfFilename } from "@/lib/pdf/filename";
+import {
+  contentDisposition,
+  filenameFromContentDisposition,
+  resumePdfFilename,
+} from "@/lib/pdf/filename";
 import { resumePdfLines, resumePdfModel } from "@/lib/pdf/model";
 import { renderResumePdf } from "@/lib/pdf/render";
 import { resolveResumeTemplate } from "@/lib/pdf/template";
@@ -46,6 +50,11 @@ describe("resumePdfFilename", () => {
     expect(contentDisposition("Jose-Alvarez.pdf")).toContain(
       'filename="Jose-Alvarez.pdf"',
     );
+    expect(filenameFromContentDisposition(contentDisposition("José.pdf"))).toBe(
+      "José.pdf",
+    );
+    expect(filenameFromContentDisposition(null)).toBeNull();
+    expect(filenameFromContentDisposition("attachment")).toBeNull();
   });
 });
 

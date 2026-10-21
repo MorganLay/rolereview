@@ -3,13 +3,16 @@
 import { revalidatePath } from "next/cache";
 
 import { strings } from "@/copy/strings";
+import { can } from "@/features/billing/entitlements";
 import { checkQuota } from "@/features/billing/quota";
+import { applyStatusChange } from "@/features/jobs/pipeline";
 import { getLibrary } from "@/features/library/queries";
 import { LibrarySnapshot, zodFieldErrors } from "@/features/library/schemas";
 import { serializeLibrary } from "@/features/library/serialize";
 import type { Library } from "@/features/library/types";
 import { JobAnalysis } from "@/features/jobs/schemas";
 import { Prisma } from "@/generated/prisma/client";
+import type { JobStatus } from "@/generated/prisma/enums";
 import { buildContent, OutputSchema, SYSTEM } from "@/lib/ai/prompts/tailor";
 import { runStructured } from "@/lib/ai/run";
 import { requireUserForAction } from "@/lib/auth";
@@ -24,8 +27,10 @@ import {
   ResumeContent,
   TailorOptions,
   ValidatedTailorOutput,
+  markResumeSubmittedSchema,
   rateResumeSchema,
   saveResumeContentSchema,
+  setResumeTemplateSchema,
   tailorResumeSchema,
 } from "./schemas";
 import { validateTailorOutput } from "./validate";
@@ -191,6 +196,138 @@ export async function rateTailoredResume(
   if (updated.count === 0) return fail("NOT_FOUND");
   revalidateJob(existing.jobId);
   return ok({ rating });
+}
+
+/** Save the PDF template. Modern and Compact require Pro. */
+export async function setResumeTemplate(
+  input: unknown,
+): Promise<ActionResult<{ templateId: "classic" | "modern" | "compact" }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = setResumeTemplateSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const feature =
+    parsed.data.templateId === "modern"
+      ? "template:modern"
+      : parsed.data.templateId === "compact"
+        ? "template:compact"
+        : null;
+  if (feature && !can(user, feature)) return fail("PRO_REQUIRED");
+
+  const updated = await db.tailoredResume.updateMany({
+    where: {
+      id: parsed.data.resumeId,
+      jobId: parsed.data.jobId,
+      userId: user.id,
+      status: "READY",
+    },
+    data: { templateId: parsed.data.templateId },
+  });
+  if (updated.count === 0) return fail("NOT_FOUND");
+
+  revalidateJob(parsed.data.jobId);
+  revalidatePath(`/jobs/${parsed.data.jobId}/resumes/${parsed.data.resumeId}`);
+  return ok({ templateId: parsed.data.templateId });
+}
+
+/** Point the job at this resume. Does not change status. */
+export async function markResumeSubmitted(
+  input: unknown,
+): Promise<ActionResult<{ submitted: true }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = markResumeSubmittedSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const assigned = await assignSubmittedResume(
+    user.id,
+    parsed.data.jobId,
+    parsed.data.resumeId,
+  );
+  if (!assigned) return fail("NOT_FOUND");
+
+  revalidateJob(parsed.data.jobId);
+  revalidatePath(`/jobs/${parsed.data.jobId}/resumes/${parsed.data.resumeId}`);
+  return ok({ submitted: true });
+}
+
+export type MarkSubmittedAndApplyResult = {
+  submitted: true;
+  status: JobStatus;
+  moved: boolean;
+};
+
+/**
+ * Yes on the first-export prompt.
+ * Sets this resume as submitted, then moves a Saved job to Applied.
+ */
+export async function markSubmittedAndApply(
+  input: unknown,
+): Promise<ActionResult<MarkSubmittedAndApplyResult>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = markResumeSubmittedSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const assigned = await assignSubmittedResume(
+    user.id,
+    parsed.data.jobId,
+    parsed.data.resumeId,
+  );
+  if (!assigned) return fail("NOT_FOUND");
+
+  let status = assigned.status;
+  let moved = false;
+  if (assigned.status === "SAVED") {
+    try {
+      const result = await applyStatusChange(user.id, parsed.data.jobId, "APPLIED");
+      if (result) {
+        status = result.status;
+        moved = result.changed;
+      }
+    } catch {
+      moved = false;
+    }
+  }
+
+  revalidateJob(parsed.data.jobId);
+  revalidatePath(`/jobs/${parsed.data.jobId}/resumes/${parsed.data.resumeId}`);
+  return ok({ submitted: true, status, moved });
+}
+
+/** Owned READY resume on this job. Status is the job's status when the id is set. */
+async function assignSubmittedResume(
+  userId: string,
+  jobId: string,
+  resumeId: string,
+): Promise<{ status: JobStatus } | null> {
+  const resume = await db.tailoredResume.findFirst({
+    where: { id: resumeId, jobId, userId, status: "READY" },
+    select: { id: true },
+  });
+  if (!resume) return null;
+
+  const job = await db.job.findFirst({
+    where: { id: jobId, userId },
+    select: { status: true },
+  });
+  if (!job) return null;
+
+  try {
+    const updated = await db.job.updateMany({
+      where: { id: jobId, userId },
+      data: { submittedResumeId: resumeId },
+    });
+    if (updated.count === 0) return null;
+  } catch {
+    return null;
+  }
+
+  return { status: job.status };
 }
 
 export type SaveResumeContentResult = {

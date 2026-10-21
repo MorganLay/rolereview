@@ -6,6 +6,7 @@
 
 import type { Requirement } from "@/features/jobs/schemas";
 import { ENTRY_KINDS, type LibrarySnapshot } from "@/features/library/schemas";
+import type { ResumeTemplateId } from "@/lib/pdf/template";
 
 import {
   RESUME_LIMITS,
@@ -27,6 +28,13 @@ export type ResumeEditIssue =
 export type ResumeEditResult =
   | { ok: true; content: ResumeContent }
   | { ok: false; issue: ResumeEditIssue };
+
+/** Which Pro export options this plan can use. */
+export type ResumeTemplateAccess = {
+  modern: boolean;
+  compact: boolean;
+  docx: boolean;
+};
 
 /** A current library entry the quick-add dialog can attach a bullet to. */
 export type LibraryEntryOption = {
@@ -51,6 +59,12 @@ export type ResumeWorkspaceData = {
   requirements: Requirement[];
   keywords: string[];
   libraryEntries: LibraryEntryOption[];
+  templateId: ResumeTemplateId;
+  /** This resume is Job.submittedResumeId. */
+  submitted: boolean;
+  /** Current job status. The Applied prompt is only offered from SAVED. */
+  jobStatus: string;
+  templates: ResumeTemplateAccess;
 };
 
 type SnapshotEntry = LibrarySnapshot["entries"][number];

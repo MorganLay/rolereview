@@ -14,7 +14,7 @@ export default async function ResumeWorkspacePage({
 }) {
   const { jobId, resumeId } = await params;
   const user = await requireUser();
-  const workspace = await getResumeWorkspace(user.id, jobId, resumeId);
+  const workspace = await getResumeWorkspace(user.id, user.plan, jobId, resumeId);
   if (!workspace) notFound();
 
   return (

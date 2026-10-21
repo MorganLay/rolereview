@@ -1,11 +1,13 @@
 import "server-only";
 
+import { can } from "@/features/billing/entitlements";
 import { quotaSnapshot } from "@/features/billing/quota";
 import { formatJobInstant } from "@/features/jobs/format";
 import { JobAnalysis } from "@/features/jobs/schemas";
 import { ENTRY_KINDS, LibrarySnapshot } from "@/features/library/schemas";
 import type { Plan } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
+import { resolveResumeTemplate } from "@/lib/pdf/template";
 
 import type { LibraryEntryOption, ResumeWorkspaceData } from "./content";
 import { MatchReport, ResumeContent } from "./schemas";
@@ -77,6 +79,7 @@ function ratingValue(value: number | null): 1 | -1 | null {
 /** A READY resume the user can edit. Missing, pending, or failed → null. */
 export async function getResumeWorkspace(
   userId: string,
+  plan: Plan,
   jobId: string,
   resumeId: string,
 ): Promise<ResumeWorkspaceData | null> {
@@ -88,10 +91,19 @@ export async function getResumeWorkspace(
         version: true,
         status: true,
         updatedAt: true,
+        templateId: true,
         content: true,
         librarySnapshot: true,
         matchReport: true,
-        job: { select: { title: true, company: true, analysis: true } },
+        job: {
+          select: {
+            title: true,
+            company: true,
+            analysis: true,
+            status: true,
+            submittedResumeId: true,
+          },
+        },
         user: { select: { timezone: true } },
       },
     }),
@@ -130,6 +142,17 @@ export async function getResumeWorkspace(
     requirements: analysis.success ? analysis.data.requirements : [],
     keywords: analysis.success ? analysis.data.keywords : [],
     libraryEntries: sortLibraryEntries(entries),
+    templateId: resolveResumeTemplate(null, row.templateId, {
+      modern: true,
+      compact: true,
+    }),
+    submitted: row.id === row.job.submittedResumeId,
+    jobStatus: row.job.status,
+    templates: {
+      modern: can({ plan }, "template:modern"),
+      compact: can({ plan }, "template:compact"),
+      docx: can({ plan }, "docx"),
+    },
   };
 }
 

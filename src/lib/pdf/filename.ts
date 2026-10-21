@@ -20,6 +20,21 @@ export function contentDisposition(filename: string): string {
   return `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
 }
 
+/** Prefer the UTF-8 filename from a Content-Disposition download header. */
+export function filenameFromContentDisposition(header: string | null): string | null {
+  if (!header) return null;
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(header);
+  if (encoded?.[1]) {
+    try {
+      return decodeURIComponent(encoded[1].trim());
+    } catch {
+      return null;
+    }
+  }
+  const quoted = /filename="([^"]*)"/.exec(header);
+  return quoted?.[1] ? quoted[1] : null;
+}
+
 function slugPart(value: string | null): string {
   if (!value) return "";
   return value

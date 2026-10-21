@@ -44,6 +44,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { MatchPanel } from "./match-panel";
+import { ExportAppliedDialog, ResumeExportBar, useResumeExport } from "./resume-export-bar";
 
 const SAVE_DELAY_MS = 1500;
 
@@ -79,6 +80,16 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   const [tab, setTab] = useState<"resume" | "match" | "export">("resume");
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const pendingScroll = useRef<string | null>(null);
+  const exportUi = useResumeExport({
+    jobId: workspace.jobId,
+    resumeId: workspace.resumeId,
+    jobStatus: workspace.jobStatus,
+    templateId: workspace.templateId,
+    submitted: workspace.submitted,
+    templates: workspace.templates,
+    content,
+    snapshot: workspace.snapshot,
+  });
 
   const snapshotByRef = new Map(
     workspace.snapshot.entries.map((entry) => [entry.ref, entry]),
@@ -395,11 +406,9 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
               savedLabel
             )}
           </p>
-          <Button asChild className="ml-auto hidden lg:inline-flex">
-            <a href={`/api/resumes/${workspace.resumeId}/pdf`}>
-              {strings.actions.exportPdf}
-            </a>
-          </Button>
+          <div className="ml-auto hidden lg:flex">
+            <ResumeExportBar {...exportUi.barProps} />
+          </div>
         </div>
         <h1 className="font-serif text-2xl font-semibold tracking-tight break-words text-ink md:text-3xl">
           {workspace.jobTitle}
@@ -418,13 +427,9 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
       </div>
 
       {tab === "export" ? (
-        <div className="flex max-w-md flex-col items-start gap-3 lg:hidden">
+        <div className="flex max-w-lg flex-col items-start gap-3 lg:hidden">
           <p className="text-sm text-slate">{copy.exportBody}</p>
-          <Button asChild>
-            <a href={`/api/resumes/${workspace.resumeId}/pdf`}>
-              {strings.actions.exportPdf}
-            </a>
-          </Button>
+          <ResumeExportBar {...exportUi.barProps} />
         </div>
       ) : null}
 
@@ -604,6 +609,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
           />
         </aside>
       </div>
+      <ExportAppliedDialog {...exportUi.dialogProps} />
     </div>
   );
 }

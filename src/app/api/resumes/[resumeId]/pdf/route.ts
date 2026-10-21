@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { can } from "@/features/billing/entitlements";
 import { LibrarySnapshot } from "@/features/library/schemas";
+import { FIRST_EXPORT_HEADER } from "@/features/tailor/export-prompt";
 import { ResumeContent } from "@/features/tailor/schemas";
 import { requireUser } from "@/lib/auth";
 import { captureServerEvent } from "@/lib/analytics";
@@ -26,6 +27,7 @@ export async function GET(
     select: {
       status: true,
       templateId: true,
+      exportedAt: true,
       content: true,
       librarySnapshot: true,
       job: { select: { title: true, company: true } },
@@ -53,6 +55,7 @@ export async function GET(
     row.job.title,
   );
 
+  const firstExport = row.exportedAt == null;
   await db.tailoredResume.updateMany({
     where: { id: resumeId, userId: user.id },
     data: { exportedAt: new Date() },
@@ -67,6 +70,7 @@ export async function GET(
       "Content-Type": "application/pdf",
       "Content-Disposition": contentDisposition(filename),
       "Cache-Control": "private, no-store",
+      [FIRST_EXPORT_HEADER]: firstExport ? "1" : "0",
     },
   });
 }

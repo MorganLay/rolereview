@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { strings } from "@/copy/strings";
 import { EntryKindEnum } from "@/features/library/schemas";
+import { RESUME_TEMPLATES } from "@/lib/pdf/template";
 
 /** Stored resume caps. docs/04-DATA-MODEL.md. */
 export const RESUME_LIMITS = {
@@ -120,6 +121,17 @@ export const saveResumeContentSchema = z.object({
   jobId: z.uuid(),
   resumeId: z.uuid(),
   content: ResumeContent,
+});
+
+export const setResumeTemplateSchema = z.object({
+  jobId: z.uuid(),
+  resumeId: z.uuid(),
+  templateId: z.enum(RESUME_TEMPLATES),
+});
+
+export const markResumeSubmittedSchema = z.object({
+  jobId: z.uuid(),
+  resumeId: z.uuid(),
 });
 
 export const RequirementVerdict = z.object({

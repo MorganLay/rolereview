@@ -12,6 +12,7 @@ import { strings } from "@/copy/strings";
 
 import { rateTailoredResume, tailorResume } from "../actions";
 import type { JobDocuments, ResumeVersion } from "../status";
+import { resumeTemplateLabel } from "../template-label";
 import { TailorDialog } from "./tailor-dialog";
 
 const copy = strings.jobs.documents;
@@ -212,8 +213,7 @@ function VersionCard({
   ratingPending: boolean;
   onRate: (resumeId: string, rating: 1 | -1) => void;
 }) {
-  const template =
-    version.templateId === "classic" ? copy.templateClassic : version.templateId;
+  const template = resumeTemplateLabel(version.templateId);
 
   return (
     <article className="flex flex-col gap-3 rounded-lg border border-line p-4">
