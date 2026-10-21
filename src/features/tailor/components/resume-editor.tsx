@@ -76,7 +76,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   const skipBlur = useRef(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const summaryId = useId();
-  const [tab, setTab] = useState<"resume" | "match">("resume");
+  const [tab, setTab] = useState<"resume" | "match" | "export">("resume");
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const pendingScroll = useRef<string | null>(null);
 
@@ -195,7 +195,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   }
 
   function onTab(value: string) {
-    if (value === "resume" || value === "match") setTab(value);
+    if (value === "resume" || value === "match" || value === "export") setTab(value);
   }
 
   function updateContent(recipe: (current: ResumeContent) => ResumeContent) {
@@ -395,6 +395,11 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
               savedLabel
             )}
           </p>
+          <Button asChild className="ml-auto hidden lg:inline-flex">
+            <a href={`/api/resumes/${workspace.resumeId}/pdf`}>
+              {strings.actions.exportPdf}
+            </a>
+          </Button>
         </div>
         <h1 className="font-serif text-2xl font-semibold tracking-tight break-words text-ink md:text-3xl">
           {workspace.jobTitle}
@@ -404,12 +409,24 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
 
       <div className="lg:hidden">
         <Tabs value={tab} onValueChange={onTab}>
-          <TabsList aria-label={copy.panelLabel}>
+          <TabsList aria-label={copy.tabsLabel}>
             <TabsTrigger value="resume">{copy.resumeTab}</TabsTrigger>
             <TabsTrigger value="match">{copy.matchTab}</TabsTrigger>
+            <TabsTrigger value="export">{copy.exportTab}</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
+
+      {tab === "export" ? (
+        <div className="flex max-w-md flex-col items-start gap-3 lg:hidden">
+          <p className="text-sm text-slate">{copy.exportBody}</p>
+          <Button asChild>
+            <a href={`/api/resumes/${workspace.resumeId}/pdf`}>
+              {strings.actions.exportPdf}
+            </a>
+          </Button>
+        </div>
+      ) : null}
 
       <div className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-8">
         <div

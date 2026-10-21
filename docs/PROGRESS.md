@@ -48,7 +48,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T6.6** Evals harness
 
 ## Phase 7 — Export
-- [ ] **T7.1** PDF templates
+- [x] **T7.1** PDF templates
 - [ ] **T7.2** Finishing touches
 - [ ] **M3 checkpoint** Use RoleRefine for your own applications for a week; log issues in docs/FEEDBACK.md; fix the top 3
 
@@ -95,6 +95,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 <!-- Short notes per task: decisions made, follow-ups, things to revisit. Newest first. -->
 
+- **2026-10-21 T7.1:** Classic, Modern, and Compact PDFs download from `/api/resumes/[id]/pdf`. Free falls back to Classic. A seed-sized resume and the saved dev resume fit one Letter page, and copied text stays in section order. `runtime` is not exported because `cacheComponents` rejects it. Copy text, the template switch, and mark as submitted stay in T7.2.
 - **2026-10-21 T6.6:** `npm run evals` runs 4 libraries × 6 postings (ANALYZE + TAILOR + guard + score). Cover letters wait for T9.1. The first run cost about $0.48 with average reverts 0.00. Two summaries overstated tenure and "worked directly with product squads"; the prompt was not changed. Calls count against `SEED_USER_ID` quota.
 - **2026-10-21 T6.5:** The match score stays the library score from tailoring. Keyword coverage updates as you edit. Add to library is only on a missing requirement, the bullet starts empty, and Tailor again opens Documents. The mobile Export tab waits for T7.1.
 - **2026-10-20 T6.4:** The workspace autosaves. Titles, employers, and dates stay on the snapshot. On Documents, Open is the left action and the version title opens the resume. PDF download waits for T7.1.
