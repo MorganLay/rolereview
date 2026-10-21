@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 
 import { JobResult } from "@/features/jobs/components/job-result";
+import type { JobSectionTab } from "@/features/jobs/components/job-sections";
 import { analysesRemaining, getJob } from "@/features/jobs/queries";
 import { getJobDocuments } from "@/features/tailor/queries";
+import { listJobTimeline } from "@/features/tracking/queries";
 import { requireUser } from "@/lib/auth";
 
 /** Analysis retry and tailoring call the model and can take up to a minute. */
@@ -21,10 +23,11 @@ export default async function JobDetailPage({
   const { jobId } = await params;
   const query = await searchParams;
   const user = await requireUser();
-  const [job, analysesLeft, documents] = await Promise.all([
+  const [job, analysesLeft, documents, timeline] = await Promise.all([
     getJob(user.id, jobId),
     analysesRemaining(user.id, user.plan),
     getJobDocuments(user.id, user.plan, jobId),
+    listJobTimeline(user.id, jobId),
   ]);
   if (!job) notFound();
 
@@ -35,6 +38,9 @@ export default async function JobDetailPage({
         analysesLeft={analysesLeft}
         documents={documents}
         initialTab={jobTab(query.tab, documents.pending)}
+        timeline={timeline.events}
+        hideAuto={queryValue(query.events) === "manual"}
+        today={timeline.today}
       />
     </div>
   );
@@ -43,9 +49,12 @@ export default async function JobDetailPage({
 function jobTab(
   value: string | string[] | undefined,
   pending: boolean,
-): "overview" | "documents" {
-  const tab = Array.isArray(value) ? value[0] : value;
-  if (tab === "documents") return "documents";
-  if (tab === "overview") return "overview";
+): JobSectionTab {
+  const tab = queryValue(value);
+  if (tab === "documents" || tab === "timeline" || tab === "overview") return tab;
   return pending ? "documents" : "overview";
+}
+
+function queryValue(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }

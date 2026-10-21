@@ -8,10 +8,12 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
 import { strings } from "@/copy/strings";
 import { DocumentsTab, TailorPoll } from "@/features/tailor/components/documents-tab";
 import type { JobDocuments } from "@/features/tailor/status";
+import { TimelineTab } from "@/features/tracking/components/timeline-tab";
+import type { TimelineEventView } from "@/features/tracking/events";
 
 import { formatSalaryLabel } from "../format";
 import type { JobPageData } from "../queries";
@@ -19,6 +21,7 @@ import type { Requirement } from "../schemas";
 import { JobAnalysisControls } from "./job-analysis-controls";
 import { JobDetailsForm } from "./job-details-form";
 import { JobHeader } from "./job-header";
+import { JobSections, type JobSectionTab } from "./job-sections";
 
 const copy = strings.jobs.result;
 const detail = strings.jobs.detail;
@@ -36,10 +39,21 @@ type JobResultProps = {
   job: JobPageData;
   analysesLeft: number;
   documents: JobDocuments;
-  initialTab: "overview" | "documents";
+  initialTab: JobSectionTab;
+  timeline: TimelineEventView[];
+  hideAuto: boolean;
+  today: string;
 };
 
-export function JobResult({ job, analysesLeft, documents, initialTab }: JobResultProps) {
+export function JobResult({
+  job,
+  analysesLeft,
+  documents,
+  initialTab,
+  timeline,
+  hideAuto,
+  today,
+}: JobResultProps) {
   const ready = job.analysisStatus === "READY";
   const must = job.requirements.filter((item) => item.importance === "must");
   const nice = job.requirements.filter((item) => item.importance === "nice");
@@ -85,11 +99,7 @@ export function JobResult({ job, analysesLeft, documents, initialTab }: JobResul
         </Button>
       </section>
 
-      <Tabs key={initialTab} defaultValue={initialTab}>
-        <TabsList aria-label={documentsCopy.tabsLabel}>
-          <TabsTrigger value="overview">{documentsCopy.overviewTab}</TabsTrigger>
-          <TabsTrigger value="documents">{documentsCopy.documentsTab}</TabsTrigger>
-        </TabsList>
+      <JobSections jobId={job.id} initialTab={initialTab} hideAuto={hideAuto}>
         <TabsContent value="overview" className="flex flex-col gap-6 pt-4">
           {ready && job.summary ? (
             <section aria-labelledby="job-summary" className="flex flex-col gap-2">
@@ -175,7 +185,15 @@ export function JobResult({ job, analysesLeft, documents, initialTab }: JobResul
             documents={documents}
           />
         </TabsContent>
-      </Tabs>
+        <TabsContent value="timeline" className="pt-4">
+          <TimelineTab
+            jobId={job.id}
+            events={timeline}
+            hideAuto={hideAuto}
+            today={today}
+          />
+        </TabsContent>
+      </JobSections>
       {documents.pending ? <TailorPoll /> : null}
     </div>
   );

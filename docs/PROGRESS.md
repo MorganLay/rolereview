@@ -54,7 +54,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Phase 8 — Full tracker
 - [x] **T8.1** Board view
-- [ ] **T8.2** Timeline tab
+- [x] **T8.2** Timeline tab
 - [ ] **T8.3** Interviews tab
 - [ ] **T8.4** Contacts
 - [ ] **T8.5** Reminders
@@ -93,6 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-21 T8.2:** Timeline is `?tab=timeline`. Manual entries are follow-up, call, email, note, and other; the date is noon in the user's timezone. Hide automatic events is the `events=manual` filter. Details cap is 2,000 characters. A contact on a follow-up waits for T8.4.
 - **2026-10-21 T8.1:** The board is the default jobs page; the list is `?view=list`. Card order is a float midpoint in `board-order.ts` (no `fractional-indexing` package). Below `md`, one column and a stage picker; Move to… is the keyboard and phone path. Same-stage drag writes `boardOrder` only. A 30-card drag was not run; the dev account has three jobs.
 - **2026-10-21 M3:** Checked by hand. Feedback fixes are on main. Follow-up: the library layout (controls beside the text) was left for later.
 - **2026-10-21 T7.2:** Copy text uses the resume on screen. Free locks Modern, Compact, and DOCX. Mark as submitted sets this version and does not change status. The first PDF export asks to move to Applied only while the job is still Saved, and Yes goes through the pipeline. DOCX file generation stays on T11.4.
