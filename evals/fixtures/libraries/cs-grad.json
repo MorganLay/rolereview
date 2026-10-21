@@ -1,0 +1,120 @@
+{
+  "takenAt": "2026-10-21T00:00:00.000Z",
+  "profile": {
+    "fullName": "Ada Okonkwo",
+    "headline": "New computer science graduate",
+    "email": "ada.okonkwo@example.com",
+    "phone": "613-555-0142",
+    "location": "Ottawa, ON",
+    "links": [{ "label": "Portfolio", "url": "https://example.com/ada-okonkwo" }],
+    "summary": "Computer science graduate with a summer internship on internal web tools and a campus help-desk role."
+  },
+  "entries": [
+    {
+      "ref": "E1",
+      "id": "grad-e1",
+      "kind": "EXPERIENCE",
+      "title": "Software developer intern",
+      "organization": "Northline Transit",
+      "location": "Ottawa, ON",
+      "startDate": "2025-05",
+      "endDate": "2025-08",
+      "isCurrent": false,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E1.B1",
+          "id": "grad-e1-b1",
+          "text": "Built a React and TypeScript page for bus-stop inspection notes used by 12 field supervisors."
+        },
+        {
+          "ref": "E1.B2",
+          "id": "grad-e1-b2",
+          "text": "Wrote Python scripts that checked GTFS files and flagged 40 missing stop records before the fall schedule was published."
+        },
+        {
+          "ref": "E1.B3",
+          "id": "grad-e1-b3",
+          "text": "Added Jest tests around a fare-table helper, covering 18 cases the team had listed."
+        }
+      ]
+    },
+    {
+      "ref": "E2",
+      "id": "grad-e2",
+      "kind": "EXPERIENCE",
+      "title": "IT help desk assistant",
+      "organization": "University of Ottawa",
+      "location": "Ottawa, ON",
+      "startDate": "2024-09",
+      "endDate": "2026-04",
+      "isCurrent": false,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E2.B1",
+          "id": "grad-e2-b1",
+          "text": "Resolved about 25 student laptop and Wi-Fi tickets a week and logged each one in the campus ticketing tool."
+        },
+        {
+          "ref": "E2.B2",
+          "id": "grad-e2-b2",
+          "text": "Wrote a 6-page wiki for resetting lab passwords that the evening shift adopted."
+        }
+      ]
+    },
+    {
+      "ref": "E3",
+      "id": "grad-e3",
+      "kind": "PROJECT",
+      "title": "Bike-shop inventory app",
+      "organization": "University of Ottawa",
+      "location": "Ottawa, ON",
+      "startDate": "2026-01",
+      "endDate": "2026-04",
+      "isCurrent": false,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E3.B1",
+          "id": "grad-e3-b1",
+          "text": "Built a Java and SQL inventory app for a campus bike-repair shop, tracking 120 parts."
+        },
+        {
+          "ref": "E3.B2",
+          "id": "grad-e3-b2",
+          "text": "Presented the app to the shop coordinator and two classmates. The shop did not deploy it."
+        }
+      ]
+    },
+    {
+      "ref": "E4",
+      "id": "grad-e4",
+      "kind": "EDUCATION",
+      "title": "Bachelor of Science, Computer Science",
+      "organization": "University of Ottawa",
+      "location": "Ottawa, ON",
+      "startDate": "2022",
+      "endDate": "2026",
+      "isCurrent": false,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E4.B1",
+          "id": "grad-e4-b1",
+          "text": "Coursework in databases, operating systems, and web development."
+        }
+      ]
+    }
+  ],
+  "skills": [
+    { "ref": "S1", "id": "grad-s1", "name": "Java", "category": "Languages" },
+    { "ref": "S2", "id": "grad-s2", "name": "Python", "category": "Languages" },
+    { "ref": "S3", "id": "grad-s3", "name": "SQL", "category": "Languages" },
+    { "ref": "S4", "id": "grad-s4", "name": "JavaScript", "category": "Languages" },
+    { "ref": "S5", "id": "grad-s5", "name": "TypeScript", "category": "Languages" },
+    { "ref": "S6", "id": "grad-s6", "name": "React", "category": "Frameworks" },
+    { "ref": "S7", "id": "grad-s7", "name": "Git", "category": "Tools" },
+    { "ref": "S8", "id": "grad-s8", "name": "Jest", "category": "Tools" }
+  ]
+}

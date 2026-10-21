@@ -1,0 +1,25 @@
+Kindling Studio — Frontend developer
+
+Montreal, Quebec. Hybrid, three days in the studio. Full-time. $95,000–$115,000 a year.
+
+Kindling Studio designs and builds marketing and account sites for cultural organizations. This is a mid-level role on a team of six.
+
+What you will do
+- Build interfaces in React and TypeScript.
+- Extend a shared component library and document components for other developers.
+- Write CSS that matches designs from Figma, including keyboard and screen-reader behaviour.
+- Add automated checks with Jest or Playwright for sign-in and other critical flows.
+- Review pull requests and pair with a designer when a layout is unclear.
+
+Required
+- About three years of professional web development.
+- TypeScript, React, HTML, and CSS.
+- Git, and a habit of small pull requests.
+- One shipped example of an accessibility fix, described in your resume.
+
+Assets
+- Storybook or another component workshop.
+- Experience with design systems used by more than one team.
+- French is useful and not required.
+
+Apply with a resume and a link to two pages you built. No cover letter is required.

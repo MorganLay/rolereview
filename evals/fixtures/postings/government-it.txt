@@ -1,0 +1,27 @@
+City of Northwater — Information technology developer
+
+Competition NW-IT-2026-014. On site at Northwater City Hall. Full-time, permanent. Salary $78,400–$92,100 a year.
+
+The City of Northwater is fictional. The information technology branch maintains internal systems for permits, recreation bookings, and staff directories.
+
+What you will do
+- Develop and maintain features in Java or C# services and their web front ends.
+- Write SQL for reporting views used by clerks.
+- Design small REST endpoints and document them for the team.
+- Fix defects logged by city staff and explain the change in plain language.
+- Follow the city's change-control checklist before a release.
+
+Required
+- A degree or diploma in computer science or a related field, or an equivalent combination of study and work.
+- Two years of software development experience.
+- SQL and a relational database.
+- Experience with Git.
+- Ability to write short technical notes for non-developers.
+
+Assets
+- REST APIs.
+- Automated tests.
+- English and French.
+- Experience in a government or other public-sector setting. A criminal-record check is required after a conditional offer. It is not part of the resume screen.
+
+Apply online by 20 January 2027. Quote competition NW-IT-2026-014.

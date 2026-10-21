@@ -1,0 +1,27 @@
+Pebble Systems — Junior software developer
+
+Ottawa, Ontario. Hybrid, two days on site. Full-time. $62,000–$72,000 a year.
+
+Pebble Systems builds scheduling tools for community recreation centres. We are hiring a junior software developer to join a team of four.
+
+What you will do
+- Implement features in our React and TypeScript web app.
+- Write Python scripts that check data files before they are published.
+- Add unit tests with Jest.
+- Fix bugs reported by recreation-centre staff.
+- Participate in code review and write short notes in Git.
+
+Required
+- A degree or diploma in computer science, software engineering, or a related field, or equivalent project work.
+- JavaScript and Git.
+- Ability to write SQL against a relational database.
+- Clear written English.
+
+Assets
+- React or TypeScript.
+- A co-op, internship, or other short software role.
+- HTML and CSS.
+
+This is an entry-level role. Candidates who finish a degree in 2026 will be considered.
+
+Apply with a resume. No cover letter is required. The posting closes on 30 November 2026.

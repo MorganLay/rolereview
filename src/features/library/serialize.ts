@@ -102,6 +102,11 @@ function promptText(snapshot: LibrarySnapshot): string {
   return lines.join("\n");
 }
 
+/** Prompt text for a snapshot that already has refs. The eval harness uses this. */
+export function libraryPromptText(snapshot: LibrarySnapshot): string {
+  return promptText(snapshot);
+}
+
 function skillLine(skill: {
   ref: string;
   name: string;

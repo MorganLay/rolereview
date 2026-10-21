@@ -1,0 +1,141 @@
+{
+  "takenAt": "2026-10-21T00:00:00.000Z",
+  "profile": {
+    "fullName": "Jordan Blake",
+    "headline": "Retail supervisor learning web development",
+    "email": "jordan.blake@example.com",
+    "phone": "902-555-0133",
+    "location": "Halifax, NS",
+    "links": [{ "label": "Portfolio", "url": "https://example.com/jordan-blake" }],
+    "summary": "Shift supervisor at a home-goods store who completed a web-development certificate and a small catalogue project."
+  },
+  "entries": [
+    {
+      "ref": "E1",
+      "id": "retail-e1",
+      "kind": "EXPERIENCE",
+      "title": "Shift supervisor",
+      "organization": "Maple & Main",
+      "location": "Halifax, NS",
+      "startDate": "2020-02",
+      "endDate": null,
+      "isCurrent": true,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E1.B1",
+          "id": "retail-e1-b1",
+          "text": "Scheduled a team of 14 at a home-goods store with about $1.2 million in annual sales."
+        },
+        {
+          "ref": "E1.B2",
+          "id": "retail-e1-b2",
+          "text": "Trained 9 new cashiers on the till and the return desk."
+        },
+        {
+          "ref": "E1.B3",
+          "id": "retail-e1-b3",
+          "text": "Counted the safe and the day's cash. The drawer was short twice in 2025."
+        },
+        {
+          "ref": "E1.B4",
+          "id": "retail-e1-b4",
+          "text": "Reconciled online-pickup orders each morning, usually 30 to 50 orders."
+        }
+      ]
+    },
+    {
+      "ref": "E2",
+      "id": "retail-e2",
+      "kind": "EXPERIENCE",
+      "title": "Cashier",
+      "organization": "Maple & Main",
+      "location": "Halifax, NS",
+      "startDate": "2018-06",
+      "endDate": "2020-01",
+      "isCurrent": false,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E2.B1",
+          "id": "retail-e2-b1",
+          "text": "Served customers at the till and the customer-service desk."
+        },
+        {
+          "ref": "E2.B2",
+          "id": "retail-e2-b2",
+          "text": "Kept the return log for the department, about 20 returns a day on weekends."
+        }
+      ]
+    },
+    {
+      "ref": "E3",
+      "id": "retail-e3",
+      "kind": "EDUCATION",
+      "title": "Certificate, Web Development",
+      "organization": "Harbour College",
+      "location": "Halifax, NS",
+      "startDate": "2024-09",
+      "endDate": "2025-06",
+      "isCurrent": false,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E3.B1",
+          "id": "retail-e3-b1",
+          "text": "Completed courses in HTML, CSS, JavaScript, and a group project."
+        }
+      ]
+    },
+    {
+      "ref": "E4",
+      "id": "retail-e4",
+      "kind": "PROJECT",
+      "title": "Bookstore catalogue",
+      "organization": "Harbour College",
+      "location": "Halifax, NS",
+      "startDate": "2025-02",
+      "endDate": "2025-04",
+      "isCurrent": false,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E4.B1",
+          "id": "retail-e4-b1",
+          "text": "Built a static site with HTML, CSS, and JavaScript listing 24 books."
+        },
+        {
+          "ref": "E4.B2",
+          "id": "retail-e4-b2",
+          "text": "Added a search box that filters the list by title."
+        }
+      ]
+    },
+    {
+      "ref": "E5",
+      "id": "retail-e5",
+      "kind": "VOLUNTEER",
+      "title": "Computer tutor",
+      "organization": "Quinpool Library Drop-in",
+      "location": "Halifax, NS",
+      "startDate": "2025-01",
+      "endDate": "2025-08",
+      "isCurrent": false,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E5.B1",
+          "id": "retail-e5-b1",
+          "text": "Helped adults with email, job applications, and printing, about 3 hours a week for 8 months."
+        }
+      ]
+    }
+  ],
+  "skills": [
+    { "ref": "S1", "id": "retail-s1", "name": "HTML", "category": "Languages" },
+    { "ref": "S2", "id": "retail-s2", "name": "CSS", "category": "Languages" },
+    { "ref": "S3", "id": "retail-s3", "name": "JavaScript", "category": "Languages" },
+    { "ref": "S4", "id": "retail-s4", "name": "Excel", "category": "Tools" },
+    { "ref": "S5", "id": "retail-s5", "name": "Customer service", "category": "Soft skills" }
+  ]
+}

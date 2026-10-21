@@ -275,7 +275,7 @@ All cron handlers require `Authorization: Bearer ${CRON_SECRET}` and are idempot
   "test": "vitest run", "test:watch": "vitest", "e2e": "playwright test",
   "db:migrate": "prisma migrate dev", "db:deploy": "prisma migrate deploy",
   "db:studio": "prisma studio", "db:generate": "prisma generate", "db:seed": "prisma db seed",
-  "evals": "tsx evals/run.ts", "email:dev": "email dev --dir src/lib/email/templates",
+  "evals": "tsx --conditions=react-server evals/run.ts", "email:dev": "email dev --dir src/lib/email/templates",
   "postinstall": "prisma generate"
 }
 ```

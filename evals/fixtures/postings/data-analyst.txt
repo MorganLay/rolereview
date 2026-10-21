@@ -1,0 +1,26 @@
+Lakeshore Mutual — Data analyst
+
+Toronto, Ontario. Hybrid, two days a week in the office. Full-time. $70,000–$85,000 a year.
+
+Lakeshore Mutual is a fictional regional insurer. The analytics team turns policy and claims data into reports for branch managers.
+
+What you will do
+- Write SQL against a Postgres warehouse to answer questions from operations.
+- Build and maintain dashboards in Power BI or Tableau.
+- Check data quality before a report is published, and document the definition of each metric.
+- Walk branch managers through a weekly pack and teach them how to use the filters.
+- Keep an Excel checklist for the files that still arrive by email.
+
+Required
+- Two years of experience in reporting, analytics, or a similar data role.
+- Strong SQL.
+- Excel, including lookups and pivot tables.
+- Experience presenting numbers to people who do not write queries.
+- Clear written English.
+
+Assets
+- Power BI or Tableau.
+- Python for file checks.
+- Experience in insurance, banking, or another regulated setting.
+
+Apply with a resume. The posting closes on 15 December 2026.

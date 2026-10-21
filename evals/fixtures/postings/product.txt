@@ -1,0 +1,25 @@
+Keel & Co — Associate product analyst
+
+Toronto, Ontario. Hybrid, two days a week with the product team. Full-time. $75,000–$88,000 a year.
+
+Keel & Co makes software that independent grocers use for specials and pickup orders. This is not a coding role. You will work with a product manager and two engineers.
+
+What you will do
+- Talk to store managers, write down what they asked for, and turn that into a short requirement.
+- Keep the backlog in order with the product manager, and say which item should wait.
+- Pull simple counts with SQL or Excel so a decision is based on orders, not a guess.
+- Walk a store manager through a change before it ships, and note what confused them.
+- Write the release note in plain language.
+
+Required
+- Experience explaining a process to customers or to colleagues who do not build the product. Retail, operations, or analytics backgrounds are welcome.
+- Excel, including a pivot table.
+- A writing sample, which can be a school project, a help article, or a requirements note.
+- Comfortable learning a basic SQL query with help from an analyst.
+
+Assets
+- A small product, catalogue, or school project you can describe.
+- Experience reconciling orders, cash, or another operational list.
+- Power BI or another dashboard you have used as a reader.
+
+Apply with a resume. Tell us about one time you changed a process after listening to a customer. The posting closes on 8 January 2027.

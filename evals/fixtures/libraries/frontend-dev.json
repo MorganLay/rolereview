@@ -1,0 +1,121 @@
+{
+  "takenAt": "2026-10-21T00:00:00.000Z",
+  "profile": {
+    "fullName": "Priya Shah",
+    "headline": "Frontend developer",
+    "email": "priya.shah@example.com",
+    "phone": "514-555-0190",
+    "location": "Montreal, QC",
+    "links": [{ "label": "Portfolio", "url": "https://example.com/priya-shah" }],
+    "summary": "Frontend developer who builds React design systems and fixes accessibility bugs on customer-facing pages."
+  },
+  "entries": [
+    {
+      "ref": "E1",
+      "id": "fe-e1",
+      "kind": "EXPERIENCE",
+      "title": "Frontend developer",
+      "organization": "Halcyon Web",
+      "location": "Montreal, QC",
+      "startDate": "2022-04",
+      "endDate": null,
+      "isCurrent": true,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E1.B1",
+          "id": "fe-e1-b1",
+          "text": "Led the design-system package used by 4 product squads, with 30 React components documented in Storybook."
+        },
+        {
+          "ref": "E1.B2",
+          "id": "fe-e1-b2",
+          "text": "Rebuilt the account settings flow in TypeScript, and support tickets about that page fell from 40 a month to 11."
+        },
+        {
+          "ref": "E1.B3",
+          "id": "fe-e1-b3",
+          "text": "Paired with a designer on keyboard and screen-reader fixes for checkout, closing 22 accessibility bugs."
+        },
+        {
+          "ref": "E1.B4",
+          "id": "fe-e1-b4",
+          "text": "Added Playwright checks for the sign-in and billing pages, and they run on every pull request."
+        }
+      ]
+    },
+    {
+      "ref": "E2",
+      "id": "fe-e2",
+      "kind": "EXPERIENCE",
+      "title": "Junior web developer",
+      "organization": "Birchlane Studio",
+      "location": "Montreal, QC",
+      "startDate": "2019-08",
+      "endDate": "2022-03",
+      "isCurrent": false,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E2.B1",
+          "id": "fe-e2-b1",
+          "text": "Built marketing pages in HTML, CSS, and JavaScript for 10 client launches."
+        },
+        {
+          "ref": "E2.B2",
+          "id": "fe-e2-b2",
+          "text": "Maintained a WordPress brochure site and published about 2 posts a week for one client."
+        }
+      ]
+    },
+    {
+      "ref": "E3",
+      "id": "fe-e3",
+      "kind": "PROJECT",
+      "title": "Component gallery",
+      "organization": "Halcyon Web",
+      "location": "Montreal, QC",
+      "startDate": "2024-02",
+      "endDate": "2024-05",
+      "isCurrent": false,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E3.B1",
+          "id": "fe-e3-b1",
+          "text": "Published an internal gallery of the 30 design-system components, with a short usage note on each."
+        }
+      ]
+    },
+    {
+      "ref": "E4",
+      "id": "fe-e4",
+      "kind": "EDUCATION",
+      "title": "Bachelor of Arts, Communication",
+      "organization": "River College",
+      "location": "Montreal, QC",
+      "startDate": "2015",
+      "endDate": "2019",
+      "isCurrent": false,
+      "url": null,
+      "bullets": [
+        {
+          "ref": "E4.B1",
+          "id": "fe-e4-b1",
+          "text": "Coursework in writing, research methods, and an elective in introductory web design."
+        }
+      ]
+    }
+  ],
+  "skills": [
+    { "ref": "S1", "id": "fe-s1", "name": "TypeScript", "category": "Languages" },
+    { "ref": "S2", "id": "fe-s2", "name": "JavaScript", "category": "Languages" },
+    { "ref": "S3", "id": "fe-s3", "name": "React", "category": "Frameworks" },
+    { "ref": "S4", "id": "fe-s4", "name": "HTML", "category": "Languages" },
+    { "ref": "S5", "id": "fe-s5", "name": "CSS", "category": "Languages" },
+    { "ref": "S6", "id": "fe-s6", "name": "Jest", "category": "Tools" },
+    { "ref": "S7", "id": "fe-s7", "name": "Playwright", "category": "Tools" },
+    { "ref": "S8", "id": "fe-s8", "name": "Figma", "category": "Tools" },
+    { "ref": "S9", "id": "fe-s9", "name": "Git", "category": "Tools" }
+  ]
+}

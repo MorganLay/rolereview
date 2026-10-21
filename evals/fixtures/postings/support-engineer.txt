@@ -1,0 +1,26 @@
+Brightpath Hosting — Support engineer
+
+Remote within Canada. Full-time. $58,000–$68,000 a year.
+
+Brightpath Hosting provides email and small-site hosting for clubs and local businesses. The support desk is a team of five.
+
+What you will do
+- Answer customer email and the ticket queue about mail delivery, DNS, and password resets.
+- Follow a runbook for the common Linux checks, and escalate when the runbook stops.
+- Write or update a help article when the same question arrives three times.
+- Take part in a shared on-call rotation one week a month, with a senior engineer as backup.
+- Keep notes in the ticket so the next person can see what was already tried.
+
+Required
+- One year of customer support, help desk, or another role where you explained technical steps in writing.
+- Comfort reading a log file and a knowledge-base article.
+- Clear written English.
+- Reliable home internet for remote work.
+
+Assets
+- Linux or another command line.
+- HTML, enough to spot a broken link in a customer's page.
+- Experience with DNS or email delivery.
+- A second language used with customers.
+
+No degree is required. Apply with a resume. The posting closes on 12 December 2026.
