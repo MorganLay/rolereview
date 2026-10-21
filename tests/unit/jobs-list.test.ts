@@ -33,9 +33,9 @@ function row(partial: Partial<JobListRecord> & Pick<JobListRecord, "id">): JobLi
 }
 
 describe("parseJobListQuery", () => {
-  it("defaults to the list, newest activity first", () => {
+  it("defaults to the board, newest activity first", () => {
     expect(parseJobListQuery({})).toEqual({
-      view: "list",
+      view: "board",
       q: "",
       source: null,
       workMode: null,
@@ -75,10 +75,12 @@ describe("parseJobListQuery", () => {
     expect(parseJobListQuery({ source: "linkedin", priority: "0", priorityExtra: "9" }).minPriority).toBeNull();
     expect(parseJobListQuery({ priority: "6" }).minPriority).toBeNull();
     expect(parseJobListQuery({ view: "LIST", sort: "nope", dir: "asc" })).toMatchObject({
-      view: "list",
+      view: "board",
       sort: "activity",
       dir: "desc",
     });
+    expect(parseJobListQuery({ view: "list" }).view).toBe("list");
+    expect(jobListHref(parseJobListQuery({ view: "list" }))).toBe("/jobs?view=list");
   });
 
   it("trims search text and keeps a SQL-shaped phrase as text", () => {

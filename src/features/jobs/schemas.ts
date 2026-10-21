@@ -44,6 +44,15 @@ export const OPEN_JOB_STATUSES = [
   "OFFER",
 ] as const;
 
+/** Board columns. Closed stacks the four closed statuses. */
+export const BOARD_STAGES = [...OPEN_JOB_STATUSES, "CLOSED"] as const;
+
+export type BoardStage = (typeof BOARD_STAGES)[number];
+
+export function isBoardStage(value: string): value is BoardStage {
+  return (BOARD_STAGES as readonly string[]).includes(value);
+}
+
 export const CLOSED_JOB_STATUSES = [
   "ACCEPTED",
   "REJECTED",
@@ -237,6 +246,14 @@ export const updateJobStatusSchema = z.object({
   jobId: z.uuid(),
   status: jobStatusSchema,
   closeReason: optionalText(JOB_LIMITS.closeReason, errors.closeReasonLength),
+});
+
+export const moveJobSchema = z.object({
+  jobId: z.uuid(),
+  toStatus: jobStatusSchema,
+  beforeId: z.uuid().nullable().optional(),
+  afterId: z.uuid().nullable().optional(),
+  closeReason: optionalText(JOB_LIMITS.closeReason, errors.closeReasonLength).optional(),
 });
 
 export type UpdateJobStatusInput = z.input<typeof updateJobStatusSchema>;

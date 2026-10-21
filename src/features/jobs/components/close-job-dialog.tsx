@@ -12,38 +12,53 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { strings } from "@/copy/strings";
 
-import type { JobStatusValue } from "../schemas";
+import { CLOSED_JOB_STATUSES, isClosedJobStatus, type JobStatusValue } from "../schemas";
 
 const copy = strings.jobs.detail;
+const board = strings.jobs.board;
 
 export function CloseJobDialog({
   open,
   status,
   pending,
+  pickStatus = false,
   onOpenChange,
   onConfirm,
 }: {
   open: boolean;
   status: JobStatusValue | null;
   pending: boolean;
+  pickStatus?: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (reason: string) => Promise<string | undefined>;
+  onConfirm: (reason: string, status: JobStatusValue) => Promise<string | undefined>;
 }) {
   const reasonId = useId();
+  const statusId = useId();
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState<string | undefined>();
+  const [chosen, setChosen] = useState<JobStatusValue | null>(status);
   const [wasOpen, setWasOpen] = useState(false);
 
   if (open && !wasOpen) {
     setWasOpen(true);
     setReason("");
     setReasonError(undefined);
+    setChosen(status);
   } else if (!open && wasOpen) {
     setWasOpen(false);
   }
+
+  const activeStatus = pickStatus ? chosen : status;
 
   function begin(next: boolean) {
     if (pending) return;
@@ -56,9 +71,9 @@ export function CloseJobDialog({
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    if (pending || !status) return;
+    if (pending || !activeStatus) return;
     setReasonError(undefined);
-    const message = await onConfirm(reason);
+    const message = await onConfirm(reason, activeStatus);
     if (message) setReasonError(message);
   }
 
@@ -68,10 +83,32 @@ export function CloseJobDialog({
         <form onSubmit={onSubmit} className="grid gap-4">
           <DialogHeader className="pr-8">
             <DialogTitle className="font-sans">
-              {status ? copy.closeAs(copy.statuses[status]) : copy.closeTitle}
+              {activeStatus ? copy.closeAs(copy.statuses[activeStatus]) : copy.closeTitle}
             </DialogTitle>
             <DialogDescription>{copy.closeBody}</DialogDescription>
           </DialogHeader>
+          {pickStatus ? (
+            <div className="grid gap-2">
+              <Label htmlFor={statusId}>{board.closedStatusLabel}</Label>
+              <Select
+                value={chosen ?? undefined}
+                onValueChange={(value) => {
+                  if (isClosedJobStatus(value)) setChosen(value);
+                }}
+              >
+                <SelectTrigger id={statusId} className="w-full">
+                  <SelectValue placeholder={board.closedStatusPlaceholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  {CLOSED_JOB_STATUSES.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {copy.statuses[value]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
           <div className="grid gap-2">
             <Label htmlFor={reasonId}>{copy.closeReasonLabel}</Label>
             <Textarea
@@ -96,7 +133,7 @@ export function CloseJobDialog({
             >
               {strings.common.cancel}
             </Button>
-            <Button type="submit" disabled={pending || !status}>
+            <Button type="submit" disabled={pending || !activeStatus}>
               {pending ? copy.updating : copy.closeConfirm}
             </Button>
           </DialogFooter>

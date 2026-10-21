@@ -77,7 +77,7 @@ export function parseJobListQuery(params: SearchParamInput): JobListQuery {
   const workModeRaw = firstParam(params.workMode);
 
   return {
-    view: firstParam(params.view) === "board" ? "board" : "list",
+    view: firstParam(params.view) === "list" ? "list" : "board",
     q: firstParam(params.q).trim().slice(0, JOB_LIST_SEARCH_MAX),
     source: sources.has(sourceRaw) ? (sourceRaw as JobListQuery["source"]) : null,
     workMode: workModes.has(workModeRaw)
@@ -101,11 +101,11 @@ export function toggledSort(
   return { sort, dir: defaultDir(sort) };
 }
 
-/** Path plus query. Default list settings stay off the URL. */
+/** Path plus query. The board and its default sort stay off the URL. */
 export function jobListHref(current: JobListQuery, patch: JobListPatch = {}): string {
   const next: JobListQuery = { ...current, ...patch };
   const params = new URLSearchParams();
-  if (next.view === "board") params.set("view", "board");
+  if (next.view === "list") params.set("view", "list");
   if (next.q.length > 0) params.set("q", next.q);
   if (next.source) params.set("source", next.source);
   if (next.workMode) params.set("workMode", next.workMode);

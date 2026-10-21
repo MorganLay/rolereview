@@ -65,18 +65,6 @@ export function JobsToolbar({ query }: { query: JobListQuery }) {
           className="inline-flex w-fit rounded-lg border border-border p-0.5"
         >
           <Button
-            variant={query.view === "list" ? "default" : "ghost"}
-            size="sm"
-            asChild
-          >
-            <Link
-              href={jobListHref(query, { view: "list" })}
-              aria-current={query.view === "list" ? "page" : undefined}
-            >
-              {copy.viewList}
-            </Link>
-          </Button>
-          <Button
             variant={query.view === "board" ? "default" : "ghost"}
             size="sm"
             asChild
@@ -86,6 +74,18 @@ export function JobsToolbar({ query }: { query: JobListQuery }) {
               aria-current={query.view === "board" ? "page" : undefined}
             >
               {copy.viewBoard}
+            </Link>
+          </Button>
+          <Button
+            variant={query.view === "list" ? "default" : "ghost"}
+            size="sm"
+            asChild
+          >
+            <Link
+              href={jobListHref(query, { view: "list" })}
+              aria-current={query.view === "list" ? "page" : undefined}
+            >
+              {copy.viewList}
             </Link>
           </Button>
         </div>

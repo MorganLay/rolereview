@@ -25,6 +25,7 @@ import {
   deadlineReminderDue,
   planDeadlineReminder,
 } from "./dates";
+import { boardInsertIndex, planColumnMove } from "./board-order";
 import { applyStatusChange } from "./pipeline";
 import type { CreateJobData, JobAnalysis } from "./schemas";
 import {
@@ -32,6 +33,7 @@ import {
   createJobSchema,
   deleteJobSchema,
   isClosedJobStatus,
+  moveJobSchema,
   retryAnalysisSchema,
   setJobArchivedSchema,
   setJobPrioritySchema,
@@ -331,6 +333,59 @@ export async function updateJobStatus(
 
   revalidateJob(data.jobId);
   return ok({ id: data.jobId });
+}
+
+/** Move a card on the board. A status change goes through the pipeline. */
+export async function moveJob(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = moveJobSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const data = parsed.data;
+  const job = await db.job.findFirst({
+    where: { id: data.jobId, userId: user.id },
+    select: { id: true, status: true },
+  });
+  if (!job) return fail("NOT_FOUND");
+
+  const destination = await db.job.findMany({
+    where: { userId: user.id, status: data.toStatus },
+    select: { id: true, boardOrder: true },
+    orderBy: [{ boardOrder: "asc" }, { id: "asc" }],
+  });
+  const others = destination.filter((card) => card.id !== job.id);
+  const index = boardInsertIndex(
+    others.map((card) => card.id),
+    data.beforeId ?? null,
+    data.afterId ?? null,
+  );
+
+  if (job.status === data.toStatus) {
+    const current = destination.findIndex((card) => card.id === job.id);
+    if (current === index) return ok({ id: job.id });
+  } else {
+    const changed = await applyStatusChange(user.id, job.id, data.toStatus, {
+      closeReason: isClosedJobStatus(data.toStatus) ? data.closeReason : undefined,
+    });
+    if (!changed) return fail("NOT_FOUND");
+  }
+
+  const planned = planColumnMove({ movingId: job.id, others, index });
+  await db.$transaction(
+    planned.map((row) =>
+      db.job.updateMany({
+        where: { id: row.id, userId: user.id },
+        data: { boardOrder: row.boardOrder },
+      }),
+    ),
+  );
+
+  revalidateJob(job.id);
+  return ok({ id: job.id });
 }
 
 /** Set priority stars, or clear them. */

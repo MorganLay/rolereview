@@ -44,6 +44,60 @@ export function renumberColumn(
  * `others` is every other card in that column, top to bottom.
  * `index` 0 is the top. Out-of-range indexes clamp.
  */
+/**
+ * Index among `otherIds` (the destination column, without the moving card).
+ * `beforeId` wins when it is in the column. Otherwise `afterId`.
+ * Unknown ids and a pair of nulls land at the top.
+ */
+export function boardInsertIndex(
+  otherIds: readonly string[],
+  beforeId: string | null,
+  afterId: string | null,
+): number {
+  if (beforeId) {
+    const index = otherIds.indexOf(beforeId);
+    if (index >= 0) return index + 1;
+  }
+  if (afterId) {
+    const index = otherIds.indexOf(afterId);
+    if (index >= 0) return index;
+  }
+  return 0;
+}
+
+/**
+ * Where a dragged card lands in the destination column.
+ * Include `movingId` in `columnIds` only when it already sits in that column.
+ * `overId` is the card under the pointer, or null on the column itself.
+ * Null means the card stays put.
+ */
+export function dragInsertIndex(input: {
+  movingId: string;
+  columnIds: readonly string[];
+  overId: string | null;
+}): number | null {
+  const from = input.columnIds.indexOf(input.movingId);
+  const overIndex =
+    input.overId === null ? -1 : input.columnIds.indexOf(input.overId);
+
+  if (from >= 0) {
+    const to = overIndex >= 0 ? overIndex : input.columnIds.length - 1;
+    if (to < 0 || from === to) return null;
+    return moveId(input.columnIds, from, to).indexOf(input.movingId);
+  }
+
+  if (overIndex >= 0) return overIndex;
+  return input.columnIds.length;
+}
+
+function moveId(ids: readonly string[], from: number, to: number): string[] {
+  const next = [...ids];
+  const [item] = next.splice(from, 1);
+  if (item === undefined) return next;
+  next.splice(to, 0, item);
+  return next;
+}
+
 export function planColumnMove(input: {
   movingId: string;
   others: readonly BoardCard[];

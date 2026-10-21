@@ -31,7 +31,7 @@ Pin major versions. Versions checked on npm in October 2026.
 | PDF export | `@react-pdf/renderer` | 4.x | 1.0 |
 | DOCX export | `docx` | 9.x | 1.0 |
 | DOCX import | `mammoth` | 1.x | 1.0 |
-| Board drag & drop | `@dnd-kit/core` + `@dnd-kit/sortable`; fractional ordering via `fractional-indexing` | — | 1.0 |
+| Board drag & drop | `@dnd-kit/core` + `@dnd-kit/sortable`; fractional `boardOrder` via `features/jobs/board-order.ts` | — | 1.0 |
 | Charts (Insights, admin) | Recharts (shadcn chart wrappers) | — | 1.0 |
 | Email | Resend + React Email templates | — | 1.0 (welcome), 1.1 (rest) |
 | Product analytics | PostHog (`posthog-js`, `posthog-node`), cookieless mode | — | 1.0 |

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   BOARD_ORDER_MIN_GAP,
+  boardInsertIndex,
+  dragInsertIndex,
   nextBoardOrder,
   planColumnMove,
   renumberColumn,
@@ -138,6 +140,44 @@ describe("planColumnMove", () => {
     ]);
   });
 
+  it("places a card after beforeId, or before afterId", () => {
+    const ids = ["a", "b", "c"];
+    expect(boardInsertIndex(ids, "b", "c")).toBe(2);
+    expect(boardInsertIndex(ids, null, "b")).toBe(1);
+    expect(boardInsertIndex(ids, "missing", "b")).toBe(1);
+    expect(boardInsertIndex(ids, "c", null)).toBe(3);
+    expect(boardInsertIndex(ids, null, null)).toBe(0);
+    expect(boardInsertIndex([], null, null)).toBe(0);
+  });
+});
+
+describe("dragInsertIndex", () => {
+  it("moves a card down or up inside its column", () => {
+    expect(
+      dragInsertIndex({ movingId: "a", columnIds: ["a", "b", "c"], overId: "c" }),
+    ).toBe(2);
+    expect(
+      dragInsertIndex({ movingId: "c", columnIds: ["a", "b", "c"], overId: "a" }),
+    ).toBe(0);
+  });
+
+  it("leaves a card dropped on itself or alone on its column", () => {
+    expect(
+      dragInsertIndex({ movingId: "b", columnIds: ["a", "b", "c"], overId: "b" }),
+    ).toBeNull();
+    expect(dragInsertIndex({ movingId: "a", columnIds: ["a"], overId: null })).toBeNull();
+  });
+
+  it("inserts into another column before the card under the pointer", () => {
+    expect(
+      dragInsertIndex({ movingId: "m", columnIds: ["a", "b"], overId: "b" }),
+    ).toBe(1);
+    expect(dragInsertIndex({ movingId: "m", columnIds: ["a", "b"], overId: null })).toBe(2);
+    expect(dragInsertIndex({ movingId: "m", columnIds: [], overId: null })).toBe(0);
+  });
+});
+
+describe("planColumnMove neighbours", () => {
   it("drops the moving card from the neighbour list before placing it", () => {
     const withSelf = [
       { id: "a", boardOrder: 0 },

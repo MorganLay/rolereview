@@ -13,6 +13,7 @@ import { db } from "@/lib/db";
 
 import { canRetryAnalysis, displayedAnalysisStatus } from "./analyze";
 import { formatDeadlineDate } from "./dates";
+import { earlierBoardCue, type BoardCardRecord } from "./format";
 import type { JobListQuery, JobListRecord } from "./list-params";
 import {
   JobAnalysis,
@@ -103,6 +104,85 @@ export async function listJobs(
       deadline: row.deadline ? formatDeadlineDate(row.deadline) : null,
       archived: row.archivedAt !== null,
     })),
+  };
+}
+
+export type BoardListResult = {
+  cards: BoardCardRecord[];
+  total: number;
+  timeZone: string;
+};
+
+/** Board cards for this user, in column order. `total` counts archived jobs too. */
+export async function listBoardJobs(
+  userId: string,
+  query: JobListQuery,
+): Promise<BoardListResult> {
+  const now = new Date();
+  const [owner, total, rows] = await Promise.all([
+    db.user.findFirst({
+      where: { id: userId },
+      select: { timezone: true },
+    }),
+    db.job.count({ where: { userId } }),
+    db.job.findMany({
+      where: jobListWhere(userId, query),
+      orderBy: [{ boardOrder: "asc" }, { id: "asc" }],
+      select: {
+        id: true,
+        title: true,
+        company: true,
+        status: true,
+        priority: true,
+        archivedAt: true,
+        deadline: true,
+        boardOrder: true,
+        submittedResumeId: true,
+        tailoredResumes: {
+          where: { status: "READY", matchScore: { not: null } },
+          orderBy: { matchScore: "desc" },
+          take: 1,
+          select: { matchScore: true },
+        },
+        reminders: {
+          where: { completedAt: null, dismissedAt: null },
+          orderBy: { dueAt: "asc" },
+          take: 1,
+          select: { dueAt: true },
+        },
+        interviews: {
+          where: { scheduledAt: { gte: now } },
+          orderBy: { scheduledAt: "asc" },
+          take: 1,
+          select: { scheduledAt: true },
+        },
+      },
+    }),
+  ]);
+
+  return {
+    timeZone: owner?.timezone ?? "America/Toronto",
+    total,
+    cards: rows.map((row) => {
+      const cue = earlierBoardCue(
+        row.reminders[0]?.dueAt.toISOString() ?? null,
+        row.interviews[0]?.scheduledAt?.toISOString() ?? null,
+      );
+      return {
+        id: row.id,
+        company: row.company,
+        title: row.title,
+        status: row.status,
+        priority: row.priority,
+        matchScore: row.tailoredResumes[0]?.matchScore ?? null,
+        submitted: row.submittedResumeId !== null,
+        deadline: row.deadline ? formatDeadlineDate(row.deadline) : null,
+        archived: row.archivedAt !== null,
+        boardOrder: row.boardOrder,
+        nextKind: cue?.kind ?? null,
+        nextAt: cue?.at ?? null,
+      };
+    }),
   };
 }
 

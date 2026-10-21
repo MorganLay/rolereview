@@ -33,6 +33,87 @@ function formatAmount(value: number): string {
   return new Intl.NumberFormat("en-CA").format(value);
 }
 
+export type BoardCueKind = "reminder" | "interview";
+
+/** The sooner of an open reminder and an upcoming interview. Equal times keep the reminder. */
+export function earlierBoardCue(
+  reminderAt: string | null,
+  interviewAt: string | null,
+): { kind: BoardCueKind; at: string } | null {
+  const reminder = instantTime(reminderAt);
+  const interview = instantTime(interviewAt);
+  if (reminder === null && interview === null) return null;
+  if (reminder === null && interviewAt) return { kind: "interview", at: interviewAt };
+  if (interview === null && reminderAt) return { kind: "reminder", at: reminderAt };
+  if (reminder !== null && interview !== null && reminderAt && interviewAt) {
+    return reminder <= interview
+      ? { kind: "reminder", at: reminderAt }
+      : { kind: "interview", at: interviewAt };
+  }
+  return null;
+}
+
+function instantTime(value: string | null): number | null {
+  if (!value) return null;
+  const time = Date.parse(value);
+  return Number.isFinite(time) ? time : null;
+}
+
+export type BoardCardRecord = {
+  id: string;
+  company: string;
+  title: string;
+  status: JobStatusValue;
+  priority: number | null;
+  matchScore: number | null;
+  submitted: boolean;
+  deadline: string | null;
+  archived: boolean;
+  boardOrder: number;
+  nextKind: BoardCueKind | null;
+  nextAt: string | null;
+};
+
+export type BoardCardDisplay = {
+  id: string;
+  company: string;
+  title: string;
+  status: JobStatusValue;
+  priority: number | null;
+  matchLabel: string;
+  submitted: boolean;
+  deadlineLabel: string | null;
+  deadlineNote: "soon" | "past" | null;
+  archived: boolean;
+  boardOrder: number;
+  nextKind: BoardCueKind | null;
+  nextLabel: string | null;
+};
+
+export function presentBoardCard(
+  card: BoardCardRecord,
+  timeZone: string,
+  today: string,
+): BoardCardDisplay {
+  const urgency = card.deadline ? deadlineUrgency(card.deadline, today) : null;
+  const nextLabel = card.nextAt ? formatJobInstant(card.nextAt, timeZone) : null;
+  return {
+    id: card.id,
+    company: card.company,
+    title: card.title,
+    status: card.status,
+    priority: card.priority,
+    matchLabel: card.matchScore === null ? board.emptyValue : String(card.matchScore),
+    submitted: card.submitted,
+    deadlineLabel: card.deadline ? formatDeadlineLabel(card.deadline) : null,
+    deadlineNote: urgency === "soon" || urgency === "past" ? urgency : null,
+    archived: card.archived,
+    boardOrder: card.boardOrder,
+    nextKind: card.nextKind,
+    nextLabel: nextLabel === board.emptyValue ? null : nextLabel,
+  };
+}
+
 export type JobListDisplay = {
   id: string;
   company: string;
