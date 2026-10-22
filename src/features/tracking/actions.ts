@@ -11,6 +11,7 @@ import { fail, ok, type ActionResult } from "@/lib/result";
 
 import { latestContactedAt } from "./contacts";
 import { isManualEventType, MANUAL_EVENT_TYPES, manualEventInstant } from "./events";
+import { snoozeDueAt } from "./reminders";
 import {
   planInterviewEffects,
   zonedDateTimeInstant,
@@ -19,12 +20,14 @@ import {
 } from "./interviews";
 import {
   createContactSchema,
+  createCustomReminderSchema,
   createInterviewSchema,
   createTimelineEventSchema,
   deleteContactSchema,
   deleteInterviewSchema,
   linkJobContactSchema,
   logOutreachSchema,
+  reminderActionSchema,
   unlinkJobContactSchema,
   updateContactSchema,
   updateInterviewSchema,
@@ -750,6 +753,105 @@ async function revalidateContactJobs(userId: string, contactId: string): Promise
     select: { jobId: true },
   });
   for (const link of links) revalidatePath(`/jobs/${link.jobId}`);
+}
+
+export async function createCustomReminder(
+  input: unknown,
+): Promise<ActionResult<{ reminderId: string }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = createCustomReminderSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const timeZone = await userTimeZone(user.id);
+  try {
+    const reminderId = await db.$transaction(async (tx) => {
+      const job = await tx.job.findFirst({
+        where: { id: parsed.data.jobId, userId: user.id },
+        select: { id: true },
+      });
+      if (!job) throw new OwnedRowMissing();
+      const reminder = await tx.reminder.create({
+        data: {
+          userId: user.id,
+          jobId: job.id,
+          kind: "CUSTOM",
+          title: parsed.data.title,
+          dueAt: manualEventInstant(parsed.data.date, timeZone),
+          autoCreated: false,
+        },
+        select: { id: true },
+      });
+      return reminder.id;
+    });
+
+    revalidateReminderViews(parsed.data.jobId);
+    return ok({ reminderId });
+  } catch (error) {
+    if (error instanceof OwnedRowMissing) return fail("NOT_FOUND");
+    throw error;
+  }
+}
+
+export async function completeReminder(
+  input: unknown,
+): Promise<ActionResult<{ reminderId: string }>> {
+  return closeOrMoveReminder(input, (now) => ({ completedAt: now }));
+}
+
+export async function snoozeReminder(
+  input: unknown,
+): Promise<ActionResult<{ reminderId: string }>> {
+  return closeOrMoveReminder(input, (now) => ({ dueAt: snoozeDueAt(now) }));
+}
+
+export async function dismissReminder(
+  input: unknown,
+): Promise<ActionResult<{ reminderId: string }>> {
+  return closeOrMoveReminder(input, (now) => ({ dismissedAt: now }));
+}
+
+async function closeOrMoveReminder(
+  input: unknown,
+  change: (now: Date) => { completedAt: Date } | { dismissedAt: Date } | { dueAt: Date },
+): Promise<ActionResult<{ reminderId: string }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = reminderActionSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const now = new Date();
+  const existing = await db.reminder.findFirst({
+    where: {
+      id: parsed.data.reminderId,
+      userId: user.id,
+      completedAt: null,
+      dismissedAt: null,
+    },
+    select: { jobId: true },
+  });
+  if (!existing) return fail("NOT_FOUND");
+
+  const updated = await db.reminder.updateMany({
+    where: {
+      id: parsed.data.reminderId,
+      userId: user.id,
+      completedAt: null,
+      dismissedAt: null,
+    },
+    data: change(now),
+  });
+  if (updated.count === 0) return fail("NOT_FOUND");
+
+  revalidateReminderViews(existing.jobId);
+  return ok({ reminderId: parsed.data.reminderId });
+}
+
+function revalidateReminderViews(jobId: string | null) {
+  revalidatePath("/dashboard");
+  if (jobId) revalidatePath(`/jobs/${jobId}`);
 }
 
 class OwnedRowMissing extends Error {

@@ -115,7 +115,7 @@ Caps for the Interviews tab. Blank text stores null. `scheduledAt` is a UTC inst
 | `reflection` | 5,000 | null |
 | `outcome` | `InterviewOutcome` | `PENDING` |
 
-Outcome and reflection show in the dialog once `scheduledAt` is in the past, and they stay visible when an outcome other than Pending or a reflection is already saved. The prep-kit button is 1.1. The Reminders tab that lists these rows is T8.5.
+Outcome and reflection show in the dialog once `scheduledAt` is in the past, and they stay visible when an outcome other than Pending or a reflection is already saved. The prep-kit button is 1.1. Open and completed reminders for the job are listed on the Reminders tab.
 
 ### Contact fields
 
@@ -133,6 +133,19 @@ Caps for a contact. Blank text stores null. One role per job (`JobContact.role`)
 | `role` | `ContactRole` | Other when a new contact is created on a job |
 
 `lastContactedAt` is not edited by hand. It is the latest `occurredAt` among follow-ups that name this contact.
+
+### Reminder fields
+
+A reminder is stored on the account and shown in the app (bell, Dashboard Today, and the job Reminders tab). It does not schedule a device notification. The daily email is 1.1. Open means `completedAt` and `dismissedAt` are both null. Due today or overdue means `dueAt` is before the start of the next calendar day in `User.timezone`. Snooze sets `dueAt` to exactly 24×60×60×1000 ms after now and leaves the reminder open. Done sets `completedAt`. Dismiss sets `dismissedAt`. A dismissed reminder stays stored and leaves the lists. A row that is already done or dismissed cannot be changed.
+
+| Field | Max | Blank saves as |
+|---|---|---|
+| `title` | 120 | required |
+| `dueAt` | a real instant | required. A custom reminder is noon on the chosen calendar date in `User.timezone` |
+| `kind` | `ReminderKind` | `CUSTOM` when added by hand. Automatic kinds are written by the pipeline |
+| `completedAt` | | null until marked done |
+| `dismissedAt` | | null until dismissed. Closing a job dismisses open reminders |
+| `autoCreated` | | false for a custom reminder |
 
 ### Job detail fields
 

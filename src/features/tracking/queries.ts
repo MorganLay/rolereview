@@ -26,6 +26,18 @@ import {
   presentInterview,
   type InterviewView,
 } from "./interviews";
+import {
+  compareOpenReminders,
+  compareUpcomingInterviews,
+  isReminderKind,
+  presentReminder,
+  presentUpcomingInterview,
+  splitJobReminders,
+  startOfNextLocalDay,
+  upcomingWindow,
+  type ReminderView,
+  type UpcomingInterviewView,
+} from "./reminders";
 
 export type JobTimeline = {
   events: TimelineEventView[];
@@ -300,4 +312,178 @@ function presentContact(
     jobs,
     outreach,
   };
+}
+
+export type DueReminders = {
+  reminders: ReminderView[];
+};
+
+/** Open reminders due today or earlier, soonest first. */
+export async function listDueReminders(userId: string): Promise<DueReminders> {
+  await connection();
+  const now = new Date();
+  const timeZone = await ownerTimeZone(userId);
+  const rows = await db.reminder.findMany({
+    where: {
+      userId,
+      completedAt: null,
+      dismissedAt: null,
+      dueAt: { lt: startOfNextLocalDay(now, timeZone) },
+    },
+    select: reminderSelect,
+  });
+
+  return {
+    reminders: presentDueReminders(rows, now, timeZone),
+  };
+}
+
+export type TodayList = {
+  reminders: ReminderView[];
+  interviews: UpcomingInterviewView[];
+};
+
+/** Due reminders, plus interviews that start within 48 hours. */
+export async function listToday(userId: string): Promise<TodayList> {
+  await connection();
+  const now = new Date();
+  const timeZone = await ownerTimeZone(userId);
+  const window = upcomingWindow(now);
+  const [reminderRows, interviewRows] = await Promise.all([
+    db.reminder.findMany({
+      where: {
+        userId,
+        completedAt: null,
+        dismissedAt: null,
+        dueAt: { lt: startOfNextLocalDay(now, timeZone) },
+      },
+      select: reminderSelect,
+    }),
+    db.interview.findMany({
+      where: {
+        userId,
+        scheduledAt: { gte: window.from, lte: window.to },
+      },
+      select: {
+        id: true,
+        round: true,
+        kind: true,
+        scheduledAt: true,
+        jobId: true,
+        job: { select: { title: true, company: true } },
+      },
+    }),
+  ]);
+
+  const interviews = interviewRows
+    .flatMap((row) => {
+      if (!row.scheduledAt) return [];
+      return [
+        {
+          id: row.id,
+          round: row.round,
+          kind: row.kind,
+          scheduledAt: row.scheduledAt,
+          jobId: row.jobId,
+          jobTitle: row.job.title,
+          jobCompany: row.job.company,
+        },
+      ];
+    })
+    .sort(compareUpcomingInterviews)
+    .map((row) => presentUpcomingInterview(row, timeZone));
+
+  return {
+    reminders: presentDueReminders(reminderRows, now, timeZone),
+    interviews,
+  };
+}
+
+export type JobReminders = {
+  open: ReminderView[];
+  completed: ReminderView[];
+  today: string;
+};
+
+/** Open and completed reminders for one job. Dismissed rows are left out. */
+export async function listJobReminders(userId: string, jobId: string): Promise<JobReminders> {
+  await connection();
+  const now = new Date();
+  const [timeZone, rows] = await Promise.all([
+    ownerTimeZone(userId),
+    db.reminder.findMany({
+      where: { userId, jobId },
+      select: reminderSelect,
+    }),
+  ]);
+
+  const known = rows.filter((row) => isReminderKind(row.kind));
+  const split = splitJobReminders(known);
+  return {
+    today: calendarDateInTimeZone(now, timeZone),
+    open: split.open.map((row) => presentOwnedReminder(row, now, timeZone)),
+    completed: split.completed.map((row) => presentOwnedReminder(row, now, timeZone)),
+  };
+}
+
+const reminderSelect = {
+  id: true,
+  kind: true,
+  title: true,
+  dueAt: true,
+  completedAt: true,
+  dismissedAt: true,
+  createdAt: true,
+  autoCreated: true,
+  jobId: true,
+  job: { select: { title: true, company: true } },
+} as const;
+
+type ReminderRow = {
+  id: string;
+  kind: string;
+  title: string;
+  dueAt: Date;
+  completedAt: Date | null;
+  dismissedAt: Date | null;
+  createdAt: Date;
+  autoCreated: boolean;
+  jobId: string | null;
+  job: { title: string; company: string } | null;
+};
+
+function presentDueReminders(rows: ReminderRow[], now: Date, timeZone: string): ReminderView[] {
+  return rows
+    .filter((row) => isReminderKind(row.kind))
+    .sort(compareOpenReminders)
+    .map((row) => presentOwnedReminder(row, now, timeZone));
+}
+
+function presentOwnedReminder(row: ReminderRow, now: Date, timeZone: string): ReminderView {
+  if (!isReminderKind(row.kind)) {
+    throw new Error("Reminder kind is not supported.");
+  }
+  return presentReminder(
+    {
+      id: row.id,
+      kind: row.kind,
+      title: row.title,
+      dueAt: row.dueAt,
+      completedAt: row.completedAt,
+      jobId: row.jobId,
+      jobTitle: row.job?.title ?? null,
+      jobCompany: row.job?.company ?? null,
+      autoCreated: row.autoCreated,
+    },
+    now,
+    timeZone,
+  );
+}
+
+async function ownerTimeZone(userId: string): Promise<string> {
+  const owner = await db.user.findFirst({
+    where: { id: userId },
+    select: { timezone: true },
+  });
+  return owner?.timezone || "America/Toronto";
 }

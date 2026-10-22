@@ -16,9 +16,11 @@ import {
   INTERVIEW_OUTCOMES,
   isZonedDateTime,
 } from "./interviews";
+import { REMINDER_LIMITS } from "./reminders";
 
 const errors = strings.jobs.timeline.errors;
 const contactErrors = strings.contacts.errors;
+const reminderErrors = strings.jobs.reminders.errors;
 
 export const EVENT_LIMITS = {
   details: 2_000,
@@ -234,6 +236,20 @@ export const logOutreachSchema = z.object({
   jobId: z.uuid(),
   contactId: z.uuid(),
   details,
+});
+
+export const createCustomReminderSchema = z.object({
+  jobId: z.uuid(),
+  title: z
+    .string()
+    .trim()
+    .min(1, { error: reminderErrors.title })
+    .max(REMINDER_LIMITS.title, { error: reminderErrors.titleLength }),
+  date: z.string().trim().refine(isCalendarDate, { error: reminderErrors.date }),
+});
+
+export const reminderActionSchema = z.object({
+  reminderId: z.uuid(),
 });
 
 export type CreateContactInput = z.input<typeof createContactSchema>;

@@ -10,8 +10,15 @@ const documentsCopy = strings.jobs.documents;
 const interviewsCopy = strings.jobs.interviews;
 const contactsCopy = strings.nav.contacts;
 const timelineCopy = strings.jobs.timeline;
+const remindersCopy = strings.jobs.reminders;
 
-export type JobSectionTab = "overview" | "documents" | "interviews" | "contacts" | "timeline";
+export type JobSectionTab =
+  | "overview"
+  | "documents"
+  | "interviews"
+  | "contacts"
+  | "timeline"
+  | "reminders";
 
 export function JobSections({
   jobId,
@@ -33,7 +40,8 @@ export function JobSections({
       value !== "documents" &&
       value !== "interviews" &&
       value !== "contacts" &&
-      value !== "timeline"
+      value !== "timeline" &&
+      value !== "reminders"
     ) {
       return;
     }
@@ -56,6 +64,7 @@ export function JobSections({
           <TabsTrigger value="interviews">{interviewsCopy.tab}</TabsTrigger>
           <TabsTrigger value="contacts">{contactsCopy}</TabsTrigger>
           <TabsTrigger value="timeline">{timelineCopy.tab}</TabsTrigger>
+          <TabsTrigger value="reminders">{remindersCopy.tab}</TabsTrigger>
         </TabsList>
       </div>
       {children}

@@ -14,10 +14,12 @@ import { DocumentsTab, TailorPoll } from "@/features/tailor/components/documents
 import type { JobDocuments } from "@/features/tailor/status";
 import { ContactsTab } from "@/features/tracking/components/contacts-tab";
 import { InterviewsTab } from "@/features/tracking/components/interviews-tab";
+import { RemindersTab } from "@/features/tracking/components/reminders-tab";
 import { TimelineTab } from "@/features/tracking/components/timeline-tab";
 import type { ContactPick, JobContactView } from "@/features/tracking/contacts";
 import type { TimelineEventView } from "@/features/tracking/events";
 import type { InterviewView } from "@/features/tracking/interviews";
+import type { ReminderView } from "@/features/tracking/reminders";
 
 import { formatSalaryLabel } from "../format";
 import type { JobPageData } from "../queries";
@@ -53,6 +55,9 @@ type JobResultProps = {
   nextRound: number;
   linkedContacts: JobContactView[];
   contactDirectory: ContactPick[];
+  openReminders: ReminderView[];
+  completedReminders: ReminderView[];
+  reminderToday: string;
 };
 
 export function JobResult({
@@ -69,6 +74,9 @@ export function JobResult({
   nextRound,
   linkedContacts,
   contactDirectory,
+  openReminders,
+  completedReminders,
+  reminderToday,
 }: JobResultProps) {
   const ready = job.analysisStatus === "READY";
   const must = job.requirements.filter((item) => item.importance === "must");
@@ -215,6 +223,14 @@ export function JobResult({
             jobId={job.id}
             linked={linkedContacts}
             directory={contactDirectory}
+          />
+        </TabsContent>
+        <TabsContent value="reminders" className="pt-4">
+          <RemindersTab
+            jobId={job.id}
+            open={openReminders}
+            completed={completedReminders}
+            today={reminderToday}
           />
         </TabsContent>
         <TabsContent value="timeline" className="pt-4">

@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { AppShell } from "@/components/shell/app-shell";
 import { strings } from "@/copy/strings";
 import { TimezoneCapture } from "@/features/account/components/timezone-capture";
+import { listDueReminders } from "@/features/tracking/queries";
 import { requireUser } from "@/lib/auth";
 
 /** Auth shell blocks on session + User upsert — not an instant static shell. */
@@ -24,9 +25,10 @@ export default function AppLayout({
 async function AppShellWithUser({ children }: { children: React.ReactNode }) {
   await connection();
   const user = await requireUser();
+  const due = await listDueReminders(user.id);
 
   return (
-    <AppShell userEmail={user.email}>
+    <AppShell userEmail={user.email} reminders={due.reminders}>
       <TimezoneCapture />
       {children}
     </AppShell>

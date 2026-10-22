@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Bell, Menu, Plus } from "lucide-react";
+import { Menu, Plus } from "lucide-react";
 
 import { signOut } from "@/features/account/actions";
 import { NewJobLink } from "@/features/jobs/components/new-job-link";
+import { RemindersBell } from "@/features/tracking/components/reminders-bell";
+import type { ReminderView } from "@/features/tracking/reminders";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,11 +17,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Sheet,
   SheetContent,
@@ -32,9 +29,10 @@ import { SidebarNav } from "./sidebar-nav";
 
 type AppHeaderProps = {
   userEmail: string;
+  reminders: ReminderView[];
 };
 
-export function AppHeader({ userEmail }: AppHeaderProps) {
+export function AppHeader({ userEmail, reminders }: AppHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [signOutPending, startSignOut] = useTransition();
 
@@ -76,24 +74,7 @@ export function AppHeader({ userEmail }: AppHeaderProps) {
           </NewJobLink>
         </Button>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={strings.shell.remindersAria}
-            >
-              <Bell />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-72">
-            <p className="font-medium text-ink">{strings.shell.remindersTitle}</p>
-            <p className="mt-1 text-sm text-slate">
-              {strings.shell.remindersEmpty}
-            </p>
-          </PopoverContent>
-        </Popover>
+        <RemindersBell reminders={reminders} />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
