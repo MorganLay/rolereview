@@ -67,7 +67,7 @@ function RetryControl({
   async function onRetry() {
     if (pending) return;
     if (analysesLeft <= 0) {
-      openUpgradeModal(copy.quotaReason);
+      openUpgradeModal({ kind: "quota", meter: "ANALYZE" });
       return;
     }
     setPending(true);
@@ -77,7 +77,7 @@ function RetryControl({
       if (!result.ok) {
         setPending(false);
         if (result.error.code === "QUOTA_EXCEEDED") {
-          openUpgradeModal(copy.quotaReason);
+          openUpgradeModal({ kind: "quota", meter: "ANALYZE" });
           return;
         }
         if (result.error.code === "CONFLICT") {

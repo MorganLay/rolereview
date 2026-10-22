@@ -29,7 +29,7 @@ export function WhatsWorkingPreview() {
       <Button
         type="button"
         className="w-fit"
-        onClick={() => openUpgradeModal(copy.proReason)}
+        onClick={() => openUpgradeModal({ kind: "feature", feature: "insights:whats-working" })}
       >
         <LockIcon aria-hidden />
         {copy.upgrade}

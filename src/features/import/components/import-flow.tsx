@@ -78,7 +78,7 @@ export function ImportFlow({
   async function readResume() {
     if (busy.current) return;
     if (importsLeft <= 0) {
-      openUpgradeModal(copy.quotaReason);
+      openUpgradeModal({ kind: "quota", meter: "IMPORT" });
       return;
     }
 
@@ -101,7 +101,7 @@ export function ImportFlow({
       if (!result.ok) {
         setStep("upload");
         if (result.error.code === "QUOTA_EXCEEDED") {
-          openUpgradeModal(copy.quotaReason);
+          openUpgradeModal({ kind: "quota", meter: "IMPORT" });
           setImportsLeft(0);
           return;
         }

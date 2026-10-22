@@ -97,8 +97,9 @@ export function useResumeExport(input: ExportInput) {
     setTemplatePending(false);
     if (resumeRef.current !== resumeId) return;
     if (!result.ok) {
-      if (result.error.code === "PRO_REQUIRED") openUpgradeModal(copy.templatePro);
-      else toast.error(copy.templateFailed);
+      if (result.error.code === "PRO_REQUIRED") {
+        openUpgradeModal({ kind: "feature", feature: "templates" });
+      } else toast.error(copy.templateFailed);
       return;
     }
     setTemplateId(result.data.templateId);
@@ -277,7 +278,7 @@ export function ResumeExportBar({
                 aria-label={locked ? `${label}, ${copy.includedWithPro}` : label}
                 onSelect={() => {
                   if (locked) {
-                    openUpgradeModal(copy.templatePro);
+                    openUpgradeModal({ kind: "feature", feature: "templates" });
                     return;
                   }
                   onTemplate(id);
@@ -320,7 +321,7 @@ export function ResumeExportBar({
             }
             onSelect={() => {
               if (templates.docx) toast.message(copy.docxLater);
-              else openUpgradeModal(copy.docxPro);
+              else openUpgradeModal({ kind: "feature", feature: "docx" });
             }}
           >
             <LockIcon aria-hidden />

@@ -81,8 +81,9 @@ export function useLetterExport(input: ExportInput) {
     setTemplatePending(false);
     if (letterRef.current !== letterId) return;
     if (!result.ok) {
-      if (result.error.code === "PRO_REQUIRED") openUpgradeModal(copy.templatePro);
-      else toast.error(copy.templateFailed);
+      if (result.error.code === "PRO_REQUIRED") {
+        openUpgradeModal({ kind: "feature", feature: "templates" });
+      } else toast.error(copy.templateFailed);
       return;
     }
     setTemplateId(result.data.templateId);
@@ -239,7 +240,7 @@ export function LetterExportBar({
                 aria-label={locked ? `${label}, ${copy.includedWithPro}` : label}
                 onSelect={() => {
                   if (locked) {
-                    openUpgradeModal(copy.templatePro);
+                    openUpgradeModal({ kind: "feature", feature: "templates" });
                     return;
                   }
                   onTemplate(id);
@@ -282,7 +283,7 @@ export function LetterExportBar({
             }
             onSelect={() => {
               if (templates.docx) toast.message(copy.docxLater);
-              else openUpgradeModal(copy.docxPro);
+              else openUpgradeModal({ kind: "feature", feature: "docx" });
             }}
           >
             <LockIcon aria-hidden />

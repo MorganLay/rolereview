@@ -93,7 +93,7 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
     event.preventDefault();
     if (busy.current) return;
     if (analysesLeft <= 0) {
-      openUpgradeModal(copy.quotaReason);
+      openUpgradeModal({ kind: "quota", meter: "ANALYZE" });
       return;
     }
 
@@ -114,7 +114,7 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
         if (!live.current) return;
         setReading(false);
         if (result.error.code === "QUOTA_EXCEEDED") {
-          openUpgradeModal(copy.quotaReason);
+          openUpgradeModal({ kind: "quota", meter: "ANALYZE" });
           setAnalysesAdjust({ base: analysesLeftProp, delta: analysesLeftProp });
           return;
         }

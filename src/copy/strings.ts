@@ -72,8 +72,12 @@ export const strings = {
   },
   shell: {
     placeholderBody: "This screen arrives in a later task.",
-    usagePill: "{used} / {limit} tailored resumes",
-    usagePillAria: "Usage: {used} of {limit} tailored resumes this period",
+    usagePill: (used: number, allowance: number) =>
+      `${used} / ${allowance} tailored resumes`,
+    usagePillAria: (used: number, allowance: number, period: string, extra: string | null) =>
+      extra
+        ? `Usage: ${used} of ${allowance} tailored resumes ${period}. ${extra}.`
+        : `Usage: ${used} of ${allowance} tailored resumes ${period}.`,
     remindersTitle: "Reminders",
     remindersEmpty: "Nothing due today.",
     remindersAria: "Reminders",
@@ -84,8 +88,61 @@ export const strings = {
   },
   upgrade: {
     title: "Upgrade to Pro",
-    body: "Pro unlocks higher limits and extra templates. Checkout arrives in a later task.",
     cta: "Got it",
+    checkoutLater: "Checkout arrives in a later task.",
+    plan: "Pro includes higher monthly limits, Modern and Compact, DOCX, and What’s working.",
+    quota: {
+      TAILOR: (free: number, pro: number) =>
+        `No tailored resumes left this month. Free includes ${free} a month. Pro includes ${pro}.`,
+      COVER_LETTER: (free: number, pro: number) =>
+        `No cover letters left this month. Free includes ${free} a month. Pro includes ${pro}.`,
+      IMPORT: (free: number, pro: number) =>
+        `No resume imports left this month. Free includes ${free} a month. Pro includes ${pro}.`,
+      ANALYZE: (free: number, pro: number) =>
+        `No job analyses left today. Free includes ${free} a day. Pro includes ${pro}.`,
+    },
+    features: {
+      templates: "Modern and Compact are part of Pro.",
+      docx: "DOCX is part of Pro.",
+      "insights:whats-working": "What’s working is part of Pro.",
+    },
+  },
+  billing: {
+    tabsLabel: "Settings sections",
+    tabs: {
+      plan: "Plan & billing",
+      profile: "Profile",
+      preferences: "Preferences",
+      data: "Data",
+    },
+    planHeading: "Plan",
+    plans: {
+      FREE: "Free",
+      PRO: "Pro",
+    },
+    intervals: {
+      MONTH: "Monthly",
+      QUARTER: "90 days",
+    },
+    renews: (date: string) => `Renews ${date}`,
+    ends: (date: string) => `Ends ${date}`,
+    founding: "Founding member",
+    upgrade: "Upgrade",
+    usage: "Usage",
+    meters: {
+      TAILOR: "Tailored resumes",
+      COVER_LETTER: "Cover letters",
+      IMPORT: "Resume imports",
+      ANALYZE: "Job analyses",
+    },
+    periods: {
+      month: "This month",
+      day: "Today",
+    },
+    ofAllowance: (used: number, allowance: number) => `${used} of ${allowance}`,
+    extra: (count: number) => (count === 1 ? "1 extra" : `${count} extra`),
+    barAria: (label: string, period: string, count: string, extra: string | null) =>
+      extra ? `${label}, ${period}: ${count}. ${extra}.` : `${label}, ${period}: ${count}.`,
   },
   feedback: {
     button: "Feedback",
@@ -555,7 +612,6 @@ export const strings = {
       pasteInstead: "Paste text instead",
       aiFailed:
         "We couldn’t read that resume. You weren’t charged. Try again, or paste the text.",
-      quotaReason: "No resume imports left this month",
       saveFailed: "Couldn’t save to your library. Try again.",
       conflict: "Your library changed while this was saving. Review it and try again.",
       saved: (input: {
@@ -774,7 +830,6 @@ export const strings = {
       "Listing requirements.",
       "Picking out keywords and details.",
     ],
-    quotaReason: "No job analyses left today",
     aiFailed: "We couldn’t analyze this posting. You weren’t charged.",
     saveFailed: "Couldn’t save this job. Try again.",
     conflict: "This posting is already analyzed.",
@@ -902,7 +957,6 @@ export const strings = {
       aiFailed: "We couldn’t tailor this resume. You weren’t charged.",
       saveFailed: "Couldn’t tailor this resume. Try again.",
       notReady: "This job isn’t ready to tailor.",
-      quotaReason: "No tailored resumes left this month",
       version: (version: number) => `v${version}`,
       matchScore: (score: number) => `Match score ${score}`,
       matchScoreEmpty: "Match score —",
@@ -965,7 +1019,6 @@ export const strings = {
       aiFailed: "We couldn’t write this letter. You weren’t charged.",
       saveFailed: "Couldn’t write this letter. Try again.",
       notReady: "This job isn’t ready for a letter.",
-      quotaReason: "No cover letters left this month",
       version: (version: number) => `v${version}`,
       openVersion: (version: number) => `Open v${version}`,
       open: "Open",
@@ -1382,8 +1435,6 @@ export const strings = {
       exporting: "Downloading…",
       exportFailed: "Couldn’t download that PDF. Try again.",
       templateFailed: "Couldn’t save that template. Try again.",
-      templatePro: "Modern and Compact are part of Pro",
-      docxPro: "DOCX is part of Pro",
       docxLater: "DOCX export is coming soon.",
       includedWithPro: "Included with Pro",
       comingSoon: "Coming soon",
@@ -1471,7 +1522,6 @@ export const strings = {
     proLabel: "Included with Pro",
     proPreview:
       "A preview of interview rate by source, by match score, and tailored against not.",
-    proReason: "What’s working is part of Pro",
     upgrade: "Upgrade to Pro",
   },
   auth: {

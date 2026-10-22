@@ -4,6 +4,9 @@ import { connection } from "next/server";
 import { AppShell } from "@/components/shell/app-shell";
 import { strings } from "@/copy/strings";
 import { TimezoneCapture } from "@/features/account/components/timezone-capture";
+import { allowanceCatalog } from "@/features/billing/catalog";
+import { presentTailorPill } from "@/features/billing/present";
+import { quotaSnapshot } from "@/features/billing/quota";
 import { listDueReminders } from "@/features/tracking/queries";
 import { requireUser } from "@/lib/auth";
 
@@ -25,10 +28,24 @@ export default function AppLayout({
 async function AppShellWithUser({ children }: { children: React.ReactNode }) {
   await connection();
   const user = await requireUser();
-  const due = await listDueReminders(user.id);
+  const catalog = allowanceCatalog();
+  const [due, tailor] = await Promise.all([
+    listDueReminders(user.id),
+    quotaSnapshot(user, "TAILOR"),
+  ]);
 
   return (
-    <AppShell userEmail={user.email} reminders={due.reminders}>
+    <AppShell
+      userEmail={user.email}
+      reminders={due.reminders}
+      usage={presentTailorPill({
+        used: tailor.used,
+        allowance: tailor.allowance,
+        bonus: tailor.bonus,
+        period: catalog.TAILOR.period,
+      })}
+      catalog={catalog}
+    >
       <TimezoneCapture />
       {children}
     </AppShell>

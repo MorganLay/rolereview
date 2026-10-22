@@ -49,7 +49,7 @@ export function LettersSection({
   async function onConfirm(input: LetterDraft) {
     if (letters.lettersLeft <= 0 && inflight.current === 0) {
       setOpen(false);
-      openUpgradeModal(copy.quotaReason);
+      openUpgradeModal({ kind: "quota", meter: "COVER_LETTER" });
       return;
     }
     inflight.current += 1;
@@ -67,7 +67,7 @@ export function LettersSection({
       });
       if (!result.ok) {
         if (result.error.code === "QUOTA_EXCEEDED") {
-          openUpgradeModal(copy.quotaReason);
+          openUpgradeModal({ kind: "quota", meter: "COVER_LETTER" });
           return;
         }
         if (result.error.code === "CONFLICT") {

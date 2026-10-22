@@ -6,15 +6,18 @@ import { usePathname } from "next/navigation";
 import { strings } from "@/copy/strings";
 import { cn } from "@/lib/utils";
 
+import type { TailorPillView } from "@/features/billing/present";
+
 import { APP_NAV_ITEMS, isNavActive } from "./nav-items";
 import { UsagePill } from "./usage-pill";
 
 type SidebarNavProps = {
+  usage: TailorPillView;
   onNavigate?: () => void;
   className?: string;
 };
 
-export function SidebarNav({ onNavigate, className }: SidebarNavProps) {
+export function SidebarNav({ usage, onNavigate, className }: SidebarNavProps) {
   const pathname = usePathname();
 
   return (
@@ -55,7 +58,7 @@ export function SidebarNav({ onNavigate, className }: SidebarNavProps) {
       </nav>
 
       <div className="mt-auto border-t border-line p-3">
-        <UsagePill />
+        <UsagePill usage={usage} />
       </div>
     </div>
   );

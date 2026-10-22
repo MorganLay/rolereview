@@ -31,7 +31,7 @@ Signed in — protected by src/proxy.ts AND requireUser() in the (app) layout
 
 ## App shell
 
-- **Sidebar** (top bar + menu on mobile): Dashboard · Library · Jobs board · Contacts · Insights · Settings. Bottom: Usage pill ("2 / 3 tailored resumes") → Settings → Plan; [1.1] XP bar and level. The pill stays at the bottom of the screen while the page scrolls.
+- **Sidebar** (top bar + menu on mobile): Dashboard · Library · Jobs board · Contacts · Insights · Settings. Bottom: Usage pill ("2 / 3 tailored resumes"; plus "N extra" when tailored-resume bonus credits remain) → Settings → Plan (`/settings?tab=plan`). The pill stays at the bottom of the sidebar while the page scrolls. On a phone it is at the bottom of the menu. [1.1] XP bar and level.
 - **Header:** global "New job" button; reminders bell with the count of open reminders that are due today or overdue (popover: Done, Snooze 1 day, Dismiss, and Open job); user menu (email, Invite friends [1.1], Sign out).
 - **Global:** toaster; Upgrade modal (opened by any `QUOTA_EXCEEDED` or Pro-only action); Feedback button (bottom-right, opens a small form → `Feedback`); [1.1] milestone toast.
 
@@ -155,9 +155,10 @@ Date range selector (30 days / 90 days / all time). 30 days is the default and h
 Momentum streak (weeks in a row with at least one meaningful action) with a calendar; milestones list (earned with dates, upcoming ones greyed with a hint). Quiet, professional styling, no badges or levels.
 
 ### `/settings`
+Tabs: Profile · Preferences · Plan & billing · Data. Invite stays hidden until 1.1. Plan & billing is the default: `/settings` with no query, and `?tab=plan`. `?tab=profile`, `?tab=preferences`, and `?tab=data` select the others. An unknown value is Plan & billing. Profile, Preferences, and Data still say they arrive in a later task.
 - **Profile:** same fields as the library profile card.
 - **Preferences:** timezone; email reminders on/off; weekly digest on/off; marketing emails (CASL consent checkbox; stores timestamp + wording; unticking sets null).
-- **Plan & billing:** plan, interval, renewal or cancel date, founding badge; usage bars for every AI kind this period + bonus credits; [Upgrade] (monthly / 90-day choice → Stripe Checkout) or [Manage subscription] (Stripe Portal).
+- **Plan & billing:** plan name; billing interval when one is set (Monthly or 90 days); "Renews {date}" or "Ends {date}" when a period end is set; founding-member badge when that flag is set. Usage bars for tailored resumes, cover letters, resume imports, and job analyses. Each bar is successful calls this period against that plan’s allowance. Bonus credits are listed on the row when any remain, and are not folded into the allowance. Job analyses use the UTC day; the others use the UTC month. Prep kits and bullet coach stay off this screen until 1.1. [Upgrade] opens the upgrade modal. Monthly / 90-day Checkout and [Manage subscription] are T11.2.
 - **Invite** [1.1]: referral link, copy button, status of invites (signed up / activated / converted), credits earned.
 - **Data:** "Export my data" (JSON download of all user-owned rows); "Delete account" (type DELETE; cancels Stripe, deletes everything, signs out).
 
@@ -173,7 +174,7 @@ Signups per day (with source), activation funnel, Free→Pro conversion, MRR (fr
 | Signed out on an app route | `proxy.ts` → `/sign-in?next=…` |
 | Resource not owned | `notFound()`, a 404 (never 403) |
 | Validation error | `{ ok: false, error: { code: "VALIDATION", fields } }` → inline errors |
-| Quota exceeded / Pro-only | `QUOTA_EXCEEDED` / `PRO_REQUIRED` → Upgrade modal naming the limit |
+| Quota exceeded / Pro-only | `QUOTA_EXCEEDED` / `PRO_REQUIRED` → Upgrade modal naming the limit. A quota also names the Free and Pro allowances. Checkout is T11.2. |
 | AI failure | `AI_FAILED` → toast with retry; no charge |
 | Concurrent generation | `CONFLICT` → "Already tailoring this job…" |
 | Slow AI | Staged progress copy; pollable PENDING state survives refresh |

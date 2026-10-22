@@ -24,15 +24,17 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { strings } from "@/copy/strings";
+import type { TailorPillView } from "@/features/billing/present";
 
 import { SidebarNav } from "./sidebar-nav";
 
 type AppHeaderProps = {
   userEmail: string;
   reminders: ReminderView[];
+  usage: TailorPillView;
 };
 
-export function AppHeader({ userEmail, reminders }: AppHeaderProps) {
+export function AppHeader({ userEmail, reminders, usage }: AppHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [signOutPending, startSignOut] = useTransition();
 
@@ -61,7 +63,7 @@ export function AppHeader({ userEmail, reminders }: AppHeaderProps) {
           <SheetHeader className="sr-only">
             <SheetTitle>{strings.nav.mainNav}</SheetTitle>
           </SheetHeader>
-          <SidebarNav onNavigate={() => setMobileOpen(false)} />
+          <SidebarNav usage={usage} onNavigate={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
 

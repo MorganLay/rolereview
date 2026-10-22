@@ -59,7 +59,7 @@ export function DocumentsTab({
   async function onConfirm(input: { length: 1 | 2; emphasis: string }) {
     if (documents.tailorsLeft <= 0 && inflight.current === 0) {
       setOpen(false);
-      openUpgradeModal(copy.quotaReason);
+      openUpgradeModal({ kind: "quota", meter: "TAILOR" });
       return;
     }
     inflight.current += 1;
@@ -74,7 +74,7 @@ export function DocumentsTab({
       });
       if (!result.ok) {
         if (result.error.code === "QUOTA_EXCEEDED") {
-          openUpgradeModal(copy.quotaReason);
+          openUpgradeModal({ kind: "quota", meter: "TAILOR" });
           return;
         }
         if (result.error.code === "CONFLICT") {

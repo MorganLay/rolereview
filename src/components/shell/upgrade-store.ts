@@ -2,13 +2,15 @@
 
 import { useSyncExternalStore } from "react";
 
+import type { UpgradeTarget } from "@/features/billing/present";
+
 export type UpgradeModalState = {
   open: boolean;
-  /** Short label for the limit or feature that triggered the modal. */
-  reason: string | null;
+  /** The limit or Pro feature that opened the modal. */
+  target: UpgradeTarget | null;
 };
 
-let state: UpgradeModalState = { open: false, reason: null };
+let state: UpgradeModalState = { open: false, target: null };
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -29,13 +31,13 @@ function getSnapshot(): UpgradeModalState {
 }
 
 /** Open from any client handler when a gated action returns QUOTA_EXCEEDED / PRO_REQUIRED. */
-export function openUpgradeModal(reason?: string): void {
-  state = { open: true, reason: reason ?? null };
+export function openUpgradeModal(target: UpgradeTarget): void {
+  state = { open: true, target };
   emit();
 }
 
 export function closeUpgradeModal(): void {
-  state = { open: false, reason: null };
+  state = { open: false, target: null };
   emit();
 }
 

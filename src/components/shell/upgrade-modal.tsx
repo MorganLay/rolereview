@@ -10,14 +10,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { strings } from "@/copy/strings";
-
 import {
-  closeUpgradeModal,
-  useUpgradeModal,
-} from "./upgrade-store";
+  presentUpgrade,
+  type AllowanceCatalog,
+} from "@/features/billing/present";
 
-export function UpgradeModal() {
-  const { open, reason } = useUpgradeModal();
+import { closeUpgradeModal, useUpgradeModal } from "./upgrade-store";
+
+export function UpgradeModal({ catalog }: { catalog: AllowanceCatalog }) {
+  const { open, target } = useUpgradeModal();
+  const view = target ? presentUpgrade(target, catalog) : null;
 
   return (
     <Dialog
@@ -29,11 +31,9 @@ export function UpgradeModal() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-serif text-lg font-semibold">
-            {strings.upgrade.title}
+            {view?.title ?? strings.upgrade.title}
           </DialogTitle>
-          <DialogDescription>
-            {reason ? `${reason}. ${strings.upgrade.body}` : strings.upgrade.body}
-          </DialogDescription>
+          {view ? <DialogDescription>{view.description}</DialogDescription> : null}
         </DialogHeader>
         <DialogFooter>
           <Button type="button" onClick={closeUpgradeModal}>

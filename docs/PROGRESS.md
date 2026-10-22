@@ -71,7 +71,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T10.2** Insights UI
 
 ## Phase 11 — Billing
-- [ ] **T11.1** Usage & gating UI
+- [x] **T11.1** Usage & gating UI
 - [ ] **T11.2** Checkout & portal
 - [ ] **T11.3** Webhook
 - [ ] **T11.4** DOCX export (Pro)
@@ -93,6 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-22 T11.1:** The usage pill is tailored resumes this UTC month, and it links to `/settings?tab=plan`. Extra credits show on the pill when any remain, and they are not folded into the allowance. Plan & billing shows the plan, the interval and renewal or end date when those are set, and bars for tailored resumes, cover letters, resume imports, and job analyses. Upgrade names the limit, including the Free and Pro allowances for a quota. Checkout and Manage subscription stay on T11.2. Prep kits and bullet coach stay off this screen. The dev account’s Pro view showed 51 of 80 tailored resumes, 12 of 60 letters, 2 of 20 imports, and 24 of 60 analyses today.
 - **2026-10-22 T10.2:** Insights is 30 days, 90 days, or all time. 30 days is the page with no query. Tiles, the funnel (share of the previous stage), and stacked weekly bars are on every plan. What’s working is Pro. Free sees a blurred preview, and Upgrade opens the modal. A group under 5 applications stays hidden. The dev account’s all-time view showed Not tailored at 33% based on 6 applications. The activity streak stays on Phase 15.
 - **2026-10-22 T10.1:** Insights rates are computed per user from `appliedAt` in range: response uses 7×24 hours, interview counts any interview row, and offer counts status Offer or Accepted or an offer event. Breakdowns under 5 applications are omitted. Weekly bars are Monday-start weeks in the user's timezone, tailored against not. The activity streak stays on Phase 15. The Insights page stays a placeholder until T10.2.
 - **2026-10-22 T9.3:** The letter workspace edits greeting, paragraphs, closing, and signature, with source chips and a 1.5s autosave. Copy text and the PDF are greeting, included paragraphs, closing, then signature, named `First-Last-Company-Title-Letter.pdf`. Mark as submitted sets this version and does not change status. DOCX stays locked. The five no-WHY letters from T9.1 (`2026-10-22T07-51-35-901Z`) still had no invented company facts; the prompt was not changed.
