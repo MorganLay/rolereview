@@ -53,6 +53,8 @@ export type TimelineEventView = {
   /** Calendar date in the user's timezone, for the edit form. */
   date: string;
   whenLabel: string;
+  contactId: string | null;
+  contactName: string | null;
 };
 
 /**
@@ -102,6 +104,8 @@ export function presentTimelineEvent(
     toStatus: JobStatus | null;
     details: string | null;
     occurredAt: Date;
+    contactId?: string | null;
+    contactName?: string | null;
   },
   timeZone: string,
 ): TimelineEventView {
@@ -116,6 +120,8 @@ export function presentTimelineEvent(
     occurredAt: row.occurredAt.toISOString(),
     date: calendarDateInTimeZone(row.occurredAt, timeZone),
     whenLabel: formatEventWhen(row.occurredAt, timeZone, manual),
+    contactId: row.contactId ?? null,
+    contactName: row.contactName ?? null,
   };
 }
 

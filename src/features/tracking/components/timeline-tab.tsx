@@ -82,11 +82,13 @@ export function TimelineTab({
   events,
   hideAuto,
   today,
+  contacts,
 }: {
   jobId: string;
   events: TimelineEventView[];
   hideAuto: boolean;
   today: string;
+  contacts: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const hideId = useId();
@@ -153,6 +155,11 @@ export function TimelineTab({
                     ) : null}
                   </div>
                   {change ? <p className="text-sm text-ink">{change}</p> : null}
+                  {event.contactName ? (
+                    <p className="text-sm break-words text-ink">
+                      {copy.withContact(event.contactName)}
+                    </p>
+                  ) : null}
                   {event.details ? (
                     <p className="text-sm break-words whitespace-pre-wrap text-ink">
                       {event.details}
@@ -174,6 +181,7 @@ export function TimelineTab({
         jobId={jobId}
         mode={mode}
         today={today}
+        contacts={contacts}
         onOpenChange={(open) => {
           if (!open) setMode(null);
         }}
@@ -182,20 +190,36 @@ export function TimelineTab({
   );
 }
 
+function contactChoices(
+  contacts: { id: string; name: string }[],
+  mode: DialogMode | null,
+): { id: string; name: string }[] {
+  if (mode?.kind !== "edit" || !mode.event.contactId) return contacts;
+  if (contacts.some((contact) => contact.id === mode.event.contactId)) return contacts;
+  return [
+    { id: mode.event.contactId, name: mode.event.contactName ?? mode.event.contactId },
+    ...contacts,
+  ];
+}
+
 function statusLine(event: TimelineEventView): string | null {
   if (!event.fromStatus || !event.toStatus) return null;
   return copy.statusTo(detail.statuses[event.fromStatus], detail.statuses[event.toStatus]);
 }
 
+const NO_CONTACT = "none";
+
 function EventDialog({
   jobId,
   mode,
   today,
+  contacts,
   onOpenChange,
 }: {
   jobId: string;
   mode: DialogMode | null;
   today: string;
+  contacts: { id: string; name: string }[];
   onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
@@ -205,6 +229,7 @@ function EventDialog({
   const [type, setType] = useState<ManualEventType | "">("");
   const [date, setDate] = useState(today);
   const [details, setDetails] = useState("");
+  const [contactId, setContactId] = useState(NO_CONTACT);
   const [fields, setFields] = useState<FieldErrors>({});
   const [pending, setPending] = useState(false);
 
@@ -216,10 +241,12 @@ function EventDialog({
       setType(mode.type);
       setDate(mode.event.date);
       setDetails(mode.event.details ?? "");
+      setContactId(mode.event.contactId ?? NO_CONTACT);
     } else {
       setType("");
       setDate(today);
       setDetails("");
+      setContactId(NO_CONTACT);
     }
   } else if (!open && wasOpen) {
     setWasOpen(false);
@@ -235,7 +262,13 @@ function EventDialog({
     if (pending || !mode) return;
     setPending(true);
     setFields({});
-    const payload = { jobId, type, date, details };
+    const payload = {
+      jobId,
+      type,
+      date,
+      details,
+      contactId: type === "FOLLOW_UP_SENT" && contactId !== NO_CONTACT ? contactId : "",
+    };
     const result =
       mode.kind === "edit"
         ? await updateTimelineEvent({ ...payload, eventId: mode.event.id })
@@ -244,7 +277,9 @@ function EventDialog({
     if (!result.ok) {
       if (result.error.code === "VALIDATION" && result.error.fields) {
         setFields(result.error.fields);
-        const shown = ["type", "date", "details"].some((key) => result.error.fields?.[key]?.[0]);
+        const shown = ["type", "date", "details", "contactId"].some(
+          (key) => result.error.fields?.[key]?.[0],
+        );
         if (shown) return;
       }
       if (result.error.code === "NOT_FOUND") {
@@ -267,6 +302,9 @@ function EventDialog({
   const typeError = fields.type?.[0];
   const dateError = fields.date?.[0];
   const detailsError = fields.details?.[0];
+  const contactError = fields.contactId?.[0];
+  const followUp = type === "FOLLOW_UP_SENT";
+  const contactOptions = contactChoices(contacts, mode);
 
   return (
     <Dialog open={open} onOpenChange={begin}>
@@ -334,6 +372,36 @@ function EventDialog({
             </p>
             {detailsError ? <FieldAlert message={detailsError} /> : null}
           </div>
+          {followUp ? (
+            <div className="grid gap-2">
+              <Label htmlFor={`${formId}-contact`}>{copy.contactLabel}</Label>
+              {contactOptions.length === 0 ? (
+                <p className="text-sm text-slate">{copy.contactEmpty}</p>
+              ) : (
+                <>
+                  <Select value={contactId} onValueChange={setContactId}>
+                    <SelectTrigger
+                      id={`${formId}-contact`}
+                      className="w-full"
+                      aria-invalid={Boolean(contactError)}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NO_CONTACT}>{copy.contactNone}</SelectItem>
+                      {contactOptions.map((contact) => (
+                        <SelectItem key={contact.id} value={contact.id}>
+                          {contact.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate">{copy.contactHint}</p>
+                </>
+              )}
+              {contactError ? <FieldAlert message={contactError} /> : null}
+            </div>
+          ) : null}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => begin(false)} disabled={pending}>
               {strings.common.cancel}

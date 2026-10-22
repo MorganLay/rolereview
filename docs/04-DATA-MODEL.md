@@ -94,7 +94,7 @@ These keep the tracking data accurate without the user doing extra work. Put the
 | Interview deleted | Reminders for that interview are removed. Timeline events stay, with `interviewId` cleared. Status stays. |
 | Offer created | `JobEvent(OFFER_RECEIVED)`; status → OFFER; if `respondBy` → `Reminder(OFFER_RESPONSE, respondBy − 2 days)` |
 | TailoredResume / CoverLetter READY | `JobEvent(RESUME_TAILORED / LETTER_WRITTEN)` |
-| Manual "Log follow-up" | `JobEvent(FOLLOW_UP_SENT)`; update `Contact.lastContactedAt` if a contact is chosen |
+| Manual "Log follow-up" | `JobEvent(FOLLOW_UP_SENT)`, with optional `contactId` when that person is already linked to the job. `Contact.lastContactedAt` becomes the latest follow-up `occurredAt` for that contact, or null when none remain. Call, email, note, and other do not store a contact. Log outreach on the job writes a follow-up dated today at noon in the user's timezone. |
 | APPLIED with no change for 30 days | Dashboard shows a "No response?" nudge (computed in the query, nothing stored until the user acts) |
 
 Status ordering for "less than" comparisons: SAVED < APPLIED < SCREENING < INTERVIEWING < OFFER < ACCEPTED (closed statuses are not ordered).
@@ -110,12 +110,29 @@ Caps for the Interviews tab. Blank text stores null. `scheduledAt` is a UTC inst
 | `scheduledAt` | real local date and time, years 1900–2099 | null |
 | `durationMinutes` | whole number 1–480 | null |
 | `locationOrLink` | 500 | null. `http` or `https` renders as a link; anything else is text |
-| `interviewers` | 300 | null. Free text until contacts (T8.4) |
+| `interviewers` | 300 | null. Free text. People are tracked as contacts on the job |
 | `prepNotes` | 5,000 | null |
 | `reflection` | 5,000 | null |
 | `outcome` | `InterviewOutcome` | `PENDING` |
 
 Outcome and reflection show in the dialog once `scheduledAt` is in the past, and they stay visible when an outcome other than Pending or a reflection is already saved. The prep-kit button is 1.1. The Reminders tab that lists these rows is T8.5.
+
+### Contact fields
+
+Caps for a contact. Blank text stores null. One role per job (`JobContact.role`), default Other. The same person can be linked to several jobs. Deleting a contact removes those links. A follow-up may name one linked contact (`JobEvent.contactId`); deleting the contact clears that link and leaves the timeline row.
+
+| Field | Max | Blank saves as |
+|---|---|---|
+| `name` | 120 | required |
+| `title` | 120 | null |
+| `company` | 120 | null |
+| `email` | 200 | null. Must be an email address when set |
+| `phone` | 40 | null |
+| `linkedinUrl` | 300 | null. `http` or `https` only |
+| `notes` | 5,000 | null |
+| `role` | `ContactRole` | Other when a new contact is created on a job |
+
+`lastContactedAt` is not edited by hand. It is the latest `occurredAt` among follow-ups that name this contact.
 
 ### Job detail fields
 

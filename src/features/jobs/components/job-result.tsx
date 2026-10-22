@@ -12,8 +12,10 @@ import { TabsContent } from "@/components/ui/tabs";
 import { strings } from "@/copy/strings";
 import { DocumentsTab, TailorPoll } from "@/features/tailor/components/documents-tab";
 import type { JobDocuments } from "@/features/tailor/status";
+import { ContactsTab } from "@/features/tracking/components/contacts-tab";
 import { InterviewsTab } from "@/features/tracking/components/interviews-tab";
 import { TimelineTab } from "@/features/tracking/components/timeline-tab";
+import type { ContactPick, JobContactView } from "@/features/tracking/contacts";
 import type { TimelineEventView } from "@/features/tracking/events";
 import type { InterviewView } from "@/features/tracking/interviews";
 
@@ -49,6 +51,8 @@ type JobResultProps = {
   interviewTimeZone: string;
   interviewNow: string;
   nextRound: number;
+  linkedContacts: JobContactView[];
+  contactDirectory: ContactPick[];
 };
 
 export function JobResult({
@@ -63,6 +67,8 @@ export function JobResult({
   interviewTimeZone,
   interviewNow,
   nextRound,
+  linkedContacts,
+  contactDirectory,
 }: JobResultProps) {
   const ready = job.analysisStatus === "READY";
   const must = job.requirements.filter((item) => item.importance === "must");
@@ -204,12 +210,23 @@ export function JobResult({
             nextRound={nextRound}
           />
         </TabsContent>
+        <TabsContent value="contacts" className="pt-4">
+          <ContactsTab
+            jobId={job.id}
+            linked={linkedContacts}
+            directory={contactDirectory}
+          />
+        </TabsContent>
         <TabsContent value="timeline" className="pt-4">
           <TimelineTab
             jobId={job.id}
             events={timeline}
             hideAuto={hideAuto}
             today={today}
+            contacts={linkedContacts.map((contact) => ({
+              id: contact.id,
+              name: contact.name,
+            }))}
           />
         </TabsContent>
       </JobSections>

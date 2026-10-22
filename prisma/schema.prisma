@@ -422,14 +422,17 @@ model JobEvent {
   details     String?        @db.Text
   occurredAt  DateTime       @default(now()) /// User-editable for manual events
   interviewId String?        @db.Uuid
+  contactId   String?        @db.Uuid /// Set on a follow-up when a linked contact is chosen
   createdAt   DateTime       @default(now())
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   job       Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
   interview Interview? @relation(fields: [interviewId], references: [id], onDelete: SetNull)
+  contact   Contact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
 
   @@index([jobId, occurredAt])
   @@index([userId, type, occurredAt])
+  @@index([contactId])
 }
 
 model Interview {
@@ -473,6 +476,7 @@ model Contact {
 
   user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobs   JobContact[]
+  events JobEvent[]
 
   @@index([userId, name])
 }

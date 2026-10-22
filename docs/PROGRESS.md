@@ -56,7 +56,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T8.1** Board view
 - [x] **T8.2** Timeline tab
 - [x] **T8.3** Interviews tab
-- [ ] **T8.4** Contacts
+- [x] **T8.4** Contacts
 - [ ] **T8.5** Reminders
 - [ ] **T8.6** Offers
 - [ ] **T8.7** Dashboard
@@ -93,6 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-21 T8.4:** Contacts are `?tab=contacts` and `/contacts`. A follow-up can name a linked contact (`JobEvent.contactId`, cleared if the contact is deleted). Log outreach is a follow-up for today at noon in the user's timezone. `lastContactedAt` is the latest follow-up for that person. Interviewers stay free text. Seed contacts stay on T8.7.
 - **2026-10-21 T8.3:** Interviews are `?tab=interviews`. The first dated interview moves Saved, Applied, or Screening to Interviewing and does not set `appliedAt`. A reminder is due 24 hours before; a thank-you is only when the interview is today in the user's timezone. The first outcome writes one completed event. Changing the date does not add a second scheduled event. Delete leaves the timeline lines and does not move status back. Reminders UI is T8.5. Interviewers stay free text until T8.4.
 - **2026-10-21 T8.2:** Timeline is `?tab=timeline`. Manual entries are follow-up, call, email, note, and other; the date is noon in the user's timezone. Hide automatic events is the `events=manual` filter. Details cap is 2,000 characters. A contact on a follow-up waits for T8.4.
 - **2026-10-21 T8.1:** The board is the default jobs page; the list is `?view=list`. Card order is a float midpoint in `board-order.ts` (no `fractional-indexing` package). Below `md`, one column and a stage picker; Move to… is the keyboard and phone path. Same-stage drag writes `boardOrder` only. A 30-card drag was not run; the dev account has three jobs.

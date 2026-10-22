@@ -8,9 +8,10 @@ import { strings } from "@/copy/strings";
 
 const documentsCopy = strings.jobs.documents;
 const interviewsCopy = strings.jobs.interviews;
+const contactsCopy = strings.nav.contacts;
 const timelineCopy = strings.jobs.timeline;
 
-export type JobSectionTab = "overview" | "documents" | "interviews" | "timeline";
+export type JobSectionTab = "overview" | "documents" | "interviews" | "contacts" | "timeline";
 
 export function JobSections({
   jobId,
@@ -31,6 +32,7 @@ export function JobSections({
       value !== "overview" &&
       value !== "documents" &&
       value !== "interviews" &&
+      value !== "contacts" &&
       value !== "timeline"
     ) {
       return;
@@ -52,6 +54,7 @@ export function JobSections({
           <TabsTrigger value="overview">{documentsCopy.overviewTab}</TabsTrigger>
           <TabsTrigger value="documents">{documentsCopy.documentsTab}</TabsTrigger>
           <TabsTrigger value="interviews">{interviewsCopy.tab}</TabsTrigger>
+          <TabsTrigger value="contacts">{contactsCopy}</TabsTrigger>
           <TabsTrigger value="timeline">{timelineCopy.tab}</TabsTrigger>
         </TabsList>
       </div>
