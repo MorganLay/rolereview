@@ -84,6 +84,64 @@ export function settingsHref(tab: SettingsTab): string {
   return `/settings?tab=${tab}`;
 }
 
+export function checkoutConfirmed(value: string | string[] | undefined): boolean {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return raw === "1";
+}
+
+export type CheckoutPrices = {
+  monthly: string;
+  quarterly: string;
+  foundingMonthly: string;
+  foundingQuarterly: string;
+  foundingPercent: number;
+};
+
+/** Whole dollars stay without cents. Anything else shows two decimals, prefixed US. */
+export function formatPlanUsd(dollars: number): string | null {
+  if (!Number.isFinite(dollars)) return null;
+  const cents = Math.round(dollars * 100);
+  const hasCents = cents % 100 !== 0;
+  const formatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: hasCents ? 2 : 0,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
+  return `US${formatted}`;
+}
+
+/** Price after a percent-off coupon, in dollars. Null when the inputs are unusable. */
+export function discountedUsd(usd: number, percentOff: number): number | null {
+  if (!Number.isFinite(usd) || usd < 0) return null;
+  if (!Number.isFinite(percentOff) || percentOff < 0 || percentOff > 100) return null;
+  const cents = Math.round(usd * 100);
+  const discounted = Math.round((cents * (100 - percentOff)) / 100);
+  return discounted / 100;
+}
+
+export function presentCheckoutPrices(input: {
+  monthlyUsd: number;
+  quarterlyUsd: number;
+  foundingPercent: number;
+}): CheckoutPrices | null {
+  const foundingMonthlyUsd = discountedUsd(input.monthlyUsd, input.foundingPercent);
+  const foundingQuarterlyUsd = discountedUsd(input.quarterlyUsd, input.foundingPercent);
+  if (foundingMonthlyUsd == null || foundingQuarterlyUsd == null) return null;
+  const monthly = formatPlanUsd(input.monthlyUsd);
+  const quarterly = formatPlanUsd(input.quarterlyUsd);
+  const foundingMonthly = formatPlanUsd(foundingMonthlyUsd);
+  const foundingQuarterly = formatPlanUsd(foundingQuarterlyUsd);
+  if (!monthly || !quarterly || !foundingMonthly || !foundingQuarterly) return null;
+  return {
+    monthly,
+    quarterly,
+    foundingMonthly,
+    foundingQuarterly,
+    foundingPercent: input.foundingPercent,
+  };
+}
+
 /** Whole-number count. Anything unusable is 0. */
 function count(value: number): number {
   if (!Number.isFinite(value) || value <= 0) return 0;
@@ -189,7 +247,7 @@ export function presentUpgrade(
         : quotaDetail(target.meter, catalog);
   return {
     title: upgrade.title,
-    description: `${detail} ${upgrade.checkoutLater}`,
+    description: detail,
   };
 }
 

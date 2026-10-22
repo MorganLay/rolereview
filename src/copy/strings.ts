@@ -88,8 +88,6 @@ export const strings = {
   },
   upgrade: {
     title: "Upgrade to Pro",
-    cta: "Got it",
-    checkoutLater: "Checkout arrives in a later task.",
     plan: "Pro includes higher monthly limits, Modern and Compact, DOCX, and What’s working.",
     quota: {
       TAILOR: (free: number, pro: number) =>
@@ -128,6 +126,26 @@ export const strings = {
     ends: (date: string) => `Ends ${date}`,
     founding: "Founding member",
     upgrade: "Upgrade",
+    confirmed: "Payment received. Your plan updates when Stripe confirms it.",
+    foundingPrice: (percent: number) =>
+      `${percent}% off for as long as you stay subscribed.`,
+    promo: "You can enter a promotion code on the payment page.",
+    manage: "Manage subscription",
+    notNow: "Not now",
+    opening: "Opening Stripe…",
+    unavailable: "Checkout isn’t available right now. Try again in a moment.",
+    alreadySubscribed:
+      "You already have a subscription. Manage it to change the plan or payment method.",
+    portalFirst: "Start a checkout before managing a subscription.",
+    signIn: "Sign in again to continue.",
+    chooseInterval: "Choose Monthly or 90 days.",
+    onPro: "You’re on Pro.",
+    testLegend: "Preview a price",
+    testAccount: "This account",
+    testFounding: "Founding price",
+    testFull: "Full price",
+    testHint:
+      "Test mode does not charge you. Open a checkout to see the total, then go back. You do not need another account. To try Manage subscription with a plan to switch, pay once with the test card 4242 4242 4242 4242, any future date, and any CVC.",
     usage: "Usage",
     meters: {
       TAILOR: "Tailored resumes",

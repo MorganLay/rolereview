@@ -84,6 +84,9 @@ export const PLANS = {
   }
 >;
 
-/** Null until Stripe price ids are set (T11.2). */
+/** Percent off Pro for a founding member, for as long as they stay subscribed. */
+export const FOUNDING_DISCOUNT_PERCENT = 40;
+
+/** Null when the Stripe price ids are unset. */
 export const STRIPE_PRICE_PRO_MONTHLY = env.STRIPE_PRICE_PRO_MONTHLY ?? null;
 export const STRIPE_PRICE_PRO_QUARTERLY = env.STRIPE_PRICE_PRO_QUARTERLY ?? null;

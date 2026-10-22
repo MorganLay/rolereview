@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { allowanceCatalog } from "@/features/billing/catalog";
-import { PLANS } from "@/features/billing/plans";
+import { allowanceCatalog, checkoutPrices } from "@/features/billing/catalog";
+import { FOUNDING_DISCOUNT_PERCENT, PLANS } from "@/features/billing/plans";
 import {
+  checkoutConfirmed,
+  discountedUsd,
+  formatPlanUsd,
   parseSettingsTab,
+  presentCheckoutPrices,
   presentPlanSummary,
   presentTailorPill,
   presentUpgrade,
@@ -190,7 +194,7 @@ describe("presentUpgrade", () => {
     );
   });
 
-  it("names each Pro lock and says checkout is later", () => {
+  it("names each Pro lock", () => {
     const templates = presentUpgrade({ kind: "feature", feature: "templates" }, CATALOG);
     const docx = presentUpgrade({ kind: "feature", feature: "docx" }, CATALOG);
     const insights = presentUpgrade(
@@ -198,13 +202,12 @@ describe("presentUpgrade", () => {
       CATALOG,
     );
     const plan = presentUpgrade({ kind: "plan" }, CATALOG);
-    expect(templates.description).toContain("Modern and Compact are part of Pro.");
-    expect(docx.description).toContain("DOCX is part of Pro.");
-    expect(insights.description).toContain("What’s working is part of Pro.");
+    expect(templates.description).toBe("Modern and Compact are part of Pro.");
+    expect(docx.description).toBe("DOCX is part of Pro.");
+    expect(insights.description).toBe("What’s working is part of Pro.");
     expect(plan.description).toContain("higher monthly limits");
     for (const view of [templates, docx, insights, plan]) {
       expect(view.title).toBe("Upgrade to Pro");
-      expect(view.description).toContain("Checkout arrives in a later task.");
     }
   });
 });
@@ -228,5 +231,45 @@ describe("allowanceCatalog", () => {
       expect(catalog[meter].pro).toBe(PLANS.PRO.limits[meter].allowance);
       expect(catalog[meter].period).toBe(PLANS.FREE.limits[meter].period);
     }
+  });
+});
+
+describe("checkout prices", () => {
+  it("formats whole dollars as US$ and keeps cents on the founding monthly price", () => {
+    expect(formatPlanUsd(19)).toBe("US$19");
+    expect(formatPlanUsd(11.4)).toBe("US$11.40");
+    expect(formatPlanUsd(Number.NaN)).toBeNull();
+    expect(discountedUsd(19, 40)).toBe(11.4);
+    expect(discountedUsd(45, 40)).toBe(27);
+    expect(discountedUsd(-1, 40)).toBeNull();
+    expect(discountedUsd(19, 101)).toBeNull();
+    expect(discountedUsd(19, Number.NaN)).toBeNull();
+  });
+
+  it("builds both intervals from the plan prices", () => {
+    const prices = checkoutPrices();
+    expect(prices.foundingPercent).toBe(FOUNDING_DISCOUNT_PERCENT);
+    expect(prices.monthly).toBe(formatPlanUsd(PLANS.PRO.price.monthlyUsd));
+    expect(prices.quarterly).toBe(formatPlanUsd(PLANS.PRO.price.quarterlyUsd));
+    expect(prices).toEqual(
+      presentCheckoutPrices({
+        monthlyUsd: PLANS.PRO.price.monthlyUsd,
+        quarterlyUsd: PLANS.PRO.price.quarterlyUsd,
+        foundingPercent: FOUNDING_DISCOUNT_PERCENT,
+      }),
+    );
+  });
+
+  it("rejects prices that cannot be discounted", () => {
+    expect(
+      presentCheckoutPrices({ monthlyUsd: -1, quarterlyUsd: 45, foundingPercent: 40 }),
+    ).toBeNull();
+  });
+
+  it("treats upgraded=1 as the checkout return and ignores anything else", () => {
+    expect(checkoutConfirmed("1")).toBe(true);
+    expect(checkoutConfirmed(["1", "0"])).toBe(true);
+    expect(checkoutConfirmed("true")).toBe(false);
+    expect(checkoutConfirmed(undefined)).toBe(false);
   });
 });

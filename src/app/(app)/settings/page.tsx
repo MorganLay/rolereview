@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
 
+import { checkoutPrices } from "@/features/billing/catalog";
+import { previewAllowed } from "@/features/billing/checkout-rules";
 import { SettingsScreen } from "@/features/billing/components/settings-screen";
-import { parseSettingsTab } from "@/features/billing/present";
+import { checkoutConfirmed, parseSettingsTab } from "@/features/billing/present";
 import { getPlanBilling } from "@/features/billing/queries";
 import { requireUser } from "@/lib/auth";
+import { env } from "@/lib/env";
 
 /** Usage is read for the signed-in user, including "now". */
 export const instant = false;
@@ -19,5 +22,13 @@ export default async function SettingsPage({
   const billing = tab === "plan" ? await getPlanBilling(user.id) : null;
   if (tab === "plan" && !billing) notFound();
 
-  return <SettingsScreen tab={tab} billing={billing} />;
+  return (
+    <SettingsScreen
+      tab={tab}
+      billing={billing}
+      prices={checkoutPrices()}
+      upgraded={tab === "plan" && checkoutConfirmed(params.upgraded)}
+      showTestPreview={previewAllowed(env.NODE_ENV, env.STRIPE_SECRET_KEY ?? null)}
+    />
+  );
 }

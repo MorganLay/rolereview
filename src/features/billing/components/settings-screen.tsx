@@ -6,12 +6,14 @@ import { Progress } from "@/components/ui/progress";
 import { strings } from "@/copy/strings";
 
 import type { PlanBilling } from "../queries";
+import { CheckoutActions } from "./checkout-actions";
 import { PlanUpgradeButton } from "./plan-upgrade-button";
 import {
   SETTINGS_TABS,
   presentPlanSummary,
   presentUsageRow,
   settingsHref,
+  type CheckoutPrices,
   type SettingsTab,
 } from "../present";
 
@@ -21,9 +23,15 @@ const page = strings.pages.settings;
 export function SettingsScreen({
   tab,
   billing,
+  prices,
+  upgraded,
+  showTestPreview,
 }: {
   tab: SettingsTab;
   billing: PlanBilling | null;
+  prices: CheckoutPrices;
+  upgraded: boolean;
+  showTestPreview: boolean;
 }) {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
@@ -47,12 +55,31 @@ export function SettingsScreen({
           </Button>
         ))}
       </nav>
-      {tab === "plan" && billing ? <PlanPanel billing={billing} /> : <Later />}
+      {tab === "plan" && billing ? (
+        <PlanPanel
+          billing={billing}
+          prices={prices}
+          upgraded={upgraded}
+          showTestPreview={showTestPreview}
+        />
+      ) : (
+        <Later />
+      )}
     </div>
   );
 }
 
-function PlanPanel({ billing }: { billing: PlanBilling }) {
+function PlanPanel({
+  billing,
+  prices,
+  upgraded,
+  showTestPreview,
+}: {
+  billing: PlanBilling;
+  prices: CheckoutPrices;
+  upgraded: boolean;
+  showTestPreview: boolean;
+}) {
   const summary = presentPlanSummary({
     plan: billing.plan,
     billingInterval: billing.billingInterval,
@@ -65,6 +92,14 @@ function PlanPanel({ billing }: { billing: PlanBilling }) {
 
   return (
     <div className="flex flex-col gap-8">
+      {upgraded ? (
+        <p
+          role="status"
+          className="rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink"
+        >
+          {copy.confirmed}
+        </p>
+      ) : null}
       <section aria-labelledby="plan-heading" className="flex flex-col gap-3">
         <h2 id="plan-heading" className="text-base font-medium text-ink">
           {copy.planHeading}
@@ -77,11 +112,20 @@ function PlanPanel({ billing }: { billing: PlanBilling }) {
         </div>
         {summary.interval ? <p className="text-sm text-slate">{summary.interval}</p> : null}
         {summary.renewal ? (
-          <p className="text-sm text-slate tabular-nums">{summary.renewal}</p>
+          <p className="text-sm tabular-nums text-slate">{summary.renewal}</p>
         ) : null}
-        <div>
-          <PlanUpgradeButton />
-        </div>
+        {billing.plan === "FREE" ? (
+          <div>
+            <PlanUpgradeButton />
+          </div>
+        ) : null}
+        <CheckoutActions
+          prices={prices}
+          foundingEligible={billing.foundingEligible}
+          hasCustomer={billing.hasCustomer}
+          plan={billing.plan}
+          showTestPreview={showTestPreview}
+        />
       </section>
       <section aria-labelledby="usage-heading" className="flex flex-col gap-4">
         <h2 id="usage-heading" className="text-base font-medium text-ink">

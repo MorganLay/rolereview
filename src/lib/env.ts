@@ -6,12 +6,12 @@ import { z } from "zod";
  * Validated environment. Import `env` everywhere — never read `process.env` in app code.
  * Secrets for later phases stay optional so local work doesn't need fake keys.
  * Auth requires NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.
- * Placeholder values from `.env.example` (containing `<...>`) are treated as unset
+ * Placeholder values from `.env.example` (`<...>` or `...`) are treated as unset
  * for optional secrets only.
  */
 function readOptional(name: string): string | undefined {
   const value = process.env[name];
-  if (!value || value.includes("<")) return undefined;
+  if (!value || value.includes("<") || value.includes("...")) return undefined;
   return value;
 }
 

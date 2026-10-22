@@ -1,4 +1,4 @@
-import type { AllowanceCatalog, TailorPillView } from "@/features/billing/present";
+import type { AllowanceCatalog, CheckoutPrices, TailorPillView } from "@/features/billing/present";
 import { FeedbackButton } from "@/features/growth/feedback/components/feedback-button";
 import type { ReminderView } from "@/features/tracking/reminders";
 
@@ -11,10 +11,24 @@ type AppShellProps = {
   reminders: ReminderView[];
   usage: TailorPillView;
   catalog: AllowanceCatalog;
+  prices: CheckoutPrices;
+  foundingEligible: boolean;
+  hasCustomer: boolean;
+  plan: "FREE" | "PRO";
   children: React.ReactNode;
 };
 
-export function AppShell({ userEmail, reminders, usage, catalog, children }: AppShellProps) {
+export function AppShell({
+  userEmail,
+  reminders,
+  usage,
+  catalog,
+  prices,
+  foundingEligible,
+  hasCustomer,
+  plan,
+  children,
+}: AppShellProps) {
   return (
     <div className="flex min-h-full bg-paper text-ink">
       <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 border-r border-line bg-surface md:flex md:flex-col">
@@ -27,7 +41,13 @@ export function AppShell({ userEmail, reminders, usage, catalog, children }: App
       </div>
 
       <FeedbackButton />
-      <UpgradeModal catalog={catalog} />
+      <UpgradeModal
+        catalog={catalog}
+        prices={prices}
+        foundingEligible={foundingEligible}
+        hasCustomer={hasCustomer}
+        plan={plan}
+      />
     </div>
   );
 }
