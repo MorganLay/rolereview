@@ -10,6 +10,7 @@ import { allowanceCatalog } from "./catalog";
 import { decideFounding } from "./founding-status";
 import { USAGE_METERS, type UsageSnapshot } from "./present";
 import { quotaSnapshot } from "./quota";
+import { showsPaymentFailedBanner } from "./webhook-map";
 
 export type PlanBilling = {
   plan: Plan;
@@ -27,6 +28,7 @@ export type CheckoutContext = {
   plan: Plan;
   foundingEligible: boolean;
   hasCustomer: boolean;
+  paymentFailed: boolean;
 };
 
 /**
@@ -37,7 +39,12 @@ export const getCheckoutContext = cache(async (userId: string): Promise<Checkout
   await connection();
   const user = await db.user.findFirst({
     where: { id: userId },
-    select: { email: true, plan: true, stripeCustomerId: true },
+    select: {
+      email: true,
+      plan: true,
+      stripeCustomerId: true,
+      subscriptionStatus: true,
+    },
   });
   if (!user) return null;
   const decision = await decideFounding(user.email);
@@ -45,6 +52,7 @@ export const getCheckoutContext = cache(async (userId: string): Promise<Checkout
     plan: user.plan,
     foundingEligible: decision === "apply",
     hasCustomer: user.stripeCustomerId !== null,
+    paymentFailed: showsPaymentFailedBanner(user.subscriptionStatus),
   };
 });
 

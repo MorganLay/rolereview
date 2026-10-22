@@ -131,8 +131,10 @@ export async function createCheckoutSession(
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: appUrl("/settings?upgraded=1"),
       cancel_url: appUrl("/settings?tab=plan"),
-      metadata: { userId: row.id },
-      subscription_data: { metadata: { userId: row.id } },
+      metadata: { userId: row.id, interval: parsed.data.interval },
+      subscription_data: {
+        metadata: { userId: row.id, interval: parsed.data.interval },
+      },
       ...(applyFounding && couponId
         ? { discounts: [{ coupon: couponId }] }
         : { allow_promotion_codes: true }),

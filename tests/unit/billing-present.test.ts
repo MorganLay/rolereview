@@ -124,6 +124,21 @@ describe("presentPlanSummary", () => {
     });
   });
 
+  it("hides leftover interval and renewal after the plan is Free", () => {
+    const view = presentPlanSummary({
+      plan: "FREE",
+      billingInterval: "MONTH",
+      currentPeriodEnd: end,
+      cancelAtPeriodEnd: false,
+      foundingMember: true,
+      timeZone: "America/Toronto",
+    });
+    expect(view.plan).toBe("Free");
+    expect(view.interval).toBeNull();
+    expect(view.renewal).toBeNull();
+    expect(view.founding).toBe("Founding member");
+  });
+
   it("shows a monthly renewal in the user's timezone", () => {
     const view = presentPlanSummary({
       plan: "PRO",

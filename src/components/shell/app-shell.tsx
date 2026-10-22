@@ -1,4 +1,5 @@
 import type { AllowanceCatalog, CheckoutPrices, TailorPillView } from "@/features/billing/present";
+import { PaymentFailedBanner } from "@/features/billing/components/payment-failed-banner";
 import { FeedbackButton } from "@/features/growth/feedback/components/feedback-button";
 import type { ReminderView } from "@/features/tracking/reminders";
 
@@ -14,6 +15,7 @@ type AppShellProps = {
   prices: CheckoutPrices;
   foundingEligible: boolean;
   hasCustomer: boolean;
+  paymentFailed: boolean;
   plan: "FREE" | "PRO";
   children: React.ReactNode;
 };
@@ -26,6 +28,7 @@ export function AppShell({
   prices,
   foundingEligible,
   hasCustomer,
+  paymentFailed,
   plan,
   children,
 }: AppShellProps) {
@@ -37,7 +40,14 @@ export function AppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader userEmail={userEmail} reminders={reminders} usage={usage} />
-        <main className="flex-1 px-4 py-5 md:px-6 md:py-6">{children}</main>
+        <main className="flex-1 px-4 py-5 md:px-6 md:py-6">
+          {paymentFailed ? (
+            <div className="mb-4">
+              <PaymentFailedBanner />
+            </div>
+          ) : null}
+          {children}
+        </main>
       </div>
 
       <FeedbackButton />

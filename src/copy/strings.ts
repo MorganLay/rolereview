@@ -127,6 +127,8 @@ export const strings = {
     founding: "Founding member",
     upgrade: "Upgrade",
     confirmed: "Payment received. Your plan updates when Stripe confirms it.",
+    paymentFailed: "Your last payment did not go through.",
+    paymentFailedAction: "Update your payment method",
     foundingPrice: (percent: number) =>
       `${percent}% off for as long as you stay subscribed.`,
     promo: "You can enter a promotion code on the payment page.",

@@ -51,6 +51,7 @@ async function AppShellWithUser({ children }: { children: React.ReactNode }) {
       prices={prices}
       foundingEligible={checkout?.foundingEligible ?? false}
       hasCustomer={checkout?.hasCustomer ?? false}
+      paymentFailed={checkout?.paymentFailed ?? false}
       plan={checkout?.plan ?? user.plan}
     >
       <TimezoneCapture />

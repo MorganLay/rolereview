@@ -12,6 +12,6 @@ Spec: docs/01-PRODUCT.md (Pricing), docs/03-ARCHITECTURE.md (Payments), docs/04-
 - Failed AI calls never consume quota or bonus credits.
 - Pro-only features go through `can(user, feature)` from `entitlements.ts`; deny with `fail("PRO_REQUIRED")`.
 - `User.plan`, `billingInterval`, `subscriptionStatus`, `currentPeriodEnd`, `cancelAtPeriodEnd`, `foundingMember` are changed ONLY by the Stripe webhook.
-- Webhook: raw body (`await req.text()`), `stripe.webhooks.constructEvent`, insert `StripeEvent` first (duplicate → 200), then handle checkout.session.completed, customer.subscription.created/updated/deleted, invoice.payment_failed.
-- PRO when subscription status is `active` or `trialing`; otherwise FREE. Interval from the price id.
+- Webhook: raw body (`await req.text()`), `Stripe.webhooks.constructEvent`, insert `StripeEvent` first (duplicate → 200), then handle checkout.session.completed, customer.subscription.created/updated/deleted, invoice.payment_failed.
+- PRO when subscription status is `active` or `trialing`; otherwise FREE. Interval from the price id. `currentPeriodEnd` from the first subscription item. The payment-failed banner shows when status is `past_due` or `unpaid`.
 - Checkout: `client_reference_id = user.id`, reuse `stripeCustomerId`. The founding coupon applies only for a `Lead` with `foundingOffer` while that coupon can still be redeemed. Promotion codes are offered on sessions that do not apply the coupon. Stripe allows only one of `discounts` and `allow_promotion_codes`.

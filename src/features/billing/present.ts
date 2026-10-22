@@ -199,10 +199,11 @@ export function presentTailorPill(input: {
 }
 
 export function presentPlanSummary(input: PlanSummaryInput): PlanSummaryView {
-  const interval = input.billingInterval
-    ? copy.intervals[input.billingInterval]
-    : null;
-  const renewal = renewalLabel(input);
+  const interval =
+    input.plan === "PRO" && input.billingInterval
+      ? copy.intervals[input.billingInterval]
+      : null;
+  const renewal = input.plan === "PRO" ? renewalLabel(input) : null;
   return {
     plan: copy.plans[input.plan],
     interval,
