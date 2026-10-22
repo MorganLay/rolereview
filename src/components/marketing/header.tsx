@@ -20,6 +20,10 @@ import {
 } from "@/components/ui/sheet";
 import { strings } from "@/copy/strings";
 import { CtaLink } from "@/features/marketing/components/cta-link";
+import {
+  BULLET_STRENGTH_HREF,
+  KEYWORD_CHECKER_HREF,
+} from "@/features/marketing/tools/routes";
 import { useSignedIn } from "@/features/marketing/use-signed-in";
 import { cn } from "@/lib/utils";
 
@@ -30,8 +34,8 @@ const links = [
 ] as const;
 
 const freeTools = [
-  strings.marketing.footer.atsChecker,
-  strings.marketing.footer.bulletStrength,
+  { href: KEYWORD_CHECKER_HREF, label: strings.marketing.footer.atsChecker },
+  { href: BULLET_STRENGTH_HREF, label: strings.marketing.footer.bulletStrength },
 ] as const;
 
 export function MarketingHeader() {
@@ -68,9 +72,9 @@ export function MarketingHeader() {
               <ChevronDown className="size-3.5" aria-hidden />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              {freeTools.map((label) => (
-                <DropdownMenuItem key={label} disabled title={strings.marketing.nav.comingSoon}>
-                  {label}
+              {freeTools.map((item) => (
+                <DropdownMenuItem key={item.href} asChild>
+                  <Link href={item.href}>{item.label}</Link>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -127,14 +131,15 @@ export function MarketingHeader() {
             <p className="px-3 pt-3 text-xs font-medium uppercase tracking-wide text-slate">
               {strings.marketing.nav.freeTools}
             </p>
-            {freeTools.map((label) => (
-              <span
-                key={label}
-                className="rounded-button px-3 py-2.5 text-base text-slate/60"
-                title={strings.marketing.nav.comingSoon}
+            {freeTools.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                className="rounded-button px-3 py-2.5 text-base text-ink hover:bg-pine-50"
               >
-                {label}
-              </span>
+                {item.label}
+              </Link>
             ))}
             {signedIn ? null : (
               <Link

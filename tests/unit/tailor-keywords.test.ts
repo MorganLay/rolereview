@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { keywordCoverage } from "@/features/tailor/keywords";
+import {
+  keywordCoverage,
+  keywordCoverageFromText,
+} from "@/features/tailor/keywords";
 
 import {
   contentBullet,
@@ -126,5 +129,35 @@ describe("keywordCoverage", () => {
 
   it("reports 100 when every keyword is covered", () => {
     expect(coverage(["Python", "SQL", "IBM Cognos"]).pct).toBe(100);
+  });
+});
+
+describe("keywordCoverageFromText", () => {
+  it("uses the same matching against pasted resume text", () => {
+    const result = keywordCoverageFromText(
+      "Analyst who ships React and C++ services using Python",
+      ["react", "C++", "Java", "PYTHON"],
+    );
+    expect(result.covered).toEqual(["react", "C++", "PYTHON"]);
+    expect(result.missing).toEqual(["Java"]);
+    expect(result.pct).toBe(75);
+  });
+
+  it("does not let Java match JavaScript in pasted text", () => {
+    const result = keywordCoverageFromText("JavaScript and C# daily", [
+      "Java",
+      "JavaScript",
+      "C#",
+    ]);
+    expect(result.covered).toEqual(["JavaScript", "C#"]);
+    expect(result.missing).toEqual(["Java"]);
+  });
+
+  it("returns zero coverage when the paste is blank", () => {
+    expect(keywordCoverageFromText("   ", ["SQL"])).toEqual({
+      covered: [],
+      missing: ["SQL"],
+      pct: 0,
+    });
   });
 });

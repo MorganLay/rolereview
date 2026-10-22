@@ -4,6 +4,8 @@ import { strings } from "@/copy/strings";
 
 export const WAITLIST_CONSENT_TEXT = strings.marketing.waitlist.consentLabel;
 export const NEWSLETTER_CONSENT_TEXT = strings.marketing.footer.newsletterConsent;
+export const KEYWORD_REPORT_CONSENT_TEXT =
+  strings.marketing.tools.keyword.emailConsent;
 
 const emailField = z
   .string()
@@ -31,5 +33,15 @@ export const joinNewsletterSchema = z.object({
   consentText: z.literal(NEWSLETTER_CONSENT_TEXT),
 });
 
+export const emailKeywordReportSchema = z.object({
+  email: emailField,
+  marketingConsent: z.literal(true, {
+    error: strings.marketing.tools.keyword.emailConsentRequired,
+  }),
+  turnstileToken: z.string().min(1),
+  consentText: z.literal(KEYWORD_REPORT_CONSENT_TEXT),
+});
+
 export type JoinWaitlistInput = z.infer<typeof joinWaitlistSchema>;
 export type JoinNewsletterInput = z.infer<typeof joinNewsletterSchema>;
+export type EmailKeywordReportInput = z.infer<typeof emailKeywordReportSchema>;

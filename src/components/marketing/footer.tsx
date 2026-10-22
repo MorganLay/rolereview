@@ -3,6 +3,10 @@ import Link from "next/link";
 import { Wordmark } from "@/components/marketing/wordmark";
 import { strings } from "@/copy/strings";
 import { NewsletterForm } from "@/features/marketing/components/newsletter-form";
+import {
+  BULLET_STRENGTH_HREF,
+  KEYWORD_CHECKER_HREF,
+} from "@/features/marketing/tools/routes";
 
 type FooterLink =
   | { kind: "link"; href: string; label: string }
@@ -16,8 +20,16 @@ const productLinks: FooterLink[] = [
 ];
 
 const freeToolLinks: FooterLink[] = [
-  { kind: "soon", label: strings.marketing.footer.atsChecker },
-  { kind: "soon", label: strings.marketing.footer.bulletStrength },
+  {
+    kind: "link",
+    href: KEYWORD_CHECKER_HREF,
+    label: strings.marketing.footer.atsChecker,
+  },
+  {
+    kind: "link",
+    href: BULLET_STRENGTH_HREF,
+    label: strings.marketing.footer.bulletStrength,
+  },
 ];
 
 const companyLinks: FooterLink[] = [

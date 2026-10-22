@@ -446,6 +446,76 @@ export const strings = {
         "retail-changer": "Career changer from retail",
       },
     },
+    tools: {
+      keyword: {
+        metaTitle: "ATS keyword checker",
+        metaDescription:
+          "Paste a job posting and your resume. See which keywords you already cover, and which must-haves are missing. Nothing is stored.",
+        title: "ATS keyword checker",
+        body: "Paste a posting and your resume. RoleRefine finds the keywords an ATS would match, then checks your resume the same way the app does. We don’t store what you paste.",
+        postingLabel: "Job posting",
+        postingPlaceholder: "Paste the full posting.",
+        resumeLabel: "Resume text",
+        resumePlaceholder: "Paste the text of your resume.",
+        submit: "Check keywords",
+        submitting: "Checking keywords…",
+        reading: "Checking this posting against your resume",
+        stages: [
+          "Reading the posting.",
+          "Picking out keywords.",
+          "Checking your resume.",
+        ],
+        coverage: (pct: number) => `${pct}% keyword coverage`,
+        covered: "Covered",
+        missing: "Missing",
+        mustHaves: "Top must-have requirements",
+        noMustHaves: "This posting had no must-have requirements.",
+        noKeywords: "This posting had no keywords to match.",
+        ctaLead:
+          "RoleRefine can tailor your resume to include the ones you actually have.",
+        tailorCta: "Tailor it free",
+        emailTitle: "Email me this report",
+        emailBody:
+          "We’ll save this address for product notes. This report stays on this page — we don’t store your resume.",
+        emailLabel: "Email",
+        emailPlaceholder: "you@example.com",
+        emailConsent:
+          "Email me product updates. Unsubscribe anytime.",
+        emailConsentRequired: "Tick the box to continue.",
+        emailSubmit: "Save my email",
+        emailSubmitting: "Saving…",
+        emailThanks:
+          "Saved. This report stays on this page. We’ll send product notes to that address.",
+        emailError: "Couldn’t save that email. Try again in a moment.",
+        rateLimited: "That’s three checks from this network today. Try again tomorrow.",
+        aiFailed: "We couldn’t read that posting. Try again in a moment.",
+        unavailable: "This tool isn’t available right now. Try again later.",
+        errors: {
+          postingRequired: "Paste a job posting.",
+          postingLong: "A posting can be at most 30,000 characters.",
+          resumeRequired: "Paste your resume text.",
+          resumeLong: "Resume text can be at most 30,000 characters.",
+        },
+      },
+      bullets: {
+        metaTitle: "Bullet strength checker",
+        metaDescription:
+          "Paste up to 10 resume bullets. See Weak through Excellent and the specific fix for the next level. No account, no AI.",
+        title: "Bullet strength checker",
+        body: "Paste up to 10 bullets, one per line. The same checks as in your library: action verb, a number, length, voice, filler, and a skill or tool.",
+        label: "Resume bullets",
+        placeholder:
+          "Led a team of 8 analysts reporting weekly to operations.\nResponsible for various tasks.",
+        submit: "Check bullets",
+        empty: "Paste at least one bullet.",
+        extra: (count: number) =>
+          count === 1
+            ? "Only the first 10 bullets are checked. 1 extra line was skipped."
+            : `Only the first 10 bullets are checked. ${count} extra lines were skipped.`,
+        ctaLead: "Check every bullet in your resume.",
+        noFixes: "This bullet passes every check.",
+      },
+    },
     waitlist: {
       metaTitle: "Join the waitlist",
       metaDescription:

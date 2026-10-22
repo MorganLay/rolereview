@@ -12,6 +12,8 @@ export const CTA_LOCATIONS = [
   "pricing-page",
   "demo",
   "final",
+  "keyword-checker",
+  "bullet-strength",
 ] as const;
 
 export type CtaLocation = (typeof CTA_LOCATIONS)[number];

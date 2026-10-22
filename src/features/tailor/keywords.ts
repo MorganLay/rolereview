@@ -19,7 +19,15 @@ export function keywordCoverage(
   snapshot: LibrarySnapshot,
   keywords: readonly string[],
 ): KeywordCoverage {
-  const haystack = normalize(keywordText(content, snapshot));
+  return keywordCoverageFromText(keywordText(content, snapshot), keywords);
+}
+
+/** Same matching as the workspace, against a pasted resume. */
+export function keywordCoverageFromText(
+  text: string,
+  keywords: readonly string[],
+): KeywordCoverage {
+  const haystack = normalize(text);
   const covered: string[] = [];
   const missing: string[] = [];
 
