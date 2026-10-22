@@ -5,7 +5,10 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { strings } from "@/copy/strings";
+import { DemoExperience } from "@/features/marketing/demo/demo-experience";
+import type { DemoFixture } from "@/features/marketing/demo/schema";
 import { faqItems, faqJsonLd } from "@/features/marketing/faq";
 import type { MarketingPricingView } from "@/features/marketing/present";
 
@@ -27,7 +30,13 @@ import {
 
 const copy = strings.marketing.home;
 
-export function HomePage({ pricing }: { pricing: MarketingPricingView }) {
+export function HomePage({
+  pricing,
+  demos,
+}: {
+  pricing: MarketingPricingView;
+  demos: readonly DemoFixture[];
+}) {
   const faqs = faqItems(pricing.freeTailor);
 
   return (
@@ -41,6 +50,7 @@ export function HomePage({ pricing }: { pricing: MarketingPricingView }) {
       <TrustStrip />
       <Problem />
       <HowItWorks />
+      <Demo demos={demos} />
       <Differentiator />
       <FeatureGrid />
       <FounderNote />
@@ -60,8 +70,11 @@ function Hero({ freeTailor }: { freeTailor: number }) {
           {copy.title}
         </h1>
         <p className="mt-4 text-lg text-slate">{copy.body}</p>
-        <div className="mt-6">
+        <div className="mt-6 flex flex-wrap gap-3">
           <CtaLink location="hero" />
+          <Button asChild variant="outline" className="min-h-11 px-4">
+            <a href="#demo">{copy.tryDemo}</a>
+          </Button>
         </div>
         <p className="mt-3 text-sm text-slate">{copy.microcopy(freeTailor)}</p>
       </div>
@@ -150,6 +163,16 @@ function HowItWorks() {
         <div className="mt-10">
           <CtaLink location="how-it-works" />
         </div>
+      </div>
+    </section>
+  );
+}
+
+function Demo({ demos }: { demos: readonly DemoFixture[] }) {
+  return (
+    <section id="demo" className="scroll-mt-20">
+      <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+        <DemoExperience demos={demos} heading="h2" />
       </div>
     </section>
   );

@@ -1,0 +1,513 @@
+{
+  "persona": "retail-changer",
+  "posting": "data-analyst",
+  "jobLabel": "Lakeshore Mutual — Data analyst",
+  "snapshot": {
+    "takenAt": "2026-10-21T00:00:00.000Z",
+    "profile": {
+      "fullName": "Jordan Blake",
+      "headline": "Retail supervisor learning web development",
+      "email": "jordan.blake@example.com",
+      "phone": "902-555-0133",
+      "location": "Halifax, NS",
+      "links": [
+        {
+          "label": "Portfolio",
+          "url": "https://example.com/jordan-blake"
+        }
+      ],
+      "summary": "Shift supervisor at a home-goods store who completed a web-development certificate and a small catalogue project."
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "id": "retail-e1",
+        "kind": "EXPERIENCE",
+        "title": "Shift supervisor",
+        "organization": "Maple & Main",
+        "location": "Halifax, NS",
+        "startDate": "2020-02",
+        "endDate": null,
+        "isCurrent": true,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E1.B1",
+            "id": "retail-e1-b1",
+            "text": "Scheduled a team of 14 at a home-goods store with about $1.2 million in annual sales."
+          },
+          {
+            "ref": "E1.B2",
+            "id": "retail-e1-b2",
+            "text": "Trained 9 new cashiers on the till and the return desk."
+          },
+          {
+            "ref": "E1.B3",
+            "id": "retail-e1-b3",
+            "text": "Counted the safe and the day's cash. The drawer was short twice in 2025."
+          },
+          {
+            "ref": "E1.B4",
+            "id": "retail-e1-b4",
+            "text": "Reconciled online-pickup orders each morning, usually 30 to 50 orders."
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "id": "retail-e2",
+        "kind": "EXPERIENCE",
+        "title": "Cashier",
+        "organization": "Maple & Main",
+        "location": "Halifax, NS",
+        "startDate": "2018-06",
+        "endDate": "2020-01",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E2.B1",
+            "id": "retail-e2-b1",
+            "text": "Served customers at the till and the customer-service desk."
+          },
+          {
+            "ref": "E2.B2",
+            "id": "retail-e2-b2",
+            "text": "Kept the return log for the department, about 20 returns a day on weekends."
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "id": "retail-e3",
+        "kind": "EDUCATION",
+        "title": "Certificate, Web Development",
+        "organization": "Harbour College",
+        "location": "Halifax, NS",
+        "startDate": "2024-09",
+        "endDate": "2025-06",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E3.B1",
+            "id": "retail-e3-b1",
+            "text": "Completed courses in HTML, CSS, JavaScript, and a group project."
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "id": "retail-e4",
+        "kind": "PROJECT",
+        "title": "Bookstore catalogue",
+        "organization": "Harbour College",
+        "location": "Halifax, NS",
+        "startDate": "2025-02",
+        "endDate": "2025-04",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E4.B1",
+            "id": "retail-e4-b1",
+            "text": "Built a static site with HTML, CSS, and JavaScript listing 24 books."
+          },
+          {
+            "ref": "E4.B2",
+            "id": "retail-e4-b2",
+            "text": "Added a search box that filters the list by title."
+          }
+        ]
+      },
+      {
+        "ref": "E5",
+        "id": "retail-e5",
+        "kind": "VOLUNTEER",
+        "title": "Computer tutor",
+        "organization": "Quinpool Library Drop-in",
+        "location": "Halifax, NS",
+        "startDate": "2025-01",
+        "endDate": "2025-08",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E5.B1",
+            "id": "retail-e5-b1",
+            "text": "Helped adults with email, job applications, and printing, about 3 hours a week for 8 months."
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "ref": "S1",
+        "id": "retail-s1",
+        "name": "HTML",
+        "category": "Languages"
+      },
+      {
+        "ref": "S2",
+        "id": "retail-s2",
+        "name": "CSS",
+        "category": "Languages"
+      },
+      {
+        "ref": "S3",
+        "id": "retail-s3",
+        "name": "JavaScript",
+        "category": "Languages"
+      },
+      {
+        "ref": "S4",
+        "id": "retail-s4",
+        "name": "Excel",
+        "category": "Tools"
+      },
+      {
+        "ref": "S5",
+        "id": "retail-s5",
+        "name": "Customer service",
+        "category": "Soft skills"
+      }
+    ]
+  },
+  "analysis": {
+    "title": "Data analyst",
+    "company": "Lakeshore Mutual",
+    "location": "Toronto, Ontario",
+    "seniority": "mid",
+    "workMode": "HYBRID",
+    "employmentType": "FULL_TIME",
+    "salary": {
+      "min": 70000,
+      "max": 85000,
+      "currency": "CAD",
+      "period": "YEAR"
+    },
+    "referenceNumber": null,
+    "summary": "Lakeshore Mutual's analytics team is hiring a data analyst in Toronto to turn policy and claims data into reports for branch managers. The role covers SQL analysis, dashboard building, data quality checks, and walking managers through a weekly reporting pack.",
+    "requirements": [
+      {
+        "id": "r1",
+        "text": "Two years of experience in reporting, analytics, or a similar data role",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r2",
+        "text": "Strong SQL",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r3",
+        "text": "Writing SQL against a Postgres warehouse",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r4",
+        "text": "Excel, including lookups",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r5",
+        "text": "Excel pivot tables",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r6",
+        "text": "Experience presenting numbers to people who do not write queries",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r7",
+        "text": "Clear written English",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r8",
+        "text": "Power BI or Tableau dashboard experience",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r9",
+        "text": "Python for file checks",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r10",
+        "text": "Experience in insurance, banking, or another regulated setting",
+        "kind": "experience",
+        "importance": "nice"
+      }
+    ],
+    "keywords": [
+      "SQL",
+      "Postgres",
+      "data warehouse",
+      "Power BI",
+      "Tableau",
+      "dashboards",
+      "Excel",
+      "lookups",
+      "pivot tables",
+      "Python",
+      "data quality",
+      "metric definitions",
+      "reporting",
+      "analytics",
+      "insurance",
+      "policy data",
+      "claims data",
+      "branch managers",
+      "weekly pack",
+      "filters"
+    ]
+  },
+  "content": {
+    "schemaVersion": 1,
+    "summary": {
+      "text": "Shift supervisor with a web-development certificate and hands-on retail experience in daily order reconciliation, cash counting, and return logging. Built a small JavaScript catalogue site with search and tutored adults on computer basics. Seeking an entry point into data work; no SQL or dashboard experience yet.",
+      "included": true
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "8o2OlLmBiH_oqRhxWDUaT",
+            "text": "Reconciled online-pickup orders each morning, usually 30 to 50 orders.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B4"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "eRZJGWR5ah4Nod6BuDzf0",
+            "text": "Trained 9 new cashiers on the till and the return desk.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "3ujtg97sLjfeE-3gV5BPC",
+            "text": "Scheduled a team of 14 at a home-goods store with about $1.2 million in annual sales.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "TKx9abBH4OZ9BZXPUPvQT",
+            "text": "Counted the safe and the day's cash.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B3"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "8rZYcrQ1anCcm7BOajUi0",
+            "text": "Kept the return log for the department, about 20 returns a day on weekends.",
+            "included": true,
+            "sourceRefs": [
+              "E2.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "QP6O_TJyuKEUIKMv9r3iC",
+            "text": "Served customers at the till and the customer-service desk.",
+            "included": false,
+            "sourceRefs": [
+              "E2.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "kind": "PROJECT",
+        "included": true,
+        "bullets": [
+          {
+            "id": "0tqsL7E9ju0qtafY1DQCn",
+            "text": "Built a static site with HTML, CSS, and JavaScript listing 24 books.",
+            "included": true,
+            "sourceRefs": [
+              "E4.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "d9555l78gy2ccnq1TcyQa",
+            "text": "Added a search box that filters the list by title.",
+            "included": true,
+            "sourceRefs": [
+              "E4.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "kind": "EDUCATION",
+        "included": true,
+        "bullets": [
+          {
+            "id": "kjYLZf6i_JmjJ2Q_X3G8M",
+            "text": "Completed courses in HTML, CSS, JavaScript, and a group project.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E5",
+        "kind": "VOLUNTEER",
+        "included": true,
+        "bullets": [
+          {
+            "id": "P5CL1iOpwcO_WU3QiFlQs",
+            "text": "Helped adults with email, job applications, and printing, about 3 hours a week for 8 months.",
+            "included": true,
+            "sourceRefs": [
+              "E5.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "category": "Tools",
+        "names": [
+          "Excel"
+        ]
+      },
+      {
+        "category": "Languages",
+        "names": [
+          "JavaScript",
+          "HTML",
+          "CSS"
+        ]
+      },
+      {
+        "category": "Soft skills",
+        "names": [
+          "Customer service"
+        ]
+      }
+    ]
+  },
+  "match": {
+    "verdicts": [
+      {
+        "requirementId": "r1",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No reporting, analytics, or data role in the library."
+      },
+      {
+        "requirementId": "r2",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No SQL experience listed."
+      },
+      {
+        "requirementId": "r3",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No Postgres or warehouse experience."
+      },
+      {
+        "requirementId": "r4",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "S4"
+        ],
+        "note": "Excel is listed as a skill but lookups are not evidenced."
+      },
+      {
+        "requirementId": "r5",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "S4"
+        ],
+        "note": "Excel is listed but pivot tables are not evidenced."
+      },
+      {
+        "requirementId": "r6",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No evidence of presenting numbers to non-technical audiences."
+      },
+      {
+        "requirementId": "r7",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E5.B1"
+        ],
+        "note": "Helped adults with job applications and email, but no direct written-English evidence."
+      },
+      {
+        "requirementId": "r8",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No Power BI or Tableau experience."
+      },
+      {
+        "requirementId": "r9",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No Python experience."
+      },
+      {
+        "requirementId": "r10",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No insurance, banking, or regulated-setting experience."
+      }
+    ],
+    "score": 18
+  }
+}

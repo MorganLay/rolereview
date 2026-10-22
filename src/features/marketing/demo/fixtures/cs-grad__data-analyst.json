@@ -1,0 +1,483 @@
+{
+  "persona": "cs-grad",
+  "posting": "data-analyst",
+  "jobLabel": "Lakeshore Mutual — Data analyst",
+  "snapshot": {
+    "takenAt": "2026-10-21T00:00:00.000Z",
+    "profile": {
+      "fullName": "Ada Okonkwo",
+      "headline": "New computer science graduate",
+      "email": "ada.okonkwo@example.com",
+      "phone": "613-555-0142",
+      "location": "Ottawa, ON",
+      "links": [
+        {
+          "label": "Portfolio",
+          "url": "https://example.com/ada-okonkwo"
+        }
+      ],
+      "summary": "Computer science graduate with a summer internship on internal web tools and a campus help-desk role."
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "id": "grad-e1",
+        "kind": "EXPERIENCE",
+        "title": "Software developer intern",
+        "organization": "Northline Transit",
+        "location": "Ottawa, ON",
+        "startDate": "2025-05",
+        "endDate": "2025-08",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E1.B1",
+            "id": "grad-e1-b1",
+            "text": "Built a React and TypeScript page for bus-stop inspection notes used by 12 field supervisors."
+          },
+          {
+            "ref": "E1.B2",
+            "id": "grad-e1-b2",
+            "text": "Wrote Python scripts that checked GTFS files and flagged 40 missing stop records before the fall schedule was published."
+          },
+          {
+            "ref": "E1.B3",
+            "id": "grad-e1-b3",
+            "text": "Added Jest tests around a fare-table helper, covering 18 cases the team had listed."
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "id": "grad-e2",
+        "kind": "EXPERIENCE",
+        "title": "IT help desk assistant",
+        "organization": "University of Ottawa",
+        "location": "Ottawa, ON",
+        "startDate": "2024-09",
+        "endDate": "2026-04",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E2.B1",
+            "id": "grad-e2-b1",
+            "text": "Resolved about 25 student laptop and Wi-Fi tickets a week and logged each one in the campus ticketing tool."
+          },
+          {
+            "ref": "E2.B2",
+            "id": "grad-e2-b2",
+            "text": "Wrote a 6-page wiki for resetting lab passwords that the evening shift adopted."
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "id": "grad-e3",
+        "kind": "PROJECT",
+        "title": "Bike-shop inventory app",
+        "organization": "University of Ottawa",
+        "location": "Ottawa, ON",
+        "startDate": "2026-01",
+        "endDate": "2026-04",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E3.B1",
+            "id": "grad-e3-b1",
+            "text": "Built a Java and SQL inventory app for a campus bike-repair shop, tracking 120 parts."
+          },
+          {
+            "ref": "E3.B2",
+            "id": "grad-e3-b2",
+            "text": "Presented the app to the shop coordinator and two classmates. The shop did not deploy it."
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "id": "grad-e4",
+        "kind": "EDUCATION",
+        "title": "Bachelor of Science, Computer Science",
+        "organization": "University of Ottawa",
+        "location": "Ottawa, ON",
+        "startDate": "2022",
+        "endDate": "2026",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E4.B1",
+            "id": "grad-e4-b1",
+            "text": "Coursework in databases, operating systems, and web development."
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "ref": "S1",
+        "id": "grad-s1",
+        "name": "Java",
+        "category": "Languages"
+      },
+      {
+        "ref": "S2",
+        "id": "grad-s2",
+        "name": "Python",
+        "category": "Languages"
+      },
+      {
+        "ref": "S3",
+        "id": "grad-s3",
+        "name": "SQL",
+        "category": "Languages"
+      },
+      {
+        "ref": "S4",
+        "id": "grad-s4",
+        "name": "JavaScript",
+        "category": "Languages"
+      },
+      {
+        "ref": "S5",
+        "id": "grad-s5",
+        "name": "TypeScript",
+        "category": "Languages"
+      },
+      {
+        "ref": "S6",
+        "id": "grad-s6",
+        "name": "React",
+        "category": "Frameworks"
+      },
+      {
+        "ref": "S7",
+        "id": "grad-s7",
+        "name": "Git",
+        "category": "Tools"
+      },
+      {
+        "ref": "S8",
+        "id": "grad-s8",
+        "name": "Jest",
+        "category": "Tools"
+      }
+    ]
+  },
+  "analysis": {
+    "title": "Data analyst",
+    "company": "Lakeshore Mutual",
+    "location": "Toronto, Ontario",
+    "seniority": "mid",
+    "workMode": "HYBRID",
+    "employmentType": "FULL_TIME",
+    "salary": {
+      "min": 70000,
+      "max": 85000,
+      "currency": "CAD",
+      "period": "YEAR"
+    },
+    "referenceNumber": null,
+    "summary": "Lakeshore Mutual's analytics team is hiring a data analyst in Toronto to turn policy and claims data into reports for branch managers. The role covers SQL analysis, dashboard building, data quality checks, and training managers on weekly reporting packs.",
+    "requirements": [
+      {
+        "id": "r1",
+        "text": "Two years of experience in reporting, analytics, or a similar data role",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r2",
+        "text": "Strong SQL",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r3",
+        "text": "Writing SQL against a Postgres warehouse",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r4",
+        "text": "Excel, including lookups",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r5",
+        "text": "Excel, including pivot tables",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r6",
+        "text": "Experience presenting numbers to people who do not write queries",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r7",
+        "text": "Clear written English",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r8",
+        "text": "Power BI or Tableau",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r9",
+        "text": "Python for file checks",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r10",
+        "text": "Experience in insurance, banking, or another regulated setting",
+        "kind": "experience",
+        "importance": "nice"
+      }
+    ],
+    "keywords": [
+      "SQL",
+      "Postgres",
+      "Power BI",
+      "Tableau",
+      "Excel",
+      "lookups",
+      "pivot tables",
+      "dashboards",
+      "Python",
+      "data quality",
+      "metric definitions",
+      "reporting",
+      "analytics",
+      "policy data",
+      "claims data",
+      "insurance",
+      "branch managers",
+      "weekly pack",
+      "filters",
+      "regulated setting"
+    ]
+  },
+  "content": {
+    "schemaVersion": 1,
+    "summary": {
+      "text": "Computer science graduate with SQL and Python experience from a Java and SQL inventory app and a transit internship, where Python scripts checked GTFS files for missing records. Also has campus help-desk experience documenting procedures in writing.",
+      "included": true
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "68sCbQ8UPrShqJ2sRLGDe",
+            "text": "Wrote Python scripts that checked GTFS files and flagged 40 missing stop records before the fall schedule was published.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "_NpPxfT0_PT4PJb5UwMK9",
+            "text": "Built a React and TypeScript page for bus-stop inspection notes used by 12 field supervisors.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "eKSYizz3XdEoWjE1l7Q_F",
+            "text": "Added Jest tests around a fare-table helper, covering 18 cases the team had listed.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B3"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "2yJebFt_UfpQLOKEr_ng-",
+            "text": "Wrote a 6-page wiki for resetting lab passwords that the evening shift adopted.",
+            "included": true,
+            "sourceRefs": [
+              "E2.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "FJNyryQr8sdS63U0W7Km6",
+            "text": "Resolved about 25 student laptop and Wi-Fi tickets a week and logged each one in the campus ticketing tool.",
+            "included": true,
+            "sourceRefs": [
+              "E2.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "kind": "PROJECT",
+        "included": true,
+        "bullets": [
+          {
+            "id": "oN4bzUZUzI20zGKm_HaJu",
+            "text": "Built a Java and SQL inventory app for a campus bike-repair shop, tracking 120 parts.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "K5ITAFeuuWCwhcrf2K8nW",
+            "text": "Presented the app to the shop coordinator and two classmates.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "kind": "EDUCATION",
+        "included": true,
+        "bullets": [
+          {
+            "id": "Uj_BeGZyRiC96n-Oz-RiT",
+            "text": "Coursework in databases, operating systems, and web development.",
+            "included": true,
+            "sourceRefs": [
+              "E4.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "category": "Data and Languages",
+        "names": [
+          "SQL",
+          "Python",
+          "Java"
+        ]
+      },
+      {
+        "category": "Web and Tools",
+        "names": [
+          "JavaScript",
+          "TypeScript",
+          "React",
+          "Git",
+          "Jest"
+        ]
+      }
+    ]
+  },
+  "match": {
+    "verdicts": [
+      {
+        "requirementId": "r1",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "Only a summer internship in software development, no two years in a data role."
+      },
+      {
+        "requirementId": "r2",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E3.B1",
+          "S3"
+        ],
+        "note": "SQL used in a course project, but no evidence of strong or professional use."
+      },
+      {
+        "requirementId": "r3",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No Postgres or warehouse experience stated."
+      },
+      {
+        "requirementId": "r4",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "Excel lookups are not mentioned."
+      },
+      {
+        "requirementId": "r5",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "Pivot tables are not mentioned."
+      },
+      {
+        "requirementId": "r6",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E3.B2",
+          "E1.B1"
+        ],
+        "note": "Presented an app to a coordinator and built a tool for supervisors, but not presenting numbers."
+      },
+      {
+        "requirementId": "r7",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E2.B2"
+        ],
+        "note": "Wrote a wiki guide that was adopted, which suggests clear writing."
+      },
+      {
+        "requirementId": "r8",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No Power BI or Tableau."
+      },
+      {
+        "requirementId": "r9",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B2",
+          "S2"
+        ],
+        "note": "Python scripts checked GTFS files and flagged missing records."
+      },
+      {
+        "requirementId": "r10",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No insurance, banking, or regulated setting experience."
+      }
+    ],
+    "score": 24
+  }
+}

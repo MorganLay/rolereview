@@ -1,0 +1,569 @@
+{
+  "persona": "cs-grad",
+  "posting": "frontend",
+  "jobLabel": "Kindling Studio — Frontend developer",
+  "snapshot": {
+    "takenAt": "2026-10-21T00:00:00.000Z",
+    "profile": {
+      "fullName": "Ada Okonkwo",
+      "headline": "New computer science graduate",
+      "email": "ada.okonkwo@example.com",
+      "phone": "613-555-0142",
+      "location": "Ottawa, ON",
+      "links": [
+        {
+          "label": "Portfolio",
+          "url": "https://example.com/ada-okonkwo"
+        }
+      ],
+      "summary": "Computer science graduate with a summer internship on internal web tools and a campus help-desk role."
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "id": "grad-e1",
+        "kind": "EXPERIENCE",
+        "title": "Software developer intern",
+        "organization": "Northline Transit",
+        "location": "Ottawa, ON",
+        "startDate": "2025-05",
+        "endDate": "2025-08",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E1.B1",
+            "id": "grad-e1-b1",
+            "text": "Built a React and TypeScript page for bus-stop inspection notes used by 12 field supervisors."
+          },
+          {
+            "ref": "E1.B2",
+            "id": "grad-e1-b2",
+            "text": "Wrote Python scripts that checked GTFS files and flagged 40 missing stop records before the fall schedule was published."
+          },
+          {
+            "ref": "E1.B3",
+            "id": "grad-e1-b3",
+            "text": "Added Jest tests around a fare-table helper, covering 18 cases the team had listed."
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "id": "grad-e2",
+        "kind": "EXPERIENCE",
+        "title": "IT help desk assistant",
+        "organization": "University of Ottawa",
+        "location": "Ottawa, ON",
+        "startDate": "2024-09",
+        "endDate": "2026-04",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E2.B1",
+            "id": "grad-e2-b1",
+            "text": "Resolved about 25 student laptop and Wi-Fi tickets a week and logged each one in the campus ticketing tool."
+          },
+          {
+            "ref": "E2.B2",
+            "id": "grad-e2-b2",
+            "text": "Wrote a 6-page wiki for resetting lab passwords that the evening shift adopted."
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "id": "grad-e3",
+        "kind": "PROJECT",
+        "title": "Bike-shop inventory app",
+        "organization": "University of Ottawa",
+        "location": "Ottawa, ON",
+        "startDate": "2026-01",
+        "endDate": "2026-04",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E3.B1",
+            "id": "grad-e3-b1",
+            "text": "Built a Java and SQL inventory app for a campus bike-repair shop, tracking 120 parts."
+          },
+          {
+            "ref": "E3.B2",
+            "id": "grad-e3-b2",
+            "text": "Presented the app to the shop coordinator and two classmates. The shop did not deploy it."
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "id": "grad-e4",
+        "kind": "EDUCATION",
+        "title": "Bachelor of Science, Computer Science",
+        "organization": "University of Ottawa",
+        "location": "Ottawa, ON",
+        "startDate": "2022",
+        "endDate": "2026",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E4.B1",
+            "id": "grad-e4-b1",
+            "text": "Coursework in databases, operating systems, and web development."
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "ref": "S1",
+        "id": "grad-s1",
+        "name": "Java",
+        "category": "Languages"
+      },
+      {
+        "ref": "S2",
+        "id": "grad-s2",
+        "name": "Python",
+        "category": "Languages"
+      },
+      {
+        "ref": "S3",
+        "id": "grad-s3",
+        "name": "SQL",
+        "category": "Languages"
+      },
+      {
+        "ref": "S4",
+        "id": "grad-s4",
+        "name": "JavaScript",
+        "category": "Languages"
+      },
+      {
+        "ref": "S5",
+        "id": "grad-s5",
+        "name": "TypeScript",
+        "category": "Languages"
+      },
+      {
+        "ref": "S6",
+        "id": "grad-s6",
+        "name": "React",
+        "category": "Frameworks"
+      },
+      {
+        "ref": "S7",
+        "id": "grad-s7",
+        "name": "Git",
+        "category": "Tools"
+      },
+      {
+        "ref": "S8",
+        "id": "grad-s8",
+        "name": "Jest",
+        "category": "Tools"
+      }
+    ]
+  },
+  "analysis": {
+    "title": "Frontend developer",
+    "company": "Kindling Studio",
+    "location": "Montreal, Quebec",
+    "seniority": "mid",
+    "workMode": "HYBRID",
+    "employmentType": "FULL_TIME",
+    "salary": {
+      "min": 95000,
+      "max": 115000,
+      "currency": "CAD",
+      "period": "YEAR"
+    },
+    "referenceNumber": null,
+    "summary": "Kindling Studio is hiring a mid-level frontend developer to build marketing and account sites for cultural organizations on a team of six. The role involves building React and TypeScript interfaces, maintaining a shared component library, and adding automated tests.",
+    "requirements": [
+      {
+        "id": "r1",
+        "text": "About three years of professional web development",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r2",
+        "text": "TypeScript",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r3",
+        "text": "React",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r4",
+        "text": "HTML",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r5",
+        "text": "CSS",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r6",
+        "text": "Git",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r7",
+        "text": "Habit of submitting small pull requests",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r8",
+        "text": "One shipped example of an accessibility fix described in resume",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r9",
+        "text": "Storybook or another component workshop",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r10",
+        "text": "Experience with design systems used by more than one team",
+        "kind": "experience",
+        "importance": "nice"
+      },
+      {
+        "id": "r11",
+        "text": "French language ability",
+        "kind": "other",
+        "importance": "nice"
+      },
+      {
+        "id": "r12",
+        "text": "Build interfaces in React and TypeScript",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r13",
+        "text": "Extend a shared component library and document components",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r14",
+        "text": "Write CSS matching Figma designs with keyboard and screen-reader behaviour",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r15",
+        "text": "Add automated checks with Jest or Playwright for sign-in and critical flows",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r16",
+        "text": "Review pull requests and pair with designers on unclear layouts",
+        "kind": "experience",
+        "importance": "must"
+      }
+    ],
+    "keywords": [
+      "React",
+      "TypeScript",
+      "HTML",
+      "CSS",
+      "Git",
+      "Figma",
+      "Jest",
+      "Playwright",
+      "Storybook",
+      "accessibility",
+      "keyboard navigation",
+      "screen reader",
+      "component library",
+      "design system",
+      "pull requests",
+      "automated testing",
+      "sign-in flows",
+      "frontend",
+      "marketing sites",
+      "account sites"
+    ]
+  },
+  "content": {
+    "schemaVersion": 1,
+    "summary": {
+      "text": "Computer science graduate with a summer internship building React and TypeScript pages and writing Jest tests, plus a Java and SQL inventory project. Also two years of help-desk experience resolving tickets and writing documentation.",
+      "included": true
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "gh1Ph7NTpzWPvGZPlhbAB",
+            "text": "Built a React and TypeScript page for bus-stop inspection notes used by 12 field supervisors.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "cVxsVlGFLsGwLt3ZUesx-",
+            "text": "Added Jest tests around a fare-table helper, covering 18 cases the team had listed.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B3"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "MtPGs_KVsdam987RVckVP",
+            "text": "Wrote Python scripts that checked GTFS files and flagged 40 missing stop records before the fall schedule was published.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "qIBuMfAnMSfYRtallJDlC",
+            "text": "Wrote a 6-page wiki for resetting lab passwords that the evening shift adopted.",
+            "included": true,
+            "sourceRefs": [
+              "E2.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "gZF7z1ROmnoUlUKA7llQn",
+            "text": "Resolved about 25 student laptop and Wi-Fi tickets a week and logged each one in the campus ticketing tool.",
+            "included": true,
+            "sourceRefs": [
+              "E2.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "kind": "PROJECT",
+        "included": true,
+        "bullets": [
+          {
+            "id": "V_aoUh4BWNE_jdGddSsuk",
+            "text": "Built a Java and SQL inventory app for a campus bike-repair shop, tracking 120 parts.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "AC2B4WkuKvc_b8mOjI8EB",
+            "text": "Presented the app to the shop coordinator and two classmates.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "kind": "EDUCATION",
+        "included": true,
+        "bullets": [
+          {
+            "id": "fr5QMG8NmeB48Z7V-pqJj",
+            "text": "Coursework in databases, operating systems, and web development.",
+            "included": true,
+            "sourceRefs": [
+              "E4.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "category": "Frontend",
+        "names": [
+          "TypeScript",
+          "React",
+          "JavaScript",
+          "Jest"
+        ]
+      },
+      {
+        "category": "Languages",
+        "names": [
+          "Java",
+          "Python",
+          "SQL"
+        ]
+      },
+      {
+        "category": "Tools",
+        "names": [
+          "Git"
+        ]
+      }
+    ]
+  },
+  "match": {
+    "verdicts": [
+      {
+        "requirementId": "r1",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E1.B1",
+          "E3.B1"
+        ],
+        "note": "Only a summer internship and a course project, far short of three years."
+      },
+      {
+        "requirementId": "r2",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B1",
+          "S5"
+        ],
+        "note": "Used TypeScript in the internship."
+      },
+      {
+        "requirementId": "r3",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B1",
+          "S6"
+        ],
+        "note": "Built a React page during the internship."
+      },
+      {
+        "requirementId": "r4",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "HTML is not listed or described."
+      },
+      {
+        "requirementId": "r5",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "CSS is not listed or described."
+      },
+      {
+        "requirementId": "r6",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "S7"
+        ],
+        "note": "Git is listed as a skill but no usage is described."
+      },
+      {
+        "requirementId": "r7",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No evidence of pull request habits."
+      },
+      {
+        "requirementId": "r8",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No accessibility fix described."
+      },
+      {
+        "requirementId": "r9",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No Storybook or component workshop experience."
+      },
+      {
+        "requirementId": "r10",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No design system experience."
+      },
+      {
+        "requirementId": "r11",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No French ability stated."
+      },
+      {
+        "requirementId": "r12",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B1",
+          "S5",
+          "S6"
+        ],
+        "note": "Built a React and TypeScript interface for field supervisors."
+      },
+      {
+        "requirementId": "r13",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E2.B2"
+        ],
+        "note": "Has written documentation but no component library work."
+      },
+      {
+        "requirementId": "r14",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No CSS, Figma, or accessibility behaviour evidence."
+      },
+      {
+        "requirementId": "r15",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E1.B3",
+          "S8"
+        ],
+        "note": "Wrote Jest tests for a helper, but not for sign-in or critical flows."
+      },
+      {
+        "requirementId": "r16",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No pull request review or designer pairing described."
+      }
+    ],
+    "score": 34
+  }
+}

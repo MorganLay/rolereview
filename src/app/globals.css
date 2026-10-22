@@ -158,6 +158,17 @@
     @apply font-sans;
   }
 
+  @keyframes demo-bullet-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.25rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

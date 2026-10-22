@@ -61,7 +61,7 @@ CTA: **[Tailor your first resume — free]**
 
 ### 6. Interactive demo (the conversion engine)
 H2: "Try it. No sign-up."
-- **Pick a sample candidate** (3 fake personas: "New CS grad", "Data analyst", "Career changer from retail") × **Pick a job** (3 sample postings).
+- **Pick a sample candidate** (3 fake personas: "New CS grad" from `cs-grad`, "Data analyst" from `bi-analyst`, "Career changer from retail" from `retail-changer`) × **Pick a job** (3 sample postings: `junior-dev` Pebble Systems, `data-analyst` Lakeshore Mutual, `frontend` Kindling Studio).
 - Click **[Tailor]** → the real resume workspace components in read-only demo mode reveal the result: bullets appear, match score counts up, requirements tick in. Hover a bullet to see its source. Toggle a bullet off and keyword coverage drops live.
 - **Zero AI cost:** all 9 combinations are pre-generated with the real pipeline and stored as fixtures in `src/features/marketing/demo/`.
 - Below: "This one was pre-generated. Yours takes about a minute." → **[Now try it with your resume →]**

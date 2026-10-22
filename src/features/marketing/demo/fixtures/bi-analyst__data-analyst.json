@@ -1,0 +1,493 @@
+{
+  "persona": "bi-analyst",
+  "posting": "data-analyst",
+  "jobLabel": "Lakeshore Mutual — Data analyst",
+  "snapshot": {
+    "takenAt": "2026-10-21T00:00:00.000Z",
+    "profile": {
+      "fullName": "Samir Rahman",
+      "headline": "Reporting analyst moving into software",
+      "email": "samir.rahman@example.com",
+      "phone": "416-555-0174",
+      "location": "Toronto, ON",
+      "links": [
+        {
+          "label": "Portfolio",
+          "url": "https://example.com/samir-rahman"
+        }
+      ],
+      "summary": "Reporting analyst who builds Power BI packs and writes SQL, now learning Python for data checks."
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "id": "bi-e1",
+        "kind": "EXPERIENCE",
+        "title": "Reporting analyst",
+        "organization": "Harbour Credit Union",
+        "location": "Toronto, ON",
+        "startDate": "2021-06",
+        "endDate": null,
+        "isCurrent": true,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E1.B1",
+            "id": "bi-e1-b1",
+            "text": "Built and maintained 22 Power BI reports for branch managers, replacing a Monday Excel pack that took 6 hours."
+          },
+          {
+            "ref": "E1.B2",
+            "id": "bi-e1-b2",
+            "text": "Wrote SQL against a Postgres warehouse to reconcile loan-application counts, finding a 4% gap in the 2024 year-end file."
+          },
+          {
+            "ref": "E1.B3",
+            "id": "bi-e1-b3",
+            "text": "Documented 15 report definitions so a new analyst could publish the weekly pack without asking the original author."
+          },
+          {
+            "ref": "E1.B4",
+            "id": "bi-e1-b4",
+            "text": "Taught 8 branch staff to filter the membership dashboard instead of requesting one-off exports."
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "id": "bi-e2",
+        "kind": "EXPERIENCE",
+        "title": "Data clerk",
+        "organization": "Harbour Credit Union",
+        "location": "Toronto, ON",
+        "startDate": "2019-03",
+        "endDate": "2021-05",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E2.B1",
+            "id": "bi-e2-b1",
+            "text": "Entered and checked about 200 membership applications a week against the credit union's ID rules."
+          },
+          {
+            "ref": "E2.B2",
+            "id": "bi-e2-b2",
+            "text": "Built an Excel checklist that cut repeat data-entry errors from 12 a week to 3."
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "id": "bi-e3",
+        "kind": "PROJECT",
+        "title": "Payment-file checker",
+        "organization": null,
+        "location": "Toronto, ON",
+        "startDate": "2025-01",
+        "endDate": "2025-06",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E3.B1",
+            "id": "bi-e3-b1",
+            "text": "Wrote a Python script that compares two CSV payment files and prints rows that differ."
+          },
+          {
+            "ref": "E3.B2",
+            "id": "bi-e3-b2",
+            "text": "Ran the script on 3 month-end files with the team lead's permission and sent the differences to the payments clerk."
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "id": "bi-e4",
+        "kind": "EDUCATION",
+        "title": "Diploma, Business Analytics",
+        "organization": "Lakeshore College",
+        "location": "Toronto, ON",
+        "startDate": "2018",
+        "endDate": "2019",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E4.B1",
+            "id": "bi-e4-b1",
+            "text": "Coursework in statistics, Excel, and an introduction to SQL."
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "ref": "S1",
+        "id": "bi-s1",
+        "name": "SQL",
+        "category": "Languages"
+      },
+      {
+        "ref": "S2",
+        "id": "bi-s2",
+        "name": "Excel",
+        "category": "Tools"
+      },
+      {
+        "ref": "S3",
+        "id": "bi-s3",
+        "name": "Power BI",
+        "category": "Tools"
+      },
+      {
+        "ref": "S4",
+        "id": "bi-s4",
+        "name": "Python",
+        "category": "Languages"
+      },
+      {
+        "ref": "S5",
+        "id": "bi-s5",
+        "name": "Tableau",
+        "category": "Tools"
+      },
+      {
+        "ref": "S6",
+        "id": "bi-s6",
+        "name": "Postgres",
+        "category": "Data"
+      },
+      {
+        "ref": "S7",
+        "id": "bi-s7",
+        "name": "Git",
+        "category": "Tools"
+      }
+    ]
+  },
+  "analysis": {
+    "title": "Data analyst",
+    "company": "Lakeshore Mutual",
+    "location": "Toronto, Ontario",
+    "seniority": "mid",
+    "workMode": "HYBRID",
+    "employmentType": "FULL_TIME",
+    "salary": {
+      "min": 70000,
+      "max": 85000,
+      "currency": "CAD",
+      "period": "YEAR"
+    },
+    "referenceNumber": null,
+    "summary": "Lakeshore Mutual's analytics team is hiring a data analyst in Toronto to turn policy and claims data into reports and dashboards for branch managers. The role includes SQL work on a Postgres warehouse, data quality checks, and presenting weekly packs to non-technical users.",
+    "requirements": [
+      {
+        "id": "r1",
+        "text": "Two years of experience in reporting, analytics, or a similar data role",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r2",
+        "text": "Strong SQL",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r3",
+        "text": "Excel lookups",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r4",
+        "text": "Excel pivot tables",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r5",
+        "text": "Experience presenting numbers to people who do not write queries",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r6",
+        "text": "Clear written English",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r7",
+        "text": "Power BI or Tableau dashboard experience",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r8",
+        "text": "Python for file checks",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r9",
+        "text": "Experience in insurance, banking, or another regulated setting",
+        "kind": "experience",
+        "importance": "nice"
+      }
+    ],
+    "keywords": [
+      "SQL",
+      "Postgres",
+      "Power BI",
+      "Tableau",
+      "Excel",
+      "lookups",
+      "pivot tables",
+      "dashboards",
+      "data quality",
+      "metric definitions",
+      "Python",
+      "reporting",
+      "analytics",
+      "policy data",
+      "claims data",
+      "insurance",
+      "regulated setting",
+      "weekly pack",
+      "filters",
+      "hybrid"
+    ]
+  },
+  "content": {
+    "schemaVersion": 1,
+    "summary": {
+      "text": "Reporting analyst with several years in a credit union, building Power BI reports for branch managers and writing SQL against a Postgres warehouse. Documents report definitions, teaches non-technical staff to use dashboard filters, and uses Python for CSV file checks.",
+      "included": true
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "RZEQjGFFlHHXQO7kHfkIk",
+            "text": "Built and maintained 22 Power BI reports for branch managers, replacing a Monday Excel pack that took 6 hours.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "bWqNMoTplGjphe__oN_Vp",
+            "text": "Wrote SQL against a Postgres warehouse to reconcile loan-application counts, finding a 4% gap in the 2024 year-end file.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "hMX6iZy2jj-5B2M_ZYYKl",
+            "text": "Taught 8 branch staff to filter the membership dashboard instead of requesting one-off exports.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B4"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "30FiWtWopXpuEiagpDnqD",
+            "text": "Documented 15 report definitions so a new analyst could publish the weekly pack without asking the original author.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B3"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "FQKzkHq3tn9qJotpnVn3Q",
+            "text": "Built an Excel checklist that cut repeat data-entry errors from 12 a week to 3.",
+            "included": true,
+            "sourceRefs": [
+              "E2.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "lxtAuJVQqnco_-63U_Kca",
+            "text": "Entered and checked about 200 membership applications a week against the credit union's ID rules.",
+            "included": true,
+            "sourceRefs": [
+              "E2.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "kind": "PROJECT",
+        "included": true,
+        "bullets": [
+          {
+            "id": "99DONB4LH7ois3W25e16-",
+            "text": "Wrote a Python script that compares two CSV payment files and prints rows that differ.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "XOJjCcC6B8PliqamJ87hs",
+            "text": "Ran the script on 3 month-end files with the team lead's permission and sent the differences to the payments clerk.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "kind": "EDUCATION",
+        "included": true,
+        "bullets": [
+          {
+            "id": "U1yoGL44jO-AjvgyPqDnw",
+            "text": "Coursework in statistics, Excel, and an introduction to SQL.",
+            "included": true,
+            "sourceRefs": [
+              "E4.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "category": "Data",
+        "names": [
+          "SQL",
+          "Postgres"
+        ]
+      },
+      {
+        "category": "Tools",
+        "names": [
+          "Power BI",
+          "Excel",
+          "Tableau",
+          "Git"
+        ]
+      },
+      {
+        "category": "Languages",
+        "names": [
+          "Python"
+        ]
+      }
+    ]
+  },
+  "match": {
+    "verdicts": [
+      {
+        "requirementId": "r1",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B1",
+          "E1.B2"
+        ],
+        "note": "Reporting analyst since 2021-06, over four years."
+      },
+      {
+        "requirementId": "r2",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E1.B2",
+          "S1"
+        ],
+        "note": "Writes SQL on Postgres for reconciliation, but the library does not show how advanced it is."
+      },
+      {
+        "requirementId": "r3",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "Excel is listed but lookups are not mentioned."
+      },
+      {
+        "requirementId": "r4",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "Pivot tables are not mentioned."
+      },
+      {
+        "requirementId": "r5",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B1",
+          "E1.B4"
+        ],
+        "note": "Built reports for branch managers and taught staff to use filters."
+      },
+      {
+        "requirementId": "r6",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E1.B3"
+        ],
+        "note": "Wrote report documentation, which is indirect evidence of written English."
+      },
+      {
+        "requirementId": "r7",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B1",
+          "S3"
+        ],
+        "note": "Built and maintained 22 Power BI reports."
+      },
+      {
+        "requirementId": "r8",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E3.B1",
+          "E3.B2"
+        ],
+        "note": "Wrote and ran a Python CSV file comparison script."
+      },
+      {
+        "requirementId": "r9",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B2",
+          "E2.B1"
+        ],
+        "note": "Works at a credit union, a banking setting with ID rules."
+      }
+    ],
+    "score": 60
+  }
+}

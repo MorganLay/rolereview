@@ -78,7 +78,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Phase 12 — Marketing site
 - [x] **T12.1** Homepage structure
-- [ ] **T12.2** Interactive demo
+- [x] **T12.2** Interactive demo
 - [ ] **T12.3** Pricing page
 - [ ] **T12.4** Free tools
 - [ ] **T12.5** SEO & content plumbing
@@ -93,6 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-22 T12.2:** Homepage section 6 and `/demo` tailor from nine pre-generated fixtures (cs-grad, bi-analyst, retail-changer × junior-dev, data-analyst, frontend). The page makes no model calls. Hero library, resume, and match scenes share one height so the page below stays put on a phone. Changing the candidate or job clears the screen-reader “ready” announcement.
 - **2026-10-22 T12.1:** `/` is the marketing homepage (sections 1–5, 7, 8, 10–14). Waitlist stays at `/waitlist`. Signed-in CTAs go to Dashboard; signed-out go to `/sign-in?next=/library/import`. Product shots are live UI miniatures, not PNG captures. Section 6 (demo) is T12.2; `/pricing` is the homepage preview until T12.3. Founder photo is the initial M until T13.1.
 - **2026-10-22 T11.4:** Resume and letter DOCX use the same section order as the PDF. Pro downloads from `/api/resumes/[id]/docx` and `/api/letters/[id]/docx`. Free shows a lock and Upgrade. The Civic Studio resume downloaded as `Avery-Lang-Civic-Studio-Product-Designer.docx`. The seed has no cover letter, so the letter file was checked in unit tests only.
 - **2026-10-22 T11.3:** `/api/stripe/webhook` verifies the signature, records `StripeEvent` first, and ignores a replay. Checkout links the customer and subscription and sets founding when that coupon applied. Active or trialing is Pro; anything else is Free. Cancel at period end stays Pro until Stripe is no longer active or trialing. Period end comes from the first subscription item. A past-due or unpaid subscription shows the payment-failed banner. A live upgrade through `stripe listen` was not run in this session.

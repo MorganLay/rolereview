@@ -1,0 +1,560 @@
+{
+  "persona": "bi-analyst",
+  "posting": "frontend",
+  "jobLabel": "Kindling Studio — Frontend developer",
+  "snapshot": {
+    "takenAt": "2026-10-21T00:00:00.000Z",
+    "profile": {
+      "fullName": "Samir Rahman",
+      "headline": "Reporting analyst moving into software",
+      "email": "samir.rahman@example.com",
+      "phone": "416-555-0174",
+      "location": "Toronto, ON",
+      "links": [
+        {
+          "label": "Portfolio",
+          "url": "https://example.com/samir-rahman"
+        }
+      ],
+      "summary": "Reporting analyst who builds Power BI packs and writes SQL, now learning Python for data checks."
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "id": "bi-e1",
+        "kind": "EXPERIENCE",
+        "title": "Reporting analyst",
+        "organization": "Harbour Credit Union",
+        "location": "Toronto, ON",
+        "startDate": "2021-06",
+        "endDate": null,
+        "isCurrent": true,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E1.B1",
+            "id": "bi-e1-b1",
+            "text": "Built and maintained 22 Power BI reports for branch managers, replacing a Monday Excel pack that took 6 hours."
+          },
+          {
+            "ref": "E1.B2",
+            "id": "bi-e1-b2",
+            "text": "Wrote SQL against a Postgres warehouse to reconcile loan-application counts, finding a 4% gap in the 2024 year-end file."
+          },
+          {
+            "ref": "E1.B3",
+            "id": "bi-e1-b3",
+            "text": "Documented 15 report definitions so a new analyst could publish the weekly pack without asking the original author."
+          },
+          {
+            "ref": "E1.B4",
+            "id": "bi-e1-b4",
+            "text": "Taught 8 branch staff to filter the membership dashboard instead of requesting one-off exports."
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "id": "bi-e2",
+        "kind": "EXPERIENCE",
+        "title": "Data clerk",
+        "organization": "Harbour Credit Union",
+        "location": "Toronto, ON",
+        "startDate": "2019-03",
+        "endDate": "2021-05",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E2.B1",
+            "id": "bi-e2-b1",
+            "text": "Entered and checked about 200 membership applications a week against the credit union's ID rules."
+          },
+          {
+            "ref": "E2.B2",
+            "id": "bi-e2-b2",
+            "text": "Built an Excel checklist that cut repeat data-entry errors from 12 a week to 3."
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "id": "bi-e3",
+        "kind": "PROJECT",
+        "title": "Payment-file checker",
+        "organization": null,
+        "location": "Toronto, ON",
+        "startDate": "2025-01",
+        "endDate": "2025-06",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E3.B1",
+            "id": "bi-e3-b1",
+            "text": "Wrote a Python script that compares two CSV payment files and prints rows that differ."
+          },
+          {
+            "ref": "E3.B2",
+            "id": "bi-e3-b2",
+            "text": "Ran the script on 3 month-end files with the team lead's permission and sent the differences to the payments clerk."
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "id": "bi-e4",
+        "kind": "EDUCATION",
+        "title": "Diploma, Business Analytics",
+        "organization": "Lakeshore College",
+        "location": "Toronto, ON",
+        "startDate": "2018",
+        "endDate": "2019",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E4.B1",
+            "id": "bi-e4-b1",
+            "text": "Coursework in statistics, Excel, and an introduction to SQL."
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "ref": "S1",
+        "id": "bi-s1",
+        "name": "SQL",
+        "category": "Languages"
+      },
+      {
+        "ref": "S2",
+        "id": "bi-s2",
+        "name": "Excel",
+        "category": "Tools"
+      },
+      {
+        "ref": "S3",
+        "id": "bi-s3",
+        "name": "Power BI",
+        "category": "Tools"
+      },
+      {
+        "ref": "S4",
+        "id": "bi-s4",
+        "name": "Python",
+        "category": "Languages"
+      },
+      {
+        "ref": "S5",
+        "id": "bi-s5",
+        "name": "Tableau",
+        "category": "Tools"
+      },
+      {
+        "ref": "S6",
+        "id": "bi-s6",
+        "name": "Postgres",
+        "category": "Data"
+      },
+      {
+        "ref": "S7",
+        "id": "bi-s7",
+        "name": "Git",
+        "category": "Tools"
+      }
+    ]
+  },
+  "analysis": {
+    "title": "Frontend developer",
+    "company": "Kindling Studio",
+    "location": "Montreal, Quebec",
+    "seniority": "mid",
+    "workMode": "HYBRID",
+    "employmentType": "FULL_TIME",
+    "salary": {
+      "min": 95000,
+      "max": 115000,
+      "currency": "CAD",
+      "period": "YEAR"
+    },
+    "referenceNumber": null,
+    "summary": "Kindling Studio is hiring a mid-level frontend developer to build marketing and account sites for cultural organizations on a team of six. The role centres on React and TypeScript interfaces, a shared component library, accessibility, and automated testing.",
+    "requirements": [
+      {
+        "id": "r1",
+        "text": "About three years of professional web development",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r2",
+        "text": "TypeScript",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r3",
+        "text": "React",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r4",
+        "text": "HTML",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r5",
+        "text": "CSS",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r6",
+        "text": "Git",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r7",
+        "text": "Habit of submitting small pull requests",
+        "kind": "other",
+        "importance": "must"
+      },
+      {
+        "id": "r8",
+        "text": "One shipped example of an accessibility fix, described in the resume",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r9",
+        "text": "Experience building interfaces in React and TypeScript",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r10",
+        "text": "Extending a shared component library and documenting components for other developers",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r11",
+        "text": "Writing CSS that matches Figma designs, including keyboard and screen-reader behaviour",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r12",
+        "text": "Automated testing with Jest or Playwright for sign-in and other critical flows",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r13",
+        "text": "Reviewing pull requests",
+        "kind": "other",
+        "importance": "must"
+      },
+      {
+        "id": "r14",
+        "text": "Storybook or another component workshop",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r15",
+        "text": "Experience with design systems used by more than one team",
+        "kind": "experience",
+        "importance": "nice"
+      },
+      {
+        "id": "r16",
+        "text": "French language ability",
+        "kind": "other",
+        "importance": "nice"
+      }
+    ],
+    "keywords": [
+      "React",
+      "TypeScript",
+      "HTML",
+      "CSS",
+      "Git",
+      "Figma",
+      "Jest",
+      "Playwright",
+      "Storybook",
+      "component library",
+      "design system",
+      "accessibility",
+      "keyboard navigation",
+      "screen reader",
+      "automated testing",
+      "pull requests",
+      "marketing sites",
+      "pair programming",
+      "Montreal",
+      "hybrid"
+    ]
+  },
+  "content": {
+    "schemaVersion": 1,
+    "summary": {
+      "text": "Reporting analyst with four years at a credit union building Power BI reports and writing SQL against a Postgres warehouse. Has written a Python script to compare payment files and uses Git. Has no professional web development experience yet.",
+      "included": true
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "GyXoVI-Dwy_No9wPDGLnC",
+            "text": "Built and maintained 22 Power BI reports for branch managers, replacing a Monday Excel pack that took 6 hours.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "GiFCTatgxtM9-eCwj7qyn",
+            "text": "Documented 15 report definitions so a new analyst could publish the weekly pack without asking the original author.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B3"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "rcoZqR1W5sFHNuL7Rklod",
+            "text": "Wrote SQL against a Postgres warehouse to reconcile loan-application counts, finding a 4% gap in the 2024 year-end file.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "fFX3ShJkn1o-1T8MmqhkF",
+            "text": "Taught 8 branch staff to filter the membership dashboard instead of requesting one-off exports.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B4"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "Kzbpv0RyE0sU5CC0UWfjB",
+            "text": "Built an Excel checklist that cut repeat data-entry errors from 12 a week to 3.",
+            "included": true,
+            "sourceRefs": [
+              "E2.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "ZhBdbcwdCm-w5tM2fwEnl",
+            "text": "Entered and checked about 200 membership applications a week against the credit union's ID rules.",
+            "included": false,
+            "sourceRefs": [
+              "E2.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "kind": "PROJECT",
+        "included": true,
+        "bullets": [
+          {
+            "id": "SJqmm_q-XKREi6zewlM76",
+            "text": "Wrote a Python script that compares two CSV payment files and prints rows that differ.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "4oWVpgxPc_KK87_-PZ7Av",
+            "text": "Ran the script on 3 month-end files with the team lead's permission and sent the differences to the payments clerk.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "kind": "EDUCATION",
+        "included": true,
+        "bullets": [
+          {
+            "id": "Jl1p6-BqoifnJ-mTraadx",
+            "text": "Coursework in statistics, Excel, and an introduction to SQL.",
+            "included": false,
+            "sourceRefs": [
+              "E4.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "category": "Languages",
+        "names": [
+          "Python",
+          "SQL"
+        ]
+      },
+      {
+        "category": "Tools",
+        "names": [
+          "Git",
+          "Power BI",
+          "Excel"
+        ]
+      },
+      {
+        "category": "Data",
+        "names": [
+          "Postgres"
+        ]
+      }
+    ]
+  },
+  "match": {
+    "verdicts": [
+      {
+        "requirementId": "r1",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No professional web development experience in the library."
+      },
+      {
+        "requirementId": "r2",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "TypeScript is not listed."
+      },
+      {
+        "requirementId": "r3",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "React is not listed."
+      },
+      {
+        "requirementId": "r4",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "HTML is not listed."
+      },
+      {
+        "requirementId": "r5",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "CSS is not listed."
+      },
+      {
+        "requirementId": "r6",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "S7"
+        ],
+        "note": "Git is listed as a skill but no usage is described."
+      },
+      {
+        "requirementId": "r7",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No pull request habit is evidenced."
+      },
+      {
+        "requirementId": "r8",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No accessibility fix is described."
+      },
+      {
+        "requirementId": "r9",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No React or TypeScript interface work."
+      },
+      {
+        "requirementId": "r10",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E1.B3"
+        ],
+        "note": "Documented report definitions for others, but not a component library."
+      },
+      {
+        "requirementId": "r11",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No CSS, Figma or screen-reader work."
+      },
+      {
+        "requirementId": "r12",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No automated testing with Jest or Playwright."
+      },
+      {
+        "requirementId": "r13",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No pull request reviewing is evidenced."
+      },
+      {
+        "requirementId": "r14",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No Storybook or component workshop experience."
+      },
+      {
+        "requirementId": "r15",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No design system experience."
+      },
+      {
+        "requirementId": "r16",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "French is not mentioned."
+      }
+    ],
+    "score": 7
+  }
+}

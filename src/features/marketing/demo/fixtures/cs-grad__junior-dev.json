@@ -1,0 +1,567 @@
+{
+  "persona": "cs-grad",
+  "posting": "junior-dev",
+  "jobLabel": "Pebble Systems — Junior software developer",
+  "snapshot": {
+    "takenAt": "2026-10-21T00:00:00.000Z",
+    "profile": {
+      "fullName": "Ada Okonkwo",
+      "headline": "New computer science graduate",
+      "email": "ada.okonkwo@example.com",
+      "phone": "613-555-0142",
+      "location": "Ottawa, ON",
+      "links": [
+        {
+          "label": "Portfolio",
+          "url": "https://example.com/ada-okonkwo"
+        }
+      ],
+      "summary": "Computer science graduate with a summer internship on internal web tools and a campus help-desk role."
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "id": "grad-e1",
+        "kind": "EXPERIENCE",
+        "title": "Software developer intern",
+        "organization": "Northline Transit",
+        "location": "Ottawa, ON",
+        "startDate": "2025-05",
+        "endDate": "2025-08",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E1.B1",
+            "id": "grad-e1-b1",
+            "text": "Built a React and TypeScript page for bus-stop inspection notes used by 12 field supervisors."
+          },
+          {
+            "ref": "E1.B2",
+            "id": "grad-e1-b2",
+            "text": "Wrote Python scripts that checked GTFS files and flagged 40 missing stop records before the fall schedule was published."
+          },
+          {
+            "ref": "E1.B3",
+            "id": "grad-e1-b3",
+            "text": "Added Jest tests around a fare-table helper, covering 18 cases the team had listed."
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "id": "grad-e2",
+        "kind": "EXPERIENCE",
+        "title": "IT help desk assistant",
+        "organization": "University of Ottawa",
+        "location": "Ottawa, ON",
+        "startDate": "2024-09",
+        "endDate": "2026-04",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E2.B1",
+            "id": "grad-e2-b1",
+            "text": "Resolved about 25 student laptop and Wi-Fi tickets a week and logged each one in the campus ticketing tool."
+          },
+          {
+            "ref": "E2.B2",
+            "id": "grad-e2-b2",
+            "text": "Wrote a 6-page wiki for resetting lab passwords that the evening shift adopted."
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "id": "grad-e3",
+        "kind": "PROJECT",
+        "title": "Bike-shop inventory app",
+        "organization": "University of Ottawa",
+        "location": "Ottawa, ON",
+        "startDate": "2026-01",
+        "endDate": "2026-04",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E3.B1",
+            "id": "grad-e3-b1",
+            "text": "Built a Java and SQL inventory app for a campus bike-repair shop, tracking 120 parts."
+          },
+          {
+            "ref": "E3.B2",
+            "id": "grad-e3-b2",
+            "text": "Presented the app to the shop coordinator and two classmates. The shop did not deploy it."
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "id": "grad-e4",
+        "kind": "EDUCATION",
+        "title": "Bachelor of Science, Computer Science",
+        "organization": "University of Ottawa",
+        "location": "Ottawa, ON",
+        "startDate": "2022",
+        "endDate": "2026",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E4.B1",
+            "id": "grad-e4-b1",
+            "text": "Coursework in databases, operating systems, and web development."
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "ref": "S1",
+        "id": "grad-s1",
+        "name": "Java",
+        "category": "Languages"
+      },
+      {
+        "ref": "S2",
+        "id": "grad-s2",
+        "name": "Python",
+        "category": "Languages"
+      },
+      {
+        "ref": "S3",
+        "id": "grad-s3",
+        "name": "SQL",
+        "category": "Languages"
+      },
+      {
+        "ref": "S4",
+        "id": "grad-s4",
+        "name": "JavaScript",
+        "category": "Languages"
+      },
+      {
+        "ref": "S5",
+        "id": "grad-s5",
+        "name": "TypeScript",
+        "category": "Languages"
+      },
+      {
+        "ref": "S6",
+        "id": "grad-s6",
+        "name": "React",
+        "category": "Frameworks"
+      },
+      {
+        "ref": "S7",
+        "id": "grad-s7",
+        "name": "Git",
+        "category": "Tools"
+      },
+      {
+        "ref": "S8",
+        "id": "grad-s8",
+        "name": "Jest",
+        "category": "Tools"
+      }
+    ]
+  },
+  "analysis": {
+    "title": "Junior software developer",
+    "company": "Pebble Systems",
+    "location": "Ottawa, Ontario",
+    "seniority": "entry",
+    "workMode": "HYBRID",
+    "employmentType": "FULL_TIME",
+    "salary": {
+      "min": 62000,
+      "max": 72000,
+      "currency": "CAD",
+      "period": "YEAR"
+    },
+    "referenceNumber": null,
+    "summary": "Pebble Systems is hiring a junior software developer to build features and fix bugs in its React and TypeScript scheduling web app for community recreation centres. The role is hybrid in Ottawa, with two days on site per week, and is part of a team of four.",
+    "requirements": [
+      {
+        "id": "r1",
+        "text": "Degree or diploma in computer science, software engineering, or a related field, or equivalent project work",
+        "kind": "education",
+        "importance": "must"
+      },
+      {
+        "id": "r2",
+        "text": "JavaScript",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r3",
+        "text": "Git",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r4",
+        "text": "Ability to write SQL against a relational database",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r5",
+        "text": "Clear written English",
+        "kind": "other",
+        "importance": "must"
+      },
+      {
+        "id": "r6",
+        "text": "React",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r7",
+        "text": "TypeScript",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r8",
+        "text": "Co-op, internship, or other short software role",
+        "kind": "experience",
+        "importance": "nice"
+      },
+      {
+        "id": "r9",
+        "text": "HTML",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r10",
+        "text": "CSS",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r11",
+        "text": "Implement features in a React and TypeScript web app",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r12",
+        "text": "Write Python scripts that check data files before publication",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r13",
+        "text": "Add unit tests with Jest",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r14",
+        "text": "Fix bugs reported by recreation-centre staff",
+        "kind": "experience",
+        "importance": "must"
+      },
+      {
+        "id": "r15",
+        "text": "Participate in code review",
+        "kind": "experience",
+        "importance": "must"
+      }
+    ],
+    "keywords": [
+      "React",
+      "TypeScript",
+      "JavaScript",
+      "Python",
+      "Jest",
+      "Git",
+      "SQL",
+      "relational database",
+      "HTML",
+      "CSS",
+      "unit tests",
+      "code review",
+      "web app",
+      "scheduling tools",
+      "junior software developer",
+      "entry-level",
+      "hybrid",
+      "Ottawa",
+      "computer science",
+      "software engineering"
+    ]
+  },
+  "content": {
+    "schemaVersion": 1,
+    "summary": {
+      "text": "Computer science graduate (University of Ottawa, 2026) with a software developer internship building React and TypeScript features, writing Python data-checking scripts and adding Jest tests. Also built a Java and SQL inventory app and supported students in a campus help-desk role.",
+      "included": true
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "vtKFoVcAu2qwnfn4uS5tj",
+            "text": "Built a React and TypeScript page for bus-stop inspection notes used by 12 field supervisors.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "EdumPKVwnIXwaaszjA0YX",
+            "text": "Wrote Python scripts that checked GTFS files and flagged 40 missing stop records before the fall schedule was published.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "fLrCXvCBd7CBH9ASWMn4Q",
+            "text": "Added Jest tests around a fare-table helper, covering 18 cases the team had listed.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B3"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "rkgIvMSNdInqknNTd0WNl",
+            "text": "Resolved about 25 student laptop and Wi-Fi tickets a week and logged each one in the campus ticketing tool.",
+            "included": true,
+            "sourceRefs": [
+              "E2.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "SYUY0-ciMr8HlT4iGfqBG",
+            "text": "Wrote a 6-page wiki for resetting lab passwords that the evening shift adopted.",
+            "included": true,
+            "sourceRefs": [
+              "E2.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "kind": "PROJECT",
+        "included": true,
+        "bullets": [
+          {
+            "id": "qMkZlFPdQf019nHibPvUu",
+            "text": "Built a Java and SQL inventory app for a campus bike-repair shop, tracking 120 parts.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "7F5UQvDtRDbP3szkT04a7",
+            "text": "Presented the app to the shop coordinator and two classmates.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "kind": "EDUCATION",
+        "included": true,
+        "bullets": [
+          {
+            "id": "kUBWTnjYKxZfc_LW8SX4s",
+            "text": "Completed coursework in databases, operating systems, and web development.",
+            "included": true,
+            "sourceRefs": [
+              "E4.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "category": "Languages",
+        "names": [
+          "JavaScript",
+          "TypeScript",
+          "Python",
+          "SQL",
+          "Java"
+        ]
+      },
+      {
+        "category": "Frameworks",
+        "names": [
+          "React"
+        ]
+      },
+      {
+        "category": "Tools",
+        "names": [
+          "Git",
+          "Jest"
+        ]
+      }
+    ]
+  },
+  "match": {
+    "verdicts": [
+      {
+        "requirementId": "r1",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E4",
+          "E3.B1"
+        ],
+        "note": "BSc in Computer Science, 2026, plus project work."
+      },
+      {
+        "requirementId": "r2",
+        "verdict": "met",
+        "evidenceRefs": [
+          "S4",
+          "E1.B1"
+        ],
+        "note": "JavaScript listed, and used alongside TypeScript and React in the internship."
+      },
+      {
+        "requirementId": "r3",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "S7"
+        ],
+        "note": "Git is listed as a skill but no bullet describes how it was used."
+      },
+      {
+        "requirementId": "r4",
+        "verdict": "met",
+        "evidenceRefs": [
+          "S3",
+          "E3.B1"
+        ],
+        "note": "Built a Java and SQL app, and SQL is a listed skill."
+      },
+      {
+        "requirementId": "r5",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E2.B2"
+        ],
+        "note": "Wrote a wiki that was adopted, which suggests clear writing, but this is indirect."
+      },
+      {
+        "requirementId": "r6",
+        "verdict": "met",
+        "evidenceRefs": [
+          "S6",
+          "E1.B1"
+        ],
+        "note": "React used in the internship."
+      },
+      {
+        "requirementId": "r7",
+        "verdict": "met",
+        "evidenceRefs": [
+          "S5",
+          "E1.B1"
+        ],
+        "note": "TypeScript used in the internship."
+      },
+      {
+        "requirementId": "r8",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1"
+        ],
+        "note": "Summer software developer internship at Northline Transit."
+      },
+      {
+        "requirementId": "r9",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "HTML is not listed in the library."
+      },
+      {
+        "requirementId": "r10",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "CSS is not listed in the library."
+      },
+      {
+        "requirementId": "r11",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B1"
+        ],
+        "note": "Built a React and TypeScript page in the internship."
+      },
+      {
+        "requirementId": "r12",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B2"
+        ],
+        "note": "Wrote Python scripts that checked GTFS files before the schedule was published."
+      },
+      {
+        "requirementId": "r13",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B3",
+          "S8"
+        ],
+        "note": "Added Jest tests covering 18 cases."
+      },
+      {
+        "requirementId": "r14",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E2.B1"
+        ],
+        "note": "Resolved user-reported tickets in help desk, but these were not software bugs."
+      },
+      {
+        "requirementId": "r15",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No code review experience appears in the library."
+      }
+    ],
+    "score": 72
+  }
+}

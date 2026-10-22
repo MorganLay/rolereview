@@ -27,14 +27,28 @@ export function HeroLoop() {
   const shown = reduced ? 2 : scene;
 
   return (
-    <div className="relative" aria-label={copy.heroVisual}>
-      <div className={cn(shown === 0 ? "block" : "hidden")}>
+    <div className="grid" aria-label={copy.heroVisual}>
+      <div
+        className={cn("col-start-1 row-start-1", shown !== 0 && "invisible")}
+        aria-hidden={shown !== 0}
+        inert={shown !== 0}
+      >
         <LibraryScene />
       </div>
-      <div className={cn(shown === 1 ? "block" : "hidden")}>
+      <div
+        className={cn("col-start-1 row-start-1", shown !== 1 && "invisible")}
+        aria-hidden={shown !== 1}
+        inert={shown !== 1}
+      >
         <ResumeScene />
       </div>
-      {shown === 2 ? <MatchScene reduced={reduced} /> : null}
+      <div
+        className={cn("col-start-1 row-start-1", shown !== 2 && "invisible")}
+        aria-hidden={shown !== 2}
+        inert={shown !== 2}
+      >
+        <MatchScene key={shown} active={shown === 2} reduced={reduced} />
+      </div>
     </div>
   );
 }
@@ -73,8 +87,8 @@ function ResumeScene() {
   );
 }
 
-function MatchScene({ reduced }: { reduced: boolean }) {
-  const score = useCountUp(52, 86, !reduced);
+function MatchScene({ active, reduced }: { active: boolean; reduced: boolean }) {
+  const score = useCountUp(52, 86, active && !reduced);
   const ticks = score >= 80 ? 3 : score >= 65 ? 2 : 1;
   const rows = [
     { mark: "✓", cls: "text-pine", text: "Shipped product work" },
@@ -102,7 +116,7 @@ function MatchScene({ reduced }: { reduced: boolean }) {
 }
 
 function useCountUp(from: number, to: number, animate: boolean): number {
-  const [value, setValue] = useState(animate ? from : to);
+  const [value, setValue] = useState(from);
 
   useEffect(() => {
     if (!animate) return;

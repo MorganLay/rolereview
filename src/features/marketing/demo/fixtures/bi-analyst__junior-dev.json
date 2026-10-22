@@ -1,0 +1,494 @@
+{
+  "persona": "bi-analyst",
+  "posting": "junior-dev",
+  "jobLabel": "Pebble Systems — Junior software developer",
+  "snapshot": {
+    "takenAt": "2026-10-21T00:00:00.000Z",
+    "profile": {
+      "fullName": "Samir Rahman",
+      "headline": "Reporting analyst moving into software",
+      "email": "samir.rahman@example.com",
+      "phone": "416-555-0174",
+      "location": "Toronto, ON",
+      "links": [
+        {
+          "label": "Portfolio",
+          "url": "https://example.com/samir-rahman"
+        }
+      ],
+      "summary": "Reporting analyst who builds Power BI packs and writes SQL, now learning Python for data checks."
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "id": "bi-e1",
+        "kind": "EXPERIENCE",
+        "title": "Reporting analyst",
+        "organization": "Harbour Credit Union",
+        "location": "Toronto, ON",
+        "startDate": "2021-06",
+        "endDate": null,
+        "isCurrent": true,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E1.B1",
+            "id": "bi-e1-b1",
+            "text": "Built and maintained 22 Power BI reports for branch managers, replacing a Monday Excel pack that took 6 hours."
+          },
+          {
+            "ref": "E1.B2",
+            "id": "bi-e1-b2",
+            "text": "Wrote SQL against a Postgres warehouse to reconcile loan-application counts, finding a 4% gap in the 2024 year-end file."
+          },
+          {
+            "ref": "E1.B3",
+            "id": "bi-e1-b3",
+            "text": "Documented 15 report definitions so a new analyst could publish the weekly pack without asking the original author."
+          },
+          {
+            "ref": "E1.B4",
+            "id": "bi-e1-b4",
+            "text": "Taught 8 branch staff to filter the membership dashboard instead of requesting one-off exports."
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "id": "bi-e2",
+        "kind": "EXPERIENCE",
+        "title": "Data clerk",
+        "organization": "Harbour Credit Union",
+        "location": "Toronto, ON",
+        "startDate": "2019-03",
+        "endDate": "2021-05",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E2.B1",
+            "id": "bi-e2-b1",
+            "text": "Entered and checked about 200 membership applications a week against the credit union's ID rules."
+          },
+          {
+            "ref": "E2.B2",
+            "id": "bi-e2-b2",
+            "text": "Built an Excel checklist that cut repeat data-entry errors from 12 a week to 3."
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "id": "bi-e3",
+        "kind": "PROJECT",
+        "title": "Payment-file checker",
+        "organization": null,
+        "location": "Toronto, ON",
+        "startDate": "2025-01",
+        "endDate": "2025-06",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E3.B1",
+            "id": "bi-e3-b1",
+            "text": "Wrote a Python script that compares two CSV payment files and prints rows that differ."
+          },
+          {
+            "ref": "E3.B2",
+            "id": "bi-e3-b2",
+            "text": "Ran the script on 3 month-end files with the team lead's permission and sent the differences to the payments clerk."
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "id": "bi-e4",
+        "kind": "EDUCATION",
+        "title": "Diploma, Business Analytics",
+        "organization": "Lakeshore College",
+        "location": "Toronto, ON",
+        "startDate": "2018",
+        "endDate": "2019",
+        "isCurrent": false,
+        "url": null,
+        "bullets": [
+          {
+            "ref": "E4.B1",
+            "id": "bi-e4-b1",
+            "text": "Coursework in statistics, Excel, and an introduction to SQL."
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "ref": "S1",
+        "id": "bi-s1",
+        "name": "SQL",
+        "category": "Languages"
+      },
+      {
+        "ref": "S2",
+        "id": "bi-s2",
+        "name": "Excel",
+        "category": "Tools"
+      },
+      {
+        "ref": "S3",
+        "id": "bi-s3",
+        "name": "Power BI",
+        "category": "Tools"
+      },
+      {
+        "ref": "S4",
+        "id": "bi-s4",
+        "name": "Python",
+        "category": "Languages"
+      },
+      {
+        "ref": "S5",
+        "id": "bi-s5",
+        "name": "Tableau",
+        "category": "Tools"
+      },
+      {
+        "ref": "S6",
+        "id": "bi-s6",
+        "name": "Postgres",
+        "category": "Data"
+      },
+      {
+        "ref": "S7",
+        "id": "bi-s7",
+        "name": "Git",
+        "category": "Tools"
+      }
+    ]
+  },
+  "analysis": {
+    "title": "Junior software developer",
+    "company": "Pebble Systems",
+    "location": "Ottawa, Ontario",
+    "seniority": "entry",
+    "workMode": "HYBRID",
+    "employmentType": "FULL_TIME",
+    "salary": {
+      "min": 62000,
+      "max": 72000,
+      "currency": "CAD",
+      "period": "YEAR"
+    },
+    "referenceNumber": null,
+    "summary": "Pebble Systems is hiring a junior software developer to build features and fix bugs for its scheduling tools used by community recreation centres. The role is full-time, hybrid with two days on site in Ottawa, and part of a team of four.",
+    "requirements": [
+      {
+        "id": "r1",
+        "text": "Degree or diploma in computer science, software engineering, or a related field, or equivalent project work",
+        "kind": "education",
+        "importance": "must"
+      },
+      {
+        "id": "r2",
+        "text": "JavaScript",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r3",
+        "text": "Git",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r4",
+        "text": "Ability to write SQL against a relational database",
+        "kind": "skill",
+        "importance": "must"
+      },
+      {
+        "id": "r5",
+        "text": "Clear written English",
+        "kind": "other",
+        "importance": "must"
+      },
+      {
+        "id": "r6",
+        "text": "React",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r7",
+        "text": "TypeScript",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r8",
+        "text": "Co-op, internship, or other short software role",
+        "kind": "experience",
+        "importance": "nice"
+      },
+      {
+        "id": "r9",
+        "text": "HTML",
+        "kind": "skill",
+        "importance": "nice"
+      },
+      {
+        "id": "r10",
+        "text": "CSS",
+        "kind": "skill",
+        "importance": "nice"
+      }
+    ],
+    "keywords": [
+      "React",
+      "TypeScript",
+      "Python",
+      "Jest",
+      "Git",
+      "JavaScript",
+      "SQL",
+      "relational database",
+      "unit tests",
+      "code review",
+      "HTML",
+      "CSS",
+      "web app",
+      "bug fixing",
+      "scheduling tools",
+      "data validation",
+      "computer science",
+      "software engineering"
+    ]
+  },
+  "content": {
+    "schemaVersion": 1,
+    "summary": {
+      "text": "Reporting analyst who writes SQL against a Postgres warehouse and builds Power BI reports. Wrote a Python script that compares payment files and flags differing rows, and is moving into software development.",
+      "included": true
+    },
+    "entries": [
+      {
+        "ref": "E1",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "-QVSb_7EfhNKhMUv2GymH",
+            "text": "Wrote SQL against a Postgres warehouse to reconcile loan-application counts, finding a 4% gap in the 2024 year-end file.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "XdFwXpjJNBJyw586g3ay3",
+            "text": "Built and maintained 22 Power BI reports for branch managers, replacing a Monday Excel pack that took 6 hours.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "l2i-EylrrkV23kJ47MLcP",
+            "text": "Documented 15 report definitions so a new analyst could publish the weekly pack without asking the original author.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B3"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "KgebO1w90dcUKLM-l-46o",
+            "text": "Taught 8 branch staff to filter the membership dashboard instead of requesting one-off exports.",
+            "included": true,
+            "sourceRefs": [
+              "E1.B4"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E2",
+        "kind": "EXPERIENCE",
+        "included": true,
+        "bullets": [
+          {
+            "id": "QmyJmMvPieaTywHAgc3L5",
+            "text": "Built an Excel checklist that cut repeat data-entry errors from 12 a week to 3.",
+            "included": true,
+            "sourceRefs": [
+              "E2.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "jsQNUwZ_TjOiNiYtqMGoi",
+            "text": "Entered and checked about 200 membership applications a week against the credit union's ID rules.",
+            "included": false,
+            "sourceRefs": [
+              "E2.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E3",
+        "kind": "PROJECT",
+        "included": true,
+        "bullets": [
+          {
+            "id": "43B6s0n0lpI6olweUE3yy",
+            "text": "Wrote a Python script that compares two CSV payment files and prints rows that differ.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          },
+          {
+            "id": "ov32ngwSsmWe5R0aDEiZt",
+            "text": "Ran the script on 3 month-end files with the team lead's permission and sent the differences to the payments clerk.",
+            "included": true,
+            "sourceRefs": [
+              "E3.B2"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      },
+      {
+        "ref": "E4",
+        "kind": "EDUCATION",
+        "included": true,
+        "bullets": [
+          {
+            "id": "WAxWyZdSNoj68c45K44-W",
+            "text": "Coursework in statistics, Excel, and an introduction to SQL.",
+            "included": true,
+            "sourceRefs": [
+              "E4.B1"
+            ],
+            "reverted": false,
+            "edited": false
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "category": "Languages",
+        "names": [
+          "SQL",
+          "Python"
+        ]
+      },
+      {
+        "category": "Data",
+        "names": [
+          "Postgres"
+        ]
+      },
+      {
+        "category": "Tools",
+        "names": [
+          "Git",
+          "Power BI",
+          "Excel",
+          "Tableau"
+        ]
+      }
+    ]
+  },
+  "match": {
+    "verdicts": [
+      {
+        "requirementId": "r1",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E4",
+          "E3.B1"
+        ],
+        "note": "Business Analytics diploma plus a Python project, but not a computer science or software degree."
+      },
+      {
+        "requirementId": "r2",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No JavaScript in the library."
+      },
+      {
+        "requirementId": "r3",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "S7"
+        ],
+        "note": "Git is listed as a skill, but no work using it is described."
+      },
+      {
+        "requirementId": "r4",
+        "verdict": "met",
+        "evidenceRefs": [
+          "E1.B2",
+          "S1",
+          "S6"
+        ],
+        "note": "Wrote SQL against a Postgres warehouse for reconciliation."
+      },
+      {
+        "requirementId": "r5",
+        "verdict": "partial",
+        "evidenceRefs": [
+          "E1.B3"
+        ],
+        "note": "Documentation of report definitions suggests written clarity, but there is no direct evidence."
+      },
+      {
+        "requirementId": "r6",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No React experience."
+      },
+      {
+        "requirementId": "r7",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No TypeScript experience."
+      },
+      {
+        "requirementId": "r8",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No co-op or software role; only a personal Python project."
+      },
+      {
+        "requirementId": "r9",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No HTML experience."
+      },
+      {
+        "requirementId": "r10",
+        "verdict": "missing",
+        "evidenceRefs": [],
+        "note": "No CSS experience."
+      }
+    ],
+    "score": 33
+  }
+}

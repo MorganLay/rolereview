@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { strings } from "@/copy/strings";
@@ -41,6 +41,9 @@ export function MatchPanel({
   libraryEntries,
   jobId,
   onEvidence,
+  readOnly = false,
+  revealCount,
+  headingLevel = "h2",
 }: {
   content: ResumeContent;
   snapshot: LibrarySnapshot;
@@ -51,22 +54,30 @@ export function MatchPanel({
   libraryEntries: readonly LibraryEntryOption[];
   jobId: string;
   onEvidence: (elementId: string) => void;
+  readOnly?: boolean;
+  /** Requirements at this index and after stay pending. Omit to show every verdict. */
+  revealCount?: number;
+  headingLevel?: "h2" | "h3";
 }) {
   const [adding, setAdding] = useState<Requirement | null>(null);
+  const scoreId = useId();
+  const keywordId = useId();
   const coverage = keywordCoverage(content, snapshot, keywords);
+  const ScoreHeading = headingLevel;
 
   return (
     <div className="flex flex-col gap-6 rounded-lg border border-line bg-surface p-4">
-      <section className="flex flex-col gap-3" aria-labelledby="match-score">
-        <h2 id="match-score" className="text-base font-medium text-ink">
+      <section className="flex flex-col gap-3" aria-labelledby={scoreId}>
+        <ScoreHeading id={scoreId} className="text-base font-medium tabular-nums text-ink">
           {score === null ? scoreCopy.matchScoreEmpty : scoreCopy.matchScore(score)}
-        </h2>
+        </ScoreHeading>
         {requirements.length === 0 ? (
           <p className="text-sm text-slate">{copy.noRequirements}</p>
         ) : (
           <ul className="flex flex-col gap-3">
-            {requirements.map((requirement) => {
+            {requirements.map((requirement, index) => {
               const verdict = verdictFor(requirement.id, verdicts);
+              const pending = revealCount !== undefined && index >= revealCount;
               const links = evidenceLinks(verdict.evidenceRefs, content, snapshot);
               return (
                 <li key={requirement.id} className="grid gap-1 border-t border-line pt-3">
@@ -74,21 +85,21 @@ export function MatchPanel({
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 text-sm font-medium",
-                        verdictClass[verdict.verdict],
+                        pending ? "text-slate" : verdictClass[verdict.verdict],
                       )}
                     >
-                      <span aria-hidden>{verdictMark[verdict.verdict]}</span>
-                      {statusCopy[verdict.verdict]}
+                      <span aria-hidden>{pending ? "○" : verdictMark[verdict.verdict]}</span>
+                      {pending ? copy.pending : statusCopy[verdict.verdict]}
                     </span>
                     <span className="text-xs text-slate">
                       {requirement.importance === "must" ? resultCopy.must : resultCopy.nice}
                     </span>
                   </div>
                   <p className="text-sm break-words text-ink">{requirement.text}</p>
-                  {verdict.note ? (
+                  {!pending && verdict.note ? (
                     <p className="text-sm break-words text-slate">{verdict.note}</p>
                   ) : null}
-                  {links.length > 0 ? (
+                  {!pending && links.length > 0 ? (
                     <ul className="flex flex-col gap-1">
                       {links.map((link) => {
                         const label = link.label.trim() || copy.untitled;
@@ -107,7 +118,7 @@ export function MatchPanel({
                       })}
                     </ul>
                   ) : null}
-                  {verdict.verdict === "missing" ? (
+                  {!readOnly && verdict.verdict === "missing" && !pending ? (
                     <Button
                       type="button"
                       variant="outline"
@@ -126,11 +137,11 @@ export function MatchPanel({
         )}
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby="keyword-coverage">
-        <h2 id="keyword-coverage" className="text-base font-medium text-ink">
+      <section className="flex flex-col gap-3" aria-labelledby={keywordId}>
+        <ScoreHeading id={keywordId} className="text-base font-medium text-ink">
           {copy.keywordCoverage}{" "}
           <span className="tabular-nums">{copy.keywordPct(coverage.pct)}</span>
-        </h2>
+        </ScoreHeading>
         {keywords.length === 0 ? (
           <p className="text-sm text-slate">{resultCopy.noKeywords}</p>
         ) : (
@@ -145,16 +156,18 @@ export function MatchPanel({
         )}
       </section>
 
-      <QuickAddBulletDialog
-        key={adding?.id ?? "closed"}
-        requirement={adding}
-        entries={libraryEntries}
-        jobId={jobId}
-        open={adding !== null}
-        onOpenChange={(open) => {
-          if (!open) setAdding(null);
-        }}
-      />
+      {readOnly ? null : (
+        <QuickAddBulletDialog
+          key={adding?.id ?? "closed"}
+          requirement={adding}
+          entries={libraryEntries}
+          jobId={jobId}
+          open={adding !== null}
+          onOpenChange={(open) => {
+            if (!open) setAdding(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -171,7 +184,7 @@ function KeywordChips({
   if (keywords.length === 0) return null;
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-sm text-slate">{heading}</h3>
+      <p className="text-sm text-slate">{heading}</p>
       <ul className="flex flex-wrap gap-2">
         {keywords.map((keyword, index) => (
           <li

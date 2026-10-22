@@ -13,14 +13,17 @@ export function CtaLink({
   compact = false,
   variant = "default",
   className,
+  signedOutLabel,
 }: {
   location: CtaLocation;
   compact?: boolean;
   variant?: "default" | "outline";
   className?: string;
+  signedOutLabel?: string;
 }) {
   const signedIn = useSignedIn();
   const cta = primaryCta(signedIn, compact);
+  const label = signedIn || !signedOutLabel ? cta.label : signedOutLabel;
 
   return (
     <Button asChild variant={variant} className={cn("min-h-11 px-4", className)}>
@@ -28,7 +31,7 @@ export function CtaLink({
         href={cta.href}
         onClick={() => captureBrowserEvent("cta_click", { location })}
       >
-        {cta.label}
+        {label}
       </Link>
     </Button>
   );
