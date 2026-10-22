@@ -92,6 +92,8 @@ export const JOB_SOURCES = [
   "OTHER",
 ] as const;
 
+export type JobSourceValue = (typeof JOB_SOURCES)[number];
+
 export const jobSourceSchema = z.enum(JOB_SOURCES, { error: errors.source });
 
 function isHttpUrl(value: string): boolean {

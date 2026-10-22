@@ -396,6 +396,8 @@ Soonest `expiresAt` first. `expiresAt` null (no expiry) is last. The same expiry
 
 Hide a breakdown until it has at least 5 jobs per group, and label small samples ("based on 7 applications").
 
+T10.1 computes every row except the activity streak. Archived jobs stay in the counts. A range of 30 or 90 days is that many calendar days in `User.timezone`, from local midnight through now. All time has no start and still stops at now. Response rate uses 7×24 hours: a job applied exactly 7 days ago still counts, and a newer application counts as Applied but not in that rate. Interview rate counts an interview with no date. Offer rate counts status Offer or Accepted, a status event into either, or an offer-received event. Median days includes every applied job in range that has `firstResponseAt`, including ones too new for the response rate. An even count averages the two middle values. No eligible jobs leaves a rate empty rather than zero. Match bands are the submitted resume's score: under 50, 50–74, and 75 or higher. No score, or no submitted resume, is left out of the bands. A missing source is its own group. A breakdown group under 5 applications is omitted. The application count on each shown group is the "based on 7 applications" label. Weekly bars count applications per Monday-start week in the user's timezone, split by whether a resume was submitted. The activity streak, including prep kits, is Release 1.1 (`momentum/streak.ts`).
+
 ## Weak queries → indexes
 
 | Query | Index |

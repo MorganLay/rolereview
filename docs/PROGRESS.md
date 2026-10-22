@@ -67,7 +67,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T9.3** Letter workspace + PDF
 
 ## Phase 10 — Insights
-- [ ] **T10.1** Metrics queries
+- [x] **T10.1** Metrics queries
 - [ ] **T10.2** Insights UI
 
 ## Phase 11 — Billing
@@ -93,6 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-22 T10.1:** Insights rates are computed per user from `appliedAt` in range: response uses 7×24 hours, interview counts any interview row, and offer counts status Offer or Accepted or an offer event. Breakdowns under 5 applications are omitted. Weekly bars are Monday-start weeks in the user's timezone, tailored against not. The activity streak stays on Phase 15. The Insights page stays a placeholder until T10.2.
 - **2026-10-22 T9.3:** The letter workspace edits greeting, paragraphs, closing, and signature, with source chips and a 1.5s autosave. Copy text and the PDF are greeting, included paragraphs, closing, then signature, named `First-Last-Company-Title-Letter.pdf`. Mark as submitted sets this version and does not change status. DOCX stays locked. The five no-WHY letters from T9.1 (`2026-10-22T07-51-35-901Z`) still had no invented company facts; the prompt was not changed.
 - **2026-10-22 T9.2:** Write cover letter is on Documents. The dialog takes tone, length, recipient, why, and an optional READY resume. Focus refs are remapped onto the library snapshot for this letter. Version cards list v#, date, tone, length, template, and ratings. Open still goes to the placeholder. A second write under 5 minutes is refused, and a failed write is not charged. The editor and PDF stay on T9.3.
 - **2026-10-22 T9.1:** The letter guard is L1–L4. A paragraph that cited WHY and has no other source stays, with `needsWhy`. Greeting and signature come from the profile and the recipient. The closing keeps the model's words. `npm run evals` writes a letter on even pairs, alternating a WHY note and none. Five no-WHY letters in `2026-10-22T07-51-35-901Z` stayed inside the posting. Average letter reverts 0.75. Resume reverts 0.00. The write action is T9.2.
