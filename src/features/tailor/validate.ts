@@ -6,6 +6,7 @@
 
 import type { LibrarySnapshot } from "@/features/library/schemas";
 import type { JobAnalysis } from "@/features/jobs/schemas";
+import { hasUnsupportedNumber } from "@/lib/ai/numbers";
 
 import { RESUME_LIMITS } from "./schemas";
 import type {
@@ -48,13 +49,6 @@ export type GuardResult = {
 const NOT_ASSESSED = "Not assessed.";
 
 type SnapshotEntry = LibrarySnapshot["entries"][number];
-
-/**
- * `$` amounts and numbers, including `1,000`, `1 000`, and a trailing `%`.
- * Commas and spaces inside a token are removed before comparison.
- */
-const NUMBER =
-  /(?:\$(?:\s*)(?:\d{1,3}(?:[, ]\d{3})+|\d+)(?:\.\d+)?)|(?:\d{1,3}(?:[, ]\d{3})+(?:\.\d+)?(?:\s*%)?)|(?:\d+(?:\.\d+)?(?:\s*%)?)/g;
 
 export function validateTailorOutput(
   output: TailorOutput,
@@ -156,7 +150,7 @@ function cleanBullets(
 
     let text = bullet.text;
     let reverted = false;
-    if (hasNewNumber(text, sources.map((source) => source.text))) {
+    if (hasUnsupportedNumber(text, sources.map((source) => source.text))) {
       text = first.text;
       reverted = true;
       reverts += 1;
@@ -275,27 +269,4 @@ function knownRefs(snapshot: LibrarySnapshot): Set<string> {
   }
   for (const skill of snapshot.skills) refs.add(skill.ref);
   return refs;
-}
-
-function hasNewNumber(text: string, sources: readonly string[]): boolean {
-  const allowed = new Set(sources.flatMap((source) => numberTokens(source)));
-  return numberTokens(text).some((token) => !allowed.has(token));
-}
-
-function numberTokens(text: string): string[] {
-  const tokens: string[] = [];
-  for (const match of text.matchAll(NUMBER)) {
-    // A successful match always includes the full text. The index check is for strict indexing.
-    const raw = match[0];
-    if (raw === undefined) continue;
-    tokens.push(normalizeToken(raw));
-  }
-  return tokens;
-}
-
-function normalizeToken(raw: string): string {
-  const digits = raw.replace(/[^0-9.]/g, "");
-  if (raw.includes("$")) return `$${digits}`;
-  if (raw.includes("%")) return `${digits}%`;
-  return digits;
 }

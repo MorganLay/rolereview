@@ -333,15 +333,19 @@ export const LetterParagraph = z.object({
   id: z.string(), text: z.string().max(1200), included: z.boolean(),
   sourceRefs: z.array(z.string()),       // library refs and/or "POSTING" / "WHY" (user's notes)
   reverted: z.boolean().default(false), edited: z.boolean().default(false),
+  needsWhy: z.boolean().default(false),  // WHY was the only source and no WHY note was given
 });
 export const CoverLetterContent = z.object({
   schemaVersion: z.literal(1),
   greeting: z.string().max(120),          // "Dear Hiring Manager,"
-  paragraphs: z.array(LetterParagraph),   // 3–5
+  paragraphs: z.array(LetterParagraph),   // 3–5 is the prompt target, not a hard cap
   closing: z.string().max(60),            // "Sincerely,"
   signature: z.string().max(80),          // from profile fullName
+  requirementIdsAddressed: z.array(z.string()), // L4, real requirement ids only
 });
 ```
+
+When `needsWhy` is true, the workspace says "Add your own reasons to strengthen this" (the editor is T9.3). `requirementIdsAddressed` is the filtered list from the guard.
 
 ### `PrepKit.content` (PrepKitContent) → `features/prep/schemas.ts` (R1.1)
 

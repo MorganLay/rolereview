@@ -14,13 +14,38 @@ export type PairMetric = {
   words: number | null;
   seconds: number;
   costMicros: number;
+  letterRan: boolean;
+  letterReverts: number | null;
+  letterWords: number | null;
 };
 
 export type QuotaGap = {
-  kind: "ANALYZE" | "TAILOR";
+  kind: "ANALYZE" | "TAILOR" | "COVER_LETTER";
   remaining: number;
   needed: number;
 };
+
+/** Fixed WHY note for even letter pairs. Includes a number so L2 can see it. */
+export const EVAL_WHY_COMPANY =
+  "I want this role because the posting's reporting work matches my library. I can start in 2 weeks.";
+
+/** Even pair indexes get a letter. Those alternate the WHY note and no note. */
+export function letterPlan(index: number): {
+  write: boolean;
+  whyCompany: string | null;
+} {
+  if (index < 0 || index % 2 !== 0) return { write: false, whyCompany: null };
+  const ordinal = index / 2;
+  return {
+    write: true,
+    whyCompany: ordinal % 2 === 0 ? EVAL_WHY_COMPANY : null,
+  };
+}
+
+export function letterPairCount(pairCount: number): number {
+  if (pairCount <= 0) return 0;
+  return Math.ceil(pairCount / 2);
+}
 
 export function bulletCount(
   entries: readonly { bullets: readonly unknown[] }[],
@@ -49,6 +74,8 @@ export function quotaShortfall(input: {
   needed: number;
   analyzeRemaining: number;
   tailorRemaining: number;
+  letterNeeded: number;
+  letterRemaining: number;
 }): QuotaGap[] {
   const gaps: QuotaGap[] = [];
   if (input.analyzeRemaining < input.needed) {
@@ -63,6 +90,13 @@ export function quotaShortfall(input: {
       kind: "TAILOR",
       remaining: input.tailorRemaining,
       needed: input.needed,
+    });
+  }
+  if (input.letterRemaining < input.letterNeeded) {
+    gaps.push({
+      kind: "COVER_LETTER",
+      remaining: input.letterRemaining,
+      needed: input.letterNeeded,
     });
   }
   return gaps;
@@ -87,6 +121,26 @@ export function formatMetricsTable(rows: readonly PairMetric[]): string {
     ].join(" | "),
   );
   return [header, ...lines].join("\n");
+}
+
+/** Letter pairs only. The resume table stays the one documented for tailoring. */
+export function formatLetterTable(rows: readonly PairMetric[]): string {
+  const header = "pair | letter reverts | letter words";
+  const lines = rows
+    .filter((row) => row.letterRan)
+    .map((row) =>
+      [row.pair, cell(row.letterReverts), cell(row.letterWords)].join(" | "),
+    );
+  return [header, ...lines].join("\n");
+}
+
+export function letterSummaryLines(rows: readonly PairMetric[]): string[] {
+  const values = rows.flatMap((row) =>
+    row.letterRan && row.letterReverts !== null ? [row.letterReverts] : [],
+  );
+  const average = averageReverts(values);
+  if (average === null) return [];
+  return [`Average letter reverts ${average.toFixed(2)}.`];
 }
 
 /** One line for the mean, plus the fail line when the mean is over 0.5. */

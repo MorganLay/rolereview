@@ -915,6 +915,9 @@ export const strings = {
       notHelpful: "Not helpful",
       ratingFailed: "Couldn’t save that rating. Try again.",
     },
+    letters: {
+      needsWhy: "Add your own reasons to strengthen this",
+    },
     timeline: {
       tab: "Timeline",
       addEntry: "Add entry",

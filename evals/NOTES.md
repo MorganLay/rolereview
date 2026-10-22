@@ -1,10 +1,14 @@
 # Eval notes
 
-Run `npm run evals` before merging a change to prompts, schemas, models, or effort. Each run writes `evals/out/<timestamp>/<pair>.json` (gitignored) and prints a metrics table. The console table has no resume or posting text.
+Run `npm run evals` before merging a change to prompts, schemas, models, or effort. Each run writes `evals/out/<timestamp>/<pair>.json` (gitignored) and prints a metrics table. The console table has no resume, posting, or letter text.
 
-A full run is 4 libraries × 6 postings: ANALYZE, then TAILOR (one page, no emphasis), then the fabrication guard and match score. Cover letters start in T9.1. Import fixtures are not in this folder yet.
+A full run is 4 libraries × 6 postings: ANALYZE, then TAILOR (one page, no emphasis), then the fabrication guard and match score. Even-numbered pairs in that sorted order also run COVER_LETTER (12 letters). Those alternate a fixed WHY note and no WHY text, starting with the note. Resume focus is the included bullet refs when that pair's tailor succeeded. The letter's cost is included in the pair's `$cost`. A second table lists letter reverts and letter words. Import fixtures are not in this folder yet.
 
-Calls are charged to `SEED_USER_ID` and count toward that account's quota. If remaining analyses or tailors are below the pair count, the script exits before any model call.
+Calls are charged to `SEED_USER_ID` and count toward that account's quota. If remaining analyses, tailors, or cover letters are below the counts the run needs, the script exits before any model call. Free allows 1 cover letter per month. Pro allows 60.
+
+## Letter rubric
+
+After a run, read 5 letters whose file has `letter.whyProvided` set to false. For each one: does it invent a company fact, value, product, news item, or culture detail that is not in the posting? Record the answer in the run section. Any invented company fact means the prompt gets fixed before merging.
 
 ## Rubric
 
@@ -21,6 +25,24 @@ Read 5 pairs from the run. For each one, answer:
 - Average reverts per tailored resume over 0.5 → tighten the prompt.
 
 ## Runs
+
+### 2026-10-22 `2026-10-22T07-51-35-901Z`
+
+24 pairs, all succeeded. Average resume reverts **0.00**. Average letter reverts **0.75** across 12 letters. Total estimated cost about **$0.62**. One page, no emphasis. Letters use a professional tone and standard length. Even pair indexes only.
+
+The five no-WHY letters are the odd letter ordinals in that list: `bi-analyst__government-it`, `cs-grad__data-analyst`, `cs-grad__product`, `frontend-dev__government-it`, `retail-changer__data-analyst`.
+
+| Pair | Invented company fact? |
+|---|---|
+| bi-analyst__government-it | No. Permits, recreation bookings, staff directories, clerk views, and plain-language notes are in the posting. |
+| cs-grad__data-analyst | No. Policy and claims reports, the weekly pack, and the two-year requirement are in the posting. |
+| cs-grad__product | No. Store managers, short requirements, release notes, and "not a coding role" are in the posting. |
+| frontend-dev__government-it | No. The same City of Northwater duties are the reason for interest. |
+| retail-changer__data-analyst | No. File checks, emailed Excel files, and teaching branch managers the filters are in the posting. |
+
+A sixth no-WHY letter, `retail-changer__product`, says Keel & Co's software is "built around pickup orders." The posting says grocers use it for specials and pickup orders. That narrows the product. It does not add a value, a news item, or a product the posting does not name. No prompt change in this task.
+
+Letter reverts are sentences the guard removed because of a number. The review above is the letter after that guard.
 
 ### 2026-10-21 `2026-10-21T05-26-59-411Z`
 

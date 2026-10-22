@@ -1,7 +1,8 @@
 /**
  * Dev eval harness. docs/05-AI.md → Evals.
  * ANALYZE + TAILOR + guard + score for each library × posting.
- * Does not print resume text, posting text, or model output.
+ * COVER_LETTER on even pair indexes, alternating a WHY note and no note.
+ * Does not print resume text, posting text, letter text, or model output.
  */
 import "dotenv/config";
 
@@ -17,6 +18,9 @@ import {
   type LibrarySnapshot as Snapshot,
 } from "@/features/library/schemas";
 import { libraryPromptText } from "@/features/library/serialize";
+import { assembleLetterContent } from "@/features/letters/assemble";
+import type { CoverLetterContent } from "@/features/letters/schemas";
+import { validateLetterOutput } from "@/features/letters/validate";
 import { assembleResumeContent } from "@/features/tailor/assemble";
 import { resumePlainText } from "@/features/tailor/plainText";
 import { scoreMatch } from "@/features/tailor/score";
@@ -28,8 +32,14 @@ import {
   SYSTEM as ANALYZE_SYSTEM,
 } from "@/lib/ai/prompts/analyze";
 import {
+  buildContent as buildLetterContent,
+  OutputSchema as LetterSchema,
+  SYSTEM as LETTER_SYSTEM,
+} from "@/lib/ai/prompts/letter";
+import {
   buildContent as buildTailorContent,
   OutputSchema as TailorSchema,
+  POSTING_MAX,
   SYSTEM as TAILOR_SYSTEM,
 } from "@/lib/ai/prompts/tailor";
 import { runStructured } from "@/lib/ai/run";
@@ -39,7 +49,11 @@ import { env } from "@/lib/env";
 import {
   bulletCount,
   droppedBulletCount,
+  formatLetterTable,
   formatMetricsTable,
+  letterPairCount,
+  letterPlan,
+  letterSummaryLines,
   quotaShortfall,
   summaryLines,
   wordCount,
@@ -73,6 +87,18 @@ type PairFile = {
   plainText: string | null;
   content: ResumeContent | null;
   matchReport: MatchReport | null;
+  letter: LetterFile | null;
+};
+
+type LetterFile = {
+  ok: boolean;
+  errorCode: string | null;
+  reverts: number | null;
+  words: number | null;
+  whyProvided: boolean;
+  guardIssues: { code: string; ref: string }[];
+  plainText: string | null;
+  content: CoverLetterContent | null;
 };
 
 class EvalStop extends Error {}
@@ -113,14 +139,17 @@ async function main() {
     );
   }
 
-  const [analyzeQuota, tailorQuota] = await Promise.all([
+  const [analyzeQuota, tailorQuota, letterQuota] = await Promise.all([
     quotaSnapshot(user, "ANALYZE"),
     quotaSnapshot(user, "TAILOR"),
+    quotaSnapshot(user, "COVER_LETTER"),
   ]);
   const gaps = quotaShortfall({
     needed: pairs.length,
     analyzeRemaining: analyzeQuota.remaining,
     tailorRemaining: tailorQuota.remaining,
+    letterNeeded: letterPairCount(pairs.length),
+    letterRemaining: letterQuota.remaining,
   });
   if (gaps.length > 0) {
     for (const gap of gaps) {
@@ -145,6 +174,7 @@ async function main() {
         library: item.library,
         posting: item.posting,
         outDir,
+        index,
       });
       metrics.push(metric);
     } catch (error) {
@@ -160,12 +190,17 @@ async function main() {
         words: null,
         seconds: 0,
         costMicros: 0,
+        letterRan: false,
+        letterReverts: null,
+        letterWords: null,
       });
     }
   }
 
   console.log(formatMetricsTable(metrics));
+  console.log(formatLetterTable(metrics));
   for (const line of summaryLines(metrics)) console.log(line);
+  for (const line of letterSummaryLines(metrics)) console.log(line);
   console.log(`evals/out/${stamp}`);
 }
 
@@ -175,6 +210,7 @@ async function runPair(input: {
   library: NamedSnapshot;
   posting: NamedText;
   outDir: string;
+  index: number;
 }): Promise<PairMetric> {
   const started = Date.now();
   let costMicros = 0;
@@ -219,6 +255,7 @@ async function runPair(input: {
       plainText: null,
       content: null,
       matchReport: null,
+      letter: null,
     });
   }
 
@@ -241,6 +278,7 @@ async function runPair(input: {
       plainText: null,
       content: null,
       matchReport: null,
+      letter: null,
     });
   }
 
@@ -271,56 +309,73 @@ async function runPair(input: {
   });
   costMicros += await costFor(input.user.id, tailorRef);
 
+  const plan = letterPlan(input.index);
+  let tailor: PairFile["tailor"];
+  let reverts: number | null = null;
+  let droppedBullets: number | null = null;
+  let matchScore: number | null = null;
+  let words: number | null = null;
+  let guardIssues: PairFile["guardIssues"] = [];
+  let plainText: string | null = null;
+  let content: ResumeContent | null = null;
+  let matchReport: MatchReport | null = null;
+
   if (!tailored.ok) {
-    return finish(input.outDir, {
-      ...base,
-      seconds: secondsSince(started),
-      costMicros,
-      analyze: { ok: true, errorCode: null },
-      tailor: { ok: false, errorCode: tailored.code },
-      reverts: null,
-      droppedBullets: null,
-      matchScore: null,
-      words: null,
-      guardIssues: [],
+    tailor = { ok: false, errorCode: tailored.code };
+  } else {
+    const guard = validateTailorOutput(
+      tailored.data,
+      input.library.snapshot,
       analysis,
-      plainText: null,
-      content: null,
-      matchReport: null,
-    });
+    );
+    content = assembleResumeContent(guard.output, input.library.snapshot);
+    matchReport = scoreMatch(analysis, guard.output.requirementMatches);
+    plainText = resumePlainText(content, input.library.snapshot);
+    droppedBullets = droppedBulletCount(
+      bulletCount(tailored.data.entries),
+      bulletCount(guard.output.entries),
+    );
+    reverts = guard.reverts;
+    matchScore = matchReport.score;
+    words = wordCount(plainText);
+    guardIssues = guard.issues.map((issue) => ({
+      code: issue.code,
+      ref: issue.ref,
+    }));
+    tailor = { ok: true, errorCode: null };
   }
 
-  const guard = validateTailorOutput(
-    tailored.data,
-    input.library.snapshot,
-    analysis,
-  );
-  const content = assembleResumeContent(guard.output, input.library.snapshot);
-  const matchReport = scoreMatch(analysis, guard.output.requirementMatches);
-  const plainText = resumePlainText(content, input.library.snapshot);
-  const droppedBullets = droppedBulletCount(
-    bulletCount(tailored.data.entries),
-    bulletCount(guard.output.entries),
-  );
+  let letter: LetterFile | null = null;
+  if (plan.write) {
+    const written = await runLetter({
+      user: input.user,
+      pair: input.pair,
+      snapshot: input.library.snapshot,
+      posting: input.posting.text,
+      analysis,
+      content,
+      whyCompany: plan.whyCompany,
+    });
+    costMicros += written.costMicros;
+    letter = written.letter;
+  }
 
   return finish(input.outDir, {
     ...base,
     seconds: secondsSince(started),
     costMicros,
     analyze: { ok: true, errorCode: null },
-    tailor: { ok: true, errorCode: null },
-    reverts: guard.reverts,
+    tailor,
+    reverts,
     droppedBullets,
-    matchScore: matchReport.score,
-    words: wordCount(plainText),
-    guardIssues: guard.issues.map((issue) => ({
-      code: issue.code,
-      ref: issue.ref,
-    })),
+    matchScore,
+    words,
+    guardIssues,
     analysis,
     plainText,
     content,
     matchReport,
+    letter,
   });
 }
 
@@ -337,7 +392,122 @@ async function finish(outDir: string, file: PairFile): Promise<PairMetric> {
     words: file.words,
     seconds: file.seconds,
     costMicros: file.costMicros,
+    letterRan: file.letter !== null,
+    letterReverts: file.letter?.reverts ?? null,
+    letterWords: file.letter?.words ?? null,
   };
+}
+
+async function runLetter(input: {
+  user: { id: string; plan: "FREE" | "PRO" };
+  pair: string;
+  snapshot: Snapshot;
+  posting: string;
+  analysis: JobAnalysis;
+  content: ResumeContent | null;
+  whyCompany: string | null;
+}): Promise<{ costMicros: number; letter: LetterFile }> {
+  const quota = await checkQuota(input.user, "COVER_LETTER");
+  if (!quota.allowed) {
+    throw new EvalStop(
+      "COVER_LETTER quota ran out. Stopped before the next call.",
+    );
+  }
+
+  const refId = `eval:${input.pair}:COVER_LETTER`;
+  const focus = input.content === null ? [] : resumeFocusRefs(input.content);
+  const generated = await runStructured({
+    kind: "COVER_LETTER",
+    userId: input.user.id,
+    usedBonusCredit: quota.useBonus,
+    system: LETTER_SYSTEM,
+    content: buildLetterContent({
+      libraryText: libraryPromptText(input.snapshot),
+      title: input.analysis.title,
+      company: input.analysis.company,
+      requirements: input.analysis.requirements,
+      keywords: input.analysis.keywords,
+      posting: input.posting,
+      whyCompany: input.whyCompany,
+      tone: "professional",
+      length: "standard",
+      recipientName: null,
+      candidateName: input.snapshot.profile.fullName,
+      resumeFocus: focus.length > 0 ? focus : null,
+    }),
+    schema: LetterSchema,
+    refId,
+  });
+  const costMicros = await costFor(input.user.id, refId);
+  const whyProvided =
+    input.whyCompany !== null && input.whyCompany.trim().length > 0;
+  if (!generated.ok) {
+    return {
+      costMicros,
+      letter: {
+        ok: false,
+        errorCode: generated.code,
+        reverts: null,
+        words: null,
+        whyProvided,
+        guardIssues: [],
+        plainText: null,
+        content: null,
+      },
+    };
+  }
+
+  const guard = validateLetterOutput(generated.data, {
+    snapshot: input.snapshot,
+    posting: input.posting.slice(0, POSTING_MAX),
+    whyCompany: input.whyCompany,
+    requirementIds: input.analysis.requirements.map(
+      (requirement) => requirement.id,
+    ),
+  });
+  const content = assembleLetterContent(guard.output, input.snapshot, {
+    recipientName: null,
+  });
+  const plainText = letterPlainText(content);
+  return {
+    costMicros,
+    letter: {
+      ok: true,
+      errorCode: null,
+      reverts: guard.reverts,
+      words: wordCount(plainText),
+      whyProvided,
+      guardIssues: guard.issues.map((issue) => ({
+        code: issue.code,
+        ref: issue.ref,
+      })),
+      plainText,
+      content,
+    },
+  };
+}
+
+function resumeFocusRefs(content: ResumeContent): string[] {
+  const refs: string[] = [];
+  for (const entry of content.entries) {
+    if (!entry.included) continue;
+    for (const bullet of entry.bullets) {
+      if (!bullet.included) continue;
+      for (const ref of bullet.sourceRefs) {
+        if (!refs.includes(ref)) refs.push(ref);
+      }
+    }
+  }
+  return refs;
+}
+
+function letterPlainText(content: CoverLetterContent): string {
+  return [
+    content.greeting,
+    ...content.paragraphs.map((paragraph) => paragraph.text),
+    content.closing,
+    content.signature,
+  ].join("\n");
 }
 
 async function costFor(userId: string, refId: string): Promise<number> {
