@@ -89,14 +89,33 @@ These keep the tracking data accurate without the user doing extra work. Put the
 | Status → ACCEPTED / REJECTED / WITHDRAWN / NO_RESPONSE | set `closedAt`; dismiss open reminders for the job |
 | Any status change | `JobEvent(STATUS_CHANGED, fromStatus, toStatus)` |
 | Status → `ACCEPTED` | celebration UI; prompt for testimonial (opt-in); prompt "pause your search?" |
-| Interview created with `scheduledAt` | `JobEvent(INTERVIEW_SCHEDULED)`; `Reminder(INTERVIEW, scheduledAt − 24h)`; if job status < INTERVIEWING → move to INTERVIEWING (via `applyStatusChange`) |
-| Interview outcome set | `JobEvent(INTERVIEW_COMPLETED)`; `Reminder(THANK_YOU, now + 2h)` if the interview was today |
+| Interview created with `scheduledAt`, or later given a `scheduledAt` when it has never had one | `JobEvent(INTERVIEW_SCHEDULED)` once; `Reminder(INTERVIEW, scheduledAt − 24h)`. 24h is exactly 24×60×60×1000 ms, including across a daylight-saving change. If an open automatic interview reminder exists, its due time moves; otherwise one is created. Clearing the date dismisses that open reminder and leaves the timeline event. A later date does not write a second scheduled event. If the status is `SAVED`, `APPLIED`, or `SCREENING` → move to `INTERVIEWING` (via `applyStatusChange`) on that first date only. `INTERVIEWING`, `OFFER`, `ACCEPTED`, and the closed statuses stay. |
+| Interview outcome leaves `PENDING` the first time | `JobEvent(INTERVIEW_COMPLETED)` once. A later outcome change, including back to Pending and out again, does not write another event. `Reminder(THANK_YOU, now + 2h)` when `scheduledAt` falls on today in the user's timezone. No date, or a date on another local day, skips the thank-you. |
+| Interview deleted | Reminders for that interview are removed. Timeline events stay, with `interviewId` cleared. Status stays. |
 | Offer created | `JobEvent(OFFER_RECEIVED)`; status → OFFER; if `respondBy` → `Reminder(OFFER_RESPONSE, respondBy − 2 days)` |
 | TailoredResume / CoverLetter READY | `JobEvent(RESUME_TAILORED / LETTER_WRITTEN)` |
 | Manual "Log follow-up" | `JobEvent(FOLLOW_UP_SENT)`; update `Contact.lastContactedAt` if a contact is chosen |
 | APPLIED with no change for 30 days | Dashboard shows a "No response?" nudge (computed in the query, nothing stored until the user acts) |
 
 Status ordering for "less than" comparisons: SAVED < APPLIED < SCREENING < INTERVIEWING < OFFER < ACCEPTED (closed statuses are not ordered).
+
+### Interview fields
+
+Caps for the Interviews tab. Blank text stores null. `scheduledAt` is a UTC instant entered as a wall-clock date and time in `User.timezone` (shown beside the field). A spring-forward gap is rejected. A repeated fall-back hour uses the earlier instant. An interview with no date stores null and does not move the status.
+
+| Field | Max | Blank saves as |
+|---|---|---|
+| `round` | whole number 1–20 | required; the form suggests the next round |
+| `kind` | `InterviewKind` | required |
+| `scheduledAt` | real local date and time, years 1900–2099 | null |
+| `durationMinutes` | whole number 1–480 | null |
+| `locationOrLink` | 500 | null. `http` or `https` renders as a link; anything else is text |
+| `interviewers` | 300 | null. Free text until contacts (T8.4) |
+| `prepNotes` | 5,000 | null |
+| `reflection` | 5,000 | null |
+| `outcome` | `InterviewOutcome` | `PENDING` |
+
+Outcome and reflection show in the dialog once `scheduledAt` is in the past, and they stay visible when an outcome other than Pending or a reflection is already saved. The prep-kit button is 1.1. The Reminders tab that lists these rows is T8.5.
 
 ### Job detail fields
 

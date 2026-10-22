@@ -7,9 +7,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { strings } from "@/copy/strings";
 
 const documentsCopy = strings.jobs.documents;
+const interviewsCopy = strings.jobs.interviews;
 const timelineCopy = strings.jobs.timeline;
 
-export type JobSectionTab = "overview" | "documents" | "timeline";
+export type JobSectionTab = "overview" | "documents" | "interviews" | "timeline";
 
 export function JobSections({
   jobId,
@@ -26,7 +27,14 @@ export function JobSections({
   const [pending, startTransition] = useTransition();
 
   function onValueChange(value: string) {
-    if (value !== "overview" && value !== "documents" && value !== "timeline") return;
+    if (
+      value !== "overview" &&
+      value !== "documents" &&
+      value !== "interviews" &&
+      value !== "timeline"
+    ) {
+      return;
+    }
     const href = jobTabHref(jobId, value, value === "timeline" && hideAuto);
     if (typeof window !== "undefined") {
       const current = `${window.location.pathname}${window.location.search}`;
@@ -43,6 +51,7 @@ export function JobSections({
         <TabsList aria-label={documentsCopy.tabsLabel}>
           <TabsTrigger value="overview">{documentsCopy.overviewTab}</TabsTrigger>
           <TabsTrigger value="documents">{documentsCopy.documentsTab}</TabsTrigger>
+          <TabsTrigger value="interviews">{interviewsCopy.tab}</TabsTrigger>
           <TabsTrigger value="timeline">{timelineCopy.tab}</TabsTrigger>
         </TabsList>
       </div>

@@ -12,8 +12,10 @@ import { TabsContent } from "@/components/ui/tabs";
 import { strings } from "@/copy/strings";
 import { DocumentsTab, TailorPoll } from "@/features/tailor/components/documents-tab";
 import type { JobDocuments } from "@/features/tailor/status";
+import { InterviewsTab } from "@/features/tracking/components/interviews-tab";
 import { TimelineTab } from "@/features/tracking/components/timeline-tab";
 import type { TimelineEventView } from "@/features/tracking/events";
+import type { InterviewView } from "@/features/tracking/interviews";
 
 import { formatSalaryLabel } from "../format";
 import type { JobPageData } from "../queries";
@@ -43,6 +45,10 @@ type JobResultProps = {
   timeline: TimelineEventView[];
   hideAuto: boolean;
   today: string;
+  interviews: InterviewView[];
+  interviewTimeZone: string;
+  interviewNow: string;
+  nextRound: number;
 };
 
 export function JobResult({
@@ -53,6 +59,10 @@ export function JobResult({
   timeline,
   hideAuto,
   today,
+  interviews,
+  interviewTimeZone,
+  interviewNow,
+  nextRound,
 }: JobResultProps) {
   const ready = job.analysisStatus === "READY";
   const must = job.requirements.filter((item) => item.importance === "must");
@@ -183,6 +193,15 @@ export function JobResult({
             jobId={job.id}
             analysisReady={ready}
             documents={documents}
+          />
+        </TabsContent>
+        <TabsContent value="interviews" className="pt-4">
+          <InterviewsTab
+            jobId={job.id}
+            interviews={interviews}
+            timeZone={interviewTimeZone}
+            now={interviewNow}
+            nextRound={nextRound}
           />
         </TabsContent>
         <TabsContent value="timeline" className="pt-4">
