@@ -74,7 +74,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T11.1** Usage & gating UI
 - [x] **T11.2** Checkout & portal
 - [x] **T11.3** Webhook
-- [ ] **T11.4** DOCX export (Pro)
+- [x] **T11.4** DOCX export (Pro)
 
 ## Phase 12 — Marketing site
 - [ ] **T12.1** Homepage structure
@@ -93,6 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-22 T11.4:** Resume and letter DOCX use the same section order as the PDF. Pro downloads from `/api/resumes/[id]/docx` and `/api/letters/[id]/docx`. Free shows a lock and Upgrade. The Civic Studio resume downloaded as `Avery-Lang-Civic-Studio-Product-Designer.docx`. The seed has no cover letter, so the letter file was checked in unit tests only.
 - **2026-10-22 T11.3:** `/api/stripe/webhook` verifies the signature, records `StripeEvent` first, and ignores a replay. Checkout links the customer and subscription and sets founding when that coupon applied. Active or trialing is Pro; anything else is Free. Cancel at period end stays Pro until Stripe is no longer active or trialing. Period end comes from the first subscription item. A past-due or unpaid subscription shows the payment-failed banner. A live upgrade through `stripe listen` was not run in this session.
 - **2026-10-22 T11.2:** Monthly and 90-day Checkout, plus Manage subscription once a Stripe customer exists. The founding coupon applies only when the email is a Lead with foundingOffer and the coupon can still be redeemed. Other sessions allow a promotion code. In development, a real `sk_test_` key shows a price preview so one account can open both totals and go back without paying. One test-card payment (4242…) then the portal switches intervals. Placeholder env values that contain `...` are treated as unset. The plan still changes only in the T11.3 webhook. The dev `.env` still has the example Stripe placeholders, so a hosted Checkout page was not opened. The settings page showed Monthly, US$19 and 90 days, US$45.
 - **2026-10-22 T11.1:** The usage pill is tailored resumes this UTC month, and it links to `/settings?tab=plan`. Extra credits show on the pill when any remain, and they are not folded into the allowance. Plan & billing shows the plan, the interval and renewal or end date when those are set, and bars for tailored resumes, cover letters, resume imports, and job analyses. Upgrade names the limit, including the Free and Pro allowances for a quota. Checkout and Manage subscription stay on T11.2. Prep kits and bullet coach stay off this screen. The dev account’s Pro view showed 51 of 80 tailored resumes, 12 of 60 letters, 2 of 20 imports, and 24 of 60 analyses today.

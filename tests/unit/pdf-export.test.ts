@@ -6,7 +6,9 @@ import type { ResumeContent } from "@/features/tailor/schemas";
 import {
   contentDisposition,
   filenameFromContentDisposition,
+  letterDocxFilename,
   letterPdfFilename,
+  resumeDocxFilename,
   resumePdfFilename,
 } from "@/lib/pdf/filename";
 import { letterPdfLines, letterPdfModel } from "@/lib/pdf/letter-model";
@@ -68,6 +70,13 @@ describe("letterPdfFilename", () => {
       "Morgan-Example-Northwind-Data-Analyst-Letter.pdf",
     );
     expect(letterPdfFilename(null, "  ", "")).toBe("Letter.pdf");
+    expect(letterDocxFilename("Morgan Example", "Northwind", "Data Analyst")).toBe(
+      "Morgan-Example-Northwind-Data-Analyst-Letter.docx",
+    );
+    expect(resumeDocxFilename("Morgan Example", "Northwind", "Data Analyst")).toBe(
+      "Morgan-Example-Northwind-Data-Analyst.docx",
+    );
+    expect(resumeDocxFilename(null, "  ", "")).toBe("Resume.docx");
   });
 });
 

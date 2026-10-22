@@ -1,5 +1,5 @@
 /**
- * When a PDF download should offer to mark the resume submitted and move to Applied.
+ * When a PDF or DOCX download should offer to mark the resume submitted and move to Applied.
  * docs/02-USER-FLOWS.md → Resume workspace → Export.
  */
 

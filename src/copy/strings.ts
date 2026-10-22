@@ -1066,7 +1066,7 @@ export const strings = {
       detailsTab: "Details",
       exportTab: "Export",
       exportBody:
-        "PDF downloads the last saved version. Copy text uses the letter on screen.",
+        "PDF or DOCX downloads the last saved version. Copy text uses the letter on screen.",
       templateLook: (name: string) =>
         `${name} is how this letter is set, including the PDF.`,
       tabsLabel: "Cover letter sections",
@@ -1442,7 +1442,7 @@ export const strings = {
       matchTab: "Match",
       exportTab: "Export",
       exportBody:
-        "PDF downloads the last saved version. Copy text uses the resume on screen.",
+        "PDF or DOCX downloads the last saved version. Copy text uses the resume on screen.",
       templateLabel: "Template",
       templateLook: (name: string) =>
         `${name} is how this resume is set, including the PDF.`,
@@ -1453,11 +1453,9 @@ export const strings = {
       exportPdf: "PDF",
       exportDocx: "DOCX",
       exporting: "Downloading…",
-      exportFailed: "Couldn’t download that PDF. Try again.",
+      exportFailed: "Couldn’t download that file. Try again.",
       templateFailed: "Couldn’t save that template. Try again.",
-      docxLater: "DOCX export is coming soon.",
       includedWithPro: "Included with Pro",
-      comingSoon: "Coming soon",
       markSubmitted: "Mark as submitted",
       submitFailed: "Couldn’t mark this version as submitted. Try again.",
       exportReadyTitle: "Resume downloaded",

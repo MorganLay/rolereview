@@ -103,28 +103,35 @@ export function useLetterExport(input: ExportInput) {
   }
 
   async function onExportPdf() {
+    await exportFile("pdf");
+  }
+
+  async function onExportDocx() {
+    if (!input.templates.docx) {
+      openUpgradeModal({ kind: "feature", feature: "docx" });
+      return;
+    }
+    await exportFile("docx");
+  }
+
+  async function exportFile(format: "pdf" | "docx") {
     if (exporting) return;
     const letterId = input.letterId;
     setExporting(true);
     try {
-      const response = await fetch(`/api/letters/${letterId}/pdf`);
+      const response = await fetch(`/api/letters/${letterId}/${format}`);
+      if (response.status === 403) {
+        openUpgradeModal({ kind: "feature", feature: "docx" });
+        return;
+      }
       const type = response.headers.get("Content-Type") ?? "";
-      if (!response.ok || !type.includes("application/pdf")) {
+      const okType =
+        format === "pdf" ? type.includes("application/pdf") : type.includes("wordprocessingml");
+      if (!response.ok || !okType) {
         toast.error(copy.exportFailed);
         return;
       }
-      const blob = await response.blob();
-      const filename =
-        filenameFromContentDisposition(response.headers.get("Content-Disposition")) ??
-        "letter.pdf";
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = filename;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(url);
+      await saveAttachment(response, format === "pdf" ? "letter.pdf" : "letter.docx");
     } catch {
       toast.error(copy.exportFailed);
     } finally {
@@ -183,6 +190,7 @@ export function useLetterExport(input: ExportInput) {
       onTemplate,
       onCopy,
       onExportPdf,
+      onExportDocx,
       onMarkSubmitted,
       onRate,
     },
@@ -201,6 +209,7 @@ export function LetterExportBar({
   onTemplate,
   onCopy,
   onExportPdf,
+  onExportDocx,
   onMarkSubmitted,
   onRate,
 }: {
@@ -215,6 +224,7 @@ export function LetterExportBar({
   onTemplate: (templateId: ResumeTemplateId) => void;
   onCopy: () => void;
   onExportPdf: () => void;
+  onExportDocx: () => void;
   onMarkSubmitted: () => void;
   onRate: (rating: 1 | -1) => void;
 }) {
@@ -276,17 +286,13 @@ export function LetterExportBar({
             {copy.exportPdf}
           </DropdownMenuItem>
           <DropdownMenuItem
+            disabled={exporting}
             aria-label={
-              templates.docx
-                ? `${copy.exportDocx}, ${copy.comingSoon}`
-                : `${copy.exportDocx}, ${copy.includedWithPro}`
+              templates.docx ? copy.exportDocx : `${copy.exportDocx}, ${copy.includedWithPro}`
             }
-            onSelect={() => {
-              if (templates.docx) toast.message(copy.docxLater);
-              else openUpgradeModal({ kind: "feature", feature: "docx" });
-            }}
+            onSelect={onExportDocx}
           >
-            <LockIcon aria-hidden />
+            {!templates.docx && <LockIcon aria-hidden />}
             {copy.exportDocx}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -336,4 +342,18 @@ function templateLocked(id: ResumeTemplateId, access: ResumeTemplateAccess): boo
   if (id === "modern") return !access.modern;
   if (id === "compact") return !access.compact;
   return false;
+}
+
+async function saveAttachment(response: Response, fallback: string) {
+  const blob = await response.blob();
+  const filename =
+    filenameFromContentDisposition(response.headers.get("Content-Disposition")) ?? fallback;
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }

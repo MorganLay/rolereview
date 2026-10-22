@@ -1,5 +1,5 @@
 /**
- * Download names: First-Last-Company-Title.pdf and …-Letter.pdf.
+ * Download names: First-Last-Company-Title.pdf/.docx and …-Letter.pdf/.docx.
  * docs/02-USER-FLOWS.md → Resume workspace → Export, Cover letter workspace.
  */
 
@@ -10,9 +10,15 @@ export function resumePdfFilename(
   company: string,
   title: string,
 ): string {
-  const parts = [fullName, company, title].map(slugPart).filter((part) => part.length > 0);
-  const base = (parts.length > 0 ? parts.join("-") : "Resume").slice(0, FILENAME_MAX);
-  return `${base}.pdf`;
+  return resumeExportFilename(fullName, company, title, "pdf");
+}
+
+export function resumeDocxFilename(
+  fullName: string | null,
+  company: string,
+  title: string,
+): string {
+  return resumeExportFilename(fullName, company, title, "docx");
 }
 
 export function letterPdfFilename(
@@ -20,9 +26,37 @@ export function letterPdfFilename(
   company: string,
   title: string,
 ): string {
+  return letterExportFilename(fullName, company, title, "pdf");
+}
+
+export function letterDocxFilename(
+  fullName: string | null,
+  company: string,
+  title: string,
+): string {
+  return letterExportFilename(fullName, company, title, "docx");
+}
+
+function resumeExportFilename(
+  fullName: string | null,
+  company: string,
+  title: string,
+  ext: "pdf" | "docx",
+): string {
+  const parts = [fullName, company, title].map(slugPart).filter((part) => part.length > 0);
+  const base = (parts.length > 0 ? parts.join("-") : "Resume").slice(0, FILENAME_MAX);
+  return `${base}.${ext}`;
+}
+
+function letterExportFilename(
+  fullName: string | null,
+  company: string,
+  title: string,
+  ext: "pdf" | "docx",
+): string {
   const parts = [fullName, company, title].map(slugPart).filter((part) => part.length > 0);
   const stem = parts.length > 0 ? `${parts.join("-")}-Letter` : "Letter";
-  return `${stem.slice(0, FILENAME_MAX)}.pdf`;
+  return `${stem.slice(0, FILENAME_MAX)}.${ext}`;
 }
 
 export function contentDisposition(filename: string): string {

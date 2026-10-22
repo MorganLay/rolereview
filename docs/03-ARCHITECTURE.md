@@ -194,7 +194,7 @@ Cover letters follow the same shape (`features/letters/actions.ts`).
 
 ## Exports
 - **PDF:** `GET /api/resumes/[resumeId]/pdf` and `/api/letters/[letterId]/pdf`: `requireUser()` → load scoped → entitlement check for the template (fallback to Classic) → `renderToBuffer` → `attachment` download; set `exportedAt`. These routes run on the Node.js runtime. Do not export `runtime` while `cacheComponents` is enabled; Next rejects that segment config. The default runtime is already Node.
-- **DOCX** (Pro): same routes with `/docx`, built with `docx` from the same section order as PDF/plain text.
+- **DOCX** (Pro): same routes with `/docx`, built with `docx` from the same section order as PDF/plain text. Single column, Arial, no tables. Unentitled requests return `PRO_REQUIRED`.
 - **ATS rules for all resume templates:** single column; standard headings; no tables/text boxes for content; real text; embedded OFL fonts (Inter, Source Sans 3); no icons replacing words. Compact = tighter spacing and smaller type for 1-page fits. When `TailorOptions.length` is 1, a PDF that would spill onto a second page groups the header links, then tightens spacing and type, until it fits one Letter page. It does not remove lines.
 - **Data export:** `GET /api/account/export` streams JSON of every user-owned row.
 

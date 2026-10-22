@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* Allow Cursor browser / 127.0.0.1 to load /_next assets in dev. */
   allowedDevOrigins: ["127.0.0.1"],
-  serverExternalPackages: ["@react-pdf/renderer"],
+  serverExternalPackages: ["@react-pdf/renderer", "docx"],
   outputFileTracingIncludes: {
     "/api/resumes/[resumeId]/pdf": ["./src/lib/pdf/fonts/**/*"],
   },
