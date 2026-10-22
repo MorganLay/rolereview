@@ -143,13 +143,13 @@ Questions grouped by category; each shows why it's asked (linked requirements), 
 Table: name, title, company, email, linked jobs (chips), last contacted. Names sort A–Z. Search (`?q=`) matches name, title, company, or email, ignoring case. With no contacts, the page says there are no contacts yet. A search that matches nothing says so, and does not look like an empty library. Add and edit use one dialog (name required; the other fields follow Contact fields). Delete asks for confirmation, removes the person, and unlinks them from every job. Timeline rows stay, without the contact. A row opens a drawer with details, linked jobs (company, title, and role), and outreach history: follow-ups that name this person, newest first. Last contacted is that calendar date in the user's timezone, or an em dash when there is none. The dev seed adds four contacts.
 
 ### `/insights` — Analytics
-Date range selector (30 d / 90 d / all). Charts follow the definitions in `04-DATA-MODEL.md` → Analytics:
-1. KPI tiles: Applied · Response rate · Interview rate · Offers · Median days to response.
-2. Funnel chart: Saved → Applied → Responded → Interviewed → Offer.
+Date range selector (30 days / 90 days / all time). 30 days is the default and has no query. `?range=90d` and `?range=all` select the others. An unknown value is 30 days. Charts follow the definitions in `04-DATA-MODEL.md` → Analytics:
+1. KPI tiles: Applied · Response rate · Interview rate · Offers · Median days to response. Offers is the count. The two rates are percents, with the counts underneath. A rate with nothing eligible is an em dash.
+2. Funnel chart: Saved → Applied → Responded → Interviewed → Offer, with the share of the previous stage.
 3. Applications per week (bar), with tailored vs not stacked.
-4. **What's working** (Pro; Free sees a blurred preview + upgrade): interview rate by source; by match score band; tailored vs not. Each shows sample size; hidden below 5.
+4. **What's working** (Pro; Free sees a blurred preview + upgrade): interview rate by source; by match score band; tailored vs not. Each shows sample size; hidden below 5. The preview is not the person's figures. Upgrade opens the upgrade modal. A breakdown with no group yet says a group appears at 5 applications.
 5. [1.1] Activity heatmap and streak history.
-- Empty state: "Your Insights fills in as you apply. Move a job to Applied to start."
+- Empty state, when the person has never applied: "Your Insights fills in as you apply. Move a job to Applied to start." A range with no applications, after they have applied before, says "No applications in this range."
 
 ### `/milestones` [1.1]
 Momentum streak (weeks in a row with at least one meaningful action) with a calendar; milestones list (earned with dates, upcoming ones greyed with a hint). Quiet, professional styling, no badges or levels.

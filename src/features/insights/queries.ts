@@ -14,6 +14,9 @@ import {
 export type InsightsData = InsightsMetrics & {
   timeZone: string;
   range: InsightsRange;
+  /** At least one job has appliedAt at or before now, on any range. */
+  everApplied: boolean;
+  asOf: Date;
 };
 
 /**
@@ -34,6 +37,7 @@ export async function getInsights(userId: string, range: InsightsRange): Promise
         status: true,
         source: true,
         appliedAt: true,
+        createdAt: true,
         firstResponseAt: true,
         submittedResumeId: true,
         submittedResume: { select: { matchScore: true } },
@@ -59,6 +63,7 @@ export async function getInsights(userId: string, range: InsightsRange): Promise
       status: row.status,
       source: row.source,
       appliedAt: row.appliedAt,
+      createdAt: row.createdAt,
       firstResponseAt: row.firstResponseAt,
       submittedResumeId: row.submittedResumeId,
       matchScore: row.submittedResume?.matchScore ?? null,
@@ -71,6 +76,10 @@ export async function getInsights(userId: string, range: InsightsRange): Promise
   return {
     timeZone,
     range,
+    everApplied: jobs.some(
+      (job) => job.appliedAt !== null && job.appliedAt.getTime() <= now.getTime(),
+    ),
+    asOf: now,
     ...insightsMetrics(jobs, { range, now, timeZone }),
   };
 }

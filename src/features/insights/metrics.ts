@@ -28,6 +28,13 @@ export const INSIGHTS_RANGES = ["30d", "90d", "all"] as const;
 
 export type InsightsRange = (typeof INSIGHTS_RANGES)[number];
 
+/** 30 days when the query is missing or not one of the three ranges. */
+export function parseInsightsRange(value: string | string[] | undefined): InsightsRange {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (raw === "30d" || raw === "90d" || raw === "all") return raw;
+  return "30d";
+}
+
 /** Missing source. Real sources use the `JobSource` values. */
 export const SOURCE_NONE = "NONE";
 
@@ -43,6 +50,8 @@ export type InsightsJob = {
   status: JobStatusValue;
   source: JobSourceValue | null;
   appliedAt: Date | null;
+  /** When the job was added. Saved jobs have no `appliedAt`. */
+  createdAt: Date;
   firstResponseAt: Date | null;
   submittedResumeId: string | null;
   /** Score of the submitted resume. Ignored when no resume was submitted. */
@@ -76,6 +85,24 @@ export type InsightsWeek = {
   notTailored: number;
 };
 
+/** Saved through Offer. Each later stage is also counted in the earlier ones. */
+export const FUNNEL_STAGES = [
+  "SAVED",
+  "APPLIED",
+  "RESPONDED",
+  "INTERVIEWED",
+  "OFFER",
+] as const;
+
+export type FunnelStage = (typeof FUNNEL_STAGES)[number];
+
+export type InsightsFunnelStage = {
+  key: FunnelStage;
+  count: number;
+  /** Share of the previous stage. Empty on Saved, or when that stage is 0. */
+  fromPrevious: number | null;
+};
+
 export type InsightsMetrics = {
   applied: number;
   response: InsightsRate;
@@ -86,12 +113,14 @@ export type InsightsMetrics = {
   byMatchBand: InsightsBreakdown[];
   tailored: InsightsBreakdown[];
   weeks: InsightsWeek[];
+  funnel: InsightsFunnelStage[];
 };
 
 type JobInput = {
   status: string;
   source: string | null;
   appliedAt: Date | null;
+  createdAt: Date;
   firstResponseAt: Date | null;
   submittedResumeId: string | null;
   matchScore: number | null;
@@ -108,6 +137,7 @@ export function toInsightsJob(row: JobInput): InsightsJob | null {
     status: row.status,
     source: row.source && SOURCE_SET.has(row.source) ? (row.source as JobSourceValue) : null,
     appliedAt: row.appliedAt,
+    createdAt: row.createdAt,
     firstResponseAt: row.firstResponseAt,
     submittedResumeId: row.submittedResumeId,
     matchScore: row.matchScore,
@@ -146,6 +176,7 @@ export function insightsMetrics(
     byMatchBand: breakdown(applied, options.now, bandKey, MATCH_BANDS),
     tailored: breakdown(applied, options.now, tailoredKey, TAILORED_KEYS),
     weeks: applicationWeeks(applied, start, options.now, options.timeZone),
+    funnel: insightsFunnel(jobs, start, options.now),
   };
 }
 
@@ -182,6 +213,47 @@ function responseEligible(job: InsightsJob, now: Date): boolean {
 
 function reachedOffer(job: InsightsJob): boolean {
   return job.status === "OFFER" || job.status === "ACCEPTED" || job.offerEvent;
+}
+
+/** An interview or an offer counts as a response so the funnel only narrows. */
+function reachedResponse(job: InsightsJob): boolean {
+  return job.firstResponseAt !== null || reachedInterview(job);
+}
+
+/** An offer counts as interviewed so the funnel only narrows. */
+function reachedInterview(job: InsightsJob): boolean {
+  return job.interviewCount >= 1 || reachedOffer(job);
+}
+
+/**
+ * Jobs applied in the window, plus jobs still saved whose createdAt is in the window.
+ * A job that already has appliedAt is dated by that, not by createdAt.
+ */
+function insightsFunnel(
+  jobs: readonly InsightsJob[],
+  start: Date | null,
+  now: Date,
+): InsightsFunnelStage[] {
+  const windowed = jobs.filter((job) =>
+    job.appliedAt ? inRange(job.appliedAt, start, now) : inRange(job.createdAt, start, now),
+  );
+  const applied = windowed.filter((job) => job.appliedAt !== null);
+  const counts = [
+    windowed.length,
+    applied.length,
+    applied.filter(reachedResponse).length,
+    applied.filter(reachedInterview).length,
+    applied.filter(reachedOffer).length,
+  ];
+  return FUNNEL_STAGES.map((key, index) => {
+    const count = counts[index] ?? 0;
+    const previous = index === 0 ? null : (counts[index - 1] ?? 0);
+    return {
+      key,
+      count,
+      fromPrevious: previous === null || previous === 0 ? null : count / previous,
+    };
+  });
 }
 
 function rate(count: number, of: number): InsightsRate {

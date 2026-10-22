@@ -4,6 +4,7 @@ import {
   BREAKDOWN_MIN_APPLICATIONS,
   insightsMetrics,
   insightsRangeStart,
+  parseInsightsRange,
   RESPONSE_WINDOW_MS,
   SOURCE_NONE,
   toInsightsJob,
@@ -27,6 +28,7 @@ function job(partial: Partial<InsightsJob> = {}): InsightsJob {
     status: "APPLIED",
     source: null,
     appliedAt: daysAgo(30),
+    createdAt: daysAgo(40),
     firstResponseAt: null,
     submittedResumeId: null,
     matchScore: null,
@@ -120,6 +122,13 @@ describe("seed-like hunt", () => {
     const metrics = insightsMetrics(hunt, { range: "all", now: NOW, timeZone: ZONE });
 
     expect(metrics.applied).toBe(7);
+    expect(metrics.funnel.map((stage) => [stage.key, stage.count])).toEqual([
+      ["SAVED", 8],
+      ["APPLIED", 7],
+      ["RESPONDED", 5],
+      ["INTERVIEWED", 4],
+      ["OFFER", 2],
+    ]);
     expect(metrics.response).toEqual({ count: 5, of: 6, rate: 5 / 6 });
     expect(metrics.interview).toEqual({ count: 2, of: 7, rate: 2 / 7 });
     expect(metrics.offer).toEqual({ count: 2, of: 7, rate: 2 / 7 });
@@ -142,6 +151,13 @@ describe("seed-like hunt", () => {
     const metrics = insightsMetrics(hunt, { range: "30d", now: NOW, timeZone: ZONE });
 
     expect(metrics.applied).toBe(3);
+    expect(metrics.funnel.map((stage) => [stage.key, stage.count, stage.fromPrevious])).toEqual([
+      ["SAVED", 3, null],
+      ["APPLIED", 3, 1],
+      ["RESPONDED", 2, 2 / 3],
+      ["INTERVIEWED", 1, 1 / 2],
+      ["OFFER", 0, 0],
+    ]);
     expect(metrics.response).toEqual({ count: 2, of: 2, rate: 1 });
     expect(metrics.interview).toEqual({ count: 1, of: 3, rate: 1 / 3 });
     expect(metrics.offer).toEqual({ count: 0, of: 3, rate: 0 });
@@ -337,6 +353,66 @@ describe("weekly applications", () => {
   });
 });
 
+describe("funnel window", () => {
+  it("counts a saved job by createdAt and an offer with no interview as every earlier stage", () => {
+    const metrics = insightsMetrics(
+      [
+        job({ status: "SAVED", appliedAt: null, createdAt: daysAgo(2) }),
+        job({ status: "SAVED", appliedAt: null, createdAt: daysAgo(40) }),
+        job({
+          createdAt: daysAgo(100),
+          appliedAt: daysAgo(3),
+          status: "OFFER",
+          interviewCount: 0,
+          firstResponseAt: null,
+        }),
+      ],
+      { range: "30d", now: NOW, timeZone: ZONE },
+    );
+
+    expect(metrics.applied).toBe(1);
+    expect(metrics.interview).toEqual({ count: 0, of: 1, rate: 0 });
+    expect(metrics.funnel.map((stage) => [stage.key, stage.count])).toEqual([
+      ["SAVED", 2],
+      ["APPLIED", 1],
+      ["RESPONDED", 1],
+      ["INTERVIEWED", 1],
+      ["OFFER", 1],
+    ]);
+    expect(metrics.funnel[3]?.fromPrevious).toBe(1);
+    expect(metrics.funnel[4]?.fromPrevious).toBe(1);
+  });
+
+  it("leaves the next share empty when the previous stage is zero", () => {
+    const metrics = insightsMetrics([], { range: "all", now: NOW, timeZone: ZONE });
+    expect(metrics.funnel.map((stage) => stage.fromPrevious)).toEqual([
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+  });
+
+  it("drops a job applied outside the window even when it was saved inside", () => {
+    const metrics = insightsMetrics(
+      [job({ createdAt: daysAgo(1), appliedAt: daysAgo(100) })],
+      { range: "30d", now: NOW, timeZone: ZONE },
+    );
+    expect(metrics.funnel.every((stage) => stage.count === 0)).toBe(true);
+  });
+});
+
+describe("range query", () => {
+  it("keeps 30 days, 90 days, and all, and treats anything else as 30 days", () => {
+    expect(parseInsightsRange(undefined)).toBe("30d");
+    expect(parseInsightsRange("90d")).toBe("90d");
+    expect(parseInsightsRange(["all"])).toBe("all");
+    expect(parseInsightsRange("week")).toBe("30d");
+    expect(parseInsightsRange(["30d", "all"])).toBe("30d");
+  });
+});
+
 describe("toInsightsJob", () => {
   it("drops an unknown status and an unknown source", () => {
     expect(
@@ -344,6 +420,7 @@ describe("toInsightsJob", () => {
         status: "HOLD",
         source: "LINKEDIN",
         appliedAt: NOW,
+        createdAt: NOW,
         firstResponseAt: null,
         submittedResumeId: null,
         matchScore: null,
@@ -356,6 +433,7 @@ describe("toInsightsJob", () => {
       status: "APPLIED" satisfies JobStatusValue,
       source: "BOARD",
       appliedAt: null,
+      createdAt: NOW,
       firstResponseAt: null,
       submittedResumeId: null,
       matchScore: 10,
@@ -373,6 +451,7 @@ describe("toInsightsJob", () => {
         status: "SAVED",
         source,
         appliedAt: null,
+        createdAt: NOW,
         firstResponseAt: null,
         submittedResumeId: null,
         matchScore: null,
