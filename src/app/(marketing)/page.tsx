@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
 
-import { WaitlistPage } from "@/features/growth/leads/components/waitlist-page";
 import { strings } from "@/copy/strings";
+import { marketingPlanInput } from "@/features/billing/catalog";
+import { HomePage } from "@/features/marketing/components/home-page";
+import { presentMarketingPricing } from "@/features/marketing/present";
 
 export const metadata: Metadata = {
-  title: strings.marketing.waitlist.metaTitle,
-  description: strings.marketing.waitlist.metaDescription,
+  title: strings.marketing.home.metaTitle,
+  description: strings.marketing.home.metaDescription,
 };
 
 export default function Home() {
-  return <WaitlistPage />;
+  const pricing = presentMarketingPricing(marketingPlanInput());
+  if (!pricing) {
+    throw new Error("Homepage pricing could not be formatted from plans.");
+  }
+
+  return <HomePage pricing={pricing} />;
 }

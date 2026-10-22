@@ -712,7 +712,7 @@ model Referral {
 model Lead {
   id                 String    @id @default(uuid()) @db.Uuid
   email              String    @unique
-  source             String /// "waitlist", "tool:keyword-checker", "guide:<slug>"
+  source             String /// "waitlist", "newsletter", "tool:keyword-checker", "guide:<slug>"
   utmSource          String?
   utmMedium          String?
   utmCampaign        String?

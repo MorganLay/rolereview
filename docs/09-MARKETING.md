@@ -25,6 +25,8 @@
 
 ## Homepage (`/`) — section by section
 
+The waitlist form stays on `/waitlist`. `/` is the marketing homepage.
+
 **One primary action everywhere: "Tailor your first resume — free"** ("Start free" in tight spaces) → `/sign-in?next=/library/import`. Signed-in visitors see "Go to dashboard". Secondary action: "Try the live demo" (scrolls to the demo). Never more than two buttons in one block.
 
 ### 0. Announcement bar (optional, dismissible)
@@ -128,7 +130,7 @@ Product (Features, Pricing, Demo, Changelog) · Free tools · Guides (1.1) · Co
 | `/about` | Founder story, why truthful-by-design, contact | 1.0 |
 | `/changelog` | MDX entries; shows momentum | 1.0 |
 | `/privacy`, `/terms` | Plain-language legal (PIPEDA-aware privacy; CASL consent wording) | 1.0 |
-| `/waitlist` → becomes `/` at launch | Pre-launch page | 1.0 early |
+| `/waitlist` | Pre-launch waitlist. Stays at this URL after the homepage ships. | 1.0 early |
 | `/guides/[slug]` | SEO guides (MDX) | 1.1 |
 | `/for/new-grads`, `/for/career-changers`, `/for/canadian-public-service` | Audience landing pages; demo preset to the matching persona | 1.1 |
 | `/compare/teal`, `/compare/jobscan`, `/compare/chatgpt` | Honest, dated, sourced comparisons | 1.1 |

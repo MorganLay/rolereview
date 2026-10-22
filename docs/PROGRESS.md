@@ -77,7 +77,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T11.4** DOCX export (Pro)
 
 ## Phase 12 — Marketing site
-- [ ] **T12.1** Homepage structure
+- [x] **T12.1** Homepage structure
 - [ ] **T12.2** Interactive demo
 - [ ] **T12.3** Pricing page
 - [ ] **T12.4** Free tools
@@ -93,6 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-22 T12.1:** `/` is the marketing homepage (sections 1–5, 7, 8, 10–14). Waitlist stays at `/waitlist`. Signed-in CTAs go to Dashboard; signed-out go to `/sign-in?next=/library/import`. Product shots are live UI miniatures, not PNG captures. Section 6 (demo) is T12.2; `/pricing` is the homepage preview until T12.3. Founder photo is the initial M until T13.1.
 - **2026-10-22 T11.4:** Resume and letter DOCX use the same section order as the PDF. Pro downloads from `/api/resumes/[id]/docx` and `/api/letters/[id]/docx`. Free shows a lock and Upgrade. The Civic Studio resume downloaded as `Avery-Lang-Civic-Studio-Product-Designer.docx`. The seed has no cover letter, so the letter file was checked in unit tests only.
 - **2026-10-22 T11.3:** `/api/stripe/webhook` verifies the signature, records `StripeEvent` first, and ignores a replay. Checkout links the customer and subscription and sets founding when that coupon applied. Active or trialing is Pro; anything else is Free. Cancel at period end stays Pro until Stripe is no longer active or trialing. Period end comes from the first subscription item. A past-due or unpaid subscription shows the payment-failed banner. A live upgrade through `stripe listen` was not run in this session.
 - **2026-10-22 T11.2:** Monthly and 90-day Checkout, plus Manage subscription once a Stripe customer exists. The founding coupon applies only when the email is a Lead with foundingOffer and the coupon can still be redeemed. Other sessions allow a promotion code. In development, a real `sk_test_` key shows a price preview so one account can open both totals and go back without paying. One test-card payment (4242…) then the portal switches intervals. Placeholder env values that contain `...` are treated as unset. The plan still changes only in the T11.3 webhook. The dev `.env` still has the example Stripe placeholders, so a hosted Checkout page was not opened. The settings page showed Monthly, US$19 and 90 days, US$45.

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Wordmark } from "@/components/marketing/wordmark";
 import { strings } from "@/copy/strings";
+import { NewsletterForm } from "@/features/marketing/components/newsletter-form";
 
 type FooterLink =
   | { kind: "link"; href: string; label: string }
@@ -9,7 +10,7 @@ type FooterLink =
 
 const productLinks: FooterLink[] = [
   { kind: "link", href: "/#features", label: strings.marketing.footer.features },
-  { kind: "soon", label: strings.marketing.footer.pricing },
+  { kind: "link", href: "/#pricing", label: strings.marketing.footer.pricing },
   { kind: "soon", label: strings.marketing.footer.demo },
   { kind: "soon", label: strings.marketing.footer.changelog },
 ];
@@ -67,33 +68,27 @@ function FooterColumn({
 export function MarketingFooter() {
   return (
     <footer className="border-t border-line bg-paper">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1.15fr)_repeat(3,minmax(0,0.7fr))_minmax(0,1.1fr)]">
         <div className="space-y-3">
           <Link href="/" aria-label={strings.brand.name} className="inline-flex">
             <Wordmark className="h-6" />
           </Link>
-          <p className="max-w-xs text-sm text-slate">
-            {strings.brand.shortDescriptor}
-          </p>
+          <p className="max-w-xs text-sm text-slate">{strings.brand.shortDescriptor}</p>
         </div>
 
-        <FooterColumn
-          title={strings.marketing.footer.product}
-          links={productLinks}
-        />
-        <FooterColumn
-          title={strings.marketing.footer.freeTools}
-          links={freeToolLinks}
-        />
+        <FooterColumn title={strings.marketing.footer.product} links={productLinks} />
+        <FooterColumn title={strings.marketing.footer.freeTools} links={freeToolLinks} />
         <div className="space-y-8">
-          <FooterColumn
-            title={strings.marketing.footer.company}
-            links={companyLinks}
-          />
-          <FooterColumn
-            title={strings.marketing.footer.legal}
-            links={legalLinks}
-          />
+          <FooterColumn title={strings.marketing.footer.company} links={companyLinks} />
+          <FooterColumn title={strings.marketing.footer.legal} links={legalLinks} />
+        </div>
+
+        <div>
+          <h2 className="text-sm font-medium text-ink">{strings.marketing.footer.newsletterTitle}</h2>
+          <p className="mt-2 text-sm text-slate">{strings.marketing.footer.newsletterBody}</p>
+          <div className="mt-4">
+            <NewsletterForm />
+          </div>
         </div>
       </div>
 
