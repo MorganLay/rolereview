@@ -56,6 +56,7 @@ import {
   type BoardStage,
   type JobStatusValue,
 } from "../schemas";
+import { AcceptedCelebration } from "./accepted-celebration";
 import { CloseJobDialog } from "./close-job-dialog";
 
 const copy = strings.jobs.board;
@@ -80,6 +81,7 @@ export function JobsBoard({ cards: initial }: { cards: BoardCardDisplay[] }) {
     jobId: string;
     status: JobStatusValue | null;
   } | null>(null);
+  const [acceptedOpen, setAcceptedOpen] = useState(false);
 
   if (incoming !== seen) {
     setSeen(incoming);
@@ -159,6 +161,7 @@ export function JobsBoard({ cards: initial }: { cards: BoardCardDisplay[] }) {
   ): Promise<string | undefined> {
     if (pending) return;
     const snapshot = cards;
+    const previous = snapshot.find((card) => card.id === jobId)?.status;
     const others = orderedColumn(snapshot, toStatus).filter((card) => card.id !== jobId);
     const index = boardInsertIndex(
       others.map((card) => card.id),
@@ -199,6 +202,7 @@ export function JobsBoard({ cards: initial }: { cards: BoardCardDisplay[] }) {
         return;
       }
       setCloseMove(null);
+      if (toStatus === "ACCEPTED" && previous !== "ACCEPTED") setAcceptedOpen(true);
       router.refresh();
     } catch {
       setCards(snapshot);
@@ -295,6 +299,7 @@ export function JobsBoard({ cards: initial }: { cards: BoardCardDisplay[] }) {
         }}
         onConfirm={confirmClose}
       />
+      <AcceptedCelebration open={acceptedOpen} onOpenChange={setAcceptedOpen} />
     </div>
   );
 }

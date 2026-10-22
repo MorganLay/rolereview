@@ -14,11 +14,13 @@ import { DocumentsTab, TailorPoll } from "@/features/tailor/components/documents
 import type { JobDocuments } from "@/features/tailor/status";
 import { ContactsTab } from "@/features/tracking/components/contacts-tab";
 import { InterviewsTab } from "@/features/tracking/components/interviews-tab";
+import { OfferTab } from "@/features/tracking/components/offer-tab";
 import { RemindersTab } from "@/features/tracking/components/reminders-tab";
 import { TimelineTab } from "@/features/tracking/components/timeline-tab";
 import type { ContactPick, JobContactView } from "@/features/tracking/contacts";
 import type { TimelineEventView } from "@/features/tracking/events";
 import type { InterviewView } from "@/features/tracking/interviews";
+import type { OfferView } from "@/features/tracking/offers";
 import type { ReminderView } from "@/features/tracking/reminders";
 
 import { formatSalaryLabel } from "../format";
@@ -58,6 +60,8 @@ type JobResultProps = {
   openReminders: ReminderView[];
   completedReminders: ReminderView[];
   reminderToday: string;
+  offer: OfferView | null;
+  showOffer: boolean;
 };
 
 export function JobResult({
@@ -77,6 +81,8 @@ export function JobResult({
   openReminders,
   completedReminders,
   reminderToday,
+  offer,
+  showOffer,
 }: JobResultProps) {
   const ready = job.analysisStatus === "READY";
   const must = job.requirements.filter((item) => item.importance === "must");
@@ -98,6 +104,7 @@ export function JobResult({
         employmentType={job.employmentType}
         salaryLabel={formatSalaryLabel(job)}
         referenceNumber={job.referenceNumber}
+        offerTabVisible={showOffer}
       />
 
       {job.analysisStatus === "PENDING" ? (
@@ -123,7 +130,12 @@ export function JobResult({
         </Button>
       </section>
 
-      <JobSections jobId={job.id} initialTab={initialTab} hideAuto={hideAuto}>
+      <JobSections
+        jobId={job.id}
+        initialTab={initialTab}
+        hideAuto={hideAuto}
+        showOffer={showOffer}
+      >
         <TabsContent value="overview" className="flex flex-col gap-6 pt-4">
           {ready && job.summary ? (
             <section aria-labelledby="job-summary" className="flex flex-col gap-2">
@@ -225,6 +237,11 @@ export function JobResult({
             directory={contactDirectory}
           />
         </TabsContent>
+        {showOffer ? (
+          <TabsContent value="offer" className="pt-4">
+            <OfferTab jobId={job.id} offer={offer} />
+          </TabsContent>
+        ) : null}
         <TabsContent value="reminders" className="pt-4">
           <RemindersTab
             jobId={job.id}

@@ -18,6 +18,7 @@ import {
   type InterviewEffectPlan,
   type InterviewKind,
 } from "./interviews";
+import { planOfferEffects, type OfferEffectPlan } from "./offers";
 import {
   createContactSchema,
   createCustomReminderSchema,
@@ -28,6 +29,7 @@ import {
   linkJobContactSchema,
   logOutreachSchema,
   reminderActionSchema,
+  saveOfferSchema,
   unlinkJobContactSchema,
   updateContactSchema,
   updateInterviewSchema,
@@ -347,6 +349,84 @@ export async function deleteInterview(
   return ok({ interviewId: parsed.data.interviewId });
 }
 
+export async function saveOffer(
+  input: unknown,
+): Promise<ActionResult<{ offerId: string }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = saveOfferSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const now = new Date();
+  try {
+    const offerId = await db.$transaction(async (tx) => {
+      const job = await tx.job.findFirst({
+        where: { id: parsed.data.jobId, userId: user.id },
+        select: { id: true, status: true },
+      });
+      if (!job) throw new OwnedRowMissing();
+
+      const existing = await tx.offer.findFirst({
+        where: { jobId: job.id, userId: user.id },
+        select: { id: true, respondBy: true },
+      });
+
+      const fields = {
+        baseSalary: parsed.data.baseSalary,
+        currency: parsed.data.currency,
+        payPeriod: parsed.data.payPeriod,
+        bonus: parsed.data.bonus,
+        equity: parsed.data.equity,
+        benefits: parsed.data.benefits,
+        startDate: parsed.data.startDate,
+        respondBy: parsed.data.respondBy,
+        decision: parsed.data.decision,
+        notes: parsed.data.notes,
+      };
+
+      let id: string;
+      if (!existing) {
+        const created = await tx.offer.create({
+          data: { userId: user.id, jobId: job.id, ...fields },
+          select: { id: true },
+        });
+        id = created.id;
+      } else {
+        const updated = await tx.offer.updateMany({
+          where: { id: existing.id, userId: user.id, jobId: job.id },
+          data: fields,
+        });
+        if (updated.count === 0) throw new OwnedRowMissing();
+        id = existing.id;
+      }
+
+      const plan = planOfferEffects({
+        creating: existing === null,
+        status: job.status,
+        previousRespondBy: existing?.respondBy ?? null,
+        nextRespondBy: parsed.data.respondBy,
+      });
+      await writeOfferEffects(tx, {
+        userId: user.id,
+        jobId: job.id,
+        plan,
+        now,
+      });
+      return id;
+    });
+
+    revalidatePath(`/jobs/${parsed.data.jobId}`);
+    revalidatePath("/jobs");
+    revalidatePath("/dashboard");
+    return ok({ offerId });
+  } catch (error) {
+    if (error instanceof OwnedRowMissing) return fail("NOT_FOUND");
+    if (isUniqueViolation(error)) return fail("CONFLICT");
+    throw error;
+  }
+}
+
 /** Blank stays null. A daylight-saving gap is `undefined`. */
 function readScheduledAt(value: string, timeZone: string): Date | null | undefined {
   if (!value) return null;
@@ -453,6 +533,75 @@ async function writeInterviewEffects(
 
   if (args.plan.advanceToInterviewing) {
     const moved = await applyStatusChange(args.userId, args.jobId, "INTERVIEWING", {
+      now: args.now,
+      tx,
+    });
+    if (!moved) throw new OwnedRowMissing();
+  }
+}
+
+async function writeOfferEffects(
+  tx: PipelineTx,
+  args: {
+    userId: string;
+    jobId: string;
+    plan: OfferEffectPlan;
+    now: Date;
+  },
+): Promise<void> {
+  if (args.plan.receivedEvent) {
+    await tx.jobEvent.create({
+      data: {
+        userId: args.userId,
+        jobId: args.jobId,
+        type: "OFFER_RECEIVED",
+        occurredAt: args.now,
+      },
+    });
+  }
+
+  if (args.plan.reminder === "dismiss") {
+    await tx.reminder.updateMany({
+      where: {
+        userId: args.userId,
+        jobId: args.jobId,
+        kind: "OFFER_RESPONSE",
+        autoCreated: true,
+        completedAt: null,
+        dismissedAt: null,
+      },
+      data: { dismissedAt: args.now },
+    });
+  }
+
+  if (args.plan.reminder === "upsert" && args.plan.reminderDueAt) {
+    const updated = await tx.reminder.updateMany({
+      where: {
+        userId: args.userId,
+        jobId: args.jobId,
+        kind: "OFFER_RESPONSE",
+        autoCreated: true,
+        completedAt: null,
+        dismissedAt: null,
+      },
+      data: { dueAt: args.plan.reminderDueAt },
+    });
+    if (updated.count === 0) {
+      await tx.reminder.create({
+        data: {
+          userId: args.userId,
+          jobId: args.jobId,
+          kind: "OFFER_RESPONSE",
+          title: strings.jobs.reminder.offerResponse,
+          dueAt: args.plan.reminderDueAt,
+          autoCreated: true,
+        },
+      });
+    }
+  }
+
+  if (args.plan.advanceToOffer) {
+    const moved = await applyStatusChange(args.userId, args.jobId, "OFFER", {
       now: args.now,
       tx,
     });
@@ -852,6 +1001,15 @@ async function closeOrMoveReminder(
 function revalidateReminderViews(jobId: string | null) {
   revalidatePath("/dashboard");
   if (jobId) revalidatePath(`/jobs/${jobId}`);
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: string }).code === "P2002"
+  );
 }
 
 class OwnedRowMissing extends Error {

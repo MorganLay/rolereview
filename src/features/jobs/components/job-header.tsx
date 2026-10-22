@@ -49,6 +49,7 @@ import { cn } from "@/lib/utils";
 import type { FieldErrors } from "@/lib/result";
 
 import { CloseJobDialog } from "./close-job-dialog";
+import { AcceptedCelebration } from "./accepted-celebration";
 import { formatDeadlineLabel } from "../format";
 import {
   deleteJob,
@@ -84,6 +85,7 @@ type JobHeaderProps = {
   employmentType: (typeof EMPLOYMENT_TYPES)[number] | null;
   salaryLabel: string | null;
   referenceNumber: string | null;
+  offerTabVisible: boolean;
 };
 
 type HeaderOverlay = {
@@ -138,6 +140,7 @@ export function JobHeader(props: JobHeaderProps) {
   const [closeOpen, setCloseOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<JobStatusValue | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [acceptedOpen, setAcceptedOpen] = useState(false);
 
   function clearOverlay(key: keyof HeaderOverlay) {
     setOverlay((current) => {
@@ -168,6 +171,7 @@ export function JobHeader(props: JobHeaderProps) {
         return;
       }
       setCloseOpen(false);
+      if (next === "ACCEPTED") setAcceptedOpen(true);
       router.refresh();
     } catch {
       clearOverlay("status");
@@ -286,6 +290,15 @@ export function JobHeader(props: JobHeaderProps) {
             >
               {copy.editDetails}
             </DropdownMenuItem>
+            {props.offerTabVisible ? null : (
+              <DropdownMenuItem
+                onSelect={() => {
+                  router.push(`/jobs/${props.jobId}?tab=offer`);
+                }}
+              >
+                {copy.addOffer}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem disabled={pending} onSelect={onArchive}>
               {archived ? copy.unarchive : copy.archive}
             </DropdownMenuItem>
@@ -444,6 +457,8 @@ export function JobHeader(props: JobHeaderProps) {
         jobId={props.jobId}
         onOpenChange={setDeleteOpen}
       />
+
+      <AcceptedCelebration open={acceptedOpen} onOpenChange={setAcceptedOpen} />
     </header>
   );
 }

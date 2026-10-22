@@ -26,6 +26,7 @@ import {
   presentInterview,
   type InterviewView,
 } from "./interviews";
+import { presentOffer, type OfferView } from "./offers";
 import {
   compareOpenReminders,
   compareUpcomingInterviews,
@@ -478,6 +479,32 @@ function presentOwnedReminder(row: ReminderRow, now: Date, timeZone: string): Re
     now,
     timeZone,
   );
+}
+
+/** The one offer on this job, or null when none is saved. */
+export async function getJobOffer(
+  userId: string,
+  jobId: string,
+): Promise<OfferView | null> {
+  await connection();
+  const row = await db.offer.findFirst({
+    where: { userId, jobId },
+    select: {
+      id: true,
+      baseSalary: true,
+      currency: true,
+      payPeriod: true,
+      bonus: true,
+      equity: true,
+      benefits: true,
+      startDate: true,
+      respondBy: true,
+      decision: true,
+      notes: true,
+    },
+  });
+  if (!row) return null;
+  return presentOffer(row);
 }
 
 async function ownerTimeZone(userId: string): Promise<string> {

@@ -1,6 +1,6 @@
 /**
  * Status side effects. docs/04-DATA-MODEL.md → Automatic side effects.
- * Interview creation calls this with the open transaction. Offer hooks come later.
+ * Interview and offer creation call this with the open transaction.
  */
 
 import "server-only";

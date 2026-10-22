@@ -88,11 +88,12 @@ These keep the tracking data accurate without the user doing extra work. Put the
 | Status leaves `APPLIED` to SCREENING / INTERVIEWING / OFFER / REJECTED (first time) | set `firstResponseAt`; `JobEvent(RESPONSE_RECEIVED)`; complete any open auto FOLLOW_UP reminder |
 | Status → ACCEPTED / REJECTED / WITHDRAWN / NO_RESPONSE | set `closedAt`; dismiss open reminders for the job |
 | Any status change | `JobEvent(STATUS_CHANGED, fromStatus, toStatus)` |
-| Status → `ACCEPTED` | celebration UI; prompt for testimonial (opt-in); prompt "pause your search?" |
+| Status → `ACCEPTED` | A short congratulations dialog on the job page, the jobs list, and the board, only when the status changes to Accepted. It fades in over 200ms. `prefers-reduced-motion` shows it without that fade. The testimonial prompt and "pause your search?" stay on T13.1. |
 | Interview created with `scheduledAt`, or later given a `scheduledAt` when it has never had one | `JobEvent(INTERVIEW_SCHEDULED)` once; `Reminder(INTERVIEW, scheduledAt − 24h)`. 24h is exactly 24×60×60×1000 ms, including across a daylight-saving change. If an open automatic interview reminder exists, its due time moves; otherwise one is created. Clearing the date dismisses that open reminder and leaves the timeline event. A later date does not write a second scheduled event. If the status is `SAVED`, `APPLIED`, or `SCREENING` → move to `INTERVIEWING` (via `applyStatusChange`) on that first date only. `INTERVIEWING`, `OFFER`, `ACCEPTED`, and the closed statuses stay. |
 | Interview outcome leaves `PENDING` the first time | `JobEvent(INTERVIEW_COMPLETED)` once. A later outcome change, including back to Pending and out again, does not write another event. `Reminder(THANK_YOU, now + 2h)` when `scheduledAt` falls on today in the user's timezone. No date, or a date on another local day, skips the thank-you. |
 | Interview deleted | Reminders for that interview are removed. Timeline events stay, with `interviewId` cleared. Status stays. |
-| Offer created | `JobEvent(OFFER_RECEIVED)`; status → OFFER; if `respondBy` → `Reminder(OFFER_RESPONSE, respondBy − 2 days)` |
+| Offer created | `JobEvent(OFFER_RECEIVED)` once. If the status is `SAVED`, `APPLIED`, `SCREENING`, or `INTERVIEWING`, move to `OFFER` via `applyStatusChange`. `OFFER`, `ACCEPTED`, and the closed statuses stay. If `respondBy` is set, `Reminder(OFFER_RESPONSE)` due at that UTC midnight minus 2 calendar days. A later save does not write another offer event. The decision does not change status. |
+| Offer respond-by edited | If the date changes, move each open automatic `Reminder(OFFER_RESPONSE)` to the new due time, or create one when none is open. That can replace a snooze. Clearing `respondBy` dismisses those open reminders. Completed or already dismissed reminders stay. |
 | TailoredResume / CoverLetter READY | `JobEvent(RESUME_TAILORED / LETTER_WRITTEN)` |
 | Manual "Log follow-up" | `JobEvent(FOLLOW_UP_SENT)`, with optional `contactId` when that person is already linked to the job. `Contact.lastContactedAt` becomes the latest follow-up `occurredAt` for that contact, or null when none remain. Call, email, note, and other do not store a contact. Log outreach on the job writes a follow-up dated today at noon in the user's timezone. |
 | APPLIED with no change for 30 days | Dashboard shows a "No response?" nudge (computed in the query, nothing stored until the user acts) |
@@ -146,6 +147,23 @@ A reminder is stored on the account and shown in the app (bell, Dashboard Today,
 | `completedAt` | | null until marked done |
 | `dismissedAt` | | null until dismissed. Closing a job dismisses open reminders |
 | `autoCreated` | | false for a custom reminder |
+
+### Offer fields
+
+Caps for the Offer tab. One offer per job. Blank text stores null. There is no delete. `startDate` and `respondBy` are calendar dates (`YYYY-MM-DD`, years 1900–2099) stored as UTC midnight, the same way as a deadline. The decision does not change the job status.
+
+| Field | Max | Blank saves as |
+|---|---|---|
+| `baseSalary` | whole number 0 through 2,147,483,647 | null |
+| `currency` | 3 letters, stored uppercase | null |
+| `payPeriod` | `HOUR` or `YEAR` | null |
+| `bonus` | 120 | null |
+| `equity` | 120 | null |
+| `benefits` | 5,000 | null |
+| `startDate` | a real calendar date, 1900–2099 | null |
+| `respondBy` | a real calendar date, 1900–2099 | null. An open automatic reminder is due 2 calendar days earlier |
+| `decision` | `OfferDecision` | `PENDING` |
+| `notes` | 5,000 | null |
 
 ### Job detail fields
 

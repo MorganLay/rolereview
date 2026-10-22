@@ -46,6 +46,7 @@ import {
   OPEN_JOB_STATUSES,
   type JobStatusValue,
 } from "../schemas";
+import { AcceptedCelebration } from "./accepted-celebration";
 import { CloseJobDialog } from "./close-job-dialog";
 
 const copy = strings.jobs.board;
@@ -77,6 +78,7 @@ export function JobsTable({
     jobId: string;
     status: JobStatusValue;
   } | null>(null);
+  const [acceptedOpen, setAcceptedOpen] = useState(false);
 
   const selectedIds = rows.filter((row) => selected.has(row.id)).map((row) => row.id);
   const selectedRows = rows.filter((row) => selected.has(row.id));
@@ -107,6 +109,7 @@ export function JobsTable({
   }
 
   async function saveStatus(jobId: string, status: JobStatusValue, closeReason: string) {
+    const previous = rows.find((row) => row.id === jobId)?.status;
     setPendingId(jobId);
     try {
       const result = await updateJobStatus({ jobId, status, closeReason });
@@ -118,6 +121,7 @@ export function JobsTable({
         return;
       }
       setCloseTarget(null);
+      if (status === "ACCEPTED" && previous !== "ACCEPTED") setAcceptedOpen(true);
       router.refresh();
     } catch {
       toast.error(detail.updateFailed);
@@ -294,6 +298,7 @@ export function JobsTable({
           return saveStatus(closeTarget.jobId, closeTarget.status, reason);
         }}
       />
+      <AcceptedCelebration open={acceptedOpen} onOpenChange={setAcceptedOpen} />
     </div>
   );
 }

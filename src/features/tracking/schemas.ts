@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 import { strings } from "@/copy/strings";
-import { isCalendarDate } from "@/features/jobs/dates";
+import { deadlineInstant, isCalendarDate } from "@/features/jobs/dates";
+import { EMPTY_CHOICE, PAY_PERIODS } from "@/features/jobs/schemas";
 import { zodFieldErrors } from "@/features/library/schemas";
 
 import {
@@ -16,11 +17,13 @@ import {
   INTERVIEW_OUTCOMES,
   isZonedDateTime,
 } from "./interviews";
+import { OFFER_DECISIONS, OFFER_LIMITS } from "./offers";
 import { REMINDER_LIMITS } from "./reminders";
 
 const errors = strings.jobs.timeline.errors;
 const contactErrors = strings.contacts.errors;
 const reminderErrors = strings.jobs.reminders.errors;
+const offerErrors = strings.jobs.offer.errors;
 
 export const EVENT_LIMITS = {
   details: 2_000,
@@ -251,6 +254,67 @@ export const createCustomReminderSchema = z.object({
 export const reminderActionSchema = z.object({
   reminderId: z.uuid(),
 });
+
+const offerSalary = z
+  .string()
+  .trim()
+  .refine(
+    (value) => {
+      if (value.length === 0) return true;
+      if (!/^\d{1,10}$/.test(value)) return false;
+      const amount = Number(value);
+      return Number.isSafeInteger(amount) && amount <= OFFER_LIMITS.salary;
+    },
+    { error: offerErrors.salary },
+  )
+  .transform((value) => (value.length === 0 ? null : Number(value)));
+
+const offerCurrency = z
+  .string()
+  .trim()
+  .transform((value) => value.toUpperCase())
+  .refine((value) => value.length === 0 || /^[A-Z]{3}$/.test(value), {
+    error: offerErrors.currency,
+  })
+  .transform((value) => (value.length === 0 ? null : value));
+
+const offerPayPeriod = z
+  .string()
+  .trim()
+  .refine(
+    (value) =>
+      value.length === 0 ||
+      value === EMPTY_CHOICE ||
+      (PAY_PERIODS as readonly string[]).includes(value),
+    { error: offerErrors.period },
+  )
+  .transform((value): "HOUR" | "YEAR" | null =>
+    value.length === 0 || value === EMPTY_CHOICE ? null : (value as "HOUR" | "YEAR"),
+  );
+
+const offerDate = z
+  .string()
+  .trim()
+  .refine((value) => value.length === 0 || isCalendarDate(value), {
+    error: offerErrors.date,
+  })
+  .transform((value) => (value.length === 0 ? null : deadlineInstant(value)));
+
+export const saveOfferSchema = z.object({
+  jobId: z.uuid(),
+  baseSalary: offerSalary,
+  currency: offerCurrency,
+  payPeriod: offerPayPeriod,
+  bonus: blankText(OFFER_LIMITS.bonus, offerErrors.bonusLength),
+  equity: blankText(OFFER_LIMITS.equity, offerErrors.equityLength),
+  benefits: blankText(OFFER_LIMITS.benefits, offerErrors.benefitsLength),
+  startDate: offerDate,
+  respondBy: offerDate,
+  decision: z.enum(OFFER_DECISIONS, { error: offerErrors.decision }),
+  notes: blankText(OFFER_LIMITS.notes, offerErrors.notesLength),
+});
+
+export type SaveOfferInput = z.input<typeof saveOfferSchema>;
 
 export type CreateContactInput = z.input<typeof createContactSchema>;
 export type UpdateContactInput = z.input<typeof updateContactSchema>;

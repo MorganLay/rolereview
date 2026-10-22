@@ -11,6 +11,7 @@ const interviewsCopy = strings.jobs.interviews;
 const contactsCopy = strings.nav.contacts;
 const timelineCopy = strings.jobs.timeline;
 const remindersCopy = strings.jobs.reminders;
+const offerCopy = strings.jobs.offer;
 
 export type JobSectionTab =
   | "overview"
@@ -18,17 +19,20 @@ export type JobSectionTab =
   | "interviews"
   | "contacts"
   | "timeline"
-  | "reminders";
+  | "reminders"
+  | "offer";
 
 export function JobSections({
   jobId,
   initialTab,
   hideAuto,
+  showOffer,
   children,
 }: {
   jobId: string;
   initialTab: JobSectionTab;
   hideAuto: boolean;
+  showOffer: boolean;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -41,7 +45,8 @@ export function JobSections({
       value !== "interviews" &&
       value !== "contacts" &&
       value !== "timeline" &&
-      value !== "reminders"
+      value !== "reminders" &&
+      value !== "offer"
     ) {
       return;
     }
@@ -65,6 +70,7 @@ export function JobSections({
           <TabsTrigger value="contacts">{contactsCopy}</TabsTrigger>
           <TabsTrigger value="timeline">{timelineCopy.tab}</TabsTrigger>
           <TabsTrigger value="reminders">{remindersCopy.tab}</TabsTrigger>
+          {showOffer ? <TabsTrigger value="offer">{offerCopy.tab}</TabsTrigger> : null}
         </TabsList>
       </div>
       {children}
