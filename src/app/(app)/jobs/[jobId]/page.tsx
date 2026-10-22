@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { JobResult } from "@/features/jobs/components/job-result";
 import type { JobSectionTab } from "@/features/jobs/components/job-sections";
 import { analysesRemaining, getJob } from "@/features/jobs/queries";
+import { getJobLetters } from "@/features/letters/queries";
 import { getJobDocuments } from "@/features/tailor/queries";
 import { offerTabVisible } from "@/features/tracking/offers";
 import {
@@ -14,7 +15,7 @@ import {
 } from "@/features/tracking/queries";
 import { requireUser } from "@/lib/auth";
 
-/** Analysis retry and tailoring call the model and can take up to a minute. */
+/** Analysis retry, tailoring, and cover letters call the model and can take up to a minute. */
 export const maxDuration = 120;
 
 /** The job comes from the signed-in user. */
@@ -30,11 +31,12 @@ export default async function JobDetailPage({
   const { jobId } = await params;
   const query = await searchParams;
   const user = await requireUser();
-  const [job, analysesLeft, documents, timeline, interviews, contacts, reminders, offer] =
+  const [job, analysesLeft, documents, letters, timeline, interviews, contacts, reminders, offer] =
     await Promise.all([
       getJob(user.id, jobId),
       analysesRemaining(user.id, user.plan),
       getJobDocuments(user.id, user.plan, jobId),
+      getJobLetters(user.id, user.plan, jobId),
       listJobTimeline(user.id, jobId),
       listJobInterviews(user.id, jobId),
       listJobContacts(user.id, jobId),
@@ -42,7 +44,7 @@ export default async function JobDetailPage({
       getJobOffer(user.id, jobId),
     ]);
   if (!job) notFound();
-  const initialTab = jobTab(query.tab, documents.pending);
+  const initialTab = jobTab(query.tab, documents.pending || letters.pending);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
@@ -50,6 +52,7 @@ export default async function JobDetailPage({
         job={job}
         analysesLeft={analysesLeft}
         documents={documents}
+        letters={letters}
         initialTab={initialTab}
         timeline={timeline.events}
         hideAuto={queryValue(query.events) === "manual"}

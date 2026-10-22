@@ -10,6 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { strings } from "@/copy/strings";
+import { LettersSection } from "@/features/letters/components/letters-section";
+import type { JobLetters } from "@/features/letters/status";
 import { DocumentsTab, TailorPoll } from "@/features/tailor/components/documents-tab";
 import type { JobDocuments } from "@/features/tailor/status";
 import { ContactsTab } from "@/features/tracking/components/contacts-tab";
@@ -47,6 +49,7 @@ type JobResultProps = {
   job: JobPageData;
   analysesLeft: number;
   documents: JobDocuments;
+  letters: JobLetters;
   initialTab: JobSectionTab;
   timeline: TimelineEventView[];
   hideAuto: boolean;
@@ -68,6 +71,7 @@ export function JobResult({
   job,
   analysesLeft,
   documents,
+  letters,
   initialTab,
   timeline,
   hideAuto,
@@ -214,11 +218,17 @@ export function JobResult({
             notes={job.notes}
           />
         </TabsContent>
-        <TabsContent value="documents" className="pt-4">
+        <TabsContent value="documents" className="flex flex-col gap-8 pt-4">
           <DocumentsTab
             jobId={job.id}
             analysisReady={ready}
             documents={documents}
+          />
+          <LettersSection
+            jobId={job.id}
+            analysisReady={ready}
+            libraryReady={documents.canTailor}
+            letters={letters}
           />
         </TabsContent>
         <TabsContent value="interviews" className="pt-4">
@@ -263,7 +273,7 @@ export function JobResult({
           />
         </TabsContent>
       </JobSections>
-      {documents.pending ? <TailorPoll /> : null}
+      {documents.pending || letters.pending ? <TailorPoll /> : null}
     </div>
   );
 }
