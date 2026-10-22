@@ -1,6 +1,6 @@
 /**
- * Download name: First-Last-Company-Title.pdf.
- * docs/02-USER-FLOWS.md → Resume workspace → Export.
+ * Download names: First-Last-Company-Title.pdf and …-Letter.pdf.
+ * docs/02-USER-FLOWS.md → Resume workspace → Export, Cover letter workspace.
  */
 
 const FILENAME_MAX = 120;
@@ -13,6 +13,16 @@ export function resumePdfFilename(
   const parts = [fullName, company, title].map(slugPart).filter((part) => part.length > 0);
   const base = (parts.length > 0 ? parts.join("-") : "Resume").slice(0, FILENAME_MAX);
   return `${base}.pdf`;
+}
+
+export function letterPdfFilename(
+  fullName: string | null,
+  company: string,
+  title: string,
+): string {
+  const parts = [fullName, company, title].map(slugPart).filter((part) => part.length > 0);
+  const stem = parts.length > 0 ? `${parts.join("-")}-Letter` : "Letter";
+  return `${stem.slice(0, FILENAME_MAX)}.pdf`;
 }
 
 export function contentDisposition(filename: string): string {

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { strings } from "@/copy/strings";
+import { can } from "@/features/billing/entitlements";
 import { checkQuota } from "@/features/billing/quota";
 import { getLibrary } from "@/features/library/queries";
 import { LibrarySnapshot, zodFieldErrors } from "@/features/library/schemas";
@@ -19,10 +20,16 @@ import { db } from "@/lib/db";
 import { fail, ok, type ActionResult } from "@/lib/result";
 
 import { assembleLetterContent } from "./assemble";
+import { applyLetterEdit } from "./content";
 import { focusRefsForLibrary, includedBulletRefs } from "./focus";
 import {
+  CoverLetterContent,
   CoverLetterOptions,
+  ValidatedLetterOutput,
+  markLetterSubmittedSchema,
   rateLetterSchema,
+  saveLetterContentSchema,
+  setLetterTemplateSchema,
   writeLetterSchema,
 } from "./schemas";
 import { LETTER_STALE_MS } from "./status";
@@ -207,9 +214,149 @@ export async function rateCoverLetter(
     data: { rating, ratingReason: null },
   });
   if (updated.count === 0) return fail("NOT_FOUND");
-  revalidateJob(existing.jobId);
+  revalidateLetter(existing.jobId, existing.id);
   return ok({ rating });
 }
+
+/** Save the PDF template. Modern and Compact require Pro. */
+export async function setLetterTemplate(
+  input: unknown,
+): Promise<ActionResult<{ templateId: "classic" | "modern" | "compact" }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = setLetterTemplateSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const feature =
+    parsed.data.templateId === "modern"
+      ? "template:modern"
+      : parsed.data.templateId === "compact"
+        ? "template:compact"
+        : null;
+  if (feature && !can(user, feature)) return fail("PRO_REQUIRED");
+
+  const updated = await db.coverLetter.updateMany({
+    where: {
+      id: parsed.data.letterId,
+      jobId: parsed.data.jobId,
+      userId: user.id,
+      status: "READY",
+    },
+    data: { templateId: parsed.data.templateId },
+  });
+  if (updated.count === 0) return fail("NOT_FOUND");
+
+  revalidateLetter(parsed.data.jobId, parsed.data.letterId);
+  return ok({ templateId: parsed.data.templateId });
+}
+
+/** Point the job at this letter. Does not change status. */
+export async function markLetterSubmitted(
+  input: unknown,
+): Promise<ActionResult<{ submitted: true }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = markLetterSubmittedSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const letter = await db.coverLetter.findFirst({
+    where: {
+      id: parsed.data.letterId,
+      jobId: parsed.data.jobId,
+      userId: user.id,
+      status: "READY",
+    },
+    select: { id: true },
+  });
+  if (!letter) return fail("NOT_FOUND");
+
+  const job = await db.job.findFirst({
+    where: { id: parsed.data.jobId, userId: user.id },
+    select: { id: true },
+  });
+  if (!job) return fail("NOT_FOUND");
+
+  const updated = await db.job.updateMany({
+    where: { id: job.id, userId: user.id },
+    data: { submittedCoverLetterId: letter.id },
+  });
+  if (updated.count === 0) return fail("NOT_FOUND");
+
+  revalidateLetter(job.id, letter.id);
+  return ok({ submitted: true });
+}
+
+export type SaveLetterContentResult = {
+  content: CoverLetterContent;
+  savedAt: string;
+};
+
+/** Autosave the workspace. Source refs stay as stored. */
+export async function saveLetterContent(
+  input: unknown,
+): Promise<ActionResult<SaveLetterContentResult>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = saveLetterContentSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const existing = await db.coverLetter.findFirst({
+    where: {
+      id: parsed.data.letterId,
+      jobId: parsed.data.jobId,
+      userId: user.id,
+      status: "READY",
+    },
+    select: { id: true, content: true, aiOutput: true },
+  });
+  if (!existing) return fail("NOT_FOUND");
+
+  const stored = CoverLetterContent.safeParse(existing.content);
+  if (!stored.success) return fail("NOT_FOUND");
+
+  const aiParsed = ValidatedLetterOutput.safeParse(existing.aiOutput);
+  const edited = applyLetterEdit({
+    stored: stored.data,
+    incoming: parsed.data.content,
+    aiOutput: aiParsed.success ? aiParsed.data : null,
+  });
+  if (!edited.ok) {
+    console.info(
+      JSON.stringify({
+        event: "letter.save.rejected",
+        userId: user.id,
+        letterId: existing.id,
+        issue: edited.issue,
+      }),
+    );
+    return fail("VALIDATION");
+  }
+
+  const updated = await db.coverLetter.updateMany({
+    where: {
+      id: existing.id,
+      jobId: parsed.data.jobId,
+      userId: user.id,
+      status: "READY",
+    },
+    data: { content: toJson(edited.content) },
+  });
+  if (updated.count === 0) return fail("NOT_FOUND");
+
+  const saved = await db.coverLetter.findFirst({
+    where: { id: existing.id, userId: user.id },
+    select: { updatedAt: true },
+  });
+  revalidateLetter(parsed.data.jobId, existing.id);
+  return ok({
+    content: edited.content,
+    savedAt: saved?.updatedAt.toISOString() ?? new Date().toISOString(),
+  });
+}
+
 
 function libraryHasMaterial(library: Library): boolean {
   return library.entries.length > 0 || library.skills.length > 0;
@@ -328,6 +475,11 @@ function logGuard(
 function revalidateJob(jobId: string): void {
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath("/jobs");
+}
+
+function revalidateLetter(jobId: string, letterId: string): void {
+  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(`/jobs/${jobId}/letters/${letterId}`);
 }
 
 function toJson(value: unknown): Prisma.InputJsonValue {

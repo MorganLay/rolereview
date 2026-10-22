@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { strings } from "@/copy/strings";
+import { RESUME_TEMPLATES } from "@/lib/pdf/template";
 
 /** Stored letter caps. docs/04-DATA-MODEL.md → CoverLetterContent. */
 export const LETTER_LIMITS = {
@@ -89,6 +90,23 @@ export const CoverLetterContent = z.object({
   requirementIdsAddressed: z.array(z.string()),
 });
 
+export const saveLetterContentSchema = z.object({
+  jobId: z.uuid(),
+  letterId: z.uuid(),
+  content: CoverLetterContent,
+});
+
+export const setLetterTemplateSchema = z.object({
+  jobId: z.uuid(),
+  letterId: z.uuid(),
+  templateId: z.enum(RESUME_TEMPLATES),
+});
+
+export const markLetterSubmittedSchema = z.object({
+  jobId: z.uuid(),
+  letterId: z.uuid(),
+});
+
 export type CoverLetterOptions = z.infer<typeof CoverLetterOptions>;
 export type LetterTone = (typeof LETTER_TONES)[number];
 export type LetterLength = (typeof LETTER_LENGTHS)[number];
@@ -96,15 +114,18 @@ export type LetterOutput = z.infer<typeof LetterOutput>;
 export type LetterParagraph = z.infer<typeof LetterParagraph>;
 export type CoverLetterContent = z.infer<typeof CoverLetterContent>;
 
-export type ValidatedLetterParagraph = {
-  text: string;
-  sourceRefs: string[];
-  reverted: boolean;
-  needsWhy: boolean;
-};
+export const ValidatedLetterParagraph = z.object({
+  text: z.string(),
+  sourceRefs: z.array(z.string()),
+  reverted: z.boolean(),
+  needsWhy: z.boolean(),
+});
 
-export type ValidatedLetterOutput = {
-  paragraphs: ValidatedLetterParagraph[];
-  closing: string;
-  requirementIdsAddressed: string[];
-};
+export const ValidatedLetterOutput = z.object({
+  paragraphs: z.array(ValidatedLetterParagraph),
+  closing: z.string(),
+  requirementIdsAddressed: z.array(z.string()),
+});
+
+export type ValidatedLetterParagraph = z.infer<typeof ValidatedLetterParagraph>;
+export type ValidatedLetterOutput = z.infer<typeof ValidatedLetterOutput>;

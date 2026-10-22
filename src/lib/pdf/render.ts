@@ -2,6 +2,8 @@ import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import { createElement, type ReactElement } from "react";
 
 import { ensurePdfFonts } from "./fonts";
+import { LetterDocument } from "./letter";
+import type { LetterPdfModel } from "./letter-model";
 import type { ResumePdfModel } from "./model";
 import { pdfPageCount } from "./pages";
 import type { ResumeTemplateId } from "./template";
@@ -51,5 +53,14 @@ async function renderDensity(
 ): Promise<Buffer> {
   const element = createElement(TEMPLATES[template], { model, density });
   // react-pdf renders the template function down to Document. The public type only accepts Document.
+  return renderToBuffer(element as ReactElement<DocumentProps>);
+}
+
+export async function renderLetterPdf(
+  model: LetterPdfModel,
+  template: ResumeTemplateId,
+): Promise<Buffer> {
+  ensurePdfFonts();
+  const element = createElement(LetterDocument, { model, variant: template });
   return renderToBuffer(element as ReactElement<DocumentProps>);
 }

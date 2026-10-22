@@ -64,7 +64,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 ## Phase 9 — Cover letters
 - [x] **T9.1** Letter logic
 - [x] **T9.2** Letter action + dialog
-- [ ] **T9.3** Letter workspace + PDF
+- [x] **T9.3** Letter workspace + PDF
 
 ## Phase 10 — Insights
 - [ ] **T10.1** Metrics queries
@@ -93,6 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-22 T9.3:** The letter workspace edits greeting, paragraphs, closing, and signature, with source chips and a 1.5s autosave. Copy text and the PDF are greeting, included paragraphs, closing, then signature, named `First-Last-Company-Title-Letter.pdf`. Mark as submitted sets this version and does not change status. DOCX stays locked. The five no-WHY letters from T9.1 (`2026-10-22T07-51-35-901Z`) still had no invented company facts; the prompt was not changed.
 - **2026-10-22 T9.2:** Write cover letter is on Documents. The dialog takes tone, length, recipient, why, and an optional READY resume. Focus refs are remapped onto the library snapshot for this letter. Version cards list v#, date, tone, length, template, and ratings. Open still goes to the placeholder. A second write under 5 minutes is refused, and a failed write is not charged. The editor and PDF stay on T9.3.
 - **2026-10-22 T9.1:** The letter guard is L1–L4. A paragraph that cited WHY and has no other source stays, with `needsWhy`. Greeting and signature come from the profile and the recipient. The closing keeps the model's words. `npm run evals` writes a letter on even pairs, alternating a WHY note and none. Five no-WHY letters in `2026-10-22T07-51-35-901Z` stayed inside the posting. Average letter reverts 0.75. Resume reverts 0.00. The write action is T9.2.
 - **2026-10-22 T8.7:** Dashboard is Today, nudges, pipeline counts, this week, and five recent jobs. Getting started stays until four steps are done, then one success line. A stage count opens `/jobs?stage=` (one column; All stages clears it). The seed replaces that user's jobs with 8 jobs, 4 contacts, 3 interviews, 5 reminders, 1 offer, and 2 READY resumes. The seeded library is 100%, so the health line stays hidden. A wider layout can wait.

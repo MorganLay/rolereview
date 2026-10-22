@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
 
+import type { CoverLetterContent } from "@/features/letters/schemas";
 import type { LibrarySnapshot } from "@/features/library/schemas";
 import type { ResumeContent } from "@/features/tailor/schemas";
 import {
   contentDisposition,
   filenameFromContentDisposition,
+  letterPdfFilename,
   resumePdfFilename,
 } from "@/lib/pdf/filename";
+import { letterPdfLines, letterPdfModel } from "@/lib/pdf/letter-model";
 import { resumePdfLines, resumePdfModel, type ResumePdfModel } from "@/lib/pdf/model";
 import { pdfPageCount } from "@/lib/pdf/pages";
-import { renderResumePdf } from "@/lib/pdf/render";
+import { renderLetterPdf, renderResumePdf } from "@/lib/pdf/render";
 import { resolveResumeTemplate } from "@/lib/pdf/template";
 import { SEED_LIBRARY } from "../../prisma/library-seed";
 
@@ -56,6 +59,15 @@ describe("resumePdfFilename", () => {
     );
     expect(filenameFromContentDisposition(null)).toBeNull();
     expect(filenameFromContentDisposition("attachment")).toBeNull();
+  });
+});
+
+describe("letterPdfFilename", () => {
+  it("joins name, company, and title, then Letter", () => {
+    expect(letterPdfFilename("Morgan Example", "Northwind", "Data Analyst")).toBe(
+      "Morgan-Example-Northwind-Data-Analyst-Letter.pdf",
+    );
+    expect(letterPdfFilename(null, "  ", "")).toBe("Letter.pdf");
   });
 });
 
@@ -133,6 +145,62 @@ describe("renderResumePdf", () => {
     expect(pdfPageCount(fitted)).toBe(1);
   }, 20000);
 });
+
+describe("letterPdfModel", () => {
+  it("matches copy-text order and drops excluded paragraphs", () => {
+    const model = letterPdfModel(sampleLetter());
+    expect(letterPdfLines(model)).toEqual([
+      "Dear Hiring Manager,",
+      "I maintained 14 reports.",
+      "Sincerely,",
+      "Morgan Example",
+    ]);
+  });
+});
+
+describe("renderLetterPdf", () => {
+  it("renders Classic, Modern, and Compact as a PDF", async () => {
+    const model = letterPdfModel(sampleLetter());
+    const classic = await renderLetterPdf(model, "classic");
+    const modern = await renderLetterPdf(model, "modern");
+    const compact = await renderLetterPdf(model, "compact");
+
+    expect(classic.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+    expect(pdfPageCount(classic)).toBe(1);
+    expect(pdfPageCount(modern)).toBe(1);
+    expect(pdfPageCount(compact)).toBe(1);
+  }, 20000);
+});
+
+function sampleLetter(): CoverLetterContent {
+  return {
+    schemaVersion: 1,
+    greeting: "Dear Hiring Manager,",
+    paragraphs: [
+      {
+        id: "p1",
+        text: "I maintained 14 reports.",
+        included: true,
+        sourceRefs: ["E1.B1"],
+        reverted: false,
+        edited: false,
+        needsWhy: false,
+      },
+      {
+        id: "p2",
+        text: "Left off.",
+        included: false,
+        sourceRefs: ["POSTING"],
+        reverted: false,
+        edited: false,
+        needsWhy: false,
+      },
+    ],
+    closing: "Sincerely,",
+    signature: "Morgan Example",
+    requirementIdsAddressed: ["r1"],
+  };
+}
 
 function sample() {
   return resumeContent({

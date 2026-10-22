@@ -1,11 +1,17 @@
 import "server-only";
 
+import { can } from "@/features/billing/entitlements";
 import { quotaSnapshot } from "@/features/billing/quota";
 import { formatJobInstant } from "@/features/jobs/format";
+import { JobAnalysis } from "@/features/jobs/schemas";
+import { LibrarySnapshot } from "@/features/library/schemas";
 import type { Plan } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
+import { resolveResumeTemplate } from "@/lib/pdf/template";
 
+import type { LetterWorkspaceData } from "./content";
 import {
+  CoverLetterContent,
   CoverLetterOptions,
   type LetterLength,
   type LetterTone,
@@ -86,4 +92,74 @@ function letterChoices(value: unknown): { tone: LetterTone; length: LetterLength
 function ratingValue(value: number | null): 1 | -1 | null {
   if (value === 1 || value === -1) return value;
   return null;
+}
+
+/** A READY letter the user can edit. Missing, pending, or failed → null. */
+export async function getLetterWorkspace(
+  userId: string,
+  plan: Plan,
+  jobId: string,
+  letterId: string,
+): Promise<LetterWorkspaceData | null> {
+  const row = await db.coverLetter.findFirst({
+    where: { id: letterId, jobId, userId },
+    select: {
+      id: true,
+      version: true,
+      status: true,
+      updatedAt: true,
+      templateId: true,
+      content: true,
+      librarySnapshot: true,
+      options: true,
+      rating: true,
+      job: {
+        select: {
+          title: true,
+          company: true,
+          analysis: true,
+          submittedCoverLetterId: true,
+        },
+      },
+      user: { select: { timezone: true } },
+    },
+  });
+  if (!row || row.status !== "READY") return null;
+
+  const content = CoverLetterContent.safeParse(row.content);
+  const snapshot = LibrarySnapshot.safeParse(row.librarySnapshot);
+  if (!content.success || !snapshot.success) return null;
+
+  const options = CoverLetterOptions.safeParse(row.options ?? {});
+  const analysis = JobAnalysis.safeParse(row.job.analysis);
+  const addressed = new Set(content.data.requirementIdsAddressed);
+  const requirements = analysis.success
+    ? analysis.data.requirements.filter((item) => addressed.has(item.id))
+    : [];
+
+  return {
+    jobId,
+    jobTitle: row.job.title,
+    company: row.job.company,
+    letterId: row.id,
+    version: row.version,
+    savedAt: row.updatedAt.toISOString(),
+    timeZone: row.user.timezone || "America/Toronto",
+    content: content.data,
+    snapshot: snapshot.data,
+    tone: options.success ? options.data.tone : "professional",
+    length: options.success ? options.data.length : "standard",
+    requirements,
+    templateId: resolveResumeTemplate(null, row.templateId, {
+      modern: true,
+      compact: true,
+    }),
+    submitted: row.id === row.job.submittedCoverLetterId,
+    rating: ratingValue(row.rating),
+    templates: {
+      modern: can({ plan }, "template:modern"),
+      compact: can({ plan }, "template:compact"),
+      docx: can({ plan }, "docx"),
+    },
+  };
 }
