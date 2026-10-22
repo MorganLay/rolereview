@@ -1,6 +1,6 @@
 /**
  * Dev-only fake library for `prisma/seed.ts`.
- * Jobs and the rest of the seed are added in later tasks.
+ * Jobs, contacts, and resumes are added by `prisma/hunt-seed.ts`.
  * Bullet tiers are checked in tests/unit/library-seed.test.ts.
  */
 

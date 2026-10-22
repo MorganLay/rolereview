@@ -8,6 +8,7 @@ import { presentJobListRow } from "@/features/jobs/format";
 import {
   compareJobListRows,
   jobListHref,
+  jobMatchesStage,
   parseJobListQuery,
   sortJobList,
   toggledSort,
@@ -42,6 +43,7 @@ describe("parseJobListQuery", () => {
       minPriority: null,
       hasDeadline: false,
       showArchived: false,
+      stage: null,
       sort: "activity",
       dir: "desc",
     });
@@ -105,6 +107,18 @@ describe("parseJobListQuery", () => {
     const href = jobListHref(query);
     const params = Object.fromEntries(new URL(href, "http://localhost").searchParams);
     expect(parseJobListQuery(params)).toEqual({ ...query, q: "library tech" });
+  });
+
+  it("keeps a board stage and drops an unknown one", () => {
+    expect(parseJobListQuery({ stage: "APPLIED" }).stage).toBe("APPLIED");
+    expect(parseJobListQuery({ stage: "closed" }).stage).toBeNull();
+    expect(parseJobListQuery({ stage: "NO_RESPONSE" }).stage).toBeNull();
+    expect(jobListHref(parseJobListQuery({ stage: "CLOSED" }))).toBe("/jobs?stage=CLOSED");
+    expect(jobMatchesStage("ACCEPTED", "CLOSED")).toBe(true);
+    expect(jobMatchesStage("REJECTED", "CLOSED")).toBe(true);
+    expect(jobMatchesStage("APPLIED", "CLOSED")).toBe(false);
+    expect(jobMatchesStage("APPLIED", "APPLIED")).toBe(true);
+    expect(jobMatchesStage("APPLIED", null)).toBe(true);
   });
 });
 

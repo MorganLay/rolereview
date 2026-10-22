@@ -57,12 +57,14 @@ Dashboard ("what needs me today?") → complete a reminder or log a follow-up �
 ### `/dashboard` — Dashboard
 - **New user:** First job line checklist (above) + a short "How RoleRefine works" card.
 - **Returning user** (top to bottom):
-  1. **Today:** open reminders that are due today or overdue (Done, Snooze 1 day, Dismiss, Open job) and interviews that start within the next 48 hours. Snooze sets the due time to exactly 24 hours from now. A dismissed reminder leaves the list. Nudges through library health stay on T8.7.
+  1. **Today:** open reminders that are due today or overdue (Done, Snooze 1 day, Dismiss, Open job) and interviews that start within the next 48 hours. Snooze sets the due time to exactly 24 hours from now. A dismissed reminder leaves the list.
   2. **Nudges:** jobs Applied for 30+ days with no change ("No response? Mark it or follow up"); deadlines within 3 days; offers with respond-by within 3 days.
   3. **Pipeline snapshot:** count per stage (clickable → board filtered).
   4. **This week:** applications sent, tailored %, responses; [1.1] momentum streak.
   5. **Recent jobs:** 5 most recently updated.
-  6. **Library health** (if score < 70%): "3 weak bullets: strengthen them" → `/library`.
+  6. **Library health** (if score < 70%): bullets below Good, linking to `/library`. At 70% or above this block is omitted.
+
+Archived jobs stay out of the nudges, the snapshot, this week, and recent jobs. A no-response nudge is a job still at Applied whose `appliedAt` is at least 30 calendar days before today in the user's timezone. Deadline and offer nudges use today through three days ahead, the same Soon window as the jobs list. This week is Monday 00:00 through the next Monday in the user's timezone: applications are `appliedAt` in that week, tailored % is the share of those with a submitted resume (an em dash when none were sent), and responses are `firstResponseAt` in that week. Pipeline counts link to `/jobs?stage=`. While `onboardingCompletedAt` is empty, the page shows Getting started and How RoleRefine works. When all four steps are true, that visit sets `onboardingCompletedAt` and shows the success line once.
 
 ### `/library`
 - **Profile card** (header data) with an edit dialog: name, headline, email, phone, location, links (≤ 5), default summary.
@@ -86,7 +88,7 @@ Client state machine `upload → reading → review`:
 List + editor: name, target role, default emphasis, preferred entries (checklist), preferred skills. Free: 1 target profile; Pro: unlimited. Picking a target profile on the tailor dialog pre-fills emphasis and guides selection.
 
 ### `/jobs` — Jobs board
-Toolbar: view toggle **Board | List**, search (company/title), filters (source, work mode, priority ≥, has deadline), "Show archived" toggle, **New job**. The toolbar is shared with the board. Choices live in the URL (`q`, `source`, `workMode`, `priority`, `deadline=1`, `archived=1`, `sort`, `dir`, `view`).
+Toolbar: view toggle **Board | List**, search (company/title), filters (source, work mode, priority ≥, has deadline), "Show archived" toggle, **New job**. The toolbar is shared with the board. Choices live in the URL (`q`, `source`, `workMode`, `priority`, `deadline=1`, `archived=1`, `sort`, `dir`, `view`, `stage`). `stage` is `SAVED`, `APPLIED`, `SCREENING`, `INTERVIEWING`, `OFFER`, or `CLOSED`. It shows that one board column at every width. **All stages** removes it. On the list, the same parameter keeps only that stage.
 
 **Board view (default)**
 - Columns: Saved · Applied · Screening · Interviewing · Offer · Closed (Closed stacks Accepted, Rejected, Withdrawn, No response, each with its own chip).
@@ -134,7 +136,7 @@ Same layout pattern: editor with greeting, paragraphs (edit, include toggle, ⓘ
 Questions grouped by category; each shows why it's asked (linked requirements), a STAR outline with source refs, a "My notes" textarea, and a "Practiced ✓" toggle. Progress bar "8 / 14 practiced". Print-friendly view.
 
 ### `/contacts`
-Table: name, title, company, email, linked jobs (chips), last contacted. Names sort A–Z. Search (`?q=`) matches name, title, company, or email, ignoring case. With no contacts, the page says there are no contacts yet. A search that matches nothing says so, and does not look like an empty library. Add and edit use one dialog (name required; the other fields follow Contact fields). Delete asks for confirmation, removes the person, and unlinks them from every job. Timeline rows stay, without the contact. A row opens a drawer with details, linked jobs (company, title, and role), and outreach history: follow-ups that name this person, newest first. Last contacted is that calendar date in the user's timezone, or an em dash when there is none. Seed contacts stay on T8.7.
+Table: name, title, company, email, linked jobs (chips), last contacted. Names sort A–Z. Search (`?q=`) matches name, title, company, or email, ignoring case. With no contacts, the page says there are no contacts yet. A search that matches nothing says so, and does not look like an empty library. Add and edit use one dialog (name required; the other fields follow Contact fields). Delete asks for confirmation, removes the person, and unlinks them from every job. Timeline rows stay, without the contact. A row opens a drawer with details, linked jobs (company, title, and role), and outreach history: follow-ups that name this person, newest first. Last contacted is that calendar date in the user's timezone, or an em dash when there is none. The dev seed adds four contacts.
 
 ### `/insights` — Analytics
 Date range selector (30 d / 90 d / all). Charts follow the definitions in `04-DATA-MODEL.md` → Analytics:

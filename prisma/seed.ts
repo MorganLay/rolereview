@@ -1,5 +1,5 @@
 /**
- * Dev-only seed. Replaces library rows and profile header fields for SEED_USER_ID.
+ * Dev-only seed. Replaces the SEED_USER_ID library, jobs, and tracking rows.
  * Email stays the sign-in address. Reads env here because this script runs
  * outside Next and cannot import `src/lib/env.ts` (`server-only`).
  */
@@ -9,6 +9,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 import { Prisma, PrismaClient } from "../src/generated/prisma/client";
 
+import { replaceHunt } from "./hunt-seed";
 import { SEED_LIBRARY } from "./library-seed";
 
 const UUID =
@@ -53,6 +54,7 @@ async function main() {
     }
 
     const [replacedEntries, replacedSkills] = await replaceLibrary(prisma, userId);
+    const hunt = await replaceHunt(prisma, userId);
 
     const bullets = SEED_LIBRARY.entries.reduce(
       (total, entry) => total + entry.bullets.length,
@@ -60,6 +62,9 @@ async function main() {
     );
     console.log(
       `Seeded library for ${userId}: ${SEED_LIBRARY.entries.length} entries, ${SEED_LIBRARY.skills.length} skills, ${bullets} bullets. Replaced ${replacedEntries} entries and ${replacedSkills} skills.`,
+    );
+    console.log(
+      `Seeded hunt for ${userId}: ${hunt.jobs} jobs, ${hunt.contacts} contacts, ${hunt.interviews} interviews, ${hunt.reminders} reminders, ${hunt.resumes} resumes.`,
     );
   } catch (error) {
     const code =

@@ -11,6 +11,7 @@ import { calendarDateInTimeZone } from "@/features/jobs/dates";
 import { presentBoardCard, presentJobListRow } from "@/features/jobs/format";
 import {
   jobListHref,
+  jobMatchesStage,
   parseJobListQuery,
   sortJobList,
   type JobListQuery,
@@ -33,17 +34,18 @@ export default async function JobsPage({
       ? await listJobs(user.id, query)
       : await listBoardJobs(user.id, query);
   const today = calendarDateInTimeZone(new Date(), listed.timeZone);
-  const rows =
-    query.view === "list" && "jobs" in listed
-      ? sortJobList(listed.jobs, query.sort, query.dir).map((row) =>
-          presentJobListRow(row, listed.timeZone, today),
-        )
-      : [];
+  const listedJobs = query.view === "list" && "jobs" in listed ? listed.jobs : [];
+  const rows = sortJobList(
+    listedJobs.filter((row) => jobMatchesStage(row.status, query.stage)),
+    query.sort,
+    query.dir,
+  ).map((row) => presentJobListRow(row, listed.timeZone, today));
   const cards =
     query.view === "board" && "cards" in listed
       ? listed.cards.map((card) => presentBoardCard(card, listed.timeZone, today))
       : [];
-  const visibleCount = query.view === "list" ? rows.length : cards.length;
+  const listEmpty = query.view === "list" && rows.length === 0;
+  const boardEmpty = query.view === "board" && cards.length === 0;
 
   return (
     <div
@@ -62,12 +64,12 @@ export default async function JobsPage({
       <JobsToolbar query={query} />
       {listed.total === 0 ? (
         <JobsEmpty />
-      ) : visibleCount === 0 ? (
+      ) : listEmpty || boardEmpty ? (
         <JobsFiltered query={query} />
       ) : query.view === "list" ? (
         <JobsTable key={jobListHref(query)} query={query} rows={rows} />
       ) : (
-        <JobsBoard key={jobListHref(query)} cards={cards} />
+        <JobsBoard key={jobListHref(query)} cards={cards} stage={query.stage} />
       )}
     </div>
   );
@@ -96,6 +98,7 @@ function JobsFiltered({ query }: { query: JobListQuery }) {
     minPriority: null,
     hasDeadline: false,
     showArchived: false,
+    stage: null,
     sort: "activity",
     dir: "desc",
   });

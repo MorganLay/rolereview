@@ -80,6 +80,7 @@ describe("libraryHealth", () => {
     expect(result.percent).toBe(0);
     expect(result.passed).toEqual([]);
     expect(result.weakest).toEqual([]);
+    expect(result.belowGood).toBe(0);
   });
 
   it("scores a complete library at 100 and hides excellent bullets", () => {
@@ -93,6 +94,7 @@ describe("libraryHealth", () => {
       "goodBullets",
     ]);
     expect(result.weakest).toEqual([]);
+    expect(result.belowGood).toBe(0);
   });
 
   it("treats phone and links as optional and whitespace as empty", () => {

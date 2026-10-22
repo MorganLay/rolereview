@@ -1,4 +1,12 @@
-import { JOB_SOURCES, JOB_STATUSES, WORK_MODES, type JobStatusValue } from "./schemas";
+import {
+  JOB_SOURCES,
+  JOB_STATUSES,
+  WORK_MODES,
+  isBoardStage,
+  isClosedJobStatus,
+  type BoardStage,
+  type JobStatusValue,
+} from "./schemas";
 
 /** Search text is capped at the company/title length. */
 export const JOB_LIST_SEARCH_MAX = 120;
@@ -26,6 +34,7 @@ export type JobListQuery = {
   minPriority: number | null;
   hasDeadline: boolean;
   showArchived: boolean;
+  stage: BoardStage | null;
   sort: JobListSort;
   dir: SortDir;
 };
@@ -86,6 +95,7 @@ export function parseJobListQuery(params: SearchParamInput): JobListQuery {
     minPriority,
     hasDeadline: firstParam(params.deadline) === "1",
     showArchived: firstParam(params.archived) === "1",
+    stage: boardStageParam(firstParam(params.stage)),
     sort,
     dir,
   };
@@ -112,12 +122,20 @@ export function jobListHref(current: JobListQuery, patch: JobListPatch = {}): st
   if (next.minPriority !== null) params.set("priority", String(next.minPriority));
   if (next.hasDeadline) params.set("deadline", "1");
   if (next.showArchived) params.set("archived", "1");
+  if (next.stage) params.set("stage", next.stage);
   if (next.sort !== "activity" || next.dir !== "desc") {
     params.set("sort", next.sort);
     params.set("dir", next.dir);
   }
   const query = params.toString();
   return query.length > 0 ? `/jobs?${query}` : "/jobs";
+}
+
+/** A board stage filter. Closed matches every closed status. No stage matches every job. */
+export function jobMatchesStage(status: JobStatusValue, stage: BoardStage | null): boolean {
+  if (!stage) return true;
+  if (stage === "CLOSED") return isClosedJobStatus(status);
+  return status === stage;
 }
 
 export function compareJobListRows(
@@ -200,6 +218,10 @@ function compareOptionalText(
   if (a === null) return 1;
   if (b === null) return -1;
   return compareText(a, b, dir);
+}
+
+function boardStageParam(value: string): BoardStage | null {
+  return isBoardStage(value) ? value : null;
 }
 
 function firstParam(value: string | string[] | undefined): string {

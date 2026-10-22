@@ -59,7 +59,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T8.4** Contacts
 - [x] **T8.5** Reminders
 - [x] **T8.6** Offers
-- [ ] **T8.7** Dashboard
+- [x] **T8.7** Dashboard
 
 ## Phase 9 — Cover letters
 - [ ] **T9.1** Letter logic
@@ -93,6 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-22 T8.7:** Dashboard is Today, nudges, pipeline counts, this week, and five recent jobs. Getting started stays until four steps are done, then one success line. A stage count opens `/jobs?stage=` (one column; All stages clears it). The seed replaces that user's jobs with 8 jobs, 4 contacts, 3 interviews, 5 reminders, 1 offer, and 2 READY resumes. The seeded library is 100%, so the health line stays hidden. A wider layout can wait.
 - **2026-10-22 T8.6:** One offer per job on `?tab=offer`. The first save writes Offer received and moves Saved, Applied, Screening, or Interviewing to Offer through the pipeline. Respond-by is UTC midnight; the reminder is two calendar days earlier and moves or clears with that date. The offer decision does not change job status. Congratulations shows only when status becomes Accepted, with no fade under reduced motion. Testimonial and pause stay on T13.1.
 - **2026-10-21 T8.5:** Reminders stay in the app (bell, Dashboard Today, `?tab=reminders`). They are not device notifications. Snooze is exactly 24 hours from now. A custom reminder is a title (120) and a calendar date at noon in the user's timezone. Dismissed rows stay stored and leave the lists. A deadline or interview date change can replace a snooze on that automatic reminder. Offer reminders stay on T8.6. The rest of the dashboard stays on T8.7.
 - **2026-10-21 T8.4:** Contacts are `?tab=contacts` and `/contacts`. A follow-up can name a linked contact (`JobEvent.contactId`, cleared if the contact is deleted). Log outreach is a follow-up for today at noon in the user's timezone. `lastContactedAt` is the latest follow-up for that person. Interviewers stay free text. Seed contacts stay on T8.7.

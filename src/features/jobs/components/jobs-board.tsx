@@ -66,7 +66,13 @@ const COLUMN_PREFIX = "column:";
 const MOBILE_QUERY = "(max-width: 767px)";
 const REDUCE_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
-export function JobsBoard({ cards: initial }: { cards: BoardCardDisplay[] }) {
+export function JobsBoard({
+  cards: initial,
+  stage: lockedStage = null,
+}: {
+  cards: BoardCardDisplay[];
+  stage?: BoardStage | null;
+}) {
   const router = useRouter();
   const stageId = useId();
   const mobile = useMedia(MOBILE_QUERY);
@@ -89,6 +95,7 @@ export function JobsBoard({ cards: initial }: { cards: BoardCardDisplay[] }) {
   }
 
   const drag = !mobile && !pending;
+  const stages = lockedStage ? [lockedStage] : BOARD_STAGES;
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
@@ -229,26 +236,28 @@ export function JobsBoard({ cards: initial }: { cards: BoardCardDisplay[] }) {
       <p className="sr-only" aria-live="polite">
         {pending ? copy.moving : ""}
       </p>
-      <div className="grid gap-2 md:hidden">
-        <Label htmlFor={stageId}>{copy.stageLabel}</Label>
-        <Select
-          value={stage}
-          onValueChange={(value) => {
-            if (isBoardStage(value)) setStage(value);
-          }}
-        >
-          <SelectTrigger id={stageId} className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {BOARD_STAGES.map((value) => (
-              <SelectItem key={value} value={value}>
-                {copy.stageOption(stageName(value), stageCount(cards, value))}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {lockedStage ? null : (
+        <div className="grid gap-2 md:hidden">
+          <Label htmlFor={stageId}>{copy.stageLabel}</Label>
+          <Select
+            value={stage}
+            onValueChange={(value) => {
+              if (isBoardStage(value)) setStage(value);
+            }}
+          >
+            <SelectTrigger id={stageId} className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {BOARD_STAGES.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {copy.stageOption(stageName(value), stageCount(cards, value))}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <DndContext
         sensors={sensors}
@@ -261,14 +270,15 @@ export function JobsBoard({ cards: initial }: { cards: BoardCardDisplay[] }) {
         onDragCancel={() => setActiveId(null)}
       >
         <div className="flex gap-3 overflow-x-auto pb-3">
-          {BOARD_STAGES.map((value) => (
+          {stages.map((value) => (
             <BoardColumn
               key={value}
               stage={value}
               cards={cards}
               drag={drag}
               pending={pending}
-              selected={stage === value}
+              selected={lockedStage !== null || stage === value}
+              solo={lockedStage !== null}
               reduceMotion={reduceMotion}
               onMove={moveToTop}
               onClose={(card) =>
@@ -310,6 +320,7 @@ function BoardColumn({
   drag,
   pending,
   selected,
+  solo,
   reduceMotion,
   onMove,
   onClose,
@@ -319,6 +330,7 @@ function BoardColumn({
   drag: boolean;
   pending: boolean;
   selected: boolean;
+  solo: boolean;
   reduceMotion: boolean;
   onMove: (card: BoardCardDisplay, status: JobStatusValue) => void;
   onClose: (card: BoardCardDisplay) => void;
@@ -337,7 +349,8 @@ function BoardColumn({
     <section
       aria-labelledby={headingId}
       className={cn(
-        "w-full shrink-0 flex-col gap-2 md:flex md:w-72",
+        "w-full shrink-0 flex-col gap-2 md:flex",
+        solo ? "md:max-w-xl" : "md:w-72",
         selected ? "flex" : "max-md:hidden",
         isOver && drag && "rounded-lg bg-muted/50",
       )}

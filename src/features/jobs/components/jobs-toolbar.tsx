@@ -23,10 +23,11 @@ import {
   type JobListPatch,
   type JobListQuery,
 } from "../list-params";
-import { JOB_SOURCES, WORK_MODES } from "../schemas";
+import { JOB_SOURCES, WORK_MODES, type BoardStage } from "../schemas";
 import { NewJobLink } from "./new-job-link";
 
 const copy = strings.jobs.board;
+const detail = strings.jobs.detail;
 const ANY = "ANY";
 
 export function JobsToolbar({ query }: { query: JobListQuery }) {
@@ -89,9 +90,22 @@ export function JobsToolbar({ query }: { query: JobListQuery }) {
             </Link>
           </Button>
         </div>
-        <Button asChild className="w-full sm:w-auto">
-          <NewJobLink>{strings.actions.newJob}</NewJobLink>
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          {query.stage ? (
+            <p className="text-sm text-ink">
+              {copy.showingStage(stageLabel(query.stage))}{" "}
+              <Link
+                href={jobListHref(query, { stage: null })}
+                className="underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                {copy.allStages}
+              </Link>
+            </p>
+          ) : null}
+          <Button asChild className="w-full sm:w-auto">
+            <NewJobLink>{strings.actions.newJob}</NewJobLink>
+          </Button>
+        </div>
       </div>
 
       <form onSubmit={onSearch} className="flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -201,4 +215,8 @@ export function JobsToolbar({ query }: { query: JobListQuery }) {
       </div>
     </div>
   );
+}
+
+function stageLabel(stage: BoardStage): string {
+  return stage === "CLOSED" ? detail.closedGroup : detail.statuses[stage];
 }
