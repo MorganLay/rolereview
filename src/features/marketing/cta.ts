@@ -9,6 +9,7 @@ export const CTA_LOCATIONS = [
   "hero",
   "how-it-works",
   "pricing",
+  "pricing-page",
   "demo",
   "final",
 ] as const;

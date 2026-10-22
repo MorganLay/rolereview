@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: "/#how-it-works", label: strings.marketing.nav.howItWorks },
   { href: "/#features", label: strings.marketing.nav.features },
-  { href: "/#pricing", label: strings.marketing.nav.pricing },
+  { href: "/pricing", label: strings.marketing.nav.pricing },
 ] as const;
 
 const freeTools = [

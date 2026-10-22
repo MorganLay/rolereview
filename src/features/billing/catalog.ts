@@ -9,12 +9,21 @@ import {
   type QuotaPeriod,
 } from "./present";
 
+export type MarketingMeter = {
+  free: number;
+  pro: number;
+  period: QuotaPeriod;
+};
+
 export type MarketingPlanInput = {
   freeMonthlyUsd: number;
   monthlyUsd: number;
   quarterlyUsd: number;
-  tailor: { free: number; pro: number; period: QuotaPeriod };
-  letter: { free: number; pro: number; period: QuotaPeriod };
+  foundingPercent: number;
+  tailor: MarketingMeter;
+  letter: MarketingMeter;
+  resumeImport: MarketingMeter;
+  jobAnalysis: MarketingMeter;
   modernTemplate: boolean;
   compactTemplate: boolean;
   docx: boolean;
@@ -50,22 +59,28 @@ export function checkoutPrices(): CheckoutPrices {
   return prices;
 }
 
-/** Homepage pricing preview. Numbers and entitlements come from `plans.ts`. */
+function marketingMeter(
+  kind: "IMPORT" | "ANALYZE" | "TAILOR" | "COVER_LETTER",
+): MarketingMeter {
+  const free = PLANS.FREE.limits[kind];
+  const pro = PLANS.PRO.limits[kind];
+  if (free.period !== pro.period) {
+    throw new Error(`Quota period mismatch for ${kind}.`);
+  }
+  return { free: free.allowance, pro: pro.allowance, period: free.period };
+}
+
+/** Homepage and /pricing. Numbers and entitlements come from `plans.ts`. */
 export function marketingPlanInput(): MarketingPlanInput {
   return {
     freeMonthlyUsd: PLANS.FREE.price.monthlyUsd,
     monthlyUsd: PLANS.PRO.price.monthlyUsd,
     quarterlyUsd: PLANS.PRO.price.quarterlyUsd,
-    tailor: {
-      free: PLANS.FREE.limits.TAILOR.allowance,
-      pro: PLANS.PRO.limits.TAILOR.allowance,
-      period: PLANS.FREE.limits.TAILOR.period,
-    },
-    letter: {
-      free: PLANS.FREE.limits.COVER_LETTER.allowance,
-      pro: PLANS.PRO.limits.COVER_LETTER.allowance,
-      period: PLANS.FREE.limits.COVER_LETTER.period,
-    },
+    foundingPercent: FOUNDING_DISCOUNT_PERCENT,
+    tailor: marketingMeter("TAILOR"),
+    letter: marketingMeter("COVER_LETTER"),
+    resumeImport: marketingMeter("IMPORT"),
+    jobAnalysis: marketingMeter("ANALYZE"),
     modernTemplate: PLANS.PRO.entitlements["template:modern"],
     compactTemplate: PLANS.PRO.entitlements["template:compact"],
     docx: PLANS.PRO.entitlements.docx,

@@ -4,28 +4,25 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { strings } from "@/copy/strings";
-import { captureBrowserEvent } from "@/lib/analytics-browser";
 import { cn } from "@/lib/utils";
 import type { MarketingPricingView, PricingInterval } from "@/features/marketing/present";
 
 import { CtaLink } from "./cta-link";
+import { PricingToggle } from "./pricing-toggle";
 
 const copy = strings.marketing.home;
 
 export function HomePricing({
   pricing,
   heading: Heading = "h2",
+  showCompare = true,
 }: {
   pricing: MarketingPricingView;
   heading?: "h1" | "h2";
+  showCompare?: boolean;
 }) {
   const [interval, setInterval] = useState<PricingInterval>("MONTH");
   const proPrice = interval === "MONTH" ? pricing.monthly : pricing.quarterly;
-
-  function select(next: PricingInterval) {
-    setInterval(next);
-    captureBrowserEvent("pricing_toggle", { interval: next });
-  }
 
   return (
     <section id="pricing" className="scroll-mt-20 border-t border-line bg-surface">
@@ -33,28 +30,13 @@ export function HomePricing({
         <Heading className="font-serif text-3xl font-semibold tracking-tight text-ink">
           {copy.pricingTitle}
         </Heading>
-        <div
-          className="mt-6 inline-flex rounded-button border border-line bg-paper p-1"
-          role="group"
-          aria-label={copy.pricingTitle}
-        >
-          <ToggleButton
-            pressed={interval === "MONTH"}
-            onClick={() => select("MONTH")}
-          >
-            {copy.pricingMonthly}
-          </ToggleButton>
-          <ToggleButton
-            pressed={interval === "QUARTER"}
-            onClick={() => select("QUARTER")}
-          >
-            {copy.pricingQuarterly}
-            {pricing.savePercent ? (
-              <span className="ml-1 text-pine">
-                {copy.pricingSave(pricing.savePercent)}
-              </span>
-            ) : null}
-          </ToggleButton>
+        <div className="mt-6">
+          <PricingToggle
+            interval={interval}
+            savePercent={pricing.savePercent}
+            label={copy.pricingTitle}
+            onChange={setInterval}
+          />
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -74,37 +56,15 @@ export function HomePricing({
         </div>
 
         <p className="mt-6 text-sm text-slate">{copy.pricingGuarantee}</p>
-        <p className="mt-2 text-sm">
-          <Link href="/pricing" className="font-medium text-pine hover:text-pine-hover">
-            {copy.pricingCompare}
-          </Link>
-        </p>
+        {showCompare ? (
+          <p className="mt-2 text-sm">
+            <Link href="/pricing" className="font-medium text-pine hover:text-pine-hover">
+              {copy.pricingCompare}
+            </Link>
+          </p>
+        ) : null}
       </div>
     </section>
-  );
-}
-
-function ToggleButton({
-  pressed,
-  onClick,
-  children,
-}: {
-  pressed: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={pressed}
-      onClick={onClick}
-      className={cn(
-        "min-h-11 rounded-button px-3 text-sm",
-        pressed ? "bg-surface font-medium text-ink shadow-sm" : "text-slate",
-      )}
-    >
-      {children}
-    </button>
   );
 }
 

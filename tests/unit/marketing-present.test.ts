@@ -7,18 +7,28 @@ import {
 import { PLANS } from "@/features/billing/plans";
 import { formatPlanUsd } from "@/features/billing/present";
 import { DASHBOARD_HREF, SIGN_IN_HREF, primaryCta } from "@/features/marketing/cta";
-import { faqItems, faqJsonLd } from "@/features/marketing/faq";
 import {
+  billingFaqItems,
+  faqItems,
+  faqJsonLd,
+} from "@/features/marketing/faq";
+import {
+  presentFoundingOffer,
   presentMarketingPricing,
+  presentPricingComparison,
   quarterlySavePercent,
+  softwareApplicationJsonLd,
 } from "@/features/marketing/present";
 
 const SAMPLE: MarketingPlanInput = {
   freeMonthlyUsd: 0,
   monthlyUsd: 19,
   quarterlyUsd: 45,
+  foundingPercent: 40,
   tailor: { free: 3, pro: 80, period: "month" },
   letter: { free: 1, pro: 60, period: "month" },
+  resumeImport: { free: 2, pro: 20, period: "month" },
+  jobAnalysis: { free: 10, pro: 60, period: "day" },
   modernTemplate: true,
   compactTemplate: true,
   docx: true,
@@ -122,5 +132,90 @@ describe("faqItems", () => {
     const json = faqJsonLd(items);
     expect(json["@type"]).toBe("FAQPage");
     expect(json.mainEntity).toHaveLength(9);
+  });
+});
+
+describe("presentPricingComparison", () => {
+  it("builds the 1.0 table from plan meters and entitlements", () => {
+    const rows = presentPricingComparison(SAMPLE);
+    expect(rows.map((row) => row.id)).toEqual([
+      "tailor",
+      "letter",
+      "import",
+      "analyze",
+      "tracking",
+      "templates",
+      "docx",
+      "insights",
+      "guarantee",
+    ]);
+    expect(rows.find((row) => row.id === "import")).toMatchObject({
+      free: "2 a month",
+      pro: "20 a month",
+    });
+    expect(rows.find((row) => row.id === "analyze")).toMatchObject({
+      free: "10 a day",
+      pro: "60 a day",
+    });
+    expect(rows.find((row) => row.id === "guarantee")?.pro).toBe("14-day refund");
+  });
+
+  it("reads live numbers from plans.ts", () => {
+    const rows = presentPricingComparison(marketingPlanInput());
+    expect(rows.find((row) => row.id === "tailor")?.free).toBe(
+      `${PLANS.FREE.limits.TAILOR.allowance} a month`,
+    );
+    expect(rows.find((row) => row.id === "import")?.pro).toBe(
+      `${PLANS.PRO.limits.IMPORT.allowance} a month`,
+    );
+    expect(rows.find((row) => row.id === "analyze")?.free).toBe(
+      `${PLANS.FREE.limits.ANALYZE.allowance} a day`,
+    );
+  });
+});
+
+describe("presentFoundingOffer", () => {
+  it("formats the founding prices from the percent off Pro", () => {
+    const offer = presentFoundingOffer(SAMPLE);
+    expect(offer).toEqual({
+      percent: 40,
+      monthly: "US$11.40",
+      quarterly: "US$27",
+    });
+  });
+
+  it("returns null when the percent cannot be applied", () => {
+    expect(presentFoundingOffer({ ...SAMPLE, foundingPercent: -1 })).toBeNull();
+  });
+});
+
+describe("billingFaqItems", () => {
+  it("includes the weekly-plan answer and founding percent", () => {
+    const items = billingFaqItems({ freeTailor: 3, foundingPercent: 40 });
+    expect(items.map((item) => item.id)).toContain("billing-weekly");
+    expect(items.find((item) => item.id === "billing-founding")?.answer).toContain("40%");
+    expect(items.find((item) => item.id === "billing-free")?.answer).toContain(
+      "3 tailored resumes",
+    );
+    expect(faqJsonLd(items)["@type"]).toBe("FAQPage");
+  });
+});
+
+describe("softwareApplicationJsonLd", () => {
+  it("lists Free and both Pro intervals from the plan prices", () => {
+    const json = softwareApplicationJsonLd({
+      name: "RoleRefine",
+      description: "Tailor your resume to every job, using only your real experience.",
+      url: "https://www.rolerefine.ca/pricing",
+      freeUsd: SAMPLE.freeMonthlyUsd,
+      monthlyUsd: SAMPLE.monthlyUsd,
+      quarterlyUsd: SAMPLE.quarterlyUsd,
+    });
+    expect(json["@type"]).toBe("SoftwareApplication");
+    expect(json.offers).toEqual([
+      { "@type": "Offer", name: "Free", price: "0", priceCurrency: "USD" },
+      { "@type": "Offer", name: "Pro monthly", price: "19", priceCurrency: "USD" },
+      { "@type": "Offer", name: "Pro 90-day", price: "45", priceCurrency: "USD" },
+    ]);
   });
 });

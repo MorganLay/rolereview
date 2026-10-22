@@ -79,7 +79,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 ## Phase 12 — Marketing site
 - [x] **T12.1** Homepage structure
 - [x] **T12.2** Interactive demo
-- [ ] **T12.3** Pricing page
+- [x] **T12.3** Pricing page
 - [ ] **T12.4** Free tools
 - [ ] **T12.5** SEO & content plumbing
 - [ ] **T12.6** Legal, consent & welcome email
@@ -93,6 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-22 T12.3:** `/pricing` is the full comparison. The monthly/90-day toggle updates the Pro price on the cards and in the table. Rows come from `plans.ts` (1.0 meters and entitlements; prep kits, bullet coach, and target profiles wait for 1.1). Founding copy uses the 40% from `FOUNDING_DISCOUNT_PERCENT` (US$11.40 / US$27). JSON-LD is SoftwareApplication offers plus FAQPage. Header and footer Pricing go here.
 - **2026-10-22 T12.2:** Homepage section 6 and `/demo` tailor from nine pre-generated fixtures (cs-grad, bi-analyst, retail-changer × junior-dev, data-analyst, frontend). The page makes no model calls. Hero library, resume, and match scenes share one height so the page below stays put on a phone. Changing the candidate or job clears the screen-reader “ready” announcement.
 - **2026-10-22 T12.1:** `/` is the marketing homepage (sections 1–5, 7, 8, 10–14). Waitlist stays at `/waitlist`. Signed-in CTAs go to Dashboard; signed-out go to `/sign-in?next=/library/import`. Product shots are live UI miniatures, not PNG captures. Section 6 (demo) is T12.2; `/pricing` is the homepage preview until T12.3. Founder photo is the initial M until T13.1.
 - **2026-10-22 T11.4:** Resume and letter DOCX use the same section order as the PDF. Pro downloads from `/api/resumes/[id]/docx` and `/api/letters/[id]/docx`. Free shows a lock and Upgrade. The Civic Studio resume downloaded as `Avery-Lang-Civic-Studio-Product-Designer.docx`. The seed has no cover letter, so the letter file was checked in unit tests only.

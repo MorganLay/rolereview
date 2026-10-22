@@ -332,11 +332,17 @@ export const strings = {
       pricingUnlimited: "Unlimited tracking",
       pricingRowTailor: "Tailored resumes",
       pricingRowLetter: "Cover letters",
+      pricingRowImport: "Resume imports",
+      pricingRowAnalyze: "Job analyses",
+      pricingRowTracking: "Tracking",
       pricingRowTemplates: "PDF templates",
       pricingRowDocx: "DOCX export",
       pricingRowInsights: "Insights",
+      pricingRowGuarantee: "Money-back guarantee",
       pricingIncluded: "Included",
       pricingNotIncluded: "Not included",
+      pricingTracking: "Unlimited",
+      pricingGuaranteePro: "14-day refund",
       pricingTemplatesFree: "Classic",
       pricingTemplatesPro: "Classic, Modern, Compact",
       pricingInsightsFree: "Funnel and weekly stats",
@@ -380,6 +386,47 @@ export const strings = {
       shotBoardAlt: "Jobs board with cards in Saved, Applied, and Interviewing",
       shotRemindersAlt: "Follow-up reminder due after an application",
       shotInsightsAlt: "Insights tiles for response rate and weekly applications",
+    },
+    pricing: {
+      metaTitle: "Pricing",
+      metaDescription: (monthly: string, quarterly: string) =>
+        `Free tracking, with a few tailored resumes each month. Pro is ${monthly} a month or ${quarterly} for 90 days. Cancel in one click.`,
+      title: "Priced for a job search, not forever",
+      body: "Track every application for free. Pay when you want more tailored resumes, cover letters, and Pro exports.",
+      featureColumn: "Feature",
+      priceRow: "Price",
+      tableCaption: "Free and Pro features",
+      foundingTitle: "Founding members",
+      foundingBody: (percent: number, monthly: string, quarterly: string) =>
+        `First 100 Pro members get ${percent}% off for as long as they stay. That’s ${monthly} a month, or ${quarterly} for 90 days.`,
+      weeklyTitle: "Why we don’t offer a weekly plan",
+      weeklyBody:
+        "A job search lasts months, not a week. Weekly plans look cheap and then keep charging. RoleRefine is monthly, or 90 days at a lower rate. Cancel in one click.",
+      faqTitle: "Billing questions",
+      offerFree: "Free",
+      offerMonthly: "Pro monthly",
+      offerQuarterly: "Pro 90-day",
+      faqFreeQ: "What does Free include?",
+      faqFreeA: (count: number) =>
+        `Unlimited tracking, plus ${count} tailored resumes a month. Cover letters, extra tailoring, and Pro templates are on the paid plan.`,
+      faqProQ: "What’s included in Pro?",
+      faqProA:
+        "Higher monthly limits, Modern and Compact templates, DOCX export, and What’s working on Insights. Bill monthly or every 90 days.",
+      faqCancelQ: "Can I cancel anytime?",
+      faqCancelA:
+        "Yes, in one click. We email you before a 90-day renewal. Pro has a 14-day money-back guarantee.",
+      faqGuaranteeQ: "How does the 14-day money-back guarantee work?",
+      faqGuaranteeA:
+        "If Pro isn’t right, ask within 14 days of the charge and we’ll refund it.",
+      faqWeeklyQ: "Why don’t you offer a weekly plan?",
+      faqWeeklyA:
+        "Searches last months, not days. A weekly plan is a trap. Monthly and 90-day billing match a real search, and you can cancel in one click.",
+      faqFoundingQ: "What is the founding-member offer?",
+      faqFoundingA: (percent: number) =>
+        `The first 100 Pro members get ${percent}% off for as long as they stay subscribed.`,
+      faqCurrencyQ: "Do you charge in Canadian dollars?",
+      faqCurrencyA:
+        "Prices are in US dollars at launch. Canadian-dollar pricing is planned for a later release.",
     },
     demo: {
       metaTitle: "Try a tailored resume",

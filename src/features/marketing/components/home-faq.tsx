@@ -6,11 +6,17 @@ import type { FaqItem } from "@/features/marketing/faq";
 
 const copy = strings.marketing.home;
 
-export function HomeFaq({ items }: { items: readonly FaqItem[] }) {
+export function HomeFaq({
+  items,
+  title = copy.faqTitle,
+}: {
+  items: readonly FaqItem[];
+  title?: string;
+}) {
   return (
     <section className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6">
       <h2 className="font-serif text-3xl font-semibold tracking-tight text-ink">
-        {copy.faqTitle}
+        {title}
       </h2>
       <div className="mt-6 divide-y divide-line border-y border-line">
         {items.map((item) => (
@@ -27,7 +33,7 @@ export function HomeFaq({ items }: { items: readonly FaqItem[] }) {
               {item.question}
               <span
                 aria-hidden
-                className="text-slate transition-transform group-open:rotate-45"
+                className="text-slate transition-transform group-open:rotate-45 motion-reduce:transition-none"
               >
                 +
               </span>

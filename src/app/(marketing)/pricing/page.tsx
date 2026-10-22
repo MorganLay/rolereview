@@ -2,19 +2,67 @@ import type { Metadata } from "next";
 
 import { strings } from "@/copy/strings";
 import { marketingPlanInput } from "@/features/billing/catalog";
-import { HomePricing } from "@/features/marketing/components/home-pricing";
-import { presentMarketingPricing } from "@/features/marketing/present";
+import { PricingExperience } from "@/features/marketing/components/pricing-page";
+import { billingFaqItems, faqJsonLd } from "@/features/marketing/faq";
+import {
+  presentFoundingOffer,
+  presentMarketingPricing,
+  presentPricingComparison,
+  softwareApplicationJsonLd,
+} from "@/features/marketing/present";
+import { env } from "@/lib/env";
 
-export const metadata: Metadata = {
-  title: strings.marketing.home.pricingTitle,
-  description: strings.marketing.home.metaDescription,
-};
+const copy = strings.marketing.pricing;
+
+export function generateMetadata(): Metadata {
+  const pricing = presentMarketingPricing(marketingPlanInput());
+  return {
+    title: copy.metaTitle,
+    description: pricing
+      ? copy.metaDescription(pricing.monthly, pricing.quarterly)
+      : strings.brand.shortDescriptor,
+    alternates: { canonical: "/pricing" },
+  };
+}
 
 export default function PricingPage() {
-  const pricing = presentMarketingPricing(marketingPlanInput());
-  if (!pricing) {
+  const input = marketingPlanInput();
+  const pricing = presentMarketingPricing(input);
+  const founding = presentFoundingOffer(input);
+  if (!pricing || !founding) {
     throw new Error("Pricing could not be formatted from plans.");
   }
 
-  return <HomePricing pricing={pricing} heading="h1" />;
+  const comparison = presentPricingComparison(input);
+  const faqs = billingFaqItems({
+    freeTailor: input.tailor.free,
+    foundingPercent: input.foundingPercent,
+  });
+  const appJsonLd = softwareApplicationJsonLd({
+    name: strings.brand.name,
+    description: strings.brand.shortDescriptor,
+    url: `${env.NEXT_PUBLIC_APP_URL}/pricing`,
+    freeUsd: input.freeMonthlyUsd,
+    monthlyUsd: input.monthlyUsd,
+    quarterlyUsd: input.quarterlyUsd,
+  });
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }}
+      />
+      <PricingExperience
+        pricing={pricing}
+        comparison={comparison}
+        founding={founding}
+        faqs={faqs}
+      />
+    </>
+  );
 }

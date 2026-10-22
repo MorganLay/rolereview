@@ -1,6 +1,7 @@
 import { strings } from "@/copy/strings";
 
 const copy = strings.marketing.home;
+const billing = strings.marketing.pricing;
 
 export const FAQ_IDS = [
   "make-up",
@@ -14,10 +15,21 @@ export const FAQ_IDS = [
   "tech",
 ] as const;
 
+export const BILLING_FAQ_IDS = [
+  "billing-free",
+  "billing-pro",
+  "billing-cancel",
+  "billing-guarantee",
+  "billing-weekly",
+  "billing-founding",
+  "billing-currency",
+] as const;
+
 export type FaqId = (typeof FAQ_IDS)[number];
+export type BillingFaqId = (typeof BILLING_FAQ_IDS)[number];
 
 export type FaqItem = {
-  id: FaqId;
+  id: string;
   question: string;
   answer: string;
 };
@@ -33,6 +45,45 @@ export function faqItems(freeTailor: number): FaqItem[] {
     { id: "cancel", question: copy.faq7Q, answer: copy.faq7A },
     { id: "government", question: copy.faq8Q, answer: copy.faq8A },
     { id: "tech", question: copy.faq9Q, answer: copy.faq9A },
+  ];
+}
+
+export function billingFaqItems(input: {
+  freeTailor: number;
+  foundingPercent: number;
+}): FaqItem[] {
+  return [
+    {
+      id: "billing-free",
+      question: billing.faqFreeQ,
+      answer: billing.faqFreeA(input.freeTailor),
+    },
+    { id: "billing-pro", question: billing.faqProQ, answer: billing.faqProA },
+    {
+      id: "billing-cancel",
+      question: billing.faqCancelQ,
+      answer: billing.faqCancelA,
+    },
+    {
+      id: "billing-guarantee",
+      question: billing.faqGuaranteeQ,
+      answer: billing.faqGuaranteeA,
+    },
+    {
+      id: "billing-weekly",
+      question: billing.faqWeeklyQ,
+      answer: billing.faqWeeklyA,
+    },
+    {
+      id: "billing-founding",
+      question: billing.faqFoundingQ,
+      answer: billing.faqFoundingA(input.foundingPercent),
+    },
+    {
+      id: "billing-currency",
+      question: billing.faqCurrencyQ,
+      answer: billing.faqCurrencyA,
+    },
   ];
 }
 
