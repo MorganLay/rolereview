@@ -7,12 +7,11 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { strings } from "@/copy/strings";
-import { DemoExperience } from "@/features/marketing/demo/demo-experience";
-import type { DemoFixture } from "@/features/marketing/demo/schema";
 import { faqItems, faqJsonLd } from "@/features/marketing/faq";
 import type { MarketingPricingView } from "@/features/marketing/present";
 
 import { CtaLink } from "./cta-link";
+import { DeferredHomepageDemo } from "./deferred-homepage-demo";
 import { HomeFaq } from "./home-faq";
 import { HeroLoop } from "./hero-loop";
 import { HomePricing } from "./home-pricing";
@@ -30,13 +29,7 @@ import {
 
 const copy = strings.marketing.home;
 
-export function HomePage({
-  pricing,
-  demos,
-}: {
-  pricing: MarketingPricingView;
-  demos: readonly DemoFixture[];
-}) {
+export function HomePage({ pricing }: { pricing: MarketingPricingView }) {
   const faqs = faqItems(pricing.freeTailor);
 
   return (
@@ -50,7 +43,7 @@ export function HomePage({
       <TrustStrip />
       <Problem />
       <HowItWorks />
-      <Demo demos={demos} />
+      <Demo />
       <Differentiator />
       <FeatureGrid />
       <FounderNote />
@@ -168,11 +161,11 @@ function HowItWorks() {
   );
 }
 
-function Demo({ demos }: { demos: readonly DemoFixture[] }) {
+function Demo() {
   return (
     <section id="demo" className="scroll-mt-20">
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
-        <DemoExperience demos={demos} heading="h2" />
+        <DeferredHomepageDemo />
       </div>
     </section>
   );

@@ -81,7 +81,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T12.2** Interactive demo
 - [x] **T12.3** Pricing page
 - [x] **T12.4** Free tools
-- [ ] **T12.5** SEO & content plumbing
+- [x] **T12.5** SEO & content plumbing
 - [ ] **T12.6** Legal, consent & welcome email
 
 ## Phase 13 — Launch match score
@@ -93,6 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-22 T12.5:** Sitemap, robots, canonicals, and a title on every route. `/about` and `/changelog` (one MDX note) are in the footer. Homepage JSON-LD adds SoftwareApplication offers from `plans.ts`. Contact is `/about#contact` (no public mailbox). Privacy and Terms stay “Coming soon” for T12.6. Mobile Lighthouse on a production build: SEO 100, accessibility 100, performance 73, LCP 3.5 s. The demo, Turnstile, and PostHog load later. The rest of the gap is homepage hydration and stays deferred.
 - **2026-10-22 T12.4:** `/tools/ats-keyword-checker` runs ANALYZE as `FREE_TOOL` after Turnstile and a 3/day IP-hash cap. Coverage uses the same matcher as the workspace. “Email me this report” upserts a `Lead` (`tool:keyword-checker`) and does not send mail or store the paste. `/tools/bullet-strength` reuses `bulletStrength()` with no AI. Header and footer Free tools go here.
 - **2026-10-22 T12.3:** `/pricing` is the full comparison. The monthly/90-day toggle updates the Pro price on the cards and in the table. Rows come from `plans.ts` (1.0 meters and entitlements; prep kits, bullet coach, and target profiles wait for 1.1). Founding copy uses the 40% from `FOUNDING_DISCOUNT_PERCENT` (US$11.40 / US$27). JSON-LD is SoftwareApplication offers plus FAQPage. Header and footer Pricing go here.
 - **2026-10-22 T12.2:** Homepage section 6 and `/demo` tailor from nine pre-generated fixtures (cs-grad, bi-analyst, retail-changer × junior-dev, data-analyst, frontend). The page makes no model calls. Hero library, resume, and match scenes share one height so the page below stays put on a phone. Changing the candidate or job clears the screen-reader “ready” announcement.

@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+import { strings } from "@/copy/strings";
 
 import { LetterEditor } from "@/features/letters/components/letter-editor";
 import { getLetterWorkspace } from "@/features/letters/queries";
 import { requireUser } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: strings.pages.letterWorkspace.title,
+  description: strings.pages.letterWorkspace.body,
+};
 
 /** The letter comes from the signed-in user. */
 export const instant = false;

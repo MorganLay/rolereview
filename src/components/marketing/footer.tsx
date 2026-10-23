@@ -16,7 +16,7 @@ const productLinks: FooterLink[] = [
   { kind: "link", href: "/#features", label: strings.marketing.footer.features },
   { kind: "link", href: "/pricing", label: strings.marketing.footer.pricing },
   { kind: "link", href: "/demo", label: strings.marketing.footer.demo },
-  { kind: "soon", label: strings.marketing.footer.changelog },
+  { kind: "link", href: "/changelog", label: strings.marketing.footer.changelog },
 ];
 
 const freeToolLinks: FooterLink[] = [
@@ -33,8 +33,8 @@ const freeToolLinks: FooterLink[] = [
 ];
 
 const companyLinks: FooterLink[] = [
-  { kind: "soon", label: strings.marketing.footer.about },
-  { kind: "soon", label: strings.marketing.footer.contact },
+  { kind: "link", href: "/about", label: strings.marketing.footer.about },
+  { kind: "link", href: "/about#contact", label: strings.marketing.footer.contact },
 ];
 
 const legalLinks: FooterLink[] = [
@@ -64,7 +64,7 @@ function FooterColumn({
               </Link>
             ) : (
               <span
-                className="text-sm text-slate/60"
+                className="text-sm text-slate"
                 title={strings.marketing.nav.comingSoon}
               >
                 {item.label}

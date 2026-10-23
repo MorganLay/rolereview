@@ -10,19 +10,20 @@ import {
   presentPricingComparison,
   softwareApplicationJsonLd,
 } from "@/features/marketing/present";
+import { marketingMetadata } from "@/features/marketing/seo";
 import { env } from "@/lib/env";
 
 const copy = strings.marketing.pricing;
 
 export function generateMetadata(): Metadata {
   const pricing = presentMarketingPricing(marketingPlanInput());
-  return {
+  return marketingMetadata({
     title: copy.metaTitle,
     description: pricing
       ? copy.metaDescription(pricing.monthly, pricing.quarterly)
       : strings.brand.shortDescriptor,
-    alternates: { canonical: "/pricing" },
-  };
+    path: "/pricing",
+  });
 }
 
 export default function PricingPage() {

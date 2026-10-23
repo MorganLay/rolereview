@@ -155,7 +155,7 @@ At ~10 h/week, 1.0 is roughly a 3–4 month project. The walking skeleton comes 
 *Accept:* the demo works offline from fixtures, with zero AI calls.
 **T12.3 Pricing page:** toggle, full comparison table generated from `plans.ts`, guarantee, billing FAQ, JSON-LD.
 **T12.4 Free tools:** keyword checker (Turnstile, IP-hash limit, FREE_TOOL logging, email-me-the-report → `Lead`) and bullet strength checker (reuses `strength.ts`).
-**T12.5 SEO & content plumbing:** metadata on all routes, `sitemap.ts`, `robots.ts`, JSON-LD (SoftwareApplication, FAQPage), OG images, `/about`, `/changelog` (MDX). Lighthouse targets met.
+**T12.5 SEO & content plumbing:** metadata on all routes, `sitemap.ts`, `robots.ts`, JSON-LD (SoftwareApplication, FAQPage), OG images, `/about`, `/changelog` (MDX). Lighthouse SEO 100 and accessibility 100. Performance 73 and LCP 3.5 s are recorded in `09-MARKETING.md`; the 90 / 2.5 s bar stays deferred.
 **T12.6 Legal, consent & welcome email:** `/privacy`, `/terms`, Settings → Preferences (timezone, notifications, marketing consent), Resend set up + welcome email + `EmailLog`.
 
 ## Phase 13 — Launch match score (~10 h)

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 
@@ -10,6 +11,11 @@ import { getCheckoutContext } from "@/features/billing/queries";
 import { quotaSnapshot } from "@/features/billing/quota";
 import { listDueReminders } from "@/features/tracking/queries";
 import { requireUser } from "@/lib/auth";
+
+/** Signed-in pages stay out of search results. */
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 /** Auth shell blocks on session + User upsert — not an instant static shell. */
 export const instant = false;

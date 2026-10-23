@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
+
 import { PlaceholderPage } from "@/components/shell/placeholder-page";
 import { strings } from "@/copy/strings";
 import { requireAdmin } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: strings.admin.title,
+  description: strings.admin.body,
+};
 
 /** Stub until Phase 20 admin UI. requireAdmin → 404 for non-admins. */
 export default async function AdminPage() {

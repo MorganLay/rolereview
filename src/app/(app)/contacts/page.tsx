@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
+
 import { strings } from "@/copy/strings";
 import { CONTACT_LIMITS } from "@/features/tracking/contacts";
 import { ContactsWorkspace } from "@/features/tracking/components/contacts-workspace";
 import { listContacts } from "@/features/tracking/queries";
 import { requireUser } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: strings.pages.contacts.title,
+  description: strings.pages.contacts.body,
+};
 
 /** The list comes from the signed-in user. */
 export const instant = false;

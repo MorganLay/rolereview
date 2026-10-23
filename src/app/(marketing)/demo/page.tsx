@@ -3,14 +3,15 @@ import type { Metadata } from "next";
 import { strings } from "@/copy/strings";
 import { DemoExperience } from "@/features/marketing/demo/demo-experience";
 import { loadDemoCatalog } from "@/features/marketing/demo/load";
+import { marketingMetadata } from "@/features/marketing/seo";
 
 const copy = strings.marketing.demo;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = marketingMetadata({
   title: copy.metaTitle,
   description: copy.metaDescription,
-  alternates: { canonical: "/demo" },
-};
+  path: "/demo",
+});
 
 export default function DemoPage() {
   return (

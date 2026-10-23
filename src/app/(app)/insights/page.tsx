@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
+
+import { strings } from "@/copy/strings";
 import { can } from "@/features/billing/entitlements";
 import { InsightsScreen } from "@/features/insights/components/insights-screen";
 import { parseInsightsRange } from "@/features/insights/metrics";
 import { getInsights } from "@/features/insights/queries";
 import { requireUser } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: strings.pages.insights.title,
+  description: strings.pages.insights.body,
+};
 
 /** The page is read for the signed-in user, including "now". */
 export const instant = false;

@@ -21,6 +21,15 @@ describe("marketing demo fixtures", () => {
     );
   });
 
+  it("matches the deferred homepage catalog", async () => {
+    const { loadClientCatalog } = await import(
+      "@/features/marketing/demo/client-catalog"
+    );
+    expect(
+      loadClientCatalog().map((fixture) => `${fixture.persona}__${fixture.posting}`),
+    ).toEqual(catalog.map((fixture) => `${fixture.persona}__${fixture.posting}`));
+  });
+
   it("drops keyword coverage when a bullet that uniquely covers a keyword is turned off", () => {
     const dropped = catalog.some((fixture) => {
       const keywords = fixture.analysis.keywords;

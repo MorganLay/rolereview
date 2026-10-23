@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,11 @@ import {
 } from "@/features/jobs/list-params";
 import { listBoardJobs, listJobs } from "@/features/jobs/queries";
 import { requireUser } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: strings.pages.jobs.title,
+  description: strings.pages.jobs.body,
+};
 
 /** The list comes from the signed-in user. */
 export const instant = false;

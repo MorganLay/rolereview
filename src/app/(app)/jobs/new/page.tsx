@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { strings } from "@/copy/strings";
 import { NewJobForm } from "@/features/jobs/components/new-job-form";
 import { analysesRemaining } from "@/features/jobs/queries";
@@ -5,6 +7,11 @@ import { requireUser } from "@/lib/auth";
 
 /** Analysis calls the model and can take several seconds. */
 export const maxDuration = 120;
+
+export const metadata: Metadata = {
+  title: strings.pages.jobsNew.title,
+  description: strings.pages.jobsNew.body,
+};
 
 /** The analyses-left count comes from the signed-in user. */
 export const instant = false;

@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+import { strings } from "@/copy/strings";
 
 import { checkoutPrices } from "@/features/billing/catalog";
 import { previewAllowed } from "@/features/billing/checkout-rules";
@@ -7,6 +10,11 @@ import { checkoutConfirmed, parseSettingsTab } from "@/features/billing/present"
 import { getPlanBilling } from "@/features/billing/queries";
 import { requireUser } from "@/lib/auth";
 import { env } from "@/lib/env";
+
+export const metadata: Metadata = {
+  title: strings.pages.settings.title,
+  description: strings.pages.settings.body,
+};
 
 /** Usage is read for the signed-in user, including "now". */
 export const instant = false;

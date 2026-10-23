@@ -1,6 +1,8 @@
+import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
   /* Allow Cursor browser / 127.0.0.1 to load /_next assets in dev. */
   allowedDevOrigins: ["127.0.0.1"],
   serverExternalPackages: ["@react-pdf/renderer", "docx"],
@@ -25,4 +27,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withMDX = createMDX({
+  extension: /\.mdx$/,
+});
+
+export default withMDX(nextConfig);

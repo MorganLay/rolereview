@@ -437,6 +437,7 @@ export const strings = {
       jobLabel: "Sample job",
       tailor: "Tailor",
       prompt: "Pick a candidate and a job, then tailor.",
+      loading: "Loading the sample resumes.",
       pregenerated: "This one was pre-generated. Yours takes about a minute.",
       tryYours: "Now try it with your resume",
       ready: "Tailored resume ready.",
@@ -548,6 +549,29 @@ export const strings = {
         "We’ll email you when RoleRefine opens. Share your link so friends can join too.",
       shareLabel: "Your invite link",
       inviteHint: "Invite 3 friends for early beta access.",
+    },
+    about: {
+      metaTitle: "About",
+      metaDescription:
+        "RoleRefine was built in Ottawa to tailor resumes from your real experience and keep the whole search in one place.",
+      title: "About",
+      truthfulTitle: "Why it won’t invent a line",
+      truthfulBody:
+        "Job titles, employers, and dates on a tailored resume come from your library. Each bullet cites the experience it came from. A check runs before the resume is saved, and a line that doesn’t trace back is not kept.",
+      truthfulLetter:
+        "A cover letter can use a note you write about why you want the role. It does not invent that reason for you.",
+      contactTitle: "Contact",
+      contactBody:
+        "There isn’t a public mailbox yet. For product updates, use the form at the bottom of this page. After you sign in, the Feedback button on app pages sends a note.",
+    },
+    changelog: {
+      metaTitle: "Changelog",
+      metaDescription:
+        "What you can do in RoleRefine today: the library, tailoring, the jobs board, and export. These notes are not a launch announcement.",
+      title: "Changelog",
+      intro:
+        "Notes on what’s in the product. A date is when the note was published, not a launch date.",
+      empty: "No notes yet.",
     },
   },
   signIn: {

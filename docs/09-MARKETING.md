@@ -112,7 +112,7 @@ H2 (serif): "Your next role is waiting." Sub: "Import your resume and tailor you
 Product (Features, Pricing, Demo, Changelog) · Free tools · Guides (1.1) · Compare (1.1) · Company (About, Contact) · Legal (Privacy, Terms) · newsletter signup (email + CASL checkbox → `Lead`) · socials · "© RoleRefine · Made in Ottawa".
 
 ### Homepage quality bar
-- Lighthouse mobile: Performance ≥ 90, Accessibility ≥ 95, SEO 100; LCP < 2.5 s.
+- Lighthouse mobile on a production build (2026-10-22): Accessibility 100, SEO 100, Performance 73, LCP 3.5 s. The 90 / 2.5 s targets stay open. The gap is React hydrating the first screen after the hero HTML is already sent. The demo, Turnstile, and PostHog load later.
 - Works at 375 px; tap targets ≥ 44 px; CTA visible without scrolling on mobile.
 - One H1; logical headings; alt text; reduced motion respected.
 - Events: `cta_click {location}`, `demo_run {persona, job}`, `pricing_toggle`, `faq_open {q}`.

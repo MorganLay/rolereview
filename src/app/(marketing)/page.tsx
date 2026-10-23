@@ -3,19 +3,39 @@ import type { Metadata } from "next";
 import { strings } from "@/copy/strings";
 import { marketingPlanInput } from "@/features/billing/catalog";
 import { HomePage } from "@/features/marketing/components/home-page";
-import { loadDemoCatalog } from "@/features/marketing/demo/load";
-import { presentMarketingPricing } from "@/features/marketing/present";
+import { presentMarketingPricing, softwareApplicationJsonLd } from "@/features/marketing/present";
+import { marketingMetadata } from "@/features/marketing/seo";
+import { env } from "@/lib/env";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = marketingMetadata({
   title: strings.marketing.home.metaTitle,
   description: strings.marketing.home.metaDescription,
-};
+  path: "/",
+});
 
 export default function Home() {
-  const pricing = presentMarketingPricing(marketingPlanInput());
+  const input = marketingPlanInput();
+  const pricing = presentMarketingPricing(input);
   if (!pricing) {
     throw new Error("Homepage pricing could not be formatted from plans.");
   }
 
-  return <HomePage pricing={pricing} demos={loadDemoCatalog()} />;
+  const appJsonLd = softwareApplicationJsonLd({
+    name: strings.brand.name,
+    description: strings.brand.shortDescriptor,
+    url: env.NEXT_PUBLIC_APP_URL.replace(/\/$/, ""),
+    freeUsd: input.freeMonthlyUsd,
+    monthlyUsd: input.monthlyUsd,
+    quarterlyUsd: input.quarterlyUsd,
+  });
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }}
+      />
+      <HomePage pricing={pricing} />
+    </>
+  );
 }

@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+import { strings } from "@/copy/strings";
 
 import { JobResult } from "@/features/jobs/components/job-result";
 import type { JobSectionTab } from "@/features/jobs/components/job-sections";
@@ -17,6 +20,11 @@ import { requireUser } from "@/lib/auth";
 
 /** Analysis retry, tailoring, and cover letters call the model and can take up to a minute. */
 export const maxDuration = 120;
+
+export const metadata: Metadata = {
+  title: strings.pages.jobDetail.title,
+  description: strings.pages.jobDetail.body,
+};
 
 /** The job comes from the signed-in user. */
 export const instant = false;

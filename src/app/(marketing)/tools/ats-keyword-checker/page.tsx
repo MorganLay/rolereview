@@ -2,16 +2,17 @@ import type { Metadata } from "next";
 
 import { strings } from "@/copy/strings";
 import { KeywordChecker } from "@/features/marketing/tools/components/keyword-checker";
+import { marketingMetadata } from "@/features/marketing/seo";
 
 const copy = strings.marketing.tools.keyword;
 
 export const maxDuration = 120;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = marketingMetadata({
   title: copy.metaTitle,
   description: copy.metaDescription,
-  alternates: { canonical: "/tools/ats-keyword-checker" },
-};
+  path: "/tools/ats-keyword-checker",
+});
 
 export default function AtsKeywordCheckerPage() {
   return (

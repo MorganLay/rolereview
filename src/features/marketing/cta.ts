@@ -14,6 +14,7 @@ export const CTA_LOCATIONS = [
   "final",
   "keyword-checker",
   "bullet-strength",
+  "about",
 ] as const;
 
 export type CtaLocation = (typeof CTA_LOCATIONS)[number];

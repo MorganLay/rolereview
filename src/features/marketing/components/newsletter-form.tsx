@@ -20,6 +20,7 @@ export function NewsletterForm() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [captcha, setCaptcha] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function onSubmit(event: React.FormEvent) {
@@ -69,7 +70,12 @@ export function NewsletterForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3" noValidate>
+    <form
+      onSubmit={onSubmit}
+      onFocus={() => setCaptcha(true)}
+      className="space-y-3"
+      noValidate
+    >
       <div className="space-y-1.5">
         <Label htmlFor="newsletter-email">{copy.newsletterEmailLabel}</Label>
         <Input
@@ -107,7 +113,9 @@ export function NewsletterForm() {
       {fieldErrors.marketingConsent?.[0] ? (
         <p className="text-sm text-clay">{fieldErrors.marketingConsent[0]}</p>
       ) : null}
-      <TurnstileWidget onToken={setToken} onExpire={() => setToken(null)} />
+      {captcha ? (
+        <TurnstileWidget onToken={setToken} onExpire={() => setToken(null)} />
+      ) : null}
       {formError ? (
         <p className="text-sm text-clay" role="alert">
           {formError}

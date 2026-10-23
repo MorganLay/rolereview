@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -11,6 +12,11 @@ import { SkillList } from "@/features/library/components/skill-list";
 import { libraryHealth } from "@/features/library/health";
 import { getLibrary } from "@/features/library/queries";
 import { requireUser } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: strings.pages.library.title,
+  description: strings.pages.library.body,
+};
 
 /** Profile comes from the signed-in user row — not an instant static shell. */
 export const instant = false;

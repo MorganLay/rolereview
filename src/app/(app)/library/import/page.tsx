@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { strings } from "@/copy/strings";
@@ -7,6 +8,11 @@ import { requireUser } from "@/lib/auth";
 
 /** Import calls the model and may upload a 5 MB file. */
 export const maxDuration = 120;
+
+export const metadata: Metadata = {
+  title: strings.pages.libraryImport.title,
+  description: strings.pages.libraryImport.body,
+};
 
 /** Library counts and the onboarding flag come from the signed-in user. */
 export const instant = false;

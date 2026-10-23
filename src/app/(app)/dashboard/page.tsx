@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { connection } from "next/server";
 
 import { strings } from "@/copy/strings";
@@ -9,6 +10,11 @@ import { getDashboard } from "@/features/dashboard/queries";
 import { TodayPanel } from "@/features/tracking/components/today-panel";
 import { listToday } from "@/features/tracking/queries";
 import { requireUser } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: strings.pages.dashboard.title,
+  description: strings.pages.dashboard.body,
+};
 
 /** The dashboard is read for the signed-in user, including "now". */
 export const instant = false;

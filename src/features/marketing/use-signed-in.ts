@@ -2,16 +2,15 @@
 
 import { useEffect, useState } from "react";
 
-import { createClient } from "@/lib/supabase/client";
-
 let sessionPromise: Promise<boolean> | null = null;
 
 function readSession(): Promise<boolean> {
   if (!sessionPromise) {
-    const supabase = createClient();
-    sessionPromise = supabase.auth
-      .getSession()
-      .then(({ data }) => Boolean(data.session));
+    sessionPromise = import("@/lib/supabase/client").then(({ createClient }) =>
+      createClient()
+        .auth.getSession()
+        .then(({ data }) => Boolean(data.session)),
+    );
   }
   return sessionPromise;
 }

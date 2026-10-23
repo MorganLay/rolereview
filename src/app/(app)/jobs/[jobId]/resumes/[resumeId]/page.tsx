@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+import { strings } from "@/copy/strings";
 
 import { ResumeEditor } from "@/features/tailor/components/resume-editor";
 import { getResumeWorkspace } from "@/features/tailor/queries";
 import { requireUser } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: strings.pages.resumeWorkspace.title,
+  description: strings.pages.resumeWorkspace.body,
+};
 
 /** The resume comes from the signed-in user. */
 export const instant = false;

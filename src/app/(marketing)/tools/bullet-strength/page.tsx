@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 
 import { strings } from "@/copy/strings";
 import { BulletStrengthChecker } from "@/features/marketing/tools/components/bullet-strength-checker";
+import { marketingMetadata } from "@/features/marketing/seo";
 
 const copy = strings.marketing.tools.bullets;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = marketingMetadata({
   title: copy.metaTitle,
   description: copy.metaDescription,
-  alternates: { canonical: "/tools/bullet-strength" },
-};
+  path: "/tools/bullet-strength",
+});
 
 export default function BulletStrengthPage() {
   return (

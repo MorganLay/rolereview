@@ -1,28 +1,35 @@
 "use client";
 
 import { useEffect } from "react";
-import posthog from "posthog-js";
 
-let initialized = false;
+import { loadPosthog } from "@/lib/analytics-browser";
 
 /**
  * Cookieless PostHog (docs/03-ARCHITECTURE.md). No-op when the public key is unset.
+ * The library loads on the first click or keypress, or after 8 seconds,
+ * so it stays out of the first paint.
  */
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-    if (!key || initialized) return;
-    initialized = true;
-
-    posthog.init(key, {
-      api_host:
-        process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
-      cookieless_mode: "always",
-      person_profiles: "never",
-      persistence: "memory",
-      capture_pageview: true,
-      capture_pageleave: true,
-    });
+    let started = false;
+    let timer = 0;
+    const start = () => {
+      if (started) return;
+      started = true;
+      window.clearTimeout(timer);
+      window.removeEventListener("pointerdown", start);
+      window.removeEventListener("keydown", start);
+      void loadPosthog();
+    };
+    timer = window.setTimeout(start, 8000);
+    window.addEventListener("pointerdown", start, { once: true });
+    window.addEventListener("keydown", start, { once: true });
+    return () => {
+      started = true;
+      window.clearTimeout(timer);
+      window.removeEventListener("pointerdown", start);
+      window.removeEventListener("keydown", start);
+    };
   }, []);
 
   return children;
