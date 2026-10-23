@@ -10,6 +10,8 @@ export const PUBLIC_SITEMAP_PATHS = [
   "/demo",
   "/about",
   "/changelog",
+  "/privacy",
+  "/terms",
   "/waitlist",
   "/tools/ats-keyword-checker",
   "/tools/bullet-strength",

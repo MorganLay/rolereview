@@ -199,8 +199,10 @@ Cover letters follow the same shape (`features/letters/actions.ts`).
 - **Data export:** `GET /api/account/export` streams JSON of every user-owned row.
 
 ## Email (Resend)
-- `lib/email/send.ts`: `sendEmail({ to, template, refKey, recipientKey, props })` → checks `EmailLog` unique (skip if already sent) → Resend → insert `EmailLog`. Templates in `lib/email/templates/` (React Email).
-- Every email: one CTA, a footer with preferences/unsubscribe link and a mailing address (CASL). Marketing templates check `marketingConsentAt` and refuse to send without it.
+- `lib/email/send.ts`: `sendEmail({ to, template, refKey, recipientKey, marketingConsentAt })` checks `EmailLog` (`recipientKey`, `template`, `refKey`) and skips a duplicate, then sends with a Resend idempotency key and inserts `EmailLog`. Templates live in `lib/email/templates/`.
+- Welcome (`template` `welcome`, `refKey` `signup`, `recipientKey` = user id) is sent after a new user row is created. A failed or unconfigured send does not block sign-up and does not write `EmailLog`. Missing `RESEND_API_KEY` or `EMAIL_FROM` logs the user id and skips.
+- Every email has one call to action, a preferences link, and “RoleRefine · Ottawa, Ontario, Canada”. A street address or PO box from `MAILING_ADDRESS` is added when that value is real. The example line in `.env.example` is treated as unset.
+- Marketing templates require `marketingConsentAt` and a real mailing address, and refuse otherwise.
 - **1.0:** welcome email. **1.1:** reminders digest, weekly digest, renewal heads-up, offer congratulations, quota reached, product updates.
 
 ## Scheduled jobs (1.1, Vercel Cron)

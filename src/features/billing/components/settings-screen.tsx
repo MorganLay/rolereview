@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { strings } from "@/copy/strings";
+import { PreferencesForm } from "@/features/account/components/preferences-form";
+import type { AccountPreferences } from "@/features/account/preferences";
 
 import type { PlanBilling } from "../queries";
 import { CheckoutActions } from "./checkout-actions";
@@ -23,12 +25,14 @@ const page = strings.pages.settings;
 export function SettingsScreen({
   tab,
   billing,
+  preferences,
   prices,
   upgraded,
   showTestPreview,
 }: {
   tab: SettingsTab;
   billing: PlanBilling | null;
+  preferences: AccountPreferences | null;
   prices: CheckoutPrices;
   upgraded: boolean;
   showTestPreview: boolean;
@@ -62,6 +66,8 @@ export function SettingsScreen({
           upgraded={upgraded}
           showTestPreview={showTestPreview}
         />
+      ) : tab === "preferences" && preferences ? (
+        <PreferencesForm preferences={preferences} />
       ) : (
         <Later />
       )}

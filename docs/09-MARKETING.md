@@ -129,7 +129,7 @@ Product (Features, Pricing, Demo, Changelog) · Free tools · Guides (1.1) · Co
 | `/tools/bullet-strength` | Free tool | 1.0 |
 | `/about` | Founder story, why truthful-by-design, contact | 1.0 |
 | `/changelog` | MDX entries; shows momentum | 1.0 |
-| `/privacy`, `/terms` | Plain-language legal (PIPEDA-aware privacy; CASL consent wording) | 1.0 |
+| `/privacy`, `/terms` | Plain-language legal (PIPEDA-aware privacy; CASL consent wording). Draft dated October 23, 2026. Contact, export, and deletion requests go to `/about#contact` until Settings → Data in T13.1. | 1.0 |
 | `/waitlist` | Pre-launch waitlist. Stays at this URL after the homepage ships. | 1.0 early |
 | `/guides/[slug]` | SEO guides (MDX) | 1.1 |
 | `/for/new-grads`, `/for/career-changers`, `/for/canadian-public-service` | Audience landing pages; demo preset to the matching persona | 1.1 |

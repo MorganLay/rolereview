@@ -8,6 +8,7 @@ import {
   type UserCreateAttribution,
 } from "@/lib/auth/attribution";
 import { db } from "@/lib/db";
+import { sendWelcomeEmail } from "@/lib/email/send";
 
 export type SessionUser = {
   id: string;
@@ -95,6 +96,7 @@ async function createUserWithAttribution(
 
         return user;
       });
+      await sendWelcomeEmail({ to: email, recipientKey: created.id });
       return created;
     } catch (error) {
       const raced = await db.user.findUnique({

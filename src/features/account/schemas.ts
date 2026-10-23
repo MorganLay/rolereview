@@ -1,11 +1,17 @@
 import { z } from "zod";
 
+import { isIanaTimeZone } from "./preferences";
+
 /** IANA timezone id from the browser (e.g. America/Toronto). */
+export const timezoneSchema = z.string().trim().refine(isIanaTimeZone, "Invalid timezone");
+
 export const setTimezoneSchema = z.object({
-  timezone: z
-    .string()
-    .trim()
-    .min(1)
-    .max(100)
-    .regex(/^[A-Za-z0-9_+\-\/]+$/, "Invalid timezone"),
+  timezone: timezoneSchema,
+});
+
+export const preferencesSchema = z.object({
+  timezone: timezoneSchema,
+  emailRemindersEnabled: z.boolean(),
+  weeklyDigestEnabled: z.boolean(),
+  marketingConsent: z.boolean(),
 });

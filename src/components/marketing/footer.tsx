@@ -38,8 +38,8 @@ const companyLinks: FooterLink[] = [
 ];
 
 const legalLinks: FooterLink[] = [
-  { kind: "soon", label: strings.marketing.footer.privacy },
-  { kind: "soon", label: strings.marketing.footer.terms },
+  { kind: "link", href: "/privacy", label: strings.marketing.footer.privacy },
+  { kind: "link", href: "/terms", label: strings.marketing.footer.terms },
 ];
 
 function FooterColumn({

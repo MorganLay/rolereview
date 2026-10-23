@@ -22,6 +22,8 @@ describe("sitemapEntries", () => {
       "https://www.rolerefine.ca/demo",
       "https://www.rolerefine.ca/about",
       "https://www.rolerefine.ca/changelog",
+      "https://www.rolerefine.ca/privacy",
+      "https://www.rolerefine.ca/terms",
       "https://www.rolerefine.ca/waitlist",
       "https://www.rolerefine.ca/tools/ats-keyword-checker",
       "https://www.rolerefine.ca/tools/bullet-strength",
@@ -34,7 +36,8 @@ describe("sitemapEntries", () => {
       priority: 1,
     });
     const paths: readonly string[] = PUBLIC_SITEMAP_PATHS;
-    expect(paths).not.toContain("/privacy");
+    expect(paths).toContain("/privacy");
+    expect(paths).toContain("/terms");
     expect(paths).not.toContain("/sign-in");
   });
 

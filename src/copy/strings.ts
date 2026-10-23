@@ -573,6 +573,172 @@ export const strings = {
         "Notes on what’s in the product. A date is when the note was published, not a launch date.",
       empty: "No notes yet.",
     },
+    privacy: {
+      metaTitle: "Privacy",
+      metaDescription:
+        "What RoleRefine stores, who processes it, and how to ask for a copy or deletion.",
+      title: "Privacy",
+      updated: "Updated October 23, 2026",
+      note: "This page says what RoleRefine does with your information, in plain language. It is not a legal opinion.",
+      contactLabel: "Contact",
+      sections: [
+        {
+          heading: "Who we are",
+          paragraphs: [
+            "RoleRefine is operated from Ottawa, Ontario, Canada. There is no public mailbox yet.",
+          ],
+        },
+        {
+          heading: "What we store",
+          paragraphs: [
+            "When you sign in, we store the email address from that sign-in and the profile you choose to add: name, headline, phone, location, links, and a summary.",
+            "We store your experience library, the jobs you add, and the history of each application: status, interviews, contacts, reminders, and offers. We store the tailored resumes and cover letters made from your library.",
+            "We store your timezone, whether you want reminder and weekly emails, and, if you opt in, the time and the exact wording of that marketing consent.",
+          ],
+        },
+        {
+          heading: "Files",
+          paragraphs: [
+            "A resume file you upload is read in memory so the text can be pulled out. The file is not kept. What you save becomes library entries.",
+          ],
+        },
+        {
+          heading: "AI",
+          paragraphs: [
+            "Tailoring, cover letters, job analysis, and resume import send the text needed for that step to Anthropic’s API (Claude). Anthropic’s commercial terms, checked on October 23, 2026, say Anthropic may not train models on that content. Anthropic’s privacy notice says API inputs and outputs are deleted within 30 days, except when a longer keep is required for their usage policy or the law.",
+            "We keep the resume or letter that results, in your account. Our usage log stores the kind of call, token counts, and an estimated cost. It does not store the prompt or the resume text.",
+          ],
+        },
+        {
+          heading: "Payments",
+          paragraphs: [
+            "Stripe processes subscriptions. We store the plan, the billing interval, and the subscription status Stripe sends us. We do not store your card number.",
+          ],
+        },
+        {
+          heading: "Analytics",
+          paragraphs: [
+            "Product analytics use PostHog in cookieless mode. Events carry ids, counts, and categories. They do not carry your email, your resume, or a job posting.",
+          ],
+        },
+        {
+          heading: "Email",
+          paragraphs: [
+            "Sign-in links are sent by the sign-in provider. Account email, including the welcome note, is sent by Resend. Product updates go out only after you tick the consent box. We keep the time and the exact words you agreed to.",
+            "Each message links to your email preferences. A street address or PO box is included when one is on file. A home address is not required.",
+          ],
+        },
+        {
+          heading: "Cookies",
+          paragraphs: [
+            "Sign-in uses a session cookie. A separate cookie remembers how you first arrived, for 30 days. Analytics does not set a tracking cookie.",
+          ],
+        },
+        {
+          heading: "Export and delete",
+          paragraphs: [
+            "You can ask for a copy of your account data, or for the account to be deleted, from the Contact section on the About page. Those controls are not on the Settings page yet.",
+          ],
+        },
+      ],
+    },
+    terms: {
+      metaTitle: "Terms",
+      metaDescription:
+        "The terms for using RoleRefine: your content, plans, and acceptable use.",
+      title: "Terms",
+      updated: "Updated October 23, 2026",
+      note: "These terms are a plain-language draft. They are not a legal opinion.",
+      contactLabel: "Contact",
+      sections: [
+        {
+          heading: "The service",
+          paragraphs: [
+            "RoleRefine keeps an experience library, tailors a resume and cover letter from that library, and tracks applications through to an offer.",
+          ],
+        },
+        {
+          heading: "Your content",
+          paragraphs: [
+            "You keep what you enter. You are responsible for having the right to use it. Job titles, employers, and dates on a tailored resume come from your library. You review a document before you send it to an employer.",
+          ],
+        },
+        {
+          heading: "Acceptable use",
+          paragraphs: [
+            "Use the service for your own job search. Do not use it to break the law, to disrupt the service, or to submit information you know is false.",
+          ],
+        },
+        {
+          heading: "Accounts",
+          paragraphs: [
+            "You sign in with an email link or Google. You are responsible for activity on your account.",
+          ],
+        },
+        {
+          heading: "Plans and payment",
+          paragraphs: [
+            "Free and Pro, the prices, and the 14-day refund are described on the pricing page. You can cancel Pro from the billing page. Stripe processes the payment.",
+          ],
+        },
+        {
+          heading: "AI output",
+          paragraphs: [
+            "The model can still be wrong. A guard checks that tailored lines trace to your library, and you should read the result. RoleRefine does not promise interviews, responses, or offers.",
+          ],
+        },
+        {
+          heading: "Changes and availability",
+          paragraphs: [
+            "The service can change, and it can be unavailable. We may suspend an account that abuses the service.",
+          ],
+        },
+        {
+          heading: "Liability",
+          paragraphs: [
+            "The service is provided as it is available. To the extent Ontario and Canadian law allow, RoleRefine is not liable for indirect loss or for a hiring decision. These terms do not limit any liability the law does not let us limit.",
+          ],
+        },
+        {
+          heading: "Law",
+          paragraphs: [
+            "These terms are governed by the laws of Ontario and the laws of Canada that apply there.",
+          ],
+        },
+        {
+          heading: "Contact",
+          paragraphs: [
+            "Questions go to the Contact section on the About page.",
+          ],
+        },
+      ],
+    },
+  },
+  email: {
+    welcome: {
+      subject: "Your RoleRefine account is ready",
+      preview: "Add your experience once, then tailor a resume for each role.",
+      body: "Your account is ready. Add your experience once, then tailor a resume for each role from that library.",
+      cta: "Build your library",
+      preferences: "Email preferences",
+      location: "RoleRefine · Ottawa, Ontario, Canada",
+    },
+  },
+  settings: {
+    preferences: {
+      title: "Preferences",
+      timezoneLabel: "Timezone",
+      reminders: "Email me when reminders are due",
+      digest: "Email me a weekly summary",
+      later:
+        "Reminder and weekly emails are not sent yet. This saves your choice.",
+      marketing: "Email me product updates and launch news. Unsubscribe anytime.",
+      save: "Save preferences",
+      saving: "Saving…",
+      saved: "Preferences saved.",
+      error: "Couldn’t save preferences. Try again.",
+      invalid: "Check the timezone and try again.",
+    },
   },
   signIn: {
     title: "Sign in",
