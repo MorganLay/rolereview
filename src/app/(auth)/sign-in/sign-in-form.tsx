@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { strings } from "@/copy/strings";
+import { requestMagicLink } from "@/features/auth/actions";
 import { createClient } from "@/lib/supabase/client";
 
 type Props = {
@@ -31,13 +32,17 @@ export function SignInForm({ next, error }: Props) {
     e.preventDefault();
     setFormError(null);
     startTransition(async () => {
-      const supabase = createClient();
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: { emailRedirectTo: callbackUrl() },
+      const result = await requestMagicLink({
+        email,
+        next,
+        origin: window.location.origin,
       });
-      if (otpError) {
-        setFormError(strings.signIn.errors.sendLink);
+      if (!result.ok) {
+        setFormError(
+          result.error.code === "RATE_LIMITED"
+            ? strings.signIn.errors.rateLimit
+            : strings.signIn.errors.sendLink,
+        );
         return;
       }
       setSent(true);

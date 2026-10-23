@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { strings } from "@/copy/strings";
+import { DataPanel } from "@/features/account/components/data-panel";
 import { PreferencesForm } from "@/features/account/components/preferences-form";
 import type { AccountPreferences } from "@/features/account/preferences";
 
@@ -68,6 +69,8 @@ export function SettingsScreen({
         />
       ) : tab === "preferences" && preferences ? (
         <PreferencesForm preferences={preferences} />
+      ) : tab === "data" ? (
+        <DataPanel />
       ) : (
         <Later />
       )}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
 import { strings } from "@/copy/strings";
 import { createClient } from "@/lib/supabase/server";
@@ -22,6 +23,7 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<{ next?: string; error?: string }>;
 }) {
+  await connection();
   const params = await searchParams;
   const next = safeRedirectPath(params.next);
 

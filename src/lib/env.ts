@@ -7,11 +7,18 @@ import { z } from "zod";
  * Secrets for later phases stay optional so local work doesn't need fake keys.
  * Auth requires NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.
  * Placeholder values from `.env.example` (`<...>` or `...`) are treated as unset
- * for optional secrets only.
+ * for optional secrets only. `EMAIL_FROM` may include a display name in angle
+ * brackets, so only `...` marks that value unset.
  */
 function readOptional(name: string): string | undefined {
   const value = process.env[name];
   if (!value || value.includes("<") || value.includes("...")) return undefined;
+  return value;
+}
+
+function readEmailFrom(): string | undefined {
+  const value = process.env.EMAIL_FROM?.trim();
+  if (!value || value.includes("...")) return undefined;
   return value;
 }
 
@@ -69,7 +76,7 @@ function loadEnv(): Env {
     STRIPE_PRICE_PRO_QUARTERLY: readOptional("STRIPE_PRICE_PRO_QUARTERLY"),
     STRIPE_COUPON_FOUNDING: readOptional("STRIPE_COUPON_FOUNDING"),
     RESEND_API_KEY: readOptional("RESEND_API_KEY"),
-    EMAIL_FROM: readOptional("EMAIL_FROM"),
+    EMAIL_FROM: readEmailFrom(),
     MAILING_ADDRESS: readOptional("MAILING_ADDRESS"),
     TURNSTILE_SECRET_KEY: readOptional("TURNSTILE_SECRET_KEY"),
     IP_HASH_SALT: readOptional("IP_HASH_SALT"),

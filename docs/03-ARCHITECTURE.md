@@ -164,7 +164,7 @@ Any change to `Job.status` (board drag, dropdown, list, offer creation, intervie
 `boardOrder` is a float. Moving a card between neighbours A and B sets `(A + B) / 2` (or ±1 at the ends); when the gap gets below 1e-6, renumber that column in a transaction. Unit-tested in `board-order.ts`.
 
 ## Auth design
-- Supabase Auth session cookie; `src/proxy.ts` refreshes it and redirects signed-out users from app routes (`/dashboard`, `/library`, `/jobs`, `/contacts`, `/insights`, `/milestones`, `/settings`, `/admin`) to `/sign-in?next=…`. It also stores first-touch `source`, `utm_*`, `ref`, and referrer in a 30-day cookie (`rr_ft`). `/auth/callback` exchanges a PKCE `code` or verifies a `token_hash` + `type` (admin/email links).
+- Supabase Auth session cookie; `src/proxy.ts` refreshes it and redirects signed-out users from app routes (`/dashboard`, `/library`, `/jobs`, `/contacts`, `/insights`, `/milestones`, `/settings`, `/admin`) to `/sign-in?next=…`. It also stores first-touch `source`, `utm_*`, `ref`, and referrer in a 30-day cookie (`rr_ft`). `/sign-in` asks `requestMagicLink` to generate the link with the admin API and send it through Resend (five per email per hour). Google stays a browser OAuth redirect. `/auth/callback` exchanges a PKCE `code` or verifies a `token_hash` + `type`.
 - **`requireUser()` is the security boundary**, called in the `(app)` layout, every server action, and every route handler except the webhook and cron (cron uses `CRON_SECRET`).
 - `requireUser()` (wrapped in React `cache()`): `supabase.auth.getUser()` (never trust `getSession()` on the server) → upsert `User` (on create: `referralCode = nanoid(8)`, attribution from the cookie, and a `Referral` row if a valid `ref` exists) → return `{ id, email, plan, role }`. Signed-out: `redirect("/sign-in")` in pages; `fail("UNAUTHENTICATED")` in actions.
 - `requireAdmin()` = `requireUser()` + `role === "ADMIN"`, otherwise `notFound()`.
@@ -196,14 +196,15 @@ Cover letters follow the same shape (`features/letters/actions.ts`).
 - **PDF:** `GET /api/resumes/[resumeId]/pdf` and `/api/letters/[letterId]/pdf`: `requireUser()` → load scoped → entitlement check for the template (fallback to Classic) → `renderToBuffer` → `attachment` download; set `exportedAt`. These routes run on the Node.js runtime. Do not export `runtime` while `cacheComponents` is enabled; Next rejects that segment config. The default runtime is already Node.
 - **DOCX** (Pro): same routes with `/docx`, built with `docx` from the same section order as PDF/plain text. Single column, Arial, no tables. Unentitled requests return `PRO_REQUIRED`.
 - **ATS rules for all resume templates:** single column; standard headings; no tables/text boxes for content; real text; embedded OFL fonts (Inter, Source Sans 3); no icons replacing words. Compact = tighter spacing and smaller type for 1-page fits. When `TailorOptions.length` is 1, a PDF that would spill onto a second page groups the header links, then tightens spacing and type, until it fits one Letter page. It does not remove lines.
-- **Data export:** `GET /api/account/export` streams JSON of every user-owned row.
+- **Data export:** `GET /api/account/export` returns `rolerefine-export.json`: the account and every user-owned row. Feedback and testimonials are included. They stay, with `userId` cleared, when the account is deleted. Leads, free-tool runs, Stripe events, and the email log are not in the file.
 
 ## Email (Resend)
 - `lib/email/send.ts`: `sendEmail({ to, template, refKey, recipientKey, marketingConsentAt })` checks `EmailLog` (`recipientKey`, `template`, `refKey`) and skips a duplicate, then sends with a Resend idempotency key and inserts `EmailLog`. Templates live in `lib/email/templates/`.
 - Welcome (`template` `welcome`, `refKey` `signup`, `recipientKey` = user id) is sent after a new user row is created. A failed or unconfigured send does not block sign-up and does not write `EmailLog`. Missing `RESEND_API_KEY` or `EMAIL_FROM` logs the user id and skips.
+- Magic link (`template` `magic-link`) is a new `EmailLog` row on every successful send (`refKey` is a new id, `recipientKey` is a hash of the address). The link is `/auth/callback?token_hash&type&next`. A failed send writes nothing. Five sends per address per hour return `RATE_LIMITED`. `EMAIL_FROM` may be `Name <address>` and is still loaded.
 - Every email has one call to action, a preferences link, and “RoleRefine · Ottawa, Ontario, Canada”. A street address or PO box from `MAILING_ADDRESS` is added when that value is real. The example line in `.env.example` is treated as unset.
 - Marketing templates require `marketingConsentAt` and a real mailing address, and refuse otherwise.
-- **1.0:** welcome email. **1.1:** reminders digest, weekly digest, renewal heads-up, offer congratulations, quota reached, product updates.
+- **1.0:** welcome email and the sign-in magic link. **1.1:** reminders digest, weekly digest, renewal heads-up, offer congratulations, quota reached, product updates.
 
 ## Scheduled jobs (1.1, Vercel Cron)
 | Route | Schedule | Job |
@@ -227,7 +228,7 @@ All cron handlers require `Authorization: Bearer ${CRON_SECRET}` and are idempot
 | `DATABASE_URL` | Prisma runtime | Supabase pooled (port 6543) |
 | `DIRECT_URL` | `prisma.config.ts` | Supabase direct/session (port 5432) |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase clients | Public key (older projects: "anon") |
-| `SUPABASE_SECRET_KEY` | `deleteAccount` | Server only |
+| `SUPABASE_SECRET_KEY` | `deleteAccount`, magic-link generation | Server only |
 | `ANTHROPIC_API_KEY` | `lib/ai/client.ts` | |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Stripe | `stripe listen` locally |
 | `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_PRICE_PRO_QUARTERLY` | `plans.ts` | Price ids |
@@ -252,7 +253,7 @@ All cron handlers require `Authorization: Bearer ${CRON_SECRET}` and are idempot
 - [ ] Free tools and waitlist: Turnstile + IP-hash rate limits; pasted text never stored.
 - [ ] Webhook signature verified; plan only changed by the webhook; cron routes require `CRON_SECRET`.
 - [ ] Marketing email only with stored CASL consent; unsubscribe + mailing address in every email.
-- [ ] `deleteAccount`: cancel Stripe → delete User (cascade) → delete the Supabase auth user → sign out. Data export available.
+- [x] `deleteAccount`: cancel Stripe → delete User (cascade) → delete the Supabase auth user → sign out. Data export available. The auth secret is required before anything is deleted. A missing Stripe subscription is treated as already cancelled. Any other Stripe failure leaves the account in place.
 - [ ] Privacy policy (PIPEDA-aware) states what's stored, that files aren't kept, the AI processor (described accurately per Anthropic's current terms), analytics, email, and how to export/delete.
 - [ ] Admin routes behind `requireAdmin()`.
 - [ ] `.gitignore`: `.env*` (not `.env.example`), `src/generated/`, `evals/out/`, `*.pdf`/`*.docx` outside `evals/fixtures/`.

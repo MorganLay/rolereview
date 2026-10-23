@@ -4,10 +4,12 @@ import {
   MapPin,
   ShieldCheck,
 } from "lucide-react";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { strings } from "@/copy/strings";
 import { faqItems, faqJsonLd } from "@/features/marketing/faq";
+import { founderPhotoReady, FOUNDER_PHOTO_SRC } from "@/features/marketing/founder-photo";
 import type { MarketingPricingView } from "@/features/marketing/present";
 
 import { CtaLink } from "./cta-link";
@@ -242,18 +244,29 @@ function FeatureGrid() {
 }
 
 function FounderNote() {
+  const photo = founderPhotoReady();
   return (
     <section className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6">
       <h2 className="font-serif text-3xl font-semibold tracking-tight text-ink">
         {copy.founderTitle}
       </h2>
       <div className="mt-6 flex gap-4">
-        <div
-          className="flex size-14 shrink-0 items-center justify-center rounded-card bg-pine text-lg font-semibold text-white"
-          aria-hidden
-        >
-          M
-        </div>
+        {photo ? (
+          <Image
+            src={FOUNDER_PHOTO_SRC}
+            alt={copy.founderPhotoAlt}
+            width={112}
+            height={112}
+            className="size-14 shrink-0 rounded-card object-cover"
+          />
+        ) : (
+          <div
+            className="flex size-14 shrink-0 items-center justify-center rounded-card bg-pine text-lg font-semibold text-white"
+            aria-hidden
+          >
+            M
+          </div>
+        )}
         <div>
           <p className="text-base leading-relaxed text-ink">{copy.founderBody}</p>
           <p className="mt-3 text-sm text-slate">{copy.founderName}</p>

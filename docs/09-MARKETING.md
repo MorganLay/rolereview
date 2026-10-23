@@ -129,7 +129,7 @@ Product (Features, Pricing, Demo, Changelog) · Free tools · Guides (1.1) · Co
 | `/tools/bullet-strength` | Free tool | 1.0 |
 | `/about` | Founder story, why truthful-by-design, contact | 1.0 |
 | `/changelog` | MDX entries; shows momentum | 1.0 |
-| `/privacy`, `/terms` | Plain-language legal (PIPEDA-aware privacy; CASL consent wording). Draft dated October 23, 2026. Contact, export, and deletion requests go to `/about#contact` until Settings → Data in T13.1. | 1.0 |
+| `/privacy`, `/terms` | Plain-language legal (PIPEDA-aware privacy; CASL consent wording). Draft dated October 23, 2026. Export and deletion are Settings → Data. Other contact still goes to `/about#contact`. | 1.0 |
 | `/waitlist` | Pre-launch waitlist. Stays at this URL after the homepage ships. | 1.0 early |
 | `/guides/[slug]` | SEO guides (MDX) | 1.1 |
 | `/for/new-grads`, `/for/career-changers`, `/for/canadian-public-service` | Audience landing pages; demo preset to the matching persona | 1.1 |
@@ -187,7 +187,7 @@ Every page: unique title and meta description, OG image from the brand template,
 
 | Email | Trigger | Consent basis |
 |---|---|---|
-| Magic link | Sign-in | Transactional (Supabase) |
+| Magic link | Sign-in | Transactional (Resend). Supabase admin generates the link; five per email per hour |
 | Welcome + "build your library" | Sign-up (1.0) | Transactional |
 | "Your first tailored resume is one paste away" | 24 h after sign-up with a library but no job | Transactional/onboarding |
 | Reminder digest | Daily 8:00 local when reminders are due | Transactional (user setting) |
@@ -198,7 +198,7 @@ Every page: unique title and meta description, OG image from the brand template,
 | Product updates | Monthly | **Marketing: requires `marketingConsentAt`** |
 | Win-back | 30 days inactive with active jobs | Marketing consent |
 
-Every email: wordmark, one CTA, footer with preferences/unsubscribe and mailing address (CASL). `EmailLog` prevents duplicates.
+Every email: wordmark, one CTA, footer with preferences/unsubscribe and mailing address (CASL). `EmailLog` prevents duplicates. The magic link is the exception: each send is a new row, capped at five per address per hour.
 
 ## Referral program (1.1): "Invite a friend"
 

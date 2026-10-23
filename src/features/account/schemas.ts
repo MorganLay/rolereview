@@ -15,3 +15,10 @@ export const preferencesSchema = z.object({
   weeklyDigestEnabled: z.boolean(),
   marketingConsent: z.boolean(),
 });
+
+/** The delete field must be this word, with this casing, and nothing else. */
+export const DELETE_CONFIRMATION = "DELETE";
+
+export const deleteAccountSchema = z.object({
+  confirmation: z.literal(DELETE_CONFIRMATION),
+});

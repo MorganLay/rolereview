@@ -358,7 +358,7 @@ export const strings = {
         "Yes. Exports are a single column of real text with standard headings, as PDF or DOCX. No tables, text boxes, or RoleRefine branding on the file.",
       faq3Q: "What happens to my data?",
       faq3A:
-        "Your library, jobs, and tailored documents live in your account. Uploaded resume files are not kept after import. AI calls process the text you submit to tailor documents. You can export, and you can delete your account.",
+        "Your library, jobs, and tailored documents live in your account. Uploaded resume files are not kept after import. AI calls process the text you submit to tailor documents. You can export your data, and you can delete your account, from Settings → Data.",
       faq4Q: "Do I need a resume to start?",
       faq4A: "No. You can build your library by hand, line by line.",
       faq5Q: "Does it write cover letters?",
@@ -637,7 +637,7 @@ export const strings = {
         {
           heading: "Export and delete",
           paragraphs: [
-            "You can ask for a copy of your account data, or for the account to be deleted, from the Contact section on the About page. Those controls are not on the Settings page yet.",
+            "Signed in, open Settings → Data. Export downloads a JSON file of your account. Delete asks you to type DELETE, cancels a Stripe subscription, removes the account, and signs you out. Feedback you sent, and a testimonial you submitted, stay without a link to the account. The name you chose for a testimonial stays on that note.",
           ],
         },
       ],
@@ -715,6 +715,15 @@ export const strings = {
     },
   },
   email: {
+    magicLink: {
+      subject: "Your RoleRefine sign-in link",
+      preview: "This link signs you in. It expires in about an hour.",
+      body: "Use the button below to sign in. The link expires in about an hour.",
+      cta: "Sign in",
+      fallback: "If the button doesn’t work, paste this link into your browser.",
+      preferences: "Email preferences",
+      location: "RoleRefine · Ottawa, Ontario, Canada",
+    },
     welcome: {
       subject: "Your RoleRefine account is ready",
       preview: "Add your experience once, then tailor a resume for each role.",
@@ -739,6 +748,19 @@ export const strings = {
       error: "Couldn’t save preferences. Try again.",
       invalid: "Check the timezone and try again.",
     },
+    data: {
+      exportTitle: "Export",
+      exportBody: "Download a JSON file of everything stored for this account.",
+      export: "Export my data",
+      deleteTitle: "Delete account",
+      deleteBody:
+        "This cancels a Stripe subscription, deletes the account, and signs you out. This cannot be undone.",
+      confirmLabel: "Type DELETE to confirm",
+      delete: "Delete account",
+      deleting: "Deleting…",
+      invalid: "Type DELETE in capital letters to confirm.",
+      error: "Couldn’t delete the account. Nothing was removed. Try again.",
+    },
   },
   signIn: {
     title: "Sign in",
@@ -754,6 +776,7 @@ export const strings = {
     errors: {
       auth: "Sign-in didn’t finish. Try again.",
       sendLink: "Couldn’t send the link. Check the address and try again.",
+      rateLimit: "Too many sign-in links for this address. Try again in about an hour.",
       google: "Google sign-in didn’t start. Try again.",
     },
   },
@@ -1743,6 +1766,24 @@ export const strings = {
       acceptedTitle: "You accepted this offer.",
       acceptedBody: "That’s a real result.",
       acceptedDone: "Done",
+      testimonialTitle: "Share a short note?",
+      testimonialBody: "Optional. It is not published until we approve it.",
+      testimonialName: "Name to show",
+      testimonialRole: "Role",
+      testimonialRoleHint: "Optional",
+      testimonialQuote: "Your note",
+      testimonialConsent:
+        "I agree that RoleRefine may publish this note with the name above. I can ask for it to be taken down.",
+      testimonialSubmit: "Send note",
+      testimonialSending: "Sending…",
+      testimonialSent: "Thanks. It stays private until it’s approved.",
+      testimonialError: "Couldn’t save that note. Try again.",
+      testimonialConflict: "A note from this account is already saved.",
+      testimonialInvalid: "Add a name, a note, and tick the consent line.",
+      pause: "Pause your search?",
+      pauseBody: "Cancel in the billing portal. The plan stays active until the period ends.",
+      pauseOpening: "Opening…",
+      pauseError: "Couldn’t open the billing portal. Try again from Settings.",
       errors: {
         salary: "Enter a whole number, 0 or higher.",
         currency: "Use a 3-letter currency code, such as CAD.",
