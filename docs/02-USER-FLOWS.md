@@ -172,13 +172,14 @@ Signups per day (with source), activation funnel, Free→Pro conversion, MRR (fr
 | Situation | Behaviour |
 |---|---|
 | Signed out on an app route | `proxy.ts` → `/sign-in?next=…` |
-| Resource not owned | `notFound()`, a 404 (never 403) |
+| Resource not owned | `notFound()`, a 404 (never 403). Branded `not-found.tsx`; in-app 404s stay in the shell. |
+| Unknown URL | Root `not-found.tsx` with the marketing header and footer. |
 | Validation error | `{ ok: false, error: { code: "VALIDATION", fields } }` → inline errors |
 | Quota exceeded / Pro-only | `QUOTA_EXCEEDED` / `PRO_REQUIRED` → Upgrade modal naming the limit. A quota also names the Free and Pro allowances. Monthly and 90-day Checkout are in the modal. |
 | AI failure | `AI_FAILED` → toast with retry; no charge |
 | Concurrent generation | `CONFLICT` → "Already tailoring this job…" |
 | Slow AI | Staged progress copy; pollable PENDING state survives refresh |
-| Unexpected | Toast "Something went wrong."; server logs ids and codes only |
+| Unexpected | Toast "Something went wrong." for action failures. Uncaught render errors use branded `error.tsx` / `global-error.tsx` (“Try again”). Server logs ids, codes, and `digest` only. |
 
 ## Accessibility & quality baseline
 - Keyboard accessible everywhere, including the board (Move to… menu); visible focus.

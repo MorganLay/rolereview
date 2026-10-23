@@ -2,8 +2,11 @@
 
 import { cookies, headers } from "next/headers";
 
+import { isPublicLeadLimited } from "@/features/growth/leads/limit";
 import { captureServerEvent } from "@/lib/analytics";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
+import { clientIpForLimit, hashClientIp } from "@/lib/iphash";
 import { fail, ok, type ActionResult } from "@/lib/result";
 import {
   ATTRIBUTION_COOKIE,
@@ -18,6 +21,35 @@ import {
 } from "./schemas";
 import { shareRefFromLeadId } from "./share-ref";
 
+type PublicLeadGate =
+  | { ok: true; ipHash: string }
+  | { ok: false; code: "CAPTCHA_FAILED" | "RATE_LIMITED" | "INTERNAL" };
+
+async function gatePublicLead(turnstileToken: string): Promise<PublicLeadGate> {
+  const headerStore = await headers();
+  const remoteIp = clientIpForLimit(headerStore, env.NODE_ENV);
+  if (!remoteIp) return { ok: false, code: "RATE_LIMITED" };
+
+  const captchaOk = await verifyTurnstile(turnstileToken, remoteIp);
+  if (!captchaOk) return { ok: false, code: "CAPTCHA_FAILED" };
+
+  const ipHash = hashClientIp(remoteIp);
+  if (!ipHash) return { ok: false, code: "INTERNAL" };
+
+  const runCount = await db.freeToolRun.count({
+    where: { ipHash, tool: "PUBLIC_LEAD" },
+  });
+  if (isPublicLeadLimited(runCount)) return { ok: false, code: "RATE_LIMITED" };
+
+  return { ok: true, ipHash };
+}
+
+async function recordPublicLead(ipHash: string): Promise<void> {
+  await db.freeToolRun.create({
+    data: { tool: "PUBLIC_LEAD", ipHash, success: true },
+  });
+}
+
 export async function joinWaitlist(
   input: unknown,
 ): Promise<ActionResult<{ shareRef: string }>> {
@@ -27,14 +59,8 @@ export async function joinWaitlist(
   }
 
   const { email, consentText, turnstileToken } = parsed.data;
-
-  const headerStore = await headers();
-  const remoteIp =
-    headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    headerStore.get("x-real-ip");
-
-  const captchaOk = await verifyTurnstile(turnstileToken, remoteIp);
-  if (!captchaOk) return fail("CAPTCHA_FAILED");
+  const gated = await gatePublicLead(turnstileToken);
+  if (!gated.ok) return fail(gated.code);
 
   const cookieStore = await cookies();
   const attribution = parseAttributionCookie(
@@ -65,6 +91,7 @@ export async function joinWaitlist(
     select: { id: true },
   });
 
+  await recordPublicLead(gated.ipHash);
   await captureServerEvent(lead.id, "lead_captured", { source: "waitlist" });
 
   return ok({ shareRef: shareRefFromLeadId(lead.id) });
@@ -77,14 +104,8 @@ export async function joinNewsletter(input: unknown): Promise<ActionResult<Recor
   }
 
   const { email, consentText, turnstileToken } = parsed.data;
-
-  const headerStore = await headers();
-  const remoteIp =
-    headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    headerStore.get("x-real-ip");
-
-  const captchaOk = await verifyTurnstile(turnstileToken, remoteIp);
-  if (!captchaOk) return fail("CAPTCHA_FAILED");
+  const gated = await gatePublicLead(turnstileToken);
+  if (!gated.ok) return fail(gated.code);
 
   const cookieStore = await cookies();
   const attribution = parseAttributionCookie(
@@ -113,6 +134,7 @@ export async function joinNewsletter(input: unknown): Promise<ActionResult<Recor
     select: { id: true },
   });
 
+  await recordPublicLead(gated.ipHash);
   await captureServerEvent(lead.id, "lead_captured", { source: "newsletter" });
 
   return ok({});
@@ -127,14 +149,8 @@ export async function emailKeywordReport(
   }
 
   const { email, consentText, turnstileToken } = parsed.data;
-
-  const headerStore = await headers();
-  const remoteIp =
-    headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    headerStore.get("x-real-ip");
-
-  const captchaOk = await verifyTurnstile(turnstileToken, remoteIp);
-  if (!captchaOk) return fail("CAPTCHA_FAILED");
+  const gated = await gatePublicLead(turnstileToken);
+  if (!gated.ok) return fail(gated.code);
 
   const cookieStore = await cookies();
   const attribution = parseAttributionCookie(
@@ -163,6 +179,7 @@ export async function emailKeywordReport(
     select: { id: true },
   });
 
+  await recordPublicLead(gated.ipHash);
   await captureServerEvent(lead.id, "lead_captured", {
     source: "tool:keyword-checker",
   });

@@ -30,3 +30,8 @@ export function clientIpFromHeaders(headerStore: Headers): string | null {
   const real = headerStore.get("x-real-ip")?.trim();
   return real || null;
 }
+
+/** Production fails closed with no client IP. Local uses loopback so forms still work. */
+export function clientIpForLimit(headerStore: Headers, nodeEnv: string): string | null {
+  return clientIpFromHeaders(headerStore) ?? (nodeEnv === "production" ? null : "127.0.0.1");
+}

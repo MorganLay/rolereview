@@ -9,7 +9,8 @@ import { captureServerEvent } from "@/lib/analytics";
 import { SYSTEM, buildContent, OutputSchema } from "@/lib/ai/prompts/analyze";
 import { runStructured } from "@/lib/ai/run";
 import { db } from "@/lib/db";
-import { clientIpFromHeaders, hashClientIp } from "@/lib/iphash";
+import { env } from "@/lib/env";
+import { clientIpForLimit, hashClientIp } from "@/lib/iphash";
 import { fail, ok, type ActionResult } from "@/lib/result";
 import { verifyTurnstile } from "@/lib/turnstile";
 
@@ -25,7 +26,7 @@ export async function checkKeywordCoverage(
   }
 
   const headerStore = await headers();
-  const remoteIp = clientIpFromHeaders(headerStore);
+  const remoteIp = clientIpForLimit(headerStore, env.NODE_ENV);
   if (!remoteIp) return fail("RATE_LIMITED");
 
   const captchaOk = await verifyTurnstile(parsed.data.turnstileToken, remoteIp);

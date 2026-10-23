@@ -181,7 +181,7 @@ describe("runStructured", () => {
 
     expect(result.ok).toBe(true);
     expect(bonusUpdateMany).toHaveBeenCalledWith({
-      where: { id: "credit-1", remaining: { gt: 0 } },
+      where: { id: "credit-1", userId: "user-1", remaining: { gt: 0 } },
       data: { remaining: { decrement: 1 } },
     });
     expect(aiCallCreate).toHaveBeenCalledWith({

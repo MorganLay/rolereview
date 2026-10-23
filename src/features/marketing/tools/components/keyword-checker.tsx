@@ -280,6 +280,10 @@ function EmailReportForm() {
           setToken(null);
           return;
         }
+        if (result.error.code === "RATE_LIMITED") {
+          setFormError(copy.emailRateLimited);
+          return;
+        }
         setFormError(copy.emailError);
         return;
       }

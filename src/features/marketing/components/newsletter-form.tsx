@@ -57,6 +57,10 @@ export function NewsletterForm() {
           setToken(null);
           return;
         }
+        if (result.error.code === "RATE_LIMITED") {
+          setFormError(copy.newsletterRateLimited);
+          return;
+        }
         setFormError(copy.newsletterError);
         return;
       }

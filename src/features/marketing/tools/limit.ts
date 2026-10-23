@@ -1,8 +1,10 @@
+import { isDailyIpLimited } from "@/lib/ip-limit";
+
 export const KEYWORD_CHECKER_DAILY_LIMIT = 3;
 export const MUST_HAVE_LIMIT = 5;
 
 export function isKeywordCheckerLimited(runCount: number): boolean {
-  return runCount >= KEYWORD_CHECKER_DAILY_LIMIT;
+  return isDailyIpLimited(runCount, KEYWORD_CHECKER_DAILY_LIMIT);
 }
 
 export function topMustHaveTexts(

@@ -2,9 +2,12 @@ import { createHash } from "node:crypto";
 
 import { z } from "zod";
 
+import { isDailyIpLimited } from "@/lib/ip-limit";
+
 export const MAGIC_LINK_TEMPLATE = "magic-link";
 export const MAGIC_LINK_LIMIT = 5;
 export const MAGIC_LINK_WINDOW_MS = 60 * 60 * 1000;
+export const MAGIC_LINK_IP_DAILY_LIMIT = 10;
 
 const emailField = z
   .string()
@@ -21,6 +24,13 @@ export const requestMagicLinkSchema = z.object({
 
 export function magicLinkBlocked(count: number, limit = MAGIC_LINK_LIMIT): boolean {
   return count >= limit;
+}
+
+export function magicLinkIpBlocked(
+  count: number,
+  limit = MAGIC_LINK_IP_DAILY_LIMIT,
+): boolean {
+  return isDailyIpLimited(count, limit);
 }
 
 /** Hash the address so EmailLog never stores it. */

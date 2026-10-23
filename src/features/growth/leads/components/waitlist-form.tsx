@@ -60,6 +60,10 @@ export function WaitlistForm({ appUrl }: WaitlistFormProps) {
           setToken(null);
           return;
         }
+        if (result.error.code === "RATE_LIMITED") {
+          setFormError(strings.marketing.waitlist.rateLimited);
+          return;
+        }
         setFormError(strings.marketing.waitlist.error);
         return;
       }

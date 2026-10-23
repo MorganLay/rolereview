@@ -191,6 +191,8 @@ enum ReferralStatus {
 enum FreeTool {
   KEYWORD_CHECKER
   BULLET_STRENGTH
+  PUBLIC_LEAD
+  MAGIC_LINK
 }
 
 enum FeedbackKind {
@@ -727,7 +729,8 @@ model Lead {
   @@index([source, createdAt])
 }
 
-/// Rate limiting + cost tracking for anonymous free tools. ipHash = sha256(ip + daily salt).
+/// Rate limiting for anonymous free tools, public lead forms, and magic-link sends.
+/// ipHash = sha256(ip + daily salt).
 model FreeToolRun {
   id           String   @id @default(uuid()) @db.Uuid
   tool         FreeTool

@@ -153,6 +153,7 @@ Every page: unique title and meta description, OG image from the brand template,
 
 - Page: hero (same H1), a 20-second demo GIF, 3 benefit bullets, email form with the **founding-member promise** ("First 100 Pro members get 40% off for as long as they stay"), CASL checkbox (unticked): "Email me product updates and launch news. Unsubscribe anytime."
 - Stores `Lead { source: "waitlist", foundingOffer: true, utm*, marketingConsentAt, consentText }`.
+- Abuse control: Turnstile + 10 joins per IP-hash per day, shared with newsletter and “email me this report” (`FreeToolRun` tool `PUBLIC_LEAD`).
 - Thank-you state: share link with `?ref=waitlist-<shortid>`; "invite 3 friends for early beta access".
 
 ## SEO & content
@@ -187,7 +188,7 @@ Every page: unique title and meta description, OG image from the brand template,
 
 | Email | Trigger | Consent basis |
 |---|---|---|
-| Magic link | Sign-in | Transactional (Resend). Supabase admin generates the link; five per email per hour |
+| Magic link | Sign-in | Transactional (Resend). Supabase admin generates the link; five per email per hour and 10 per IP-hash per day |
 | Welcome + "build your library" | Sign-up (1.0) | Transactional |
 | "Your first tailored resume is one paste away" | 24 h after sign-up with a library but no job | Transactional/onboarding |
 | Reminder digest | Daily 8:00 local when reminders are due | Transactional (user setting) |

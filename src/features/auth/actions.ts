@@ -2,11 +2,14 @@
 
 import { randomUUID } from "node:crypto";
 
+import { headers } from "next/headers";
+
 import {
   MAGIC_LINK_LIMIT,
   MAGIC_LINK_TEMPLATE,
   MAGIC_LINK_WINDOW_MS,
   magicLinkBlocked,
+  magicLinkIpBlocked,
   magicLinkOriginAllowed,
   magicLinkRecipientKey,
   magicLinkRedirectUrl,
@@ -17,6 +20,7 @@ import { db } from "@/lib/db";
 import { publicMailingAddress } from "@/lib/email/address";
 import { sendMagicLinkEmail } from "@/lib/email/magic-link";
 import { env } from "@/lib/env";
+import { clientIpForLimit, hashClientIp } from "@/lib/iphash";
 import { fail, ok, type ActionResult } from "@/lib/result";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeRedirectPath } from "@/lib/supabase/redirect";
@@ -48,12 +52,24 @@ export async function requestMagicLink(input: unknown): Promise<ActionResult<{ s
     return fail("INTERNAL");
   }
 
+  const headerStore = await headers();
+  const remoteIp = clientIpForLimit(headerStore, env.NODE_ENV);
+  if (!remoteIp) return fail("RATE_LIMITED");
+  const ipHash = hashClientIp(remoteIp);
+  if (!ipHash) return fail("INTERNAL");
+
   const recipientKey = magicLinkRecipientKey(parsed.data.email, env.IP_HASH_SALT ?? "rolerefine");
   const since = new Date(Date.now() - MAGIC_LINK_WINDOW_MS);
-  const recent = await db.emailLog.count({
-    where: { template: MAGIC_LINK_TEMPLATE, recipientKey, sentAt: { gte: since } },
-  });
+  const [recent, ipRuns] = await Promise.all([
+    db.emailLog.count({
+      where: { template: MAGIC_LINK_TEMPLATE, recipientKey, sentAt: { gte: since } },
+    }),
+    db.freeToolRun.count({
+      where: { ipHash, tool: "MAGIC_LINK" },
+    }),
+  ]);
   if (magicLinkBlocked(recent, MAGIC_LINK_LIMIT)) return fail("RATE_LIMITED");
+  if (magicLinkIpBlocked(ipRuns)) return fail("RATE_LIMITED");
 
   const { data, error } = await admin.auth.admin.generateLink({
     type: "magiclink",
@@ -97,6 +113,14 @@ export async function requestMagicLink(input: unknown): Promise<ActionResult<{ s
     });
   } catch {
     console.error("magic link failed", { code: "log" });
+  }
+
+  try {
+    await db.freeToolRun.create({
+      data: { tool: "MAGIC_LINK", ipHash, success: true },
+    });
+  } catch {
+    console.error("magic link failed", { code: "ip_log" });
   }
 
   return ok({ sent: true });

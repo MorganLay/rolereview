@@ -414,7 +414,7 @@ T10.2 draws the funnel for that same window. A job with `appliedAt` in the windo
 | Upcoming interviews | `Interview(userId, scheduledAt)` |
 | Quota counts | `AiCall(userId, kind, success, createdAt)` |
 | Bonus credit lookup | `BonusCredit(userId, kind, remaining)` |
-| Free-tool rate limit | `FreeToolRun(ipHash, tool, createdAt)` |
+| Free-tool / public-form rate limit | `FreeToolRun(ipHash, tool, createdAt)` (`KEYWORD_CHECKER`, `PUBLIC_LEAD`, `MAGIC_LINK`) |
 | Email de-duplication | `EmailLog(recipientKey, template, refKey)` unique |
 
 ## Migrations

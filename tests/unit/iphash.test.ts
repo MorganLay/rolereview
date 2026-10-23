@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 import {
+  clientIpForLimit,
   clientIpFromHeaders,
   hashIp,
   utcDayStamp,
@@ -55,5 +56,21 @@ describe("clientIpFromHeaders", () => {
 
   it("returns null when neither header is set", () => {
     expect(clientIpFromHeaders(new Headers())).toBeNull();
+  });
+});
+
+describe("clientIpForLimit", () => {
+  it("uses the forwarded address in production", () => {
+    const headers = new Headers({ "x-forwarded-for": "203.0.113.10" });
+    expect(clientIpForLimit(headers, "production")).toBe("203.0.113.10");
+  });
+
+  it("fails closed in production when the IP is missing", () => {
+    expect(clientIpForLimit(new Headers(), "production")).toBeNull();
+  });
+
+  it("uses loopback outside production when the IP is missing", () => {
+    expect(clientIpForLimit(new Headers(), "development")).toBe("127.0.0.1");
+    expect(clientIpForLimit(new Headers(), "test")).toBe("127.0.0.1");
   });
 });

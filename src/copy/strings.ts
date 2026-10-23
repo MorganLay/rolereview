@@ -31,6 +31,21 @@ export const strings = {
     submit: "Submit",
     openMenu: "Open menu",
   },
+  errors: {
+    notFound: {
+      title: "This page isn’t here.",
+      body: "The link may be out of date, or this item isn’t in your account.",
+      home: "Back to home",
+      dashboard: "Go to Dashboard",
+    },
+    unexpected: {
+      title: "Something went wrong.",
+      body: "Try again. If it keeps happening, come back in a few minutes.",
+      retry: "Try again",
+      home: "Back to home",
+      dashboard: "Go to Dashboard",
+    },
+  },
   nav: {
     dashboard: "Dashboard",
     library: "Library",
@@ -243,6 +258,8 @@ export const strings = {
       newsletterSubmitting: "Subscribing…",
       newsletterThanks: "You’re subscribed.",
       newsletterError: "Couldn’t subscribe right now. Try again in a moment.",
+      newsletterRateLimited:
+        "That’s enough from this network today. Try again tomorrow.",
     },
     cta: {
       primary: "Tailor your first resume — free",
@@ -488,6 +505,8 @@ export const strings = {
         emailThanks:
           "Saved. This report stays on this page. We’ll send product notes to that address.",
         emailError: "Couldn’t save that email. Try again in a moment.",
+        emailRateLimited:
+          "That’s enough from this network today. Try again tomorrow.",
         rateLimited: "That’s three checks from this network today. Try again tomorrow.",
         aiFailed: "We couldn’t read that posting. Try again in a moment.",
         unavailable: "This tool isn’t available right now. Try again later.",
@@ -543,6 +562,7 @@ export const strings = {
       submitting: "Joining…",
       captchaRequired: "Complete the captcha to continue.",
       captchaFailed: "Captcha failed. Try again.",
+      rateLimited: "That’s enough from this network today. Try again tomorrow.",
       error: "Couldn’t join right now. Try again in a moment.",
       thanksTitle: "You’re on the list.",
       thanksBody:
@@ -776,7 +796,7 @@ export const strings = {
     errors: {
       auth: "Sign-in didn’t finish. Try again.",
       sendLink: "Couldn’t send the link. Check the address and try again.",
-      rateLimit: "Too many sign-in links for this address. Try again in about an hour.",
+      rateLimit: "Too many sign-in links. Try again in about an hour.",
       google: "Google sign-in didn’t start. Try again.",
     },
   },

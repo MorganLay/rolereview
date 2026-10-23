@@ -173,7 +173,7 @@ async function recordCall<T>(
         const picked = selectBonusCredit(credits, now);
         if (picked) {
           const updated = await tx.bonusCredit.updateMany({
-            where: { id: picked.id, remaining: { gt: 0 } },
+            where: { id: picked.id, userId: args.userId, remaining: { gt: 0 } },
             data: { remaining: { decrement: 1 } },
           });
           usedBonusCredit = updated.count === 1;
