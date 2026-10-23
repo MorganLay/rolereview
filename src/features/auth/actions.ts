@@ -17,6 +17,7 @@ import {
   requestMagicLinkSchema,
 } from "@/features/auth/magic-link";
 import { db } from "@/lib/db";
+import { emailSendingEnabled } from "@/lib/deploy";
 import { publicMailingAddress } from "@/lib/email/address";
 import { sendMagicLinkEmail } from "@/lib/email/magic-link";
 import { env } from "@/lib/env";
@@ -41,6 +42,10 @@ export async function requestMagicLink(input: unknown): Promise<ActionResult<{ s
   }
 
   const from = env.EMAIL_FROM;
+  if (!emailSendingEnabled(env.VERCEL_ENV)) {
+    console.error("magic link failed", { code: "preview" });
+    return fail("INTERNAL");
+  }
   if (!env.SUPABASE_SECRET_KEY || !env.RESEND_API_KEY || !from) {
     console.error("magic link failed", { code: "unconfigured" });
     return fail("INTERNAL");

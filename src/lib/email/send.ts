@@ -6,13 +6,17 @@ import { Resend } from "resend";
 import { strings } from "@/copy/strings";
 import { db } from "@/lib/db";
 import { publicMailingAddress } from "@/lib/email/address";
-import { decideEmailSend, type EmailTemplateName } from "@/lib/email/decide";
+import {
+  decideEmailSend,
+  type EmailDecision,
+  type EmailTemplateName,
+} from "@/lib/email/decide";
 import { WelcomeEmail } from "@/lib/email/templates/welcome";
 import { env } from "@/lib/env";
 
 export type EmailSendResult =
   | { status: "sent"; providerMessageId: string }
-  | { status: "skipped"; reason: "already-sent" | "no-consent" | "no-address" | "unconfigured" | "unknown-template" }
+  | { status: "skipped"; reason: Exclude<EmailDecision, "send"> }
   | { status: "failed" };
 
 export type OutboundEmail = {
@@ -88,10 +92,15 @@ export async function sendEmail(
     marketingConsent: input.marketingConsentAt != null,
     configured: Boolean(env.RESEND_API_KEY && env.EMAIL_FROM),
     hasMailingAddress: mailingAddress !== null,
+    preview: env.VERCEL_ENV === "preview",
   });
 
   if (decision !== "send") {
-    if (decision === "unconfigured" || decision === "unknown-template") {
+    if (
+      decision === "unconfigured" ||
+      decision === "unknown-template" ||
+      decision === "preview"
+    ) {
       console.info("email skipped", {
         template: input.template,
         recipientKey: input.recipientKey,

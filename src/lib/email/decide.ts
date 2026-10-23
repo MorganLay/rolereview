@@ -14,7 +14,8 @@ export type EmailDecision =
   | "no-consent"
   | "no-address"
   | "unconfigured"
-  | "unknown-template";
+  | "unknown-template"
+  | "preview";
 
 export function isEmailTemplate(template: string): template is EmailTemplateName {
   return Object.prototype.hasOwnProperty.call(EMAIL_TEMPLATES, template);
@@ -34,9 +35,11 @@ export function decideEmailSend(input: {
   marketingConsent: boolean;
   configured: boolean;
   hasMailingAddress: boolean;
+  preview?: boolean;
 }): EmailDecision {
   if (!isEmailTemplate(input.template)) return "unknown-template";
   if (input.alreadySent) return "already-sent";
+  if (input.preview) return "preview";
   if (isMarketingTemplate(input.template) && !input.marketingConsent) return "no-consent";
   if (isMarketingTemplate(input.template) && !input.hasMailingAddress) return "no-address";
   if (!input.configured) return "unconfigured";

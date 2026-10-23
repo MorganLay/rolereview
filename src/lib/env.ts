@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { deployEnvIssues, parseVercelEnv } from "@/lib/deploy";
+
 /**
  * Validated environment. Import `env` everywhere — never read `process.env` in app code.
  * Secrets for later phases stay optional so local work doesn't need fake keys.
@@ -24,6 +26,7 @@ function readEmailFrom(): string | undefined {
 
 const serverSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
 
   DATABASE_URL: z.string().min(1),
   DIRECT_URL: z.string().min(1),
@@ -66,6 +69,7 @@ export type Env = z.infer<typeof schema>;
 function loadEnv(): Env {
   const parsed = schema.safeParse({
     NODE_ENV: process.env.NODE_ENV,
+    VERCEL_ENV: parseVercelEnv(process.env.VERCEL_ENV),
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_URL: process.env.DIRECT_URL,
     SUPABASE_SECRET_KEY: readOptional("SUPABASE_SECRET_KEY"),
@@ -96,6 +100,16 @@ function loadEnv(): Env {
       .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
       .join("; ");
     throw new Error(`Invalid environment: ${details}`);
+  }
+
+  const deployIssues = deployEnvIssues({
+    vercelEnv: parsed.data.VERCEL_ENV,
+    stripeSecretKey: parsed.data.STRIPE_SECRET_KEY,
+    appUrl: parsed.data.NEXT_PUBLIC_APP_URL,
+    seedUserId: parsed.data.SEED_USER_ID,
+  });
+  if (deployIssues.length > 0) {
+    throw new Error(`Invalid environment: ${deployIssues.join("; ")}`);
   }
 
   return parsed.data;

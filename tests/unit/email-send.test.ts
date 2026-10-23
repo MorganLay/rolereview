@@ -23,6 +23,7 @@ vi.mock("@/lib/env", () => ({
     EMAIL_FROM: "RoleRefine <hello@mail.rolerefine.ca>",
     MAILING_ADDRESS: "Your mailing address, Ottawa, ON, Canada",
     NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+    VERCEL_ENV: undefined,
   },
 }));
 
@@ -95,6 +96,32 @@ describe("decideEmailSend", () => {
         hasMailingAddress: true,
       }),
     ).toBe("unknown-template");
+  });
+
+  it("skips Preview even when Resend is configured", () => {
+    expect(
+      decideEmailSend({
+        template: "welcome",
+        alreadySent: false,
+        marketingConsent: false,
+        configured: true,
+        hasMailingAddress: false,
+        preview: true,
+      }),
+    ).toBe("preview");
+  });
+
+  it("keeps already-sent ahead of Preview", () => {
+    expect(
+      decideEmailSend({
+        template: "welcome",
+        alreadySent: true,
+        marketingConsent: false,
+        configured: true,
+        hasMailingAddress: false,
+        preview: true,
+      }),
+    ).toBe("already-sent");
   });
 });
 

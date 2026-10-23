@@ -200,8 +200,8 @@ Cover letters follow the same shape (`features/letters/actions.ts`).
 
 ## Email (Resend)
 - `lib/email/send.ts`: `sendEmail({ to, template, refKey, recipientKey, marketingConsentAt })` checks `EmailLog` (`recipientKey`, `template`, `refKey`) and skips a duplicate, then sends with a Resend idempotency key and inserts `EmailLog`. Templates live in `lib/email/templates/`.
-- Welcome (`template` `welcome`, `refKey` `signup`, `recipientKey` = user id) is sent after a new user row is created. A failed or unconfigured send does not block sign-up and does not write `EmailLog`. Missing `RESEND_API_KEY` or `EMAIL_FROM` logs the user id and skips.
-- Magic link (`template` `magic-link`) is a new `EmailLog` row on every successful send (`refKey` is a new id, `recipientKey` is a hash of the address). The link is `/auth/callback?token_hash&type&next`. A failed send writes nothing. Five sends per address per hour, or 10 from one IP-hash in a UTC day, return `RATE_LIMITED`. `EMAIL_FROM` may be `Name <address>` and is still loaded.
+- Welcome (`template` `welcome`, `refKey` `signup`, `recipientKey` = user id) is sent after a new user row is created. A failed or unconfigured send does not block sign-up and does not write `EmailLog`. Missing `RESEND_API_KEY` or `EMAIL_FROM` logs the user id and skips. Vercel Preview (`VERCEL_ENV=preview`) does not send welcome or magic-link mail.
+- Magic link (`template` `magic-link`) is a new `EmailLog` row on every successful send (`refKey` is a new id, `recipientKey` is a hash of the address). The link is `/auth/callback?token_hash&type&next`. A failed send writes nothing. Five sends per address per hour, or 10 from one IP-hash in a UTC day, return `RATE_LIMITED`. `EMAIL_FROM` may be `Name <address>` and is still loaded. Preview returns `INTERNAL` without generating a link.
 - Every email has one call to action, a preferences link, and “RoleRefine · Ottawa, Ontario, Canada”. A street address or PO box from `MAILING_ADDRESS` is added when that value is real. The example line in `.env.example` is treated as unset.
 - Marketing templates require `marketingConsentAt` and a real mailing address, and refuse otherwise.
 - **1.0:** welcome email and the sign-in magic link. **1.1:** reminders digest, weekly digest, renewal heads-up, offer congratulations, quota reached, product updates.
@@ -231,19 +231,20 @@ All cron handlers require `Authorization: Bearer ${CRON_SECRET}` and are idempot
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase clients | Public key (older projects: "anon") |
 | `SUPABASE_SECRET_KEY` | `deleteAccount`, magic-link generation | Server only |
 | `ANTHROPIC_API_KEY` | `lib/ai/client.ts` | |
-| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Stripe | `stripe listen` locally |
-| `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_PRICE_PRO_QUARTERLY` | `plans.ts` | Price ids |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Stripe | Test keys locally and on Preview; live keys (`sk_live_`) only on Production. `stripe listen` locally |
+| `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_PRICE_PRO_QUARTERLY` | `plans.ts` | Price ids (live ids on Production) |
 | `STRIPE_COUPON_FOUNDING` | checkout | 40% forever, max 100 |
-| `RESEND_API_KEY`, `EMAIL_FROM` | `lib/email` | e.g. `RoleRefine <hello@yourdomain>` (verify the domain in Resend) |
+| `RESEND_API_KEY`, `EMAIL_FROM` | `lib/email` | e.g. `RoleRefine <hello@mail.rolerefine.ca>` (verify the domain in Resend) |
 | `MAILING_ADDRESS` | email footer | CASL requirement |
-| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | analytics | |
+| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | analytics | Production PostHog project on Production |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | free tools, waitlist | |
-| `IP_HASH_SALT` | `lib/iphash.ts` | Random 32+ chars |
+| `IP_HASH_SALT` | `lib/iphash.ts` | Random 32+ chars; a different salt on Production |
 | `CRON_SECRET` | cron routes | 1.1 |
-| `NEXT_PUBLIC_APP_URL` | redirects, emails, OG | |
-| `SEED_USER_ID` | `prisma/seed.ts` | Dev only; optional |
+| `NEXT_PUBLIC_APP_URL` | redirects, emails, OG | `https://www.rolerefine.ca` on Production |
+| `SEED_USER_ID` | `prisma/seed.ts` | Dev only; must be unset on Production |
+| `VERCEL_ENV` | `lib/deploy.ts`, `lib/env.ts` | Set by Vercel (`production` / `preview` / `development`). Do not set in `.env` |
 
-`src/lib/env.ts` validates these with Zod (1.1-only ones optional until used).
+`src/lib/env.ts` validates these with Zod (1.1-only ones optional until used). On Vercel Production it refuses a test Stripe key, a seed user id, and an http app URL. `vercelProductionIssues()` lists the secrets Production should have; they stay optional at boot so a missing live key does not take down marketing pages.
 
 ## Security & privacy checklist
 - [x] Every query/mutation scoped by `userId`; every status change through `applyStatusChange`.
@@ -267,8 +268,9 @@ All cron handlers require `Authorization: Bearer ${CRON_SECRET}` and are idempot
 | Preview | `rolerefine-dev` | Test | Disabled | Vercel per PR |
 | Production | `rolerefine-prod` | Live | Resend (verified domain) | Vercel on `main` |
 
-- Build command (prod): `prisma migrate deploy && next build`.
-- `vercel.json` cron entries in 1.1.
+- `vercel.json` build command: `npm run db:deploy && next build` (applies Prisma migrations, then `next build`). Cron entries in 1.1.
+- Vercel Production (`main` → `https://www.rolerefine.ca`): Supabase project `rolerefine-prod` (Canada if offered). Pooled `DATABASE_URL` (port 6543) and session `DIRECT_URL` (port 5432). Stripe live mode; webhook `https://www.rolerefine.ca/api/stripe/webhook` for `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`. Founding coupon 40% forever, max 100. Resend on verified `mail.rolerefine.ca`, `EMAIL_FROM` `RoleRefine <hello@mail.rolerefine.ca>`. Auth Site URL `https://www.rolerefine.ca`; redirect allow list `https://www.rolerefine.ca/auth/callback` and `https://rolerefine.ca/auth/callback`. Google authorized origin `https://www.rolerefine.ca` and the Supabase callback. PostHog production project, cookieless. `SEED_USER_ID` unset. Hobby is non-commercial — switch the Vercel project to Pro before a live charge.
+- Vercel Preview: `rolerefine-dev` and Stripe test keys. Email is not sent. A live Stripe secret is refused.
 - CI: lint, typecheck, unit tests on every PR. E2E is not in CI (`npm run e2e`, Chromium). Smoke always runs. The happy path (sign in → import fixture → job → tailored resume → letter → export PDF → board Move to Applied) needs `ANTHROPIC_API_KEY` and `SUPABASE_SECRET_KEY`; it creates a throwaway user in `rolerefine-dev` and deletes that user after. Four live model calls; about 2 minutes. Skip the spec if those secrets are unset.
 - Fixed costs at launch ≈ Vercel Pro $20 + Supabase Pro $25 + domain; Resend and PostHog free tiers.
 
