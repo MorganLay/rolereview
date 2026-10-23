@@ -1,7 +1,29 @@
+import "dotenv/config";
+
 import { defineConfig, devices } from "@playwright/test";
 
 const port = 3000;
-const baseURL = `http://127.0.0.1:${port}`;
+
+/**
+ * Session cookies are host-only. Use the same origin as NEXT_PUBLIC_APP_URL
+ * (localhost in local .env) so the magic-link callback keeps the session.
+ */
+function localBaseURL(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (fromEnv) {
+    try {
+      const url = new URL(fromEnv);
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+        return url.origin;
+      }
+    } catch {
+      // fall through
+    }
+  }
+  return `http://127.0.0.1:${port}`;
+}
+
+const baseURL = localBaseURL();
 
 export default defineConfig({
   testDir: "tests/e2e",

@@ -269,7 +269,7 @@ All cron handlers require `Authorization: Bearer ${CRON_SECRET}` and are idempot
 
 - Build command (prod): `prisma migrate deploy && next build`.
 - `vercel.json` cron entries in 1.1.
-- CI: lint, typecheck, unit tests on every PR. E2E manually or nightly.
+- CI: lint, typecheck, unit tests on every PR. E2E is not in CI (`npm run e2e`, Chromium). Smoke always runs. The happy path (sign in → import fixture → job → tailored resume → letter → export PDF → board Move to Applied) needs `ANTHROPIC_API_KEY` and `SUPABASE_SECRET_KEY`; it creates a throwaway user in `rolerefine-dev` and deletes that user after. Four live model calls; about 2 minutes. Skip the spec if those secrets are unset.
 - Fixed costs at launch ≈ Vercel Pro $20 + Supabase Pro $25 + domain; Resend and PostHog free tiers.
 
 ## npm scripts
