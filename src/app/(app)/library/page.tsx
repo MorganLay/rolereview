@@ -30,7 +30,7 @@ export default async function LibraryPage() {
   const empty = library.entries.length === 0 && library.skills.length === 0;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">

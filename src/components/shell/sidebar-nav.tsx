@@ -7,6 +7,7 @@ import { strings } from "@/copy/strings";
 import { cn } from "@/lib/utils";
 
 import type { TailorPillView } from "@/features/billing/present";
+import { FeedbackSidebarButton } from "@/features/growth/feedback/components/feedback-button";
 
 import { APP_NAV_ITEMS, isNavActive } from "./nav-items";
 import { UsagePill } from "./usage-pill";
@@ -58,6 +59,7 @@ export function SidebarNav({ usage, onNavigate, className }: SidebarNavProps) {
       </nav>
 
       <div className="mt-auto border-t border-line p-3">
+        <FeedbackSidebarButton />
         <UsagePill usage={usage} />
       </div>
     </div>

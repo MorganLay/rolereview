@@ -5,12 +5,15 @@ export function envValue(name: string): string | undefined {
   return value;
 }
 
-export function happyPathReady(): boolean {
+export function e2eAuthReady(): boolean {
   return Boolean(
-    envValue("ANTHROPIC_API_KEY") &&
-      envValue("SUPABASE_SECRET_KEY") &&
+    envValue("SUPABASE_SECRET_KEY") &&
       envValue("NEXT_PUBLIC_SUPABASE_URL") &&
       envValue("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") &&
       envValue("DIRECT_URL"),
   );
+}
+
+export function happyPathReady(): boolean {
+  return Boolean(envValue("ANTHROPIC_API_KEY") && e2eAuthReady());
 }

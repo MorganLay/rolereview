@@ -96,7 +96,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **TQ.3** Better writing advice
 - [x] **TQ.4** Summary guard
 - [x] **TQ.5** Submitted versions are frozen
-- [ ] **TQ.6** Mobile shell and overflow
+- [x] **TQ.6** Mobile shell and overflow
 - [ ] **TQ.7** Mobile lists and job header
 - [ ] **TQ.8** Library and editor density
 - [ ] **T13.4b** Separate production environment
@@ -112,6 +112,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-25 TQ.6:** Playwright overflow check passed at 375 and 390 on every signed-in app route. The header is an account icon; the email is inside the menu. Feedback is in that menu on a phone and in the sidebar on a wider screen. A 390×480 browser viewport kept the feedback form on screen. A physical phone with the on-screen keyboard was not used.
 - **2026-10-25 TQ.5:** Marking a resume or letter submitted stamps `submittedAt` and freezes that version. The card title is the saved label, or "{Company} — {date}". Create revision copies it into the next version number with no model call. A frozen PDF or DOCX keeps the file timestamp at `submittedAt`.
 - **2026-10-25 TQ.4:** G12 drops a summary sentence whose "N years" claim exceeds the whole years from snapshot dates (round down), or whose numbers are not in the library and are not that tenure. All sentences failing falls back to the library default. Eval `2026-10-25T08-18-58-443Z`: average resume reverts 0.00; the Birchlane "three years" / "worked directly with product squads" summary did not recur in `frontend-dev__product`. Six TAILOR bonus credits were granted on the seed account so the 24-pair run could start (plan remaining was 20).
 - **2026-10-25 TQ.3:** The meter accepts Completed, Processed, Reconciled, Prepared, and the other operational openers in the eval fixtures. A missing number says “If you have a number for this, add it”; a spelled-out figure says to write it as a digit. 44 bullets (eval fixtures plus the Avery Lang seed) have expected tiers. The seeded thesis bullet is Good. Strong or better stays 3 of 9. WordPress counts as a known tool.

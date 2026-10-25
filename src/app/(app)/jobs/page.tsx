@@ -57,8 +57,8 @@ export default async function JobsPage({
     <div
       className={
         query.view === "board"
-          ? "flex w-full flex-col gap-6"
-          : "mx-auto flex w-full max-w-6xl flex-col gap-6"
+          ? "flex w-full min-w-0 flex-col gap-6"
+          : "mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6"
       }
     >
       <div>

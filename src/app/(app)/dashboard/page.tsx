@@ -34,7 +34,7 @@ export default async function DashboardPage() {
   const today = returning ? await listToday(user.id) : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
+    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-8">
       <div>
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">
           {strings.pages.dashboard.title}

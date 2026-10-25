@@ -67,7 +67,7 @@ export function ContactsWorkspace({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <form onSubmit={onSearch} className="flex w-full max-w-md flex-col gap-2 sm:flex-row sm:items-end">
           <div className="grid flex-1 gap-2">

@@ -62,7 +62,7 @@ export function JobSections({
 
   return (
     <Tabs key={initialTab} defaultValue={initialTab} onValueChange={onValueChange}>
-      <div className="max-w-full overflow-x-auto" aria-busy={pending}>
+      <div className="w-full min-w-0 max-w-full overflow-x-auto" aria-busy={pending}>
         <TabsList aria-label={documentsCopy.tabsLabel}>
           <TabsTrigger value="overview">{documentsCopy.overviewTab}</TabsTrigger>
           <TabsTrigger value="documents">{documentsCopy.documentsTab}</TabsTrigger>

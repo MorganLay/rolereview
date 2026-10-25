@@ -32,8 +32,8 @@ Signed in — protected by src/proxy.ts AND requireUser() in the (app) layout
 ## App shell
 
 - **Sidebar** (top bar + menu on mobile): Dashboard · Library · Jobs board · Contacts · Insights · Settings. Bottom: Usage pill ("2 / 3 tailored resumes"; plus "N extra" when tailored-resume bonus credits remain) → Settings → Plan (`/settings?tab=plan`). The pill stays at the bottom of the sidebar while the page scrolls. On a phone it is at the bottom of the menu. [1.1] XP bar and level.
-- **Header:** global "New job" button; reminders bell with the count of open reminders that are due today or overdue (popover: Done, Snooze 1 day, Dismiss, and Open job); user menu (email, Invite friends [1.1], Sign out).
-- **Global:** toaster; Upgrade modal (opened by any `QUOTA_EXCEEDED` or Pro-only action); Feedback button (bottom-right, opens a small form → `Feedback`); a payment-failed banner when Stripe reports the subscription as past due or unpaid, with a link to Plan & billing to update the payment method; [1.1] milestone toast.
+- **Header:** global "New job" button; reminders bell with the count of open reminders that are due today or overdue (popover: Done, Snooze 1 day, Dismiss, and Open job); account menu. The trigger is an icon. The email is inside the menu, with Sign out (and Invite friends [1.1]). On a phone the menu also includes Feedback.
+- **Global:** toaster; Upgrade modal (opened by any `QUOTA_EXCEEDED` or Pro-only action); Feedback opens a small form → `Feedback`. On a phone it is in the account menu. On a wider screen it is in the sidebar, above the usage pill, so it does not cover the page. A payment-failed banner when Stripe reports the subscription as past due or unpaid, with a link to Plan & billing to update the payment method; [1.1] milestone toast. Dialogs stay within the visible height and scroll, including when the on-screen keyboard is open.
 
 ## Flow A — first-time user (activation)
 

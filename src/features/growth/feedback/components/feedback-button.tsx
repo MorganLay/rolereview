@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { createContext, useContext, useState, useTransition } from "react";
 import { usePathname } from "next/navigation";
 import { MessageSquarePlus } from "lucide-react";
 import { toast } from "sonner";
@@ -29,7 +29,17 @@ import { strings } from "@/copy/strings";
 
 const KINDS = feedbackKindSchema.options;
 
-export function FeedbackButton() {
+const FeedbackContext = createContext<(() => void) | null>(null);
+
+export function useOpenFeedback(): () => void {
+  const open = useContext(FeedbackContext);
+  if (!open) {
+    throw new Error("Feedback is only available inside the app shell.");
+  }
+  return open;
+}
+
+export function FeedbackProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<(typeof KINDS)[number]>("IDEA");
@@ -73,18 +83,8 @@ export function FeedbackButton() {
   }
 
   return (
-    <>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="fixed right-4 bottom-4 z-40 shadow-sm"
-        onClick={() => setOpen(true)}
-      >
-        <MessageSquarePlus data-icon="inline-start" />
-        {strings.feedback.button}
-      </Button>
-
+    <FeedbackContext.Provider value={() => setOpen(true)}>
+      {children}
       <Dialog
         open={open}
         onOpenChange={(next) => {
@@ -98,9 +98,7 @@ export function FeedbackButton() {
               <DialogTitle className="font-serif text-lg font-semibold">
                 {strings.feedback.title}
               </DialogTitle>
-              <DialogDescription>
-                {strings.feedback.description}
-              </DialogDescription>
+              <DialogDescription>{strings.feedback.description}</DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-2">
@@ -126,9 +124,7 @@ export function FeedbackButton() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="feedback-message">
-                {strings.feedback.messageLabel}
-              </Label>
+              <Label htmlFor="feedback-message">{strings.feedback.messageLabel}</Label>
               <Textarea
                 id="feedback-message"
                 value={message}
@@ -138,23 +134,17 @@ export function FeedbackButton() {
                 required
                 aria-invalid={Boolean(fieldError)}
               />
-              {fieldError ? (
-                <p className="text-sm text-destructive">{fieldError}</p>
-              ) : null}
+              {fieldError ? <p className="text-sm text-destructive">{fieldError}</p> : null}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="feedback-rating">
-                {strings.feedback.ratingLabel}
-              </Label>
+              <Label htmlFor="feedback-rating">{strings.feedback.ratingLabel}</Label>
               <Select value={rating} onValueChange={setRating}>
                 <SelectTrigger id="feedback-rating" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">
-                    {strings.feedback.ratingNone}
-                  </SelectItem>
+                  <SelectItem value="none">{strings.feedback.ratingNone}</SelectItem>
                   {[1, 2, 3, 4, 5].map((n) => (
                     <SelectItem key={n} value={String(n)}>
                       {n}
@@ -180,6 +170,24 @@ export function FeedbackButton() {
           </form>
         </DialogContent>
       </Dialog>
-    </>
+    </FeedbackContext.Provider>
+  );
+}
+
+/** Desktop sidebar. Hidden below `md`, where Feedback lives in the account menu. */
+export function FeedbackSidebarButton() {
+  const open = useOpenFeedback();
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className="mb-3 hidden w-full md:inline-flex"
+      onClick={open}
+    >
+      <MessageSquarePlus aria-hidden data-icon="inline-start" />
+      {strings.feedback.button}
+    </Button>
   );
 }

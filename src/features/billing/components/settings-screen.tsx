@@ -39,7 +39,7 @@ export function SettingsScreen({
   showTestPreview: boolean;
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-6">
       <div>
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">
           {page.title}

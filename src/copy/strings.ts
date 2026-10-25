@@ -585,7 +585,7 @@ export const strings = {
         "A cover letter can use a note you write about why you want the role. It does not invent that reason for you.",
       contactTitle: "Contact",
       contactBody:
-        "There isn’t a public mailbox yet. For product updates, use the form at the bottom of this page. After you sign in, the Feedback button on app pages sends a note.",
+        "There isn’t a public mailbox yet. For product updates, use the form at the bottom of this page. After you sign in, Feedback is in the account menu on a phone and in the sidebar on a larger screen.",
     },
     changelog: {
       metaTitle: "Changelog",

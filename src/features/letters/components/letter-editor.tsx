@@ -292,7 +292,7 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
         </p>
       </div>
 
-      <div className="lg:hidden">
+      <div className="min-w-0 overflow-x-auto lg:hidden">
         <Tabs value={tab} onValueChange={onTab}>
           <TabsList aria-label={letterCopy.tabsLabel}>
             <TabsTrigger value="letter">{letterCopy.letterTab}</TabsTrigger>

@@ -232,7 +232,7 @@ export function JobsBoard({
   }
 
   return (
-    <div className="flex flex-col gap-4" aria-busy={pending}>
+    <div className="flex min-w-0 flex-col gap-4" aria-busy={pending}>
       <p className="sr-only" aria-live="polite">
         {pending ? copy.moving : ""}
       </p>
@@ -269,7 +269,7 @@ export function JobsBoard({
         onDragEnd={onDragEnd}
         onDragCancel={() => setActiveId(null)}
       >
-        <div className="flex gap-3 overflow-x-auto pb-3">
+        <div className="flex w-full min-w-0 max-w-full gap-3 overflow-x-auto pb-3">
           {stages.map((value) => (
             <BoardColumn
               key={value}

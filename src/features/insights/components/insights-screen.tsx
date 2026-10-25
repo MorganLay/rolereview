@@ -21,7 +21,7 @@ export function InsightsScreen({ data, pro }: { data: InsightsData; pro: boolean
   const showCharts = data.everApplied && (data.applied > 0 || saved > 0);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
+    <div className="mx-auto flex w-full min-w-0 max-w-5xl flex-col gap-8">
       <div>
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">
           {page.title}
@@ -97,7 +97,7 @@ function WeeklySection({ weeks }: { weeks: readonly WeekRow[] }) {
       <h2 id="weekly-heading" className="text-base font-medium text-ink">
         {copy.weekly}
       </h2>
-      <div className="overflow-x-auto">
+      <div className="w-full min-w-0 max-w-full overflow-x-auto">
         <WeeklyChart weeks={weeks} />
       </div>
     </section>

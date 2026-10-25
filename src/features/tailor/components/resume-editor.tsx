@@ -450,7 +450,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         <p className="text-sm text-slate">{copy.templateLook(resumeTemplateLabel(templateId))}</p>
       </div>
 
-      <div className="lg:hidden">
+      <div className="min-w-0 overflow-x-auto lg:hidden">
         <Tabs value={tab} onValueChange={onTab}>
           <TabsList aria-label={copy.tabsLabel}>
             <TabsTrigger value="resume">{copy.resumeTab}</TabsTrigger>

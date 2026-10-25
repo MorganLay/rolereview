@@ -26,7 +26,7 @@ export default async function ResumeWorkspacePage({
   if (!workspace) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6">
       <ResumeEditor workspace={workspace} />
     </div>
   );

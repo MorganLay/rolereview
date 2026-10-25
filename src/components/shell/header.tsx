@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Menu, Plus } from "lucide-react";
+import { Menu, Plus, UserRound } from "lucide-react";
 
 import { signOut } from "@/features/account/actions";
+import { useOpenFeedback } from "@/features/growth/feedback/components/feedback-button";
 import { NewJobLink } from "@/features/jobs/components/new-job-link";
 import { RemindersBell } from "@/features/tracking/components/reminders-bell";
 import type { ReminderView } from "@/features/tracking/reminders";
@@ -37,10 +38,11 @@ type AppHeaderProps = {
 export function AppHeader({ userEmail, reminders, usage }: AppHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [signOutPending, startSignOut] = useTransition();
+  const openFeedback = useOpenFeedback();
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line bg-paper/95 px-3 backdrop-blur-sm md:px-6">
-      <div className="flex items-center gap-1 md:hidden">
+    <header className="sticky top-0 z-30 flex h-14 min-w-0 items-center gap-2 border-b border-line bg-paper/95 px-3 backdrop-blur-sm md:px-6">
+      <div className="flex min-w-0 items-center gap-1 md:hidden">
         <Button
           type="button"
           variant="ghost"
@@ -52,7 +54,7 @@ export function AppHeader({ userEmail, reminders, usage }: AppHeaderProps) {
         </Button>
         <Link
           href="/dashboard"
-          className="font-serif text-base font-semibold tracking-tight text-ink"
+          className="min-w-0 truncate font-serif text-base font-semibold tracking-tight text-ink"
         >
           {strings.brand.name}
         </Link>
@@ -67,7 +69,7 @@ export function AppHeader({ userEmail, reminders, usage }: AppHeaderProps) {
         </SheetContent>
       </Sheet>
 
-      <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
         <Button type="button" size="sm" asChild>
           <NewJobLink>
             <Plus data-icon="inline-start" />
@@ -83,18 +85,20 @@ export function AppHeader({ userEmail, reminders, usage }: AppHeaderProps) {
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="icon"
               aria-label={strings.shell.userMenuAria}
-              className="max-w-[10rem] truncate sm:max-w-[14rem]"
             >
-              <span className="truncate">{userEmail}</span>
+              <UserRound aria-hidden />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="truncate font-normal text-slate">
+            <DropdownMenuLabel className="font-normal break-all whitespace-normal text-slate">
               {userEmail}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem className="md:hidden" onSelect={() => openFeedback()}>
+              {strings.feedback.button}
+            </DropdownMenuItem>
             <DropdownMenuItem
               disabled={signOutPending}
               onSelect={() => {

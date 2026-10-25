@@ -25,7 +25,7 @@ export default async function ContactsPage({
   const listed = await listContacts(user.id, q);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div className="mx-auto flex w-full min-w-0 max-w-5xl flex-col gap-6">
       <div>
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">
           {strings.pages.contacts.title}
