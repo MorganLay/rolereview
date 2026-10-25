@@ -15,7 +15,7 @@ Spec: docs/05-AI.md. Read the relevant section before editing.
 - Check quota BEFORE calling (`checkQuota`). Failed calls never count.
 - Generation rows (Tailor, CoverLetter, PrepKit) are created PENDING before the call and set READY/FAILED after; PENDING > 5 min = FAILED.
 - The model outputs refs (E1, E1.B2, S4, POSTING, WHY) — never titles, employers, dates or skill names. Code resolves refs against the library snapshot.
-- Run the matching guard before saving: `validateTailorOutput` (G1–G11), `validateLetterOutput` (L1–L4), prep/coach guards. No unsupported numbers ever reach the user.
+- Run the matching guard before saving: `validateTailorOutput` (G1–G12), `validateLetterOutput` (L1–L4), prep/coach guards. No unsupported numbers ever reach the user.
 - Guards, assemble, score, keywords, strength, serialize are pure functions with unit tests — extend tests when changing them.
 - Never log prompts, resume/posting text, or model output. Never store free-tool inputs.
 - Changing a prompt, schema, model or effort → `npm run evals` and record results in `evals/NOTES.md`.

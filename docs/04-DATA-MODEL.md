@@ -312,7 +312,7 @@ export const ResumeContent = z.object({
   skills: z.array(z.object({ category: z.string().nullable(), names: z.array(z.string()) })),
 });
 ```
-Render order: Summary → Experience → Projects → Education → Certifications → Volunteer → Other → Skills.
+Render order: Summary → Experience → Projects → Education → Certifications → Volunteer → Other → Skills. G12 may drop summary sentences whose tenure or numbers are not supported, or replace the summary with the library default.
 
 ### `TailoredResume.matchReport` (MatchReport)
 

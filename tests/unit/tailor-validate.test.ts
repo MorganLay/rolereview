@@ -530,4 +530,115 @@ describe("validateTailorOutput", () => {
       "G11",
     );
   });
+
+  it("G12 reverts a spelled-out tenure that rounds up Birchlane dates", () => {
+    const snapshot = birchlaneSnapshot();
+    const output = tailorOutput();
+    output.summary =
+      "Frontend developer who spent three years at Birchlane Studio.";
+
+    const result = guard(output, snapshot);
+
+    expect(result.reverts).toBe(1);
+    expect(result.output.summary).toBe(snapshot.profile.summary);
+    expect(result.issues).toContainEqual({ code: "G12", ref: "summary" });
+  });
+
+  it("G12 keeps a whole-year tenure that matches the Birchlane dates", () => {
+    const snapshot = birchlaneSnapshot();
+    const output = tailorOutput();
+    output.summary =
+      "Frontend developer who spent two years at Birchlane Studio.";
+
+    const result = guard(output, snapshot);
+
+    expect(result.reverts).toBe(0);
+    expect(result.output.summary).toBe(
+      "Frontend developer who spent two years at Birchlane Studio.",
+    );
+  });
+
+  it("G12 drops only the sentence with the overstated tenure", () => {
+    const snapshot = birchlaneSnapshot();
+    const output = tailorOutput();
+    output.summary =
+      "Analyst with reporting experience. She spent three years at Birchlane Studio.";
+
+    const result = guard(output, snapshot);
+
+    expect(result.reverts).toBe(1);
+    expect(result.output.summary).toBe("Analyst with reporting experience.");
+    expect(result.issues).toEqual([{ code: "G12", ref: "summary" }]);
+  });
+
+  it("G12 reverts a summary number that is not in the library or computed tenure", () => {
+    const output = tailorOutput();
+    output.summary = "Analyst who shipped 99 reports.";
+
+    const result = guard(output);
+
+    expect(result.reverts).toBe(1);
+    expect(result.output.summary).toBe(
+      "Library summary that should not print on the resume.",
+    );
+    expect(result.issues).toContainEqual({ code: "G12", ref: "summary" });
+  });
+
+  it("G12 allows a library number and the computed whole-year tenure", () => {
+    const output = tailorOutput();
+    output.summary = "Analyst who maintained 14 reports over 3 years.";
+
+    const result = guard(output);
+
+    expect(result.reverts).toBe(0);
+    expect(result.output.summary).toBe(
+      "Analyst who maintained 14 reports over 3 years.",
+    );
+  });
+
+  it("G12 allows a four-year degree when education dates cover it", () => {
+    const snapshot = librarySnapshot();
+    const degree = snapshot.entries.find((entry) => entry.ref === "E3");
+    if (!degree) throw new Error("missing education entry");
+    degree.startDate = "2019";
+    degree.endDate = "2023";
+    const output = tailorOutput();
+    output.summary = "Graduate with a four-year degree in computer science.";
+
+    const result = guard(output, snapshot);
+
+    expect(result.reverts).toBe(0);
+    expect(result.output.summary).toBe(
+      "Graduate with a four-year degree in computer science.",
+    );
+  });
+
+  it("G12 uses an empty string when every sentence fails and the library has no summary", () => {
+    const snapshot = librarySnapshot();
+    snapshot.profile.summary = null;
+    const output = tailorOutput();
+    output.summary = "Invented 99 years of experience.";
+
+    const result = guard(output, snapshot);
+
+    expect(result.reverts).toBe(1);
+    expect(result.output.summary).toBe("");
+  });
 });
+
+function birchlaneSnapshot() {
+  const snapshot = librarySnapshot();
+  const intern = snapshot.entries.find((entry) => entry.ref === "E4");
+  if (!intern) throw new Error("missing intern entry");
+  intern.organization = "Birchlane Studio";
+  intern.startDate = "2019-08";
+  intern.endDate = "2022-03";
+  intern.isCurrent = false;
+  intern.title = "Junior web developer";
+  intern.bullets[0] = {
+    ref: "E4.B1",
+    id: "b5",
+    text: "Built marketing pages in HTML, CSS, and JavaScript for 10 client launches.",
+  };
+  return snapshot;
+}

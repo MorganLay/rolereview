@@ -1,7 +1,7 @@
 /**
  * Fabrication guard for a tailored resume.
  * docs/05-AI.md → The fabrication guard.
- * Pure: G1–G11 clean the model output before anything is saved.
+ * Pure: G1–G12 clean the model output before anything is saved.
  */
 
 import type { LibrarySnapshot } from "@/features/library/schemas";
@@ -18,6 +18,12 @@ import type {
   ValidatedBullet,
   ValidatedTailorOutput,
 } from "./schemas";
+import {
+  hasOverstatedTenure,
+  libraryNumberSources,
+  snapshotTenure,
+  stripEducationDurationPhrases,
+} from "./tenure";
 
 export const GUARD_CODES = [
   "G1",
@@ -31,6 +37,7 @@ export const GUARD_CODES = [
   "G9",
   "G10",
   "G11",
+  "G12",
 ] as const;
 
 export type GuardCode = (typeof GUARD_CODES)[number];
@@ -56,21 +63,100 @@ export function validateTailorOutput(
 ): GuardResult {
   const issues: GuardIssue[] = [];
   const entries = cleanEntries(output.entries, snapshot, issues);
+  const skills = cleanSkills(output.skills, snapshot, issues);
+  const requirementMatches = cleanMatches(
+    output.requirementMatches,
+    analysis,
+    snapshot,
+    issues,
+  );
+  const summary = cleanSummary(output.summary, snapshot, issues);
   return {
     output: {
-      summary: output.summary,
+      summary: summary.text,
       entries: entries.entries,
-      skills: cleanSkills(output.skills, snapshot, issues),
-      requirementMatches: cleanMatches(
-        output.requirementMatches,
-        analysis,
-        snapshot,
-        issues,
-      ),
+      skills,
+      requirementMatches,
     },
-    reverts: entries.reverts,
+    reverts: entries.reverts + summary.reverts,
     issues,
   };
+}
+
+function cleanSummary(
+  text: string,
+  snapshot: LibrarySnapshot,
+  issues: GuardIssue[],
+): { text: string; reverts: number } {
+  const tenure = snapshotTenure(snapshot);
+  const sources = libraryNumberSources(snapshot, tenure);
+  const parts = sentences(text);
+  if (parts.length === 0) return { text, reverts: 0 };
+
+  const kept: string[] = [];
+  let dropped = false;
+  for (const sentence of parts) {
+    const forNumbers = stripEducationDurationPhrases(sentence);
+    if (
+      hasOverstatedTenure(sentence, tenure) ||
+      hasUnsupportedNumber(forNumbers, sources)
+    ) {
+      dropped = true;
+      continue;
+    }
+    kept.push(sentence);
+  }
+
+  if (!dropped) return { text, reverts: 0 };
+  issues.push({ code: "G12", ref: "summary" });
+  if (kept.length > 0) return { text: kept.join(" "), reverts: 1 };
+  return { text: snapshot.profile.summary?.trim() ?? "", reverts: 1 };
+}
+
+const ABBREVIATIONS = new Set([
+  "mr",
+  "mrs",
+  "ms",
+  "dr",
+  "prof",
+  "sr",
+  "jr",
+  "st",
+  "e.g",
+  "i.e",
+]);
+
+function sentences(text: string): string[] {
+  const parts: string[] = [];
+  let start = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    if (!isSentenceEnd(text, index)) continue;
+    const sentence = text.slice(start, index + 1).trim();
+    if (sentence.length > 0) parts.push(sentence);
+    let next = index + 1;
+    while (next < text.length && /\s/.test(text[next] ?? "")) next += 1;
+    start = next;
+    index = next - 1;
+  }
+  const tail = text.slice(start).trim();
+  if (tail.length > 0) parts.push(tail);
+  return parts;
+}
+
+function isSentenceEnd(text: string, index: number): boolean {
+  const mark = text[index];
+  if (mark !== "." && mark !== "!" && mark !== "?") return false;
+  const next = text[index + 1];
+  if (next !== undefined && !/\s/.test(next)) return false;
+  if (mark === "." && abbreviationBefore(text, index)) return false;
+  return true;
+}
+
+function abbreviationBefore(text: string, periodIndex: number): boolean {
+  const match = text.slice(0, periodIndex).match(/(?:[A-Za-z]\.)*[A-Za-z]+$/);
+  const token = match?.[0];
+  if (token === undefined) return false;
+  return ABBREVIATIONS.has(token.toLowerCase());
 }
 
 function cleanEntries(

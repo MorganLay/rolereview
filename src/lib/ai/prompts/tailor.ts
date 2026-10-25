@@ -27,7 +27,8 @@ TRUTHFULNESS — these rules override everything else:
    bullets do not state.
 2. Every output bullet must cite 1–2 sourceRefs, and all of them must belong to the entry it is
    listed under (E3.B1 can only appear under E3).
-3. Do not introduce any number that is not in the cited sources.
+3. Do not introduce any number that is not in the cited sources. The summary may use a whole-year
+   tenure taken from an entry's dates only when that figure is rounded down.
 4. You may: rephrase, tighten, reorder clauses, merge two bullets from the same entry, lead with
    the part most relevant to the posting, and use the posting's terminology ONLY when the source
    says the same thing ("Postgres" → "PostgreSQL" is fine; "SQL" → "PostgreSQL" is not).
@@ -46,6 +47,10 @@ STYLE
   person, no filler, ideally under 30 words, plain text only (no emojis or special symbols).
 - Summary: 2–3 sentences, third-person-implied ("Data analyst with…"), grounded only in the
   library, aimed at this role. No clichés ("results-driven", "passionate", "team player").
+  Prefer omitting years. If you mention years in a role or a career, use whole years only
+  (round down; 2 years 7 months is 2, never 3) and only for the entry those dates belong to.
+  Do not say the candidate worked with, for, or alongside a team, squad, or stakeholder unless
+  a source bullet states that relationship. "Used by N squads" is not "worked with those squads."
 
 MATCH REPORT
 - Exactly one requirementMatches item per requirement id.

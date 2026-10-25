@@ -26,6 +26,34 @@ Read 5 pairs from the run. For each one, answer:
 
 ## Runs
 
+### 2026-10-25 `2026-10-25T08-18-58-443Z`
+
+24 pairs, all succeeded. Average resume reverts **0.00**. Average letter reverts **1.00** across 12 letters. Total estimated cost about **$0.62**. One page, no emphasis. Letters use a professional tone and standard length. Even pair indexes only. The seed account needed 6 extra TAILOR bonus credits to clear the 24-call floor (plan remaining was 20).
+
+The five pairs are a shuffle of the filenames, seeded from that timestamp, first five: `cs-grad__product`, `retail-changer__product`, `cs-grad__support-engineer`, `cs-grad__frontend`, `cs-grad__data-analyst`. `frontend-dev__product` was also read because that is the pair that invented Birchlane tenure last time.
+
+| Pair | Unsupported claim? | Best items selected? | Reads like a person? | Summary grounded? |
+|---|---|---|---|---|
+| cs-grad__product | No | Yes | Yes | Yes |
+| retail-changer__product | No | Yes | Yes | Yes |
+| cs-grad__support-engineer | No | Yes | Yes | Yes |
+| cs-grad__frontend | No | Yes | Yes | Yes |
+| cs-grad__data-analyst | No | Yes | Yes | Yes |
+
+**cs-grad__product.** Numbers match (6-page wiki, 25 tickets, 40 stops, 12 supervisors, 120 parts). The bike-shop bullet still drops "The shop did not deploy it"; what remains is in the source. The summary stays on the internship, the help-desk wiki, and the SQL inventory project.
+
+**retail-changer__product.** Bullets keep 14, $1.2 million, 9 cashiers, 30 to 50 orders, 24 books, 3 hours / 8 months. The summary says "library drop-in", which is the org name, not "public library". Current-role bullets use present tense.
+
+**cs-grad__support-engineer.** Help-desk tickets and wiki lead; the internship's Python file checks and the React page are in. Numbers match.
+
+**cs-grad__frontend.** React, TypeScript, Jest, Python, and the Java/SQL project are in. The wiki is included. HTML and CSS stay missing from the library.
+
+**cs-grad__data-analyst.** Python GTFS checks and the SQL inventory app lead. Ticket and wiki numbers match.
+
+**frontend-dev__product (extra).** The summary does not say "three years" at Birchlane and does not say she worked directly with product squads. It uses the design system, Storybook, the checkout accessibility work with a designer, and the account-settings ticket drop. The Birchlane bullet stays on WordPress and posts. Score 25.
+
+No unsupported summary claims in the five reviewed pairs. Revert average is under 0.5.
+
 ### 2026-10-22 `2026-10-22T07-51-35-901Z`
 
 24 pairs, all succeeded. Average resume reverts **0.00**. Average letter reverts **0.75** across 12 letters. Total estimated cost about **$0.62**. One page, no emphasis. Letters use a professional tone and standard length. Even pair indexes only.
