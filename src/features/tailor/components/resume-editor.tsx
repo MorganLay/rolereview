@@ -35,6 +35,7 @@ import {
   skillElementId,
   SKILLS_SECTION_ID,
 } from "@/features/tailor/evidence";
+import { includeEvidence } from "@/features/tailor/requirement-state";
 import {
   RESUME_LIMITS,
   type ContentBullet,
@@ -354,6 +355,10 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
     });
   }
 
+  function includeInResume(refs: readonly string[]) {
+    updateContent((current) => includeEvidence(current, workspace.snapshot, refs));
+  }
+
   function removeSkill(name: string) {
     updateContent((current) => {
       const names = skillNamesOf(current).filter((item) => item !== name);
@@ -611,6 +616,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
             libraryEntries={workspace.libraryEntries}
             jobId={workspace.jobId}
             onEvidence={showEvidence}
+            onInclude={includeInResume}
           />
         </aside>
       </div>

@@ -3,12 +3,17 @@
 import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { strings } from "@/copy/strings";
 import type { Requirement } from "@/features/jobs/schemas";
 import type { LibrarySnapshot } from "@/features/library/schemas";
 import type { LibraryEntryOption } from "@/features/tailor/content";
 import { evidenceLinks } from "@/features/tailor/evidence";
 import { keywordCoverage } from "@/features/tailor/keywords";
+import {
+  requirementState,
+  type RequirementStateName,
+} from "@/features/tailor/requirement-state";
 import type { RequirementVerdict, ResumeContent } from "@/features/tailor/schemas";
 import { cn } from "@/lib/utils";
 
@@ -17,19 +22,20 @@ import { QuickAddBulletDialog } from "./quick-add-bullet-dialog";
 const copy = strings.jobs.workspace;
 const scoreCopy = strings.jobs.documents;
 const resultCopy = strings.jobs.result;
-const statusCopy = strings.status;
 
-const verdictMark = {
-  met: "✓",
-  partial: "◐",
-  missing: "✗",
-} as const;
+const stateMark: Record<RequirementStateName, string> = {
+  in_resume: "✓",
+  in_library: "○",
+  needs_review: "◐",
+  no_evidence: "✗",
+};
 
-const verdictClass = {
-  met: "text-pine",
-  partial: "text-marigold-700",
-  missing: "text-clay",
-} as const;
+const stateClass: Record<RequirementStateName, string> = {
+  in_resume: "text-pine",
+  in_library: "text-marigold-700",
+  needs_review: "text-marigold-700",
+  no_evidence: "text-clay",
+};
 
 export function MatchPanel({
   content,
@@ -41,6 +47,7 @@ export function MatchPanel({
   libraryEntries,
   jobId,
   onEvidence,
+  onInclude,
   readOnly = false,
   revealCount,
   headingLevel = "h2",
@@ -54,6 +61,8 @@ export function MatchPanel({
   libraryEntries: readonly LibraryEntryOption[];
   jobId: string;
   onEvidence: (elementId: string) => void;
+  /** Turn excluded evidence on in the resume on screen. */
+  onInclude?: (refs: readonly string[]) => void;
   readOnly?: boolean;
   /** Requirements at this index and after stay pending. Omit to show every verdict. */
   revealCount?: number;
@@ -68,9 +77,26 @@ export function MatchPanel({
   return (
     <div className="flex flex-col gap-6 rounded-lg border border-line bg-surface p-4">
       <section className="flex flex-col gap-3" aria-labelledby={scoreId}>
-        <ScoreHeading id={scoreId} className="text-base font-medium tabular-nums text-ink">
-          {score === null ? scoreCopy.matchScoreEmpty : scoreCopy.matchScore(score)}
-        </ScoreHeading>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <ScoreHeading id={scoreId} className="text-base font-medium tabular-nums text-ink">
+            {score === null ? scoreCopy.matchScoreEmpty : scoreCopy.matchScore(score)}
+          </ScoreHeading>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-auto px-0 text-slate"
+              >
+                {copy.howScored}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start">
+              <p>{copy.howScoredBody}</p>
+            </PopoverContent>
+          </Popover>
+        </div>
         {requirements.length === 0 ? (
           <p className="text-sm text-slate">{copy.noRequirements}</p>
         ) : (
@@ -78,18 +104,27 @@ export function MatchPanel({
             {requirements.map((requirement, index) => {
               const verdict = verdictFor(requirement.id, verdicts);
               const pending = revealCount !== undefined && index >= revealCount;
+              const placement = requirementState({
+                requirement,
+                verdict,
+                content,
+                snapshot,
+                keywords,
+              });
               const links = evidenceLinks(verdict.evidenceRefs, content, snapshot);
               return (
                 <li key={requirement.id} className="grid gap-1 border-t border-line pt-3">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 text-sm font-medium",
-                        pending ? "text-slate" : verdictClass[verdict.verdict],
+                        "inline-flex max-w-full items-start gap-1 text-sm font-medium",
+                        pending ? "text-slate" : stateClass[placement.state],
                       )}
                     >
-                      <span aria-hidden>{pending ? "○" : verdictMark[verdict.verdict]}</span>
-                      {pending ? copy.pending : statusCopy[verdict.verdict]}
+                      <span aria-hidden>{pending ? "○" : stateMark[placement.state]}</span>
+                      <span className="break-words">
+                        {pending ? copy.pending : copy.states[placement.state]}
+                      </span>
                     </span>
                     <span className="text-xs text-slate">
                       {requirement.importance === "must" ? resultCopy.must : resultCopy.nice}
@@ -118,7 +153,23 @@ export function MatchPanel({
                       })}
                     </ul>
                   ) : null}
-                  {!readOnly && verdict.verdict === "missing" && !pending ? (
+                  {!readOnly &&
+                  !pending &&
+                  placement.state === "in_library" &&
+                  placement.includeRefs.length > 0 &&
+                  onInclude ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-1 w-fit"
+                      aria-label={copy.includeFor(requirement.text)}
+                      onClick={() => onInclude(placement.includeRefs)}
+                    >
+                      {copy.include}
+                    </Button>
+                  ) : null}
+                  {!readOnly && placement.state === "no_evidence" && !pending ? (
                     <Button
                       type="button"
                       variant="outline"

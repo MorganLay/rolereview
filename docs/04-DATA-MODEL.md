@@ -315,7 +315,7 @@ Render order: Summary → Experience → Projects → Education → Certificatio
 
 ```ts
 export const RequirementVerdict = z.object({
-  requirementId: z.string(), verdict: z.enum(["met", "partial", "missing"]),
+  requirementId: z.string(), verdict: z.enum(["met", "partial", "missing", "unassessed"]),
   evidenceRefs: z.array(z.string()), note: z.string().max(200),
 });
 export const MatchReport = z.object({
@@ -324,7 +324,9 @@ export const MatchReport = z.object({
 });
 ```
 
-`score` is null when the posting has no requirements. A null score shows as an em dash on the jobs list.
+`unassessed` means the model returned no verdict for that requirement. A row saved earlier may say `missing` with the note "Not assessed." Readers treat that note as `unassessed`. The match panel does not display this verdict directly. It recomputes In this resume / In your library, not in this resume / Needs review / No evidence found from the resume on screen (`05-AI.md` → Requirement states).
+
+`score` is null when the posting has no requirements, and when every requirement is unassessed. An unassessed requirement is left out of the score. A null score shows as an em dash on the jobs list. The number stays the one stored at tailoring time.
 
 ### `CoverLetter.content` (CoverLetterContent) → `features/letters/schemas.ts`
 

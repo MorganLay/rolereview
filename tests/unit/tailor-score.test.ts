@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { RESUME_LIMITS } from "@/features/tailor/schemas";
+import { MatchReport, RESUME_LIMITS } from "@/features/tailor/schemas";
 import type { RequirementMatch } from "@/features/tailor/schemas";
 import { scoreMatch } from "@/features/tailor/score";
 
@@ -78,18 +78,42 @@ describe("scoreMatch", () => {
     expect(report.verdicts).toEqual([
       {
         requirementId: "r1",
-        verdict: "missing",
+        verdict: "unassessed",
         evidenceRefs: [],
         note: "Not assessed.",
       },
       {
         requirementId: "r2",
-        verdict: "missing",
+        verdict: "unassessed",
         evidenceRefs: [],
         note: "Not assessed.",
       },
     ]);
+    expect(report.score).toBeNull();
+  });
+
+  it("leaves an unassessed requirement out of the score", () => {
+    const report = scoreMatch(jobAnalysis(), [match("r1", "met")]);
+
+    expect(report.verdicts[1]?.verdict).toBe("unassessed");
+    expect(report.score).toBe(100);
+  });
+
+  it("reads a saved not-assessed verdict as unassessed and keeps the stored score", () => {
+    const report = MatchReport.parse({
+      score: 0,
+      verdicts: [
+        {
+          requirementId: "r1",
+          verdict: "missing",
+          evidenceRefs: [],
+          note: "Not assessed.",
+        },
+      ],
+    });
+
     expect(report.score).toBe(0);
+    expect(report.verdicts[0]?.verdict).toBe("unassessed");
   });
 
   it("cuts a note at 200 characters", () => {
@@ -112,6 +136,7 @@ describe("scoreMatch", () => {
 
     expect(report.verdicts).toHaveLength(1);
     expect(report.verdicts[0]?.requirementId).toBe("r1");
-    expect(report.score).toBe(0);
+    expect(report.verdicts[0]?.verdict).toBe("unassessed");
+    expect(report.score).toBeNull();
   });
 });

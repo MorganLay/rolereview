@@ -1989,6 +1989,16 @@ export const strings = {
         "This version is marked submitted. The job stayed Saved. Try again.",
       tabsLabel: "Resume sections",
       panelLabel: "Match",
+      states: {
+        in_resume: "In this resume",
+        in_library: "In your library, not in this resume",
+        needs_review: "Needs review",
+        no_evidence: "No evidence found",
+      },
+      includeFor: (text: string) => `Include in this resume: ${text}`,
+      howScored: "How this is scored",
+      howScoredBody:
+        "This score reflects your library when this resume was tailored. It is not a chance of getting hired. Requirement wording varies, so the lines below follow the resume you are editing.",
       notAssessed: "Not assessed.",
       noRequirements: "This posting has no requirements to score.",
       pending: "Pending",

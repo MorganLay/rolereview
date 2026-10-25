@@ -23,7 +23,7 @@ Plain, specific, encouraging. Write like a good career advisor: honest about gap
 | Do | Don't |
 |---|---|
 | "Tailor your resume to this role." | "Supercharge your career with AI magic! 🚀" |
-| "3 requirements met, 2 partial, 1 missing." | "You're a 92% perfect match!!" |
+| "Python is in this resume. The certification needs review." | "You're a 92% perfect match!!" |
 | "We couldn't read that file. Try a PDF or paste the text." | "Oops! Something went wrong 😅" |
 | "Add a number to make this bullet Strong." | "This bullet is bad." |
 | "No response after 30 days? Mark it closed or follow up." | "You've been ghosted!" |

@@ -404,7 +404,7 @@ describe("validateTailorOutput", () => {
     ]);
   });
 
-  it("G9 adds a missing requirement as not assessed", () => {
+  it("G9 adds a skipped requirement as unassessed", () => {
     const output = tailorOutput();
     output.requirementMatches = [
       {
@@ -419,7 +419,7 @@ describe("validateTailorOutput", () => {
 
     expect(result.output.requirementMatches[1]).toEqual({
       requirementId: "r2",
-      verdict: "missing",
+      verdict: "unassessed",
       evidenceRefs: [],
       note: "Not assessed.",
     });

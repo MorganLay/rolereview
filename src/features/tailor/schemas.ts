@@ -41,7 +41,12 @@ export const rateResumeSchema = z.object({
 
 export type TailorOptions = z.infer<typeof TailorOptions>;
 
-const Verdict = z.enum(["met", "partial", "missing"]);
+const ModelVerdict = z.enum(["met", "partial", "missing"]);
+
+/** Saved on a match report. `unassessed` is written by the guard, not the model. */
+export const StoredVerdict = z.enum(["met", "partial", "missing", "unassessed"]);
+
+export const NOT_ASSESSED_NOTE = "Not assessed.";
 
 /** Model shape for TAILOR. Loose on purpose; the guard enforces limits. docs/05-AI.md. */
 export const TailorBullet = z.object({
@@ -56,9 +61,14 @@ export const TailorSkillGroup = z.object({
 
 export const RequirementMatch = z.object({
   requirementId: z.string(),
-  verdict: Verdict,
+  verdict: ModelVerdict,
   evidenceRefs: z.array(z.string()),
   note: z.string(),
+});
+
+/** Guard output. The model schema stays met, partial, or missing. */
+export const GuardRequirementMatch = RequirementMatch.extend({
+  verdict: StoredVerdict,
 });
 
 export const TailorOutput = z.object({
@@ -84,6 +94,7 @@ export const ValidatedTailorOutput = TailorOutput.extend({
       bullets: z.array(ValidatedBullet),
     }),
   ),
+  requirementMatches: z.array(GuardRequirementMatch),
 });
 
 export const ContentBullet = z.object({
@@ -134,12 +145,18 @@ export const markResumeSubmittedSchema = z.object({
   resumeId: z.uuid(),
 });
 
-export const RequirementVerdict = z.object({
-  requirementId: z.string(),
-  verdict: Verdict,
-  evidenceRefs: z.array(z.string()),
-  note: z.string().max(RESUME_LIMITS.note),
-});
+export const RequirementVerdict = z
+  .object({
+    requirementId: z.string(),
+    verdict: StoredVerdict,
+    evidenceRefs: z.array(z.string()),
+    note: z.string().max(RESUME_LIMITS.note),
+  })
+  .transform((row) =>
+    row.verdict === "missing" && row.note === NOT_ASSESSED_NOTE
+      ? { ...row, verdict: "unassessed" as const }
+      : row,
+  );
 
 export const MatchReport = z.object({
   verdicts: z.array(RequirementVerdict),
@@ -148,7 +165,9 @@ export const MatchReport = z.object({
 
 export type TailorBullet = z.infer<typeof TailorBullet>;
 export type TailorSkillGroup = z.infer<typeof TailorSkillGroup>;
+export type StoredVerdict = z.infer<typeof StoredVerdict>;
 export type RequirementMatch = z.infer<typeof RequirementMatch>;
+export type GuardRequirementMatch = z.infer<typeof GuardRequirementMatch>;
 export type TailorOutput = z.infer<typeof TailorOutput>;
 export type ValidatedBullet = z.infer<typeof ValidatedBullet>;
 export type ValidatedTailorOutput = z.infer<typeof ValidatedTailorOutput>;

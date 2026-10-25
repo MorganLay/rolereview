@@ -19,7 +19,7 @@ export function keywordCoverage(
   snapshot: LibrarySnapshot,
   keywords: readonly string[],
 ): KeywordCoverage {
-  return keywordCoverageFromText(keywordText(content, snapshot), keywords);
+  return keywordCoverageFromText(includedResumeText(content, snapshot), keywords);
 }
 
 /** Same matching as the workspace, against a pasted resume. */
@@ -27,13 +27,13 @@ export function keywordCoverageFromText(
   text: string,
   keywords: readonly string[],
 ): KeywordCoverage {
-  const haystack = normalize(text);
+  const haystack = normalizeMatchText(text);
   const covered: string[] = [];
   const missing: string[] = [];
 
   for (const keyword of keywords) {
-    const needle = normalize(keyword);
-    if (needle.length > 0 && includesKeyword(haystack, needle)) {
+    const needle = normalizeMatchText(keyword);
+    if (needle.length > 0 && termAppears(haystack, needle)) {
       covered.push(keyword);
     } else {
       missing.push(keyword);
@@ -48,7 +48,10 @@ export function keywordCoverageFromText(
   return { covered, missing, pct };
 }
 
-function keywordText(content: ResumeContent, snapshot: LibrarySnapshot): string {
+export function includedResumeText(
+  content: ResumeContent,
+  snapshot: LibrarySnapshot,
+): string {
   const byRef = new Map(snapshot.entries.map((entry) => [entry.ref, entry]));
   const parts: string[] = [];
 
@@ -70,12 +73,16 @@ function keywordText(content: ResumeContent, snapshot: LibrarySnapshot): string 
   return parts.join("\n");
 }
 
-function normalize(value: string): string {
+export function normalizeMatchText(value: string): string {
   return value.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
-/** `+`, `#`, and `.` stay part of the word, so Java does not match JavaScript. */
-function includesKeyword(haystack: string, needle: string): boolean {
+/**
+ * `haystack` and `needle` are already normalised.
+ * `+`, `#`, and `.` stay part of the word, so Java does not match JavaScript.
+ */
+export function termAppears(haystack: string, needle: string): boolean {
+  if (needle.length === 0) return false;
   const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const pattern = new RegExp(
     `(?:^|[^a-z0-9+.#])${escaped}(?:[^a-z0-9+.#]|$)`,

@@ -91,7 +91,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **T13.4** Production deploy guards + first deploy (rest moved to T13.4b)
 
 ## Phase Q — Core quality (before public launch)
-- [ ] **TQ.1** Requirement states (truthful match panel)
+- [x] **TQ.1** Requirement states (truthful match panel)
 - [ ] **TQ.2** Labels and counting that agree
 - [ ] **TQ.3** Better writing advice
 - [ ] **TQ.4** Summary guard
@@ -112,6 +112,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-25 TQ.1:** The match panel recomputes In this resume / In your library / Needs review / No evidence found as you edit. G9 stores unassessed, older "Not assessed." rows read the same way, and those requirements are left out of new scores. Include turns excluded evidence back on without a new tailor. The stored score does not change while you edit.
 - **2026-10-25 Phase Q:** Added after an outside UX review (D-28). T13.4 split: the code and first deploy are done; the production environment work is T13.4b, scheduled after the trust and mobile fixes and before the private beta (T13.5a). T13.5 is now T13.5a (private beta) and T13.5b (public launch). No new features until Phase Q is done.
 - **2026-10-23 T13.4:** Code is in: `vercel.json` runs `npm run db:deploy && next build`; Preview does not send mail; Production refuses a test Stripe key, a seed user id, and an http app URL. `vercelProductionIssues()` lists the Production secrets. Production deploy of `3956461` is Ready on `https://www.rolerefine.ca` after removing `SEED_USER_ID`. Team is still Hobby. `DATABASE_URL` and `STRIPE_SECRET_KEY` are still shared across Production/Preview/Development (no `rolerefine-prod` yet). Still needed: `rolerefine-prod`, Vercel Pro, live Stripe + webhook, Resend domain, PostHog prod, auth URLs, a real purchase then refund.
 - **2026-10-23 T13.3:** Playwright happy path signs in with an admin magic link (no Resend), pastes the cs-grad fixture, then job → tailor → letter → PDF → Move to Applied. Throwaway user is deleted after. Live Anthropic; skipped if those secrets are unset. Not in CI. ~2 minutes.

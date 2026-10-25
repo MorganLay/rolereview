@@ -8,8 +8,9 @@ import type { LibrarySnapshot } from "@/features/library/schemas";
 import type { JobAnalysis } from "@/features/jobs/schemas";
 import { hasUnsupportedNumber } from "@/lib/ai/numbers";
 
-import { RESUME_LIMITS } from "./schemas";
+import { NOT_ASSESSED_NOTE, RESUME_LIMITS } from "./schemas";
 import type {
+  GuardRequirementMatch,
   RequirementMatch,
   TailorBullet,
   TailorOutput,
@@ -45,8 +46,6 @@ export type GuardResult = {
   reverts: number;
   issues: GuardIssue[];
 };
-
-const NOT_ASSESSED = "Not assessed.";
 
 type SnapshotEntry = LibrarySnapshot["entries"][number];
 
@@ -201,12 +200,12 @@ function cleanMatches(
   analysis: JobAnalysis,
   snapshot: LibrarySnapshot,
   issues: GuardIssue[],
-): RequirementMatch[] {
+): GuardRequirementMatch[] {
   const requirementIds = new Set(
     analysis.requirements.map((requirement) => requirement.id),
   );
   const seen = new Set<string>();
-  const cleaned: RequirementMatch[] = [];
+  const cleaned: GuardRequirementMatch[] = [];
 
   for (const match of matches) {
     if (!requirementIds.has(match.requirementId) || seen.has(match.requirementId)) {
@@ -221,9 +220,9 @@ function cleanMatches(
     if (seen.has(requirement.id)) continue;
     cleaned.push({
       requirementId: requirement.id,
-      verdict: "missing",
+      verdict: "unassessed",
       evidenceRefs: [],
-      note: NOT_ASSESSED,
+      note: NOT_ASSESSED_NOTE,
     });
     issues.push({ code: "G9", ref: requirement.id });
   }
