@@ -146,7 +146,7 @@ Every page: unique title and meta description, OG image from the brand template,
 - Abuse control: Turnstile + 3 runs per IP-hash per day (`FreeToolRun`); logged as `AiCall(kind = FREE_TOOL, userId = null)`; ≈ $0.002 per run. Inputs never stored.
 
 ### Bullet Strength Checker (`/tools/bullet-strength`)
-- Paste up to 10 bullets → the same deterministic `bulletStrength()`: level (Weak → Excellent) and specific fixes ("add a number", "start with an action verb", "cut 'responsible for'").
+- Paste up to 10 bullets → the same deterministic `bulletStrength()`: level (Weak → Excellent) and specific fixes ("if you have a number for this, add it", "start with an action verb", "cut 'responsible for'").
 - No AI, no cost, no limit. CTA: "Check every bullet in your resume → **[Start free]**".
 
 ## Pre-launch waitlist (live in the first two weeks of building)

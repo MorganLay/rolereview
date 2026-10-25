@@ -1,14 +1,20 @@
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { strings } from "@/copy/strings";
+import { LibrarySnapshot } from "@/features/library/schemas";
 import {
   bulletStrength,
   CHECK_IDS,
   filledSegments,
   KNOWN_TERMS,
   type CheckId,
+  type StrengthTier,
 } from "@/features/library/strength";
 import { STRONG_VERB_LIST, STRONG_VERBS } from "@/features/library/verbs";
+import { SEED_LIBRARY } from "../../prisma/library-seed";
 
 const EXCELLENT = "Led a team of 12 engineers using React and SQL daily.";
 const fixes = strings.strength.fixes;
@@ -268,6 +274,26 @@ const cases: Array<{
     skills: ["  "],
     passed: ["verb", "length", "voice", "filler"],
   },
+  {
+    name: "processed opener",
+    text: "Processed 40 loan files in Excel for the branch team each morning.",
+    passed: [...CHECK_IDS],
+  },
+  {
+    name: "prepared opener",
+    text: "Prepared the weekly Excel pack for 12 branch managers every Monday.",
+    passed: [...CHECK_IDS],
+  },
+  {
+    name: "one of is not a figure",
+    text: "Led one of the React and SQL platform teams each week.",
+    passed: ["verb", "length", "voice", "filler", "specific"],
+  },
+  {
+    name: "one-off is not a figure",
+    text: "Built one-off Excel exports for the branch team this year.",
+    passed: ["verb", "length", "voice", "filler", "specific"],
+  },
 ];
 
 describe("bulletStrength", () => {
@@ -328,7 +354,42 @@ describe("strength fixes", () => {
     const excellent = strings.strength.excellent;
     expect(
       bulletStrength("Led a team of two engineers using React and SQL daily.", []).fixes,
+    ).toEqual([fixes.metricDigit(excellent)]);
+  });
+
+  it("asks for a digit when the figure is already written as a word", () => {
+    expect(fixes.metricDigit("Excellent")).toBe(
+      "Write that figure as a digit to reach Excellent.",
+    );
+  });
+
+  it("does not treat one of or one-off as a figure to digitize", () => {
+    const excellent = strings.strength.excellent;
+    expect(
+      bulletStrength("Led one of the React and SQL platform teams each week.", []).fixes,
     ).toEqual([fixes.metric(excellent)]);
+    expect(
+      bulletStrength("Built one-off Excel exports for the branch team this year.", []).fixes,
+    ).toEqual([fixes.metric(excellent)]);
+  });
+
+  it("never tells you to add a number outright", () => {
+    const samples = [
+      fixes.verb("Strong"),
+      fixes.metric("Strong"),
+      fixes.metricDigit("Strong"),
+      fixes.lengthShort("Strong"),
+      fixes.lengthLong("Strong"),
+      fixes.voice("Strong"),
+      fixes.filler("responsible for", "Strong"),
+      fixes.specific("Strong"),
+    ];
+    expect(fixes.metric("Strong")).toBe(
+      "If you have a number for this, add it to reach Strong.",
+    );
+    for (const sample of samples) {
+      expect(sample).not.toMatch(/^Add a (number|metric)\b/i);
+    }
   });
 
   it("quotes the filler phrase", () => {
@@ -359,14 +420,41 @@ describe("strength meter segments", () => {
 });
 
 describe("verb list", () => {
-  it("has about 150 unique verbs and omits the weak openers", () => {
+  it("includes operational verbs and omits the weak openers", () => {
     expect(new Set(STRONG_VERB_LIST).size).toBe(STRONG_VERB_LIST.length);
     expect(STRONG_VERB_LIST.length).toBeGreaterThanOrEqual(140);
-    expect(STRONG_VERBS.has("led")).toBe(true);
-    expect(STRONG_VERBS.has("lead")).toBe(true);
-    expect(STRONG_VERBS.has("analysed")).toBe(true);
-    expect(STRONG_VERBS.has("analyzed")).toBe(true);
-    expect(STRONG_VERBS.has("co-founded")).toBe(true);
+    for (const verb of [
+      "led",
+      "lead",
+      "analysed",
+      "analyzed",
+      "co-founded",
+      "completed",
+      "complete",
+      "coordinated",
+      "resolved",
+      "processed",
+      "process",
+      "reconciled",
+      "reconcile",
+      "maintained",
+      "supported",
+      "prepared",
+      "prepare",
+      "scheduled",
+      "served",
+      "added",
+      "kept",
+      "counted",
+      "rebuilt",
+      "paired",
+      "taught",
+      "entered",
+      "ran",
+      "run",
+    ]) {
+      expect(STRONG_VERBS.has(verb)).toBe(true);
+    }
     for (const weak of ["responsible", "helped", "worked", "assisted", "tasked"]) {
       expect(STRONG_VERBS.has(weak)).toBe(false);
     }
@@ -377,8 +465,108 @@ describe("known terms", () => {
   it("includes the core tools and has no duplicates", () => {
     expect(new Set(KNOWN_TERMS).size).toBe(KNOWN_TERMS.length);
     expect(KNOWN_TERMS.length).toBeGreaterThanOrEqual(60);
-    for (const term of ["sql", "excel", "python", "react", "aws"]) {
+    for (const term of ["sql", "excel", "python", "react", "aws", "wordpress"]) {
       expect(KNOWN_TERMS).toContain(term);
     }
   });
+});
+
+/**
+ * Eval-fixture bullets plus the seeded library (Avery Lang).
+ * A personal resume is not stored here.
+ * Tiers were reviewed so a real action verb is not called weak, and no fix
+ * tells the writer to invent a number.
+ */
+const REVIEWED_TIERS: StrengthTier[] = [
+  "excellent",
+  "excellent",
+  "strong",
+  "strong",
+  "strong",
+  "excellent",
+  "strong",
+  "strong",
+  "good",
+  "excellent",
+  "excellent",
+  "excellent",
+  "strong",
+  "strong",
+  "excellent",
+  "good",
+  "fair",
+  "excellent",
+  "excellent",
+  "strong",
+  "strong",
+  "excellent",
+  "excellent",
+  "strong",
+  "fair",
+  "strong",
+  "strong",
+  "strong",
+  "strong",
+  "good",
+  "strong",
+  "strong",
+  "excellent",
+  "good",
+  "good",
+  "excellent",
+  "weak",
+  "fair",
+  "strong",
+  "good",
+  "weak",
+  "excellent",
+  "good",
+  "good",
+];
+
+function reviewedBullets(): { source: string; text: string; skills: string[] }[] {
+  const libraryDir = path.resolve(process.cwd(), "evals/fixtures/libraries");
+  const files = readdirSync(libraryDir)
+    .filter((name) => name.endsWith(".json"))
+    .sort();
+  const bullets = files.flatMap((filename) => {
+    const snapshot = LibrarySnapshot.parse(
+      JSON.parse(readFileSync(path.join(libraryDir, filename), "utf8")),
+    );
+    const skills = snapshot.skills.map((skill) => skill.name);
+    return snapshot.entries.flatMap((entry) =>
+      entry.bullets.map((bullet) => ({
+        source: filename,
+        text: bullet.text,
+        skills,
+      })),
+    );
+  });
+  const seedSkills = SEED_LIBRARY.skills.map((skill) => skill.name);
+  for (const entry of SEED_LIBRARY.entries) {
+    for (const bullet of entry.bullets) {
+      bullets.push({ source: "seed", text: bullet.text, skills: seedSkills });
+    }
+  }
+  return bullets;
+}
+
+describe("reviewed resume bullets", () => {
+  const bullets = reviewedBullets();
+
+  it("covers at least 40 bullets from the eval fixtures and the seeded library", () => {
+    expect(bullets.length).toBeGreaterThanOrEqual(40);
+    expect(REVIEWED_TIERS).toHaveLength(bullets.length);
+  });
+
+  it.each(bullets.map((bullet, index) => ({ ...bullet, index })))(
+    "$source #$index stays at the reviewed tier",
+    ({ text, skills, index }) => {
+      const result = bulletStrength(text, skills);
+      expect(result.tier).toBe(REVIEWED_TIERS[index]);
+      for (const fix of result.fixes) {
+        expect(fix).not.toMatch(/^Add a (number|metric)\b/i);
+      }
+    },
+  );
 });

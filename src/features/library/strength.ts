@@ -124,6 +124,7 @@ export const KNOWN_TERMS = [
   "vba",
   "vue",
   "webpack",
+  "wordpress",
 ] as const;
 
 const FILLER_PHRASES = [
@@ -156,9 +157,14 @@ const MIN_WORDS = 8;
 const MAX_WORDS = 32;
 
 type Failure =
-  | { id: "verb" | "metric" | "voice" | "specific" }
+  | { id: "verb" | "voice" | "specific" }
+  | { id: "metric"; kind: "missing" | "spelled" }
   | { id: "length"; kind: "short" | "long" }
   | { id: "filler"; phrase: string };
+
+/** Quantity words. "one of" and "one-off" are not figures. */
+const SPELLED_NUMBER =
+  /\b(?:once|twice|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|dozen)\b/i;
 
 export function tierForScore(score: number): StrengthTier {
   if (score <= 2) return "weak";
@@ -181,7 +187,12 @@ export function bulletStrength(
   const failures: Failure[] = [];
 
   if (!STRONG_VERBS.has(tokens[0] ?? "")) failures.push({ id: "verb" });
-  if (!hasMetric(text)) failures.push({ id: "metric" });
+  if (!hasMetric(text)) {
+    failures.push({
+      id: "metric",
+      kind: hasSpelledNumber(text) ? "spelled" : "missing",
+    });
+  }
   if (tokens.length < MIN_WORDS) failures.push({ id: "length", kind: "short" });
   else if (tokens.length > MAX_WORDS) failures.push({ id: "length", kind: "long" });
   if (tokens.some((token) => FIRST_PERSON.has(token))) failures.push({ id: "voice" });
@@ -208,7 +219,7 @@ function fixFor(failure: Failure, score: number): string {
     case "verb":
       return copy.verb(tier);
     case "metric":
-      return copy.metric(tier);
+      return failure.kind === "spelled" ? copy.metricDigit(tier) : copy.metric(tier);
     case "length":
       return failure.kind === "short" ? copy.lengthShort(tier) : copy.lengthLong(tier);
     case "voice":
@@ -242,6 +253,13 @@ function normalizeToken(token: string): string {
 
 function hasMetric(text: string): boolean {
   return /\d|%|\$/.test(text) || /\d+\s*x\b/i.test(text);
+}
+
+function hasSpelledNumber(text: string): boolean {
+  const scrubbed = text
+    .replace(/\bone-(?:off|time|on-one)\b/gi, " ")
+    .replace(/\bone of\b/gi, " ");
+  return SPELLED_NUMBER.test(scrubbed) || /\bone\b/i.test(scrubbed);
 }
 
 function fillerPhrase(text: string): string | null {

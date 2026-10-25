@@ -16,7 +16,7 @@ const EXPECTED_TIERS: StrengthTier[] = [
   "weak",
   "excellent",
   "good",
-  "fair",
+  "good",
 ];
 
 function asLibrary(): Library {

@@ -77,12 +77,15 @@ export const strings = {
     meterAria: (tier: string, detail: string) => `${tier}. ${detail}`,
     fixes: {
       verb: (tier: string) => `Start with an action verb to reach ${tier}.`,
-      metric: (tier: string) => `Add a number to reach ${tier}.`,
-      lengthShort: (tier: string) => `Add detail to reach ${tier}.`,
-      lengthLong: (tier: string) => `Shorten this to reach ${tier}.`,
+      metric: (tier: string) => `If you have a number for this, add it to reach ${tier}.`,
+      metricDigit: (tier: string) => `Write that figure as a digit to reach ${tier}.`,
+      lengthShort: (tier: string) =>
+        `If there is more to say, add one concrete detail to reach ${tier}.`,
+      lengthLong: (tier: string) => `Shorten this to 32 words or fewer to reach ${tier}.`,
       voice: (tier: string) => `Drop first person to reach ${tier}.`,
       filler: (phrase: string, tier: string) => `Cut "${phrase}" to reach ${tier}.`,
-      specific: (tier: string) => `Name a skill or tool to reach ${tier}.`,
+      specific: (tier: string) =>
+        `If a skill or tool belongs here, name it to reach ${tier}.`,
     },
   },
   shell: {

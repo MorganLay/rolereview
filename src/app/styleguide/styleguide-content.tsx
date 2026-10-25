@@ -359,7 +359,9 @@ export function StyleguideContent() {
                 <TooltipTrigger asChild>
                   <Button variant="outline">Tooltip</Button>
                 </TooltipTrigger>
-                <TooltipContent>Add a number to make this bullet Strong.</TooltipContent>
+                <TooltipContent>
+                  {strings.strength.fixes.metric(strings.strength.strong)}
+                </TooltipContent>
               </Tooltip>
 
               <Button

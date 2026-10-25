@@ -93,7 +93,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 ## Phase Q — Core quality (before public launch)
 - [x] **TQ.1** Requirement states (truthful match panel)
 - [x] **TQ.2** Labels and counting that agree
-- [ ] **TQ.3** Better writing advice
+- [x] **TQ.3** Better writing advice
 - [ ] **TQ.4** Summary guard
 - [ ] **TQ.5** Submitted versions are frozen
 - [ ] **TQ.6** Mobile shell and overflow
@@ -112,6 +112,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-25 TQ.3:** The meter accepts Completed, Processed, Reconciled, Prepared, and the other operational openers in the eval fixtures. A missing number says “If you have a number for this, add it”; a spelled-out figure says to write it as a digit. 44 bullets (eval fixtures plus the Avery Lang seed) have expected tiers. The seeded thesis bullet is Good. Strong or better stays 3 of 9. WordPress counts as a known tool.
 - **2026-10-25 TQ.2:** Deadline reminders read “Deadline in 3 days: {company}” and show the deadline date. Soon stays ordinary text; Overdue and red wait until that date is before today. Insights Applied, Responded, and Interviewed match the funnel (all-time seed view: 7, 5 responded, 4 of 7). The response percent still leaves out the last 7 days. Library completeness is separate from bullet strength. The signed-in library showed 100% complete and 3 of 9 bullets Strong or better.
 - **2026-10-25 TQ.1:** The match panel recomputes In this resume / In your library / Needs review / No evidence found as you edit. G9 stores unassessed, older "Not assessed." rows read the same way, and those requirements are left out of new scores. Include turns excluded evidence back on without a new tailor. The stored score does not change while you edit.
 - **2026-10-25 Phase Q:** Added after an outside UX review (D-28). T13.4 split: the code and first deploy are done; the production environment work is T13.4b, scheduled after the trust and mobile fixes and before the private beta (T13.5a). T13.5 is now T13.5a (private beta) and T13.5b (public launch). No new features until Phase Q is done.
