@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   Award,
   Briefcase,
@@ -7,7 +6,6 @@ import {
   Wrench,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { strings } from "@/copy/strings";
 import { LettersSection } from "@/features/letters/components/letters-section";
@@ -25,17 +23,15 @@ import type { InterviewView } from "@/features/tracking/interviews";
 import type { OfferView } from "@/features/tracking/offers";
 import type { ReminderView } from "@/features/tracking/reminders";
 
-import { formatSalaryLabel } from "../format";
 import type { JobPageData } from "../queries";
 import type { Requirement } from "../schemas";
 import { JobAnalysisControls } from "./job-analysis-controls";
 import { JobDetailsForm } from "./job-details-form";
-import { JobHeader } from "./job-header";
+import { JobHeader, JobPriority } from "./job-header";
 import { JobSections, type JobSectionTab } from "./job-sections";
 
 const copy = strings.jobs.result;
 const detail = strings.jobs.detail;
-const documentsCopy = strings.jobs.documents;
 
 const kindIcons = {
   skill: Wrench,
@@ -101,13 +97,7 @@ export function JobResult({
         location={job.location}
         url={job.url}
         status={job.status}
-        priority={job.priority}
         archived={job.archived}
-        deadline={job.deadline}
-        workMode={job.workMode}
-        employmentType={job.employmentType}
-        salaryLabel={formatSalaryLabel(job)}
-        referenceNumber={job.referenceNumber}
         offerTabVisible={showOffer}
       />
 
@@ -125,14 +115,6 @@ export function JobResult({
           mode="failed"
         />
       ) : null}
-
-      <section className="flex flex-col items-start gap-2 rounded-lg border border-line bg-surface p-4">
-        <h2 className="text-base font-medium text-ink">{documentsCopy.promptTitle}</h2>
-        <p className="text-sm text-slate">{documentsCopy.promptBody}</p>
-        <Button asChild>
-          <Link href={`/jobs/${job.id}?tab=documents`}>{documentsCopy.promptAction}</Link>
-        </Button>
-      </section>
 
       <JobSections
         jobId={job.id}
@@ -202,6 +184,23 @@ export function JobResult({
               {job.rawText}
             </div>
           </details>
+
+          <JobPriority jobId={job.id} priority={job.priority} />
+          {job.url ? (
+            <p className="text-sm break-words">
+              <span className="text-ink">{strings.jobs.urlLabel}</span>
+              {" · "}
+              <a
+                href={job.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all text-pine underline-offset-4 hover:underline"
+              >
+                {job.url}
+                <span className="sr-only"> ({detail.newTab})</span>
+              </a>
+            </p>
+          ) : null}
 
           <JobDetailsForm
             jobId={job.id}

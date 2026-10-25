@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useTransition, type FormEvent } from "react";
+import { useId, useRef, useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -16,9 +16,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { strings } from "@/copy/strings";
+import { cn } from "@/lib/utils";
 
 import {
   JOB_LIST_SEARCH_MAX,
+  activeJobFilterCount,
   jobListHref,
   type JobListPatch,
   type JobListQuery,
@@ -35,6 +37,9 @@ export function JobsToolbar({ query }: { query: JobListQuery }) {
   const searchRef = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
   const searchId = useId();
+  const filtersId = useId();
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterCount = activeJobFilterCount(query);
   const sourceId = useId();
   const workModeId = useId();
   const priorityId = useId();
@@ -125,6 +130,22 @@ export function JobsToolbar({ query }: { query: JobListQuery }) {
         </Button>
       </form>
 
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full md:hidden"
+        aria-expanded={filtersOpen}
+        aria-controls={filtersId}
+        aria-label={filterCount > 0 ? copy.filtersApplied(filterCount) : undefined}
+        onClick={() => setFiltersOpen((open) => !open)}
+      >
+        {filterCount > 0 ? copy.filtersWithCount(filterCount) : copy.filters}
+      </Button>
+
+      <div
+        id={filtersId}
+        className={cn("flex flex-col gap-3", !filtersOpen && "max-md:hidden")}
+      >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div className="grid gap-2">
           <Label htmlFor={sourceId}>{copy.sourceLabel}</Label>
@@ -212,6 +233,7 @@ export function JobsToolbar({ query }: { query: JobListQuery }) {
           />
           <Label htmlFor={archivedId}>{copy.showArchived}</Label>
         </div>
+      </div>
       </div>
     </div>
   );

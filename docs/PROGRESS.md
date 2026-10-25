@@ -97,7 +97,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **TQ.4** Summary guard
 - [x] **TQ.5** Submitted versions are frozen
 - [x] **TQ.6** Mobile shell and overflow
-- [ ] **TQ.7** Mobile lists and job header
+- [x] **TQ.7** Mobile lists and job header
 - [ ] **TQ.8** Library and editor density
 - [ ] **T13.4b** Separate production environment
 - [ ] **T13.5a** Private beta (5–10 people)
@@ -112,6 +112,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-25 TQ.7:** Under `md`, contacts are cards and job filters sit behind Filters. The job header is the title, company, status, and Open Documents. Priority and the posting URL are on Overview. At 375×667 the first screen of /jobs showed a job, and /contacts did not scroll sideways.
 - **2026-10-25 TQ.6:** Playwright overflow check passed at 375 and 390 on every signed-in app route. The header is an account icon; the email is inside the menu. Feedback is in that menu on a phone and in the sidebar on a wider screen. A 390×480 browser viewport kept the feedback form on screen. A physical phone with the on-screen keyboard was not used.
 - **2026-10-25 TQ.5:** Marking a resume or letter submitted stamps `submittedAt` and freezes that version. The card title is the saved label, or "{Company} — {date}". Create revision copies it into the next version number with no model call. A frozen PDF or DOCX keeps the file timestamp at `submittedAt`.
 - **2026-10-25 TQ.4:** G12 drops a summary sentence whose "N years" claim exceeds the whole years from snapshot dates (round down), or whose numbers are not in the library and are not that tenure. All sentences failing falls back to the library default. Eval `2026-10-25T08-18-58-443Z`: average resume reverts 0.00; the Birchlane "three years" / "worked directly with product squads" summary did not recur in `frontend-dev__product`. Six TAILOR bonus credits were granted on the seed account so the 24-pair run could start (plan remaining was 20).

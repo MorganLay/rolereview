@@ -7,6 +7,7 @@ import {
 import { presentJobListRow } from "@/features/jobs/format";
 import {
   compareJobListRows,
+  activeJobFilterCount,
   jobListHref,
   jobMatchesStage,
   parseJobListQuery,
@@ -255,6 +256,24 @@ describe("presentJobListRow", () => {
     expect(display.matchLabel).toBe("—");
     expect(display.appliedLabel).toBe("—");
     expect(display.activityLabel).toContain("2026");
+  });
+});
+
+describe("activeJobFilterCount", () => {
+  it("counts the filters behind the Filters button", () => {
+    const base = parseJobListQuery({});
+    expect(activeJobFilterCount(base)).toBe(0);
+    expect(activeJobFilterCount({ ...base, q: "nurse", stage: "SAVED" })).toBe(0);
+    expect(
+      activeJobFilterCount({
+        ...base,
+        source: "REFERRAL",
+        workMode: "REMOTE",
+        minPriority: 3,
+        hasDeadline: true,
+        showArchived: true,
+      }),
+    ).toBe(5);
   });
 });
 

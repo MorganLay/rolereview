@@ -91,6 +91,56 @@ export function ContactsWorkspace({
       {contacts.length === 0 ? (
         <p className="text-sm text-slate">{total === 0 ? copy.empty : copy.emptySearch}</p>
       ) : (
+        <>
+        <ul className="flex flex-col gap-3 md:hidden" aria-label={copy.listLabel}>
+          {contacts.map((contact) => (
+            <li
+              key={contact.id}
+              className="min-w-0 rounded-lg border border-line bg-surface p-4"
+            >
+              <button
+                type="button"
+                className="flex w-full min-w-0 flex-col gap-1 rounded-md text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                onClick={() => setOpenId(contact.id)}
+              >
+                <span className="font-medium break-words text-ink">{contact.name}</span>
+                <span className="text-sm break-words text-slate">
+                  {[contact.title, contact.company].filter(Boolean).join(" · ") || copy.emptyValue}
+                </span>
+                <span className="text-sm break-all text-ink">
+                  {contact.email ?? copy.emptyValue}
+                </span>
+                <span className="text-sm text-slate">
+                  {copy.lastContacted}
+                  {" · "}
+                  <span className="text-ink">
+                    {contact.lastContactedLabel ?? copy.emptyValue}
+                  </span>
+                </span>
+              </button>
+              <div className="mt-3 min-w-0">
+                <p className="text-xs text-slate">{copy.columns.jobs}</p>
+                {contact.jobs.length === 0 ? (
+                  <p className="text-sm text-ink">{copy.emptyValue}</p>
+                ) : (
+                  <span className="mt-1 flex flex-wrap gap-1">
+                    {contact.jobs.map((job) => (
+                      <Link
+                        key={job.id}
+                        href={`/jobs/${job.id}?tab=contacts`}
+                        className="inline-flex max-w-full rounded-full border border-line bg-paper px-2.5 py-0.5 text-xs break-words text-ink underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                      >
+                        {job.company}
+                        <span className="sr-only">, {job.title}</span>
+                      </Link>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -155,6 +205,8 @@ export function ContactsWorkspace({
             ))}
           </TableBody>
         </Table>
+        </div>
+        </>
       )}
 
       <ContactDrawer

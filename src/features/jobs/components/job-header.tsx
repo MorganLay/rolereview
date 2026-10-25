@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent, type MouseEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, Star } from "lucide-react";
 import { toast } from "sonner";
@@ -50,7 +51,6 @@ import type { FieldErrors } from "@/lib/result";
 
 import { CloseJobDialog } from "./close-job-dialog";
 import { AcceptedCelebration } from "./accepted-celebration";
-import { formatDeadlineLabel } from "../format";
 import {
   deleteJob,
   setJobArchived,
@@ -60,16 +60,14 @@ import {
 } from "../actions";
 import {
   CLOSED_JOB_STATUSES,
-  EMPLOYMENT_TYPES,
   isClosedJobStatus,
   isJobStatus,
   OPEN_JOB_STATUSES,
-  WORK_MODES,
   type JobStatusValue,
 } from "../schemas";
 
 const copy = strings.jobs.detail;
-const resultCopy = strings.jobs.result;
+const documentsCopy = strings.jobs.documents;
 
 type JobHeaderProps = {
   jobId: string;
@@ -78,13 +76,7 @@ type JobHeaderProps = {
   location: string | null;
   url: string | null;
   status: JobStatusValue;
-  priority: number | null;
   archived: boolean;
-  deadline: string | null;
-  workMode: (typeof WORK_MODES)[number];
-  employmentType: (typeof EMPLOYMENT_TYPES)[number] | null;
-  salaryLabel: string | null;
-  referenceNumber: string | null;
   offerTabVisible: boolean;
 };
 
@@ -94,7 +86,6 @@ type HeaderOverlay = {
   location?: string | null;
   url?: string | null;
   status?: JobStatusValue;
-  priority?: number | null;
   archived?: boolean;
 };
 
@@ -105,7 +96,6 @@ function settledOverlay(overlay: HeaderOverlay, props: JobHeaderProps): HeaderOv
   if ("location" in next && next.location === props.location) delete next.location;
   if ("url" in next && next.url === props.url) delete next.url;
   if ("status" in next && next.status === props.status) delete next.status;
-  if ("priority" in next && next.priority === props.priority) delete next.priority;
   if ("archived" in next && next.archived === props.archived) delete next.archived;
   return next;
 }
@@ -133,7 +123,6 @@ export function JobHeader(props: JobHeaderProps) {
   const location = "location" in settled ? (settled.location ?? null) : props.location;
   const url = "url" in settled ? (settled.url ?? null) : props.url;
   const status = settled.status ?? props.status;
-  const priority = "priority" in settled ? (settled.priority ?? null) : props.priority;
   const archived = "archived" in settled ? settled.archived === true : props.archived;
   const [pending, setPending] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -193,27 +182,6 @@ export function JobHeader(props: JobHeaderProps) {
     void changeStatus(value, "");
   }
 
-  async function onPriority(n: number) {
-    if (pending) return;
-    const next = priority === n ? null : n;
-    setPending(true);
-    setOverlay((current) => ({ ...current, priority: next }));
-    try {
-      const result = await setJobPriority({ jobId: props.jobId, priority: next });
-      if (!result.ok) {
-        clearOverlay("priority");
-        toast.error(copy.updateFailed);
-        return;
-      }
-      router.refresh();
-    } catch {
-      clearOverlay("priority");
-      toast.error(copy.updateFailed);
-    } finally {
-      setPending(false);
-    }
-  }
-
   async function onArchive() {
     if (pending) return;
     const next = !archived;
@@ -237,26 +205,6 @@ export function JobHeader(props: JobHeaderProps) {
     } finally {
       setPending(false);
     }
-  }
-
-  const badges: { key: string; label: string; prefix?: string; outline?: boolean }[] = [];
-  if (archived) badges.push({ key: "archived", label: copy.archived, outline: true });
-  if (props.workMode !== "UNKNOWN") {
-    badges.push({ key: "work", label: resultCopy.workModes[props.workMode] });
-  }
-  if (props.employmentType) {
-    badges.push({
-      key: "employment",
-      label: resultCopy.employmentTypes[props.employmentType],
-    });
-  }
-  if (props.salaryLabel) badges.push({ key: "salary", label: props.salaryLabel });
-  if (props.referenceNumber) {
-    badges.push({
-      key: "reference",
-      label: props.referenceNumber,
-      prefix: resultCopy.reference,
-    });
   }
 
   return (
@@ -313,7 +261,13 @@ export function JobHeader(props: JobHeaderProps) {
         </DropdownMenu>
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+      {archived ? (
+        <Badge variant="outline" className="h-auto w-fit whitespace-normal">
+          {copy.archived}
+        </Badge>
+      ) : null}
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="grid w-full gap-2 sm:w-56">
           <Label htmlFor={statusId}>{copy.statusLabel}</Label>
           <Select value={status} onValueChange={onStatusChange} disabled={pending}>
@@ -340,80 +294,10 @@ export function JobHeader(props: JobHeaderProps) {
             </SelectContent>
           </Select>
         </div>
-
-        <fieldset className="grid min-w-0 gap-2 border-0 p-0">
-          <legend className="text-sm font-medium text-ink">{strings.jobs.priorityLabel}</legend>
-          <div className="flex flex-wrap items-center gap-1">
-            {[1, 2, 3, 4, 5].map((n) => {
-              const selected = priority !== null && n <= priority;
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  disabled={pending}
-                  className="rounded-md p-1 text-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
-                  aria-pressed={priority === n}
-                  aria-label={
-                    priority === n
-                      ? strings.jobs.priorityClear
-                      : strings.jobs.prioritySet(n)
-                  }
-                  onClick={() => void onPriority(n)}
-                >
-                  <Star
-                    aria-hidden
-                    className={cn(
-                      "size-5",
-                      selected ? "fill-marigold text-ink" : "text-slate",
-                    )}
-                  />
-                </button>
-              );
-            })}
-            <span className="ml-1 text-sm text-slate">
-              {priority === null
-                ? strings.jobs.priorityNone
-                : strings.jobs.priorityValue(priority)}
-            </span>
-          </div>
-        </fieldset>
+        <Button asChild className="w-full sm:w-auto">
+          <Link href={`/jobs/${props.jobId}?tab=documents`}>{documentsCopy.promptAction}</Link>
+        </Button>
       </div>
-
-      {props.deadline ? (
-        <p className="text-sm text-slate">
-          <span className="text-ink">{strings.jobs.deadlineLabel}</span>
-          {" · "}
-          {formatDeadlineLabel(props.deadline)}
-        </p>
-      ) : null}
-
-      {url ? (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-fit max-w-full break-all text-sm text-pine underline-offset-4 hover:underline"
-        >
-          {url}
-          <span className="sr-only"> ({copy.newTab})</span>
-        </a>
-      ) : null}
-
-      {badges.length > 0 ? (
-        <ul className="flex flex-wrap gap-2">
-          {badges.map((badge) => (
-            <li key={badge.key}>
-              <Badge
-                variant={badge.outline ? "outline" : "secondary"}
-                className="h-auto max-w-full whitespace-normal text-left"
-              >
-                {badge.prefix ? <span className="sr-only">{badge.prefix} </span> : null}
-                {badge.label}
-              </Badge>
-            </li>
-          ))}
-        </ul>
-      ) : null}
 
       <EditDetailsDialog
         open={editOpen}
@@ -460,6 +344,73 @@ export function JobHeader(props: JobHeaderProps) {
 
       <AcceptedCelebration open={acceptedOpen} onOpenChange={setAcceptedOpen} />
     </header>
+  );
+}
+
+export function JobPriority({
+  jobId,
+  priority: savedPriority,
+}: {
+  jobId: string;
+  priority: number | null;
+}) {
+  const router = useRouter();
+  const [overlay, setOverlay] = useState<number | null | undefined>(undefined);
+  const [pending, setPending] = useState(false);
+  if (overlay !== undefined && overlay === savedPriority) setOverlay(undefined);
+  const priority = overlay !== undefined ? overlay : savedPriority;
+
+  async function onPriority(n: number) {
+    if (pending) return;
+    const next = priority === n ? null : n;
+    setPending(true);
+    setOverlay(next);
+    try {
+      const result = await setJobPriority({ jobId, priority: next });
+      if (!result.ok) {
+        setOverlay(undefined);
+        toast.error(copy.updateFailed);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setOverlay(undefined);
+      toast.error(copy.updateFailed);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <fieldset className="grid min-w-0 gap-2 border-0 p-0">
+      <legend className="text-sm font-medium text-ink">{strings.jobs.priorityLabel}</legend>
+      <div className="flex flex-wrap items-center gap-1">
+        {[1, 2, 3, 4, 5].map((n) => {
+          const selected = priority !== null && n <= priority;
+          return (
+            <button
+              key={n}
+              type="button"
+              disabled={pending}
+              className="rounded-md p-1 text-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+              aria-pressed={priority === n}
+              aria-label={
+                priority === n ? strings.jobs.priorityClear : strings.jobs.prioritySet(n)
+              }
+              onClick={() => void onPriority(n)}
+            >
+              <Star
+                aria-hidden
+                className={cn("size-5", selected ? "fill-marigold text-ink" : "text-slate")}
+              />
+            </button>
+          );
+        })}
+        <span className="ml-1 text-sm text-slate">
+          {priority === null ? strings.jobs.priorityNone : strings.jobs.priorityValue(priority)}
+        </span>
+      </div>
+    </fieldset>
   );
 }
 

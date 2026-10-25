@@ -111,6 +111,17 @@ export function toggledSort(
   return { sort, dir: defaultDir(sort) };
 }
 
+/** Filters behind the phone Filters button. Search and the stage stay outside it. */
+export function activeJobFilterCount(query: JobListQuery): number {
+  return [
+    query.source !== null,
+    query.workMode !== null,
+    query.minPriority !== null,
+    query.hasDeadline,
+    query.showArchived,
+  ].filter(Boolean).length;
+}
+
 /** Path plus query. The board and its default sort stay off the URL. */
 export function jobListHref(current: JobListQuery, patch: JobListPatch = {}): string {
   const next: JobListQuery = { ...current, ...patch };
