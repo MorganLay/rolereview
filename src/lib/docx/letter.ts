@@ -9,13 +9,20 @@ import type { LetterPdfModel } from "@/lib/pdf/letter-model";
 
 import { packDocx } from "./file";
 
-export async function renderLetterDocx(model: LetterPdfModel): Promise<Buffer> {
-  return packDocx(letterDocxChildren(model), {
-    top: 0.75,
-    bottom: 0.75,
-    left: 1,
-    right: 1,
-  });
+export async function renderLetterDocx(
+  model: LetterPdfModel,
+  producedAt?: Date,
+): Promise<Buffer> {
+  return packDocx(
+    letterDocxChildren(model),
+    {
+      top: 0.75,
+      bottom: 0.75,
+      left: 1,
+      right: 1,
+    },
+    producedAt,
+  );
 }
 
 function letterDocxChildren(model: LetterPdfModel): FileChild[] {

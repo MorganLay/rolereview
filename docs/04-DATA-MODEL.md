@@ -69,6 +69,8 @@ All user-owned rows carry `userId` and cascade-delete with the user (feedback an
 | Archive is a timestamp, not a status | Keeps the final stage (e.g., REJECTED) for analytics while hiding the card. |
 | `appliedAt`, `firstResponseAt`, `closedAt` on `Job` (plus the timeline) | Analytics queries stay simple and fast; the timeline keeps the full story. |
 | `submittedResumeId` / `submittedCoverLetterId` | Lets the Insights answer "do tailored applications get more interviews?" |
+| `TailoredResume.submittedAt` / `CoverLetter.submittedAt` | Set the first time that version is marked submitted. Content, template, and options stay frozen. A later mark does not change the stamp. |
+| `TailoredResume.label` / `CoverLetter.label` | Optional version name, at most 80 characters. Blank shows "{Company} — {date}" from `createdAt` in the user's timezone. |
 | `TailoredResume.librarySnapshot` | Source traceability survives later library edits. |
 | `aiOutput` (immutable) vs `content` (editable) | Compare AI output to user edits for evals and prompt tuning. |
 | Quotas counted from `AiCall`; bonus credits as a ledger with `remaining` | No counter drift; failures are free; full audit trail. |
@@ -85,7 +87,9 @@ These keep the tracking data accurate without the user doing extra work. Put the
 | Job created | `JobEvent(CREATED)`; if `deadline` → `Reminder(DEADLINE, dueAt = deadline − 3 days, title “Deadline in 3 days: {company}”)` |
 | Deadline edited | If the date changes, move each open auto `Reminder(DEADLINE)` to the new `deadline − 3 days` and refresh the title from the current company, or create that reminder when none is open. Clearing the deadline dismisses those open reminders. Completed or already dismissed reminders stay. |
 | Company edited | Each open auto `Reminder(DEADLINE)` title becomes “Deadline in 3 days: {company}”. Analysis does the same when it fills the company. |
-| Status → `APPLIED` (first time) | set `appliedAt`; `JobEvent(APPLIED)`; `Reminder(FOLLOW_UP, +7 days, autoCreated)`; if no `submittedResumeId` and a READY tailored resume exists → set it to the latest exported tailor (user can change) |
+| Status → `APPLIED` (first time) | set `appliedAt`; `JobEvent(APPLIED)`; `Reminder(FOLLOW_UP, +7 days, autoCreated)`; if no `submittedResumeId` and a READY tailored resume exists → set it to the latest exported tailor and set that resume's `submittedAt` if it is still empty (user can change which version is the pointer; a stamped version stays frozen) |
+| Mark resume or letter as submitted | set `Job.submittedResumeId` or `submittedCoverLetterId`; set that version's `submittedAt` if it is still empty. Does not change job status. |
+| Create revision | copy the submitted version's content, snapshot, AI output, match report, options, and template into the next version number. No model call, no quota, no timeline event. The copy is editable and is not submitted. |
 | Status leaves `APPLIED` to SCREENING / INTERVIEWING / OFFER / REJECTED (first time) | set `firstResponseAt`; `JobEvent(RESPONSE_RECEIVED)`; complete any open auto FOLLOW_UP reminder |
 | Status → ACCEPTED / REJECTED / WITHDRAWN / NO_RESPONSE | set `closedAt`; dismiss open reminders for the job |
 | Any status change | `JobEvent(STATUS_CHANGED, fromStatus, toStatus)` |

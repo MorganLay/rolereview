@@ -226,12 +226,12 @@ function LetterCard({
       {version.status === "FAILED" ? null : (
         <Link
           href={href}
-          aria-label={copy.openVersion(version.version)}
+          aria-label={copy.openVersion(version.title)}
           className="absolute inset-0 rounded-lg focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         />
       )}
       <div className="pointer-events-none relative flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-medium text-ink">{copy.version(version.version)}</h3>
+        <h3 className="text-sm font-medium text-ink">{version.title}</h3>
         {version.submitted ? (
           <span className="rounded-full bg-pine-50 px-2 py-0.5 text-xs text-pine">
             {copy.submitted}

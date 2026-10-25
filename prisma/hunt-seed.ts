@@ -121,7 +121,10 @@ async function writeHunt(prisma: PrismaClient, userId: string) {
       await insertRejected(tx, userId, clock);
 
       const exported = await tx.tailoredResume.create({
-        data: resumeData(userId, applied.id, bundle, 82, now),
+        data: {
+          ...resumeData(userId, applied.id, bundle, 82, now),
+          submittedAt: now,
+        },
       });
       await tx.tailoredResume.create({
         data: resumeData(userId, interviewing.id, bundle, 74, null),

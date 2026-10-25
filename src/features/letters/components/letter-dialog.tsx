@@ -211,7 +211,7 @@ export function LetterDialog({
               <option value="">{copy.alignNone}</option>
               {resumes.map((resume) => (
                 <option key={resume.id} value={resume.id}>
-                  {copy.version(resume.version)}
+                  {resume.title}
                 </option>
               ))}
             </select>

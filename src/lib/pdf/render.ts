@@ -29,6 +29,8 @@ const ONE_PAGE_DENSITIES: readonly PdfDensity[] = [
 export type ResumePdfOptions = {
   /** 1 keeps the PDF on a single Letter page by tightening the layout. */
   pages?: 1 | 2;
+  /** Stable PDF timestamp. A submitted version passes `submittedAt`. */
+  producedAt?: Date;
 };
 
 export async function renderResumePdf(
@@ -40,7 +42,7 @@ export async function renderResumePdf(
   const densities = options?.pages === 1 ? ONE_PAGE_DENSITIES : (["regular"] as const);
   let pdf: Buffer | null = null;
   for (const density of densities) {
-    pdf = await renderDensity(model, template, density);
+    pdf = await renderDensity(model, template, density, options?.producedAt);
     if (options?.pages !== 1 || pdfPageCount(pdf) <= 1) return pdf;
   }
   return pdf as Buffer;
@@ -50,8 +52,9 @@ async function renderDensity(
   model: ResumePdfModel,
   template: ResumeTemplateId,
   density: PdfDensity,
+  producedAt?: Date,
 ): Promise<Buffer> {
-  const element = createElement(TEMPLATES[template], { model, density });
+  const element = createElement(TEMPLATES[template], { model, density, producedAt });
   // react-pdf renders the template function down to Document. The public type only accepts Document.
   return renderToBuffer(element as ReactElement<DocumentProps>);
 }
@@ -59,8 +62,9 @@ async function renderDensity(
 export async function renderLetterPdf(
   model: LetterPdfModel,
   template: ResumeTemplateId,
+  producedAt?: Date,
 ): Promise<Buffer> {
   ensurePdfFonts();
-  const element = createElement(LetterDocument, { model, variant: template });
+  const element = createElement(LetterDocument, { model, variant: template, producedAt });
   return renderToBuffer(element as ReactElement<DocumentProps>);
 }

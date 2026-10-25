@@ -567,6 +567,10 @@ model TailoredResume {
   rating            Int? /// 1 = 👍, -1 = 👎
   ratingReason      String?
   exportedAt        DateTime?
+  /// Set the first time this version is marked submitted. Content stays frozen.
+  submittedAt       DateTime?
+  /// Optional version name, at most 80 characters. Blank shows company and date.
+  label             String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -595,6 +599,10 @@ model CoverLetter {
   rating            Int?
   ratingReason      String?
   exportedAt        DateTime?
+  /// Set the first time this version is marked submitted. Content stays frozen.
+  submittedAt       DateTime?
+  /// Optional version name, at most 80 characters. Blank shows company and date.
+  label             String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

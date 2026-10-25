@@ -9,7 +9,7 @@ import { db } from "@/lib/db";
 import { contentDisposition, letterPdfFilename } from "@/lib/pdf/filename";
 import { letterPdfModel } from "@/lib/pdf/letter-model";
 import { renderLetterPdf } from "@/lib/pdf/render";
-import { resolveResumeTemplate } from "@/lib/pdf/template";
+import { resolveResumeTemplate, storedResumeTemplate } from "@/lib/pdf/template";
 
 /** Saved cover letter PDF. Unentitled Modern or Compact renders as Classic. */
 export async function GET(
@@ -25,6 +25,7 @@ export async function GET(
     select: {
       status: true,
       templateId: true,
+      submittedAt: true,
       content: true,
       librarySnapshot: true,
       job: { select: { title: true, company: true } },
@@ -36,15 +37,21 @@ export async function GET(
   const snapshot = LibrarySnapshot.safeParse(row.librarySnapshot);
   if (!content.success || !snapshot.success) notFound();
 
-  const template = resolveResumeTemplate(
-    new URL(request.url).searchParams.get("template"),
-    row.templateId,
-    {
-      modern: can(user, "template:modern"),
-      compact: can(user, "template:compact"),
-    },
+  const template = row.submittedAt
+    ? storedResumeTemplate(row.templateId)
+    : resolveResumeTemplate(
+        new URL(request.url).searchParams.get("template"),
+        row.templateId,
+        {
+          modern: can(user, "template:modern"),
+          compact: can(user, "template:compact"),
+        },
+      );
+  const pdf = await renderLetterPdf(
+    letterPdfModel(content.data),
+    template,
+    row.submittedAt ?? undefined,
   );
-  const pdf = await renderLetterPdf(letterPdfModel(content.data), template);
   const filename = letterPdfFilename(
     snapshot.data.profile.fullName,
     row.job.company,

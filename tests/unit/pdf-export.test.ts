@@ -15,7 +15,7 @@ import { letterPdfLines, letterPdfModel } from "@/lib/pdf/letter-model";
 import { resumePdfLines, resumePdfModel, type ResumePdfModel } from "@/lib/pdf/model";
 import { pdfPageCount } from "@/lib/pdf/pages";
 import { renderLetterPdf, renderResumePdf } from "@/lib/pdf/render";
-import { resolveResumeTemplate } from "@/lib/pdf/template";
+import { resolveResumeTemplate, storedResumeTemplate } from "@/lib/pdf/template";
 import { SEED_LIBRARY } from "../../prisma/library-seed";
 
 import {
@@ -41,6 +41,9 @@ describe("resolveResumeTemplate", () => {
     expect(resolveResumeTemplate("nope", "classic", pro)).toBe("classic");
     expect(resolveResumeTemplate(null, "poster", free)).toBe("classic");
     expect(resolveResumeTemplate(" CLASSIC ", "modern", free)).toBe("classic");
+    expect(storedResumeTemplate("modern")).toBe("modern");
+    expect(storedResumeTemplate("compact")).toBe("compact");
+    expect(storedResumeTemplate("poster")).toBe("classic");
   });
 });
 
@@ -152,6 +155,14 @@ describe("renderResumePdf", () => {
 
     expect(pdfPageCount(spilled)).toBeGreaterThan(1);
     expect(pdfPageCount(fitted)).toBe(1);
+  }, 20000);
+
+  it("is byte-identical when the same submitted timestamp is used again", async () => {
+    const model = typicalResume();
+    const producedAt = new Date("2026-04-10T15:00:00.000Z");
+    const first = await renderResumePdf(model, "classic", { producedAt });
+    const later = await renderResumePdf(model, "classic", { producedAt });
+    expect(later.equals(first)).toBe(true);
   }, 20000);
 });
 

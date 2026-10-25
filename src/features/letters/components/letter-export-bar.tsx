@@ -34,6 +34,8 @@ type ExportInput = {
   letterId: string;
   templateId: ResumeTemplateId;
   submitted: boolean;
+  frozen: boolean;
+  onSubmitted?: () => void;
   rating: 1 | -1 | null;
   templates: ResumeTemplateAccess;
   content: CoverLetterContent;
@@ -65,7 +67,7 @@ export function useLetterExport(input: ExportInput) {
   }
 
   async function onTemplate(next: ResumeTemplateId) {
-    if (templatePending || next === templateId) return;
+    if (input.frozen || templatePending || next === templateId) return;
     const letterId = input.letterId;
     setTemplatePending(true);
     let result: Awaited<ReturnType<typeof setLetterTemplate>>;
@@ -83,6 +85,8 @@ export function useLetterExport(input: ExportInput) {
     if (!result.ok) {
       if (result.error.code === "PRO_REQUIRED") {
         openUpgradeModal({ kind: "feature", feature: "templates" });
+      } else if (result.error.code === "CONFLICT") {
+        toast.error(copy.frozenSave);
       } else toast.error(copy.templateFailed);
       return;
     }
@@ -156,6 +160,7 @@ export function useLetterExport(input: ExportInput) {
       return;
     }
     setSubmitted(true);
+    input.onSubmitted?.();
   }
 
   async function onRate(next: 1 | -1) {
@@ -182,6 +187,7 @@ export function useLetterExport(input: ExportInput) {
       templateId,
       templatePending,
       submitted,
+      frozen: input.frozen,
       submitPending,
       rating,
       ratingPending,
@@ -201,6 +207,7 @@ export function LetterExportBar({
   templateId,
   templatePending,
   submitted,
+  frozen,
   submitPending,
   rating,
   ratingPending,
@@ -216,6 +223,7 @@ export function LetterExportBar({
   templateId: ResumeTemplateId;
   templatePending: boolean;
   submitted: boolean;
+  frozen: boolean;
   submitPending: boolean;
   rating: 1 | -1 | null;
   ratingPending: boolean;
@@ -234,7 +242,7 @@ export function LetterExportBar({
     <div className="flex flex-wrap items-center gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button type="button" variant="outline" disabled={templatePending}>
+          <Button type="button" variant="outline" disabled={templatePending || frozen}>
             {`${copy.templateLabel}: ${current}`}
             <ChevronDownIcon aria-hidden />
           </Button>

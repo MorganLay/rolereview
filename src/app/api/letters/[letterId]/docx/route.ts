@@ -29,6 +29,7 @@ export async function GET(
     where: { id: letterId, userId: user.id },
     select: {
       status: true,
+      submittedAt: true,
       content: true,
       librarySnapshot: true,
       job: { select: { title: true, company: true } },
@@ -40,7 +41,10 @@ export async function GET(
   const snapshot = LibrarySnapshot.safeParse(row.librarySnapshot);
   if (!content.success || !snapshot.success) notFound();
 
-  const buffer = await renderLetterDocx(letterPdfModel(content.data));
+  const buffer = await renderLetterDocx(
+    letterPdfModel(content.data),
+    row.submittedAt ?? undefined,
+  );
   const filename = letterDocxFilename(
     snapshot.data.profile.fullName,
     row.job.company,

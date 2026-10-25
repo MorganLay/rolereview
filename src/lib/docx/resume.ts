@@ -9,13 +9,20 @@ import type { ResumePdfModel } from "@/lib/pdf/model";
 
 import { packDocx } from "./file";
 
-export async function renderResumeDocx(model: ResumePdfModel): Promise<Buffer> {
-  return packDocx(resumeDocxChildren(model), {
-    top: 0.5,
-    bottom: 0.5,
-    left: 0.65,
-    right: 0.65,
-  });
+export async function renderResumeDocx(
+  model: ResumePdfModel,
+  producedAt?: Date,
+): Promise<Buffer> {
+  return packDocx(
+    resumeDocxChildren(model),
+    {
+      top: 0.5,
+      bottom: 0.5,
+      left: 0.65,
+      right: 0.65,
+    },
+    producedAt,
+  );
 }
 
 function resumeDocxChildren(model: ResumePdfModel): FileChild[] {

@@ -62,6 +62,14 @@ export type ResumeWorkspaceData = {
   templateId: ResumeTemplateId;
   /** This resume is Job.submittedResumeId. */
   submitted: boolean;
+  /** Saved version name. Blank uses the company and date. */
+  label: string | null;
+  /** label, or "{Company} — {date}". */
+  title: string;
+  /** submittedAt is set. Content and template cannot change. */
+  frozen: boolean;
+  /** Calendar date of submittedAt, when this version is frozen. */
+  submittedOn: string | null;
   /** Current job status. The Applied prompt is only offered from SAVED. */
   jobStatus: string;
   templates: ResumeTemplateAccess;

@@ -41,6 +41,14 @@ describe("renderResumeDocx", () => {
     const text = await extractText(buffer);
     expect(text).not.toMatch(/RoleRefine/i);
   });
+
+  it("is byte-identical when the same submitted timestamp is used again", async () => {
+    const model = resumePdfModel(sample(), librarySnapshot());
+    const producedAt = new Date("2026-04-10T15:00:00.000Z");
+    const first = await renderResumeDocx(model, producedAt);
+    const later = await renderResumeDocx(model, producedAt);
+    expect(later.equals(first)).toBe(true);
+  });
 });
 
 describe("renderLetterDocx", () => {

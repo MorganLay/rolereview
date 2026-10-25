@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { strings } from "@/copy/strings";
 import type { JobStatus } from "@/generated/prisma/enums";
 
-const { transaction, jobFindFirst, jobUpdateMany, jobEventCreate, reminderCreate, reminderUpdateMany, resumeFindFirst } =
+const { transaction, jobFindFirst, jobUpdateMany, jobEventCreate, reminderCreate, reminderUpdateMany, resumeFindFirst, resumeUpdateMany } =
   vi.hoisted(() => ({
     transaction: vi.fn(),
     jobFindFirst: vi.fn(),
@@ -12,6 +12,7 @@ const { transaction, jobFindFirst, jobUpdateMany, jobEventCreate, reminderCreate
     reminderCreate: vi.fn(),
     reminderUpdateMany: vi.fn(),
     resumeFindFirst: vi.fn(),
+    resumeUpdateMany: vi.fn(),
   }));
 
 vi.mock("@/lib/db", () => ({
@@ -22,7 +23,7 @@ vi.mock("@/lib/db", () => ({
         job: { findFirst: jobFindFirst, updateMany: jobUpdateMany },
         jobEvent: { create: jobEventCreate },
         reminder: { create: reminderCreate, updateMany: reminderUpdateMany },
-        tailoredResume: { findFirst: resumeFindFirst },
+        tailoredResume: { findFirst: resumeFindFirst, updateMany: resumeUpdateMany },
       });
     },
   },
@@ -328,6 +329,7 @@ describe("applyStatusChange", () => {
     reminderCreate.mockResolvedValue({ id: "reminder-1" });
     reminderUpdateMany.mockResolvedValue({ count: 1 });
     resumeFindFirst.mockResolvedValue(null);
+    resumeUpdateMany.mockResolvedValue({ count: 1 });
   });
 
   it("returns null when the job is not owned", async () => {
@@ -400,11 +402,16 @@ describe("applyStatusChange", () => {
     expect(jobUpdateMany.mock.calls[0]?.[0].data.submittedResumeId).toBe(
       "resume-new",
     );
+    expect(resumeUpdateMany).toHaveBeenCalledWith({
+      where: { id: "resume-new", userId, submittedAt: null },
+      data: { submittedAt: NOW },
+    });
   });
 
   it("leaves submittedResumeId empty when nothing has been exported", async () => {
     await applyStatusChange(userId, jobId, "APPLIED", { now: NOW });
     expect(jobUpdateMany.mock.calls[0]?.[0].data.submittedResumeId).toBeUndefined();
+    expect(resumeUpdateMany).not.toHaveBeenCalled();
   });
 
   it("does not look up a resume when one is already submitted", async () => {

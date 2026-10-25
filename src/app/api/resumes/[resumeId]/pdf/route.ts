@@ -11,7 +11,7 @@ import { db } from "@/lib/db";
 import { contentDisposition, resumePdfFilename } from "@/lib/pdf/filename";
 import { resumePdfModel } from "@/lib/pdf/model";
 import { renderResumePdf } from "@/lib/pdf/render";
-import { resolveResumeTemplate } from "@/lib/pdf/template";
+import { resolveResumeTemplate, storedResumeTemplate } from "@/lib/pdf/template";
 
 /** Saved resume PDF. Unentitled Modern or Compact renders as Classic. */
 export async function GET(
@@ -29,6 +29,7 @@ export async function GET(
       templateId: true,
       options: true,
       exportedAt: true,
+      submittedAt: true,
       content: true,
       librarySnapshot: true,
       job: { select: { title: true, company: true } },
@@ -40,18 +41,21 @@ export async function GET(
   const snapshot = LibrarySnapshot.safeParse(row.librarySnapshot);
   if (!content.success || !snapshot.success) notFound();
 
-  const template = resolveResumeTemplate(
-    new URL(request.url).searchParams.get("template"),
-    row.templateId,
-    {
-      modern: can(user, "template:modern"),
-      compact: can(user, "template:compact"),
-    },
-  );
+  const template = row.submittedAt
+    ? storedResumeTemplate(row.templateId)
+    : resolveResumeTemplate(
+        new URL(request.url).searchParams.get("template"),
+        row.templateId,
+        {
+          modern: can(user, "template:modern"),
+          compact: can(user, "template:compact"),
+        },
+      );
   const model = resumePdfModel(content.data, snapshot.data);
   const tailor = TailorOptions.safeParse(row.options ?? {});
   const pdf = await renderResumePdf(model, template, {
     pages: tailor.success ? tailor.data.length : 1,
+    producedAt: row.submittedAt ?? undefined,
   });
   const filename = resumePdfFilename(
     snapshot.data.profile.fullName,

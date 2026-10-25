@@ -11,7 +11,10 @@ export type ResumeVersion = {
   matchScore: number | null;
   templateId: string;
   rating: 1 | -1 | null;
+  /** This version has been marked submitted. */
   submitted: boolean;
+  /** label, or "{Company} — {date}". */
+  title: string;
 };
 
 export type JobDocuments = {

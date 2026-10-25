@@ -11,6 +11,11 @@ import { serializeLibrary } from "@/features/library/serialize";
 import type { Library } from "@/features/library/types";
 import { JobAnalysis } from "@/features/jobs/schemas";
 import { ResumeContent } from "@/features/tailor/schemas";
+import {
+  nextVersionNumber,
+  normalizeVersionLabel,
+  versionIsFrozen,
+} from "@/features/tailor/version";
 import { Prisma } from "@/generated/prisma/client";
 import { buildContent, OutputSchema, SYSTEM } from "@/lib/ai/prompts/letter";
 import { POSTING_MAX } from "@/lib/ai/prompts/tailor";
@@ -29,6 +34,7 @@ import {
   markLetterSubmittedSchema,
   rateLetterSchema,
   saveLetterContentSchema,
+  setLetterLabelSchema,
   setLetterTemplateSchema,
   writeLetterSchema,
 } from "./schemas";
@@ -236,12 +242,25 @@ export async function setLetterTemplate(
         : null;
   if (feature && !can(user, feature)) return fail("PRO_REQUIRED");
 
+  const existing = await db.coverLetter.findFirst({
+    where: {
+      id: parsed.data.letterId,
+      jobId: parsed.data.jobId,
+      userId: user.id,
+      status: "READY",
+    },
+    select: { submittedAt: true },
+  });
+  if (!existing) return fail("NOT_FOUND");
+  if (versionIsFrozen(existing.submittedAt)) return fail("CONFLICT");
+
   const updated = await db.coverLetter.updateMany({
     where: {
       id: parsed.data.letterId,
       jobId: parsed.data.jobId,
       userId: user.id,
       status: "READY",
+      submittedAt: null,
     },
     data: { templateId: parsed.data.templateId },
   });
@@ -278,14 +297,128 @@ export async function markLetterSubmitted(
   });
   if (!job) return fail("NOT_FOUND");
 
-  const updated = await db.job.updateMany({
-    where: { id: job.id, userId: user.id },
-    data: { submittedCoverLetterId: letter.id },
-  });
-  if (updated.count === 0) return fail("NOT_FOUND");
+  const submittedAt = new Date();
+  try {
+    const updated = await db.$transaction(async (tx) => {
+      const jobUpdated = await tx.job.updateMany({
+        where: { id: job.id, userId: user.id },
+        data: { submittedCoverLetterId: letter.id },
+      });
+      if (jobUpdated.count === 0) return 0;
+      await tx.coverLetter.updateMany({
+        where: { id: letter.id, jobId: job.id, userId: user.id, submittedAt: null },
+        data: { submittedAt },
+      });
+      return jobUpdated.count;
+    });
+    if (updated === 0) return fail("NOT_FOUND");
+  } catch {
+    return fail("NOT_FOUND");
+  }
 
   revalidateLetter(job.id, letter.id);
   return ok({ submitted: true });
+}
+
+/** Rename a letter. Allowed after it is submitted; the export does not use the name. */
+export async function setLetterLabel(
+  input: unknown,
+): Promise<ActionResult<{ label: string | null }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = setLetterLabelSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const label = normalizeVersionLabel(parsed.data.label);
+  const updated = await db.coverLetter.updateMany({
+    where: {
+      id: parsed.data.letterId,
+      jobId: parsed.data.jobId,
+      userId: user.id,
+      status: "READY",
+    },
+    data: { label },
+  });
+  if (updated.count === 0) return fail("NOT_FOUND");
+
+  revalidateLetter(parsed.data.jobId, parsed.data.letterId);
+  return ok({ label });
+}
+
+export type CreateLetterRevisionResult = {
+  id: string;
+  version: number;
+};
+
+/**
+ * Copy a submitted letter into the next version.
+ * No model call and no quota. The new version is editable.
+ */
+export async function createLetterRevision(
+  input: unknown,
+): Promise<ActionResult<CreateLetterRevisionResult>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = markLetterSubmittedSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  try {
+    const created = await db.$transaction(async (tx) => {
+      const source = await tx.coverLetter.findFirst({
+        where: {
+          id: parsed.data.letterId,
+          jobId: parsed.data.jobId,
+          userId: user.id,
+          status: "READY",
+        },
+        select: {
+          submittedAt: true,
+          options: true,
+          librarySnapshot: true,
+          aiOutput: true,
+          content: true,
+          guardReverts: true,
+          templateId: true,
+        },
+      });
+      if (!source) return "missing" as const;
+      if (!versionIsFrozen(source.submittedAt)) return "open" as const;
+
+      const latest = await tx.coverLetter.findFirst({
+        where: { userId: user.id, jobId: parsed.data.jobId },
+        orderBy: { version: "desc" },
+        select: { version: true },
+      });
+      return tx.coverLetter.create({
+        data: {
+          userId: user.id,
+          jobId: parsed.data.jobId,
+          version: nextVersionNumber(latest?.version ?? null),
+          status: "READY",
+          options: copyJson(source.options) ?? {},
+          librarySnapshot: copyJson(source.librarySnapshot),
+          aiOutput: copyJson(source.aiOutput),
+          content: copyJson(source.content),
+          guardReverts: source.guardReverts,
+          templateId: source.templateId,
+        },
+        select: { id: true, version: true },
+      });
+    });
+
+    if (created === "missing") return fail("NOT_FOUND");
+    if (created === "open") return fail("CONFLICT");
+
+    revalidateLetter(parsed.data.jobId, created.id);
+    return ok({ id: created.id, version: created.version });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return fail("CONFLICT");
+    }
+    throw error;
+  }
 }
 
 export type SaveLetterContentResult = {
@@ -310,9 +443,10 @@ export async function saveLetterContent(
       userId: user.id,
       status: "READY",
     },
-    select: { id: true, content: true, aiOutput: true },
+    select: { id: true, content: true, aiOutput: true, submittedAt: true },
   });
   if (!existing) return fail("NOT_FOUND");
+  if (versionIsFrozen(existing.submittedAt)) return fail("CONFLICT");
 
   const stored = CoverLetterContent.safeParse(existing.content);
   if (!stored.success) return fail("NOT_FOUND");
@@ -341,6 +475,7 @@ export async function saveLetterContent(
       jobId: parsed.data.jobId,
       userId: user.id,
       status: "READY",
+      submittedAt: null,
     },
     data: { content: toJson(edited.content) },
   });
@@ -484,4 +619,9 @@ function revalidateLetter(jobId: string, letterId: string): void {
 
 function toJson(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
+
+function copyJson(value: unknown): Prisma.InputJsonValue | undefined {
+  if (value === null || value === undefined) return undefined;
+  return toJson(value);
 }

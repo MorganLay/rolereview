@@ -14,12 +14,16 @@ export type LetterVersion = {
   length: LetterLength;
   templateId: string;
   rating: 1 | -1 | null;
+  /** This version has been marked submitted. */
   submitted: boolean;
+  /** label, or "{Company} — {date}". */
+  title: string;
 };
 
 export type LetterAlignChoice = {
   id: string;
   version: number;
+  title: string;
 };
 
 export type JobLetters = {

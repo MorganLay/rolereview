@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { strings } from "@/copy/strings";
 import { EntryKindEnum } from "@/features/library/schemas";
+import { VERSION_LABEL_MAX } from "@/features/tailor/version";
 import { RESUME_TEMPLATES } from "@/lib/pdf/template";
 
 /** Stored resume caps. docs/04-DATA-MODEL.md. */
@@ -143,6 +144,14 @@ export const setResumeTemplateSchema = z.object({
 export const markResumeSubmittedSchema = z.object({
   jobId: z.uuid(),
   resumeId: z.uuid(),
+});
+
+export const setResumeLabelSchema = z.object({
+  jobId: z.uuid(),
+  resumeId: z.uuid(),
+  label: z.string().trim().max(VERSION_LABEL_MAX, {
+    error: strings.jobs.workspace.labelTooLong,
+  }),
 });
 
 export const RequirementVerdict = z

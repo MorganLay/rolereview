@@ -48,6 +48,8 @@ type ExportInput = {
   jobStatus: string;
   templateId: ResumeTemplateId;
   submitted: boolean;
+  frozen: boolean;
+  onSubmitted?: () => void;
   templates: ResumeTemplateAccess;
   content: ResumeContent;
   snapshot: LibrarySnapshot;
@@ -81,7 +83,7 @@ export function useResumeExport(input: ExportInput) {
   }
 
   async function onTemplate(next: ResumeTemplateId) {
-    if (templatePending || next === templateId) return;
+    if (input.frozen || templatePending || next === templateId) return;
     const resumeId = input.resumeId;
     setTemplatePending(true);
     let result: Awaited<ReturnType<typeof setResumeTemplate>>;
@@ -99,6 +101,8 @@ export function useResumeExport(input: ExportInput) {
     if (!result.ok) {
       if (result.error.code === "PRO_REQUIRED") {
         openUpgradeModal({ kind: "feature", feature: "templates" });
+      } else if (result.error.code === "CONFLICT") {
+        toast.error(copy.frozenSave);
       } else toast.error(copy.templateFailed);
       return;
     }
@@ -182,6 +186,7 @@ export function useResumeExport(input: ExportInput) {
       return;
     }
     setSubmitted(true);
+    input.onSubmitted?.();
   }
 
   async function onYes() {
@@ -201,6 +206,7 @@ export function useResumeExport(input: ExportInput) {
       return;
     }
     setSubmitted(true);
+    input.onSubmitted?.();
     setJobStatus(result.data.status);
     if (result.data.moved || result.data.status !== "SAVED") {
       setPromptOpen(false);
@@ -219,6 +225,7 @@ export function useResumeExport(input: ExportInput) {
       templateId,
       templatePending,
       submitted,
+      frozen: input.frozen,
       submitPending,
       exporting,
       templates: input.templates,
@@ -241,6 +248,7 @@ export function ResumeExportBar({
   templateId,
   templatePending,
   submitted,
+  frozen,
   submitPending,
   exporting,
   templates,
@@ -253,6 +261,7 @@ export function ResumeExportBar({
   templateId: ResumeTemplateId;
   templatePending: boolean;
   submitted: boolean;
+  frozen: boolean;
   submitPending: boolean;
   exporting: boolean;
   templates: ResumeTemplateAccess;
@@ -271,7 +280,7 @@ export function ResumeExportBar({
           <Button
             type="button"
             variant="outline"
-            disabled={templatePending}
+            disabled={templatePending || frozen}
           >
             {`${copy.templateLabel}: ${current}`}
             <ChevronDownIcon aria-hidden />

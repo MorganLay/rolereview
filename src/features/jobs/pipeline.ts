@@ -186,7 +186,13 @@ async function applyStatusChangeOn(
       orderBy: [{ exportedAt: "desc" }, { version: "desc" }],
       select: { id: true },
     });
-    if (resume) submittedResumeId = resume.id;
+    if (resume) {
+      submittedResumeId = resume.id;
+      await tx.tailoredResume.updateMany({
+        where: { id: resume.id, userId, submittedAt: null },
+        data: { submittedAt: now },
+      });
+    }
   }
 
   const updated = await tx.job.updateMany({

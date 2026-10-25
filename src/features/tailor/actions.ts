@@ -30,10 +30,12 @@ import {
   markResumeSubmittedSchema,
   rateResumeSchema,
   saveResumeContentSchema,
+  setResumeLabelSchema,
   setResumeTemplateSchema,
   tailorResumeSchema,
 } from "./schemas";
 import { validateTailorOutput } from "./validate";
+import { nextVersionNumber, normalizeVersionLabel, versionIsFrozen } from "./version";
 
 const copy = strings.jobs.documents;
 
@@ -216,12 +218,25 @@ export async function setResumeTemplate(
         : null;
   if (feature && !can(user, feature)) return fail("PRO_REQUIRED");
 
+  const existing = await db.tailoredResume.findFirst({
+    where: {
+      id: parsed.data.resumeId,
+      jobId: parsed.data.jobId,
+      userId: user.id,
+      status: "READY",
+    },
+    select: { submittedAt: true },
+  });
+  if (!existing) return fail("NOT_FOUND");
+  if (versionIsFrozen(existing.submittedAt)) return fail("CONFLICT");
+
   const updated = await db.tailoredResume.updateMany({
     where: {
       id: parsed.data.resumeId,
       jobId: parsed.data.jobId,
       userId: user.id,
       status: "READY",
+      submittedAt: null,
     },
     data: { templateId: parsed.data.templateId },
   });
@@ -317,17 +332,133 @@ async function assignSubmittedResume(
   });
   if (!job) return null;
 
+  const submittedAt = new Date();
   try {
-    const updated = await db.job.updateMany({
-      where: { id: jobId, userId },
-      data: { submittedResumeId: resumeId },
+    const updated = await db.$transaction(async (tx) => {
+      const jobUpdated = await tx.job.updateMany({
+        where: { id: jobId, userId },
+        data: { submittedResumeId: resumeId },
+      });
+      if (jobUpdated.count === 0) return 0;
+      await tx.tailoredResume.updateMany({
+        where: { id: resumeId, jobId, userId, submittedAt: null },
+        data: { submittedAt },
+      });
+      return jobUpdated.count;
     });
-    if (updated.count === 0) return null;
+    if (updated === 0) return null;
   } catch {
     return null;
   }
 
   return { status: job.status };
+}
+
+/** Rename a version. Allowed after it is submitted; the export does not use the name. */
+export async function setResumeLabel(
+  input: unknown,
+): Promise<ActionResult<{ label: string | null }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = setResumeLabelSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  const label = normalizeVersionLabel(parsed.data.label);
+  const updated = await db.tailoredResume.updateMany({
+    where: {
+      id: parsed.data.resumeId,
+      jobId: parsed.data.jobId,
+      userId: user.id,
+      status: "READY",
+    },
+    data: { label },
+  });
+  if (updated.count === 0) return fail("NOT_FOUND");
+
+  revalidateResume(parsed.data.jobId, parsed.data.resumeId);
+  return ok({ label });
+}
+
+export type CreateResumeRevisionResult = {
+  id: string;
+  version: number;
+};
+
+/**
+ * Copy a submitted resume into the next version.
+ * No model call and no quota. The new version is editable.
+ */
+export async function createResumeRevision(
+  input: unknown,
+): Promise<ActionResult<CreateResumeRevisionResult>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+
+  const parsed = markResumeSubmittedSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
+
+  try {
+    const created = await db.$transaction(async (tx) => {
+      const source = await tx.tailoredResume.findFirst({
+        where: {
+          id: parsed.data.resumeId,
+          jobId: parsed.data.jobId,
+          userId: user.id,
+          status: "READY",
+        },
+        select: {
+          submittedAt: true,
+          targetProfileId: true,
+          options: true,
+          librarySnapshot: true,
+          aiOutput: true,
+          content: true,
+          matchReport: true,
+          matchScore: true,
+          guardReverts: true,
+          templateId: true,
+        },
+      });
+      if (!source) return "missing" as const;
+      if (!versionIsFrozen(source.submittedAt)) return "open" as const;
+
+      const latest = await tx.tailoredResume.findFirst({
+        where: { userId: user.id, jobId: parsed.data.jobId },
+        orderBy: { version: "desc" },
+        select: { version: true },
+      });
+      return tx.tailoredResume.create({
+        data: {
+          userId: user.id,
+          jobId: parsed.data.jobId,
+          targetProfileId: source.targetProfileId,
+          version: nextVersionNumber(latest?.version ?? null),
+          status: "READY",
+          options: copyJson(source.options) ?? {},
+          librarySnapshot: copyJson(source.librarySnapshot),
+          aiOutput: copyJson(source.aiOutput),
+          content: copyJson(source.content),
+          matchReport: copyJson(source.matchReport),
+          matchScore: source.matchScore,
+          guardReverts: source.guardReverts,
+          templateId: source.templateId,
+        },
+        select: { id: true, version: true },
+      });
+    });
+
+    if (created === "missing") return fail("NOT_FOUND");
+    if (created === "open") return fail("CONFLICT");
+
+    revalidateResume(parsed.data.jobId, created.id);
+    return ok({ id: created.id, version: created.version });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return fail("CONFLICT");
+    }
+    throw error;
+  }
 }
 
 export type SaveResumeContentResult = {
@@ -352,9 +483,16 @@ export async function saveResumeContent(
       userId: user.id,
       status: "READY",
     },
-    select: { id: true, content: true, librarySnapshot: true, aiOutput: true },
+    select: {
+      id: true,
+      content: true,
+      librarySnapshot: true,
+      aiOutput: true,
+      submittedAt: true,
+    },
   });
   if (!existing) return fail("NOT_FOUND");
+  if (versionIsFrozen(existing.submittedAt)) return fail("CONFLICT");
 
   const stored = ResumeContent.safeParse(existing.content);
   const snapshot = LibrarySnapshot.safeParse(existing.librarySnapshot);
@@ -385,6 +523,7 @@ export async function saveResumeContent(
       jobId: parsed.data.jobId,
       userId: user.id,
       status: "READY",
+      submittedAt: null,
     },
     data: { content: toJson(edited.content) },
   });
@@ -496,4 +635,9 @@ function revalidateResume(jobId: string, resumeId: string): void {
 
 function toJson(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
+
+function copyJson(value: unknown): Prisma.InputJsonValue | undefined {
+  if (value === null || value === undefined) return undefined;
+  return toJson(value);
 }

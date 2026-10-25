@@ -338,10 +338,12 @@ export function ResumeDocument({
   model,
   variant,
   density = "regular",
+  producedAt,
 }: {
   model: ResumePdfModel;
   variant: ResumeTemplateId;
   density?: PdfDensity;
+  producedAt?: Date;
 }) {
   const styles = STYLES[variant][density];
   const hasHeader = Boolean(
@@ -351,7 +353,12 @@ export function ResumeDocument({
     density === "regular" ? model.links : groupedLinks(model.links);
 
   return (
-    <Document title={model.name ?? "Resume"} author={model.name ?? undefined}>
+    <Document
+      title={model.name ?? "Resume"}
+      author={model.name ?? undefined}
+      creationDate={producedAt}
+      modificationDate={producedAt}
+    >
       <Page size="LETTER" style={styles.page}>
         {model.name ? <Text style={styles.name}>{model.name}</Text> : null}
         {model.headline ? <Text style={styles.headline}>{model.headline}</Text> : null}

@@ -2,7 +2,9 @@
 
 import { ArrowLeftIcon, InfoIcon, XIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -48,6 +50,7 @@ import { cn } from "@/lib/utils";
 import { resumeTemplateLabel } from "../template-label";
 import { MatchPanel } from "./match-panel";
 import { ExportAppliedDialog, ResumeExportBar, useResumeExport } from "./resume-export-bar";
+import { SubmittedVersionBanner, VersionNameField } from "./version-chrome";
 
 const SAVE_DELAY_MS = 1500;
 
@@ -56,14 +59,14 @@ const bulletCopy = strings.library.bullets;
 const entryCopy = strings.library.entries;
 const skillCopy = strings.library.skills;
 const profileCopy = strings.library.profile;
-const versionCopy = strings.jobs.documents.version;
-
 type Phase = "saving" | "saved" | "error";
 type SnapshotEntry = LibrarySnapshot["entries"][number];
 type Direction = "up" | "down";
 
 export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) {
+  const router = useRouter();
   const [content, setContent] = useState(workspace.content);
+  const [frozen, setFrozen] = useState(workspace.frozen);
   const [phase, setPhase] = useState<Phase>("saved");
   const [savedAt, setSavedAt] = useState(workspace.savedAt);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -89,6 +92,11 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
     jobStatus: workspace.jobStatus,
     templateId: workspace.templateId,
     submitted: workspace.submitted,
+    frozen,
+    onSubmitted: () => {
+      setFrozen(true);
+      router.refresh();
+    },
     templates: workspace.templates,
     content,
     snapshot: workspace.snapshot,
@@ -101,6 +109,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   const skillNames = workspace.snapshot.skills.map((skill) => skill.name);
 
   async function persist() {
+    if (frozen) return;
     if (inFlight.current) {
       queued.current = true;
       return;
@@ -136,6 +145,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
     }
     if (unmounted.current) return;
     if (!result.ok) {
+      if (result.error.code === "CONFLICT") toast.error(copy.frozenSave);
       setPhase("error");
       return;
     }
@@ -149,7 +159,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   }
 
   function schedule() {
-    if (unmounted.current) return;
+    if (frozen || unmounted.current) return;
     setPhase("saving");
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
@@ -214,6 +224,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   }
 
   function updateContent(recipe: (current: ResumeContent) => ResumeContent) {
+    if (frozen) return;
     const next = recipe(contentRef.current);
     contentRef.current = next;
     setContent(next);
@@ -229,7 +240,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   }
 
   function beginEdit(bullet: ContentBullet) {
-    if (editingId) return;
+    if (frozen || editingId) return;
     skipBlur.current = false;
     setEditingId(bullet.id);
     setDraft(bullet.text);
@@ -398,7 +409,6 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
             <ArrowLeftIcon aria-hidden className="size-4" />
             {copy.back}
           </Link>
-          <span className="text-sm text-slate">{versionCopy(workspace.version)}</span>
           <p aria-live="polite" className="text-sm text-slate">
             {phase === "error" ? (
               <button
@@ -418,6 +428,21 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
             <ResumeExportBar {...exportUi.barProps} />
           </div>
         </div>
+        <VersionNameField
+          kind="resume"
+          jobId={workspace.jobId}
+          documentId={workspace.resumeId}
+          label={workspace.label}
+          placeholder={workspace.title}
+        />
+        {frozen && workspace.submittedOn ? (
+          <SubmittedVersionBanner
+            kind="resume"
+            jobId={workspace.jobId}
+            documentId={workspace.resumeId}
+            submittedOn={workspace.submittedOn}
+          />
+        ) : null}
         <h1 className="font-serif text-2xl font-semibold tracking-tight break-words text-ink md:text-3xl">
           {workspace.jobTitle}
         </h1>
@@ -460,6 +485,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
           <IncludeSwitch
             label={copy.includeSummary}
             checked={content.summary.included}
+            disabled={frozen}
             onCheckedChange={(included) =>
               updateContent((current) => ({
                 ...current,
@@ -475,6 +501,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
           rows={4}
           aria-labelledby={`${summaryId}-heading`}
           aria-describedby={`${summaryId}-count`}
+          readOnly={frozen}
           className={cn("text-sm", !content.summary.included && "opacity-60")}
           onChange={(event) => {
             const text = event.target.value;
@@ -507,6 +534,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
                   highlighted={highlightId === entryElementId(entry.ref)}
                   highlightId={highlightId}
                   editingId={editingId}
+                  readOnly={frozen}
                   draft={draft}
                   fieldError={fieldError}
                   editorRef={editorRef}
@@ -560,6 +588,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
                       )}
                     >
                       {name}
+                      {frozen ? null : (
                       <button
                         type="button"
                         className="rounded-full p-0.5 text-slate hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
@@ -568,6 +597,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
                       >
                         <XIcon aria-hidden className="size-3.5" />
                       </button>
+                      )}
                     </li>
                     );
                   })}
@@ -576,7 +606,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
             ))}
           </div>
         )}
-        {available.length > 0 ? (
+        {frozen ? null : available.length > 0 ? (
           <Select key={skillNamesOf(content).join("|")} onValueChange={addSkill}>
             <SelectTrigger aria-label={copy.addSkillLabel} className="w-full sm:w-72">
               <SelectValue placeholder={copy.addSkill} />
@@ -616,7 +646,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
             libraryEntries={workspace.libraryEntries}
             jobId={workspace.jobId}
             onEvidence={showEvidence}
-            onInclude={includeInResume}
+            onInclude={frozen ? undefined : includeInResume}
           />
         </aside>
       </div>
@@ -701,6 +731,7 @@ function EntryBlock({
   highlighted,
   highlightId,
   editingId,
+  readOnly,
   draft,
   fieldError,
   editorRef,
@@ -718,6 +749,7 @@ function EntryBlock({
   highlighted: boolean;
   highlightId: string | null;
   editingId: string | null;
+  readOnly: boolean;
   draft: string;
   fieldError: string | null;
   editorRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -769,6 +801,7 @@ function EntryBlock({
         <IncludeSwitch
           label={copy.includeEntry(title)}
           checked={entry.included}
+          disabled={readOnly}
           onCheckedChange={onIncluded}
         />
       </div>
@@ -782,7 +815,8 @@ function EntryBlock({
               skills={skills}
               highlighted={highlightId === bulletElementId(bullet.id)}
               editing={editingId === bullet.id}
-              locked={editingId !== null}
+              locked={readOnly || editingId !== null}
+              readOnly={readOnly}
               draft={draft}
               fieldError={fieldError}
               editorRef={editorRef}
@@ -810,6 +844,7 @@ function BulletRow({
   highlighted,
   editing,
   locked,
+  readOnly,
   draft,
   fieldError,
   editorRef,
@@ -829,6 +864,7 @@ function BulletRow({
   highlighted: boolean;
   editing: boolean;
   locked: boolean;
+  readOnly: boolean;
   draft: string;
   fieldError: string | null;
   editorRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -859,6 +895,7 @@ function BulletRow({
         <IncludeSwitch
           label={copy.includeBullet(bullet.text)}
           checked={bullet.included}
+          disabled={readOnly}
           onCheckedChange={onIncluded}
         />
         <div className="min-w-0 flex-1">
@@ -872,6 +909,15 @@ function BulletRow({
               onKeyDown={onEditKeyDown}
               onBlur={onEditBlur}
             />
+          ) : readOnly ? (
+            <p
+              className={cn(
+                "px-2 py-1 text-sm whitespace-pre-wrap text-ink",
+                !bullet.included || !entryIncluded ? "opacity-60" : "",
+              )}
+            >
+              {bullet.text}
+            </p>
           ) : (
             <button
               type="button"
@@ -895,7 +941,7 @@ function BulletRow({
         </p>
       )}
       {editing ? null : <StrengthMeter text={bullet.text} skills={skills} />}
-      {editing ? null : (
+      {editing || readOnly ? null : (
         <div className="flex flex-wrap gap-1">
           <Button
             type="button"
@@ -1008,10 +1054,12 @@ function SourceButton({
 function IncludeSwitch({
   label,
   checked,
+  disabled,
   onCheckedChange,
 }: {
   label: string;
   checked: boolean;
+  disabled?: boolean;
   onCheckedChange: (included: boolean) => void;
 }) {
   const id = useId();
@@ -1023,6 +1071,7 @@ function IncludeSwitch({
       <Switch
         id={id}
         checked={checked}
+        disabled={disabled}
         aria-label={label}
         onCheckedChange={onCheckedChange}
       />

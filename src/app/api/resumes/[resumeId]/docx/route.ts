@@ -12,7 +12,7 @@ import { DOCX_MIME } from "@/lib/docx/file";
 import { renderResumeDocx } from "@/lib/docx/resume";
 import { contentDisposition, resumeDocxFilename } from "@/lib/pdf/filename";
 import { resumePdfModel } from "@/lib/pdf/model";
-import { resolveResumeTemplate } from "@/lib/pdf/template";
+import { resolveResumeTemplate, storedResumeTemplate } from "@/lib/pdf/template";
 import { fail } from "@/lib/result";
 
 /** Saved resume DOCX. Pro only. Same section order as the PDF. */
@@ -34,6 +34,7 @@ export async function GET(
       status: true,
       templateId: true,
       exportedAt: true,
+      submittedAt: true,
       content: true,
       librarySnapshot: true,
       job: { select: { title: true, company: true } },
@@ -45,15 +46,20 @@ export async function GET(
   const snapshot = LibrarySnapshot.safeParse(row.librarySnapshot);
   if (!content.success || !snapshot.success) notFound();
 
-  const template = resolveResumeTemplate(
-    new URL(request.url).searchParams.get("template"),
-    row.templateId,
-    {
-      modern: can(user, "template:modern"),
-      compact: can(user, "template:compact"),
-    },
+  const template = row.submittedAt
+    ? storedResumeTemplate(row.templateId)
+    : resolveResumeTemplate(
+        new URL(request.url).searchParams.get("template"),
+        row.templateId,
+        {
+          modern: can(user, "template:modern"),
+          compact: can(user, "template:compact"),
+        },
+      );
+  const buffer = await renderResumeDocx(
+    resumePdfModel(content.data, snapshot.data),
+    row.submittedAt ?? undefined,
   );
-  const buffer = await renderResumeDocx(resumePdfModel(content.data, snapshot.data));
   const filename = resumeDocxFilename(
     snapshot.data.profile.fullName,
     row.job.company,

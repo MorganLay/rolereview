@@ -2,7 +2,9 @@
 
 import { ArrowLeftIcon, InfoIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -12,6 +14,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { strings } from "@/copy/strings";
 import { resumeTemplateLabel } from "@/features/tailor/template-label";
+import {
+  SubmittedVersionBanner,
+  VersionNameField,
+} from "@/features/tailor/components/version-chrome";
 import type { ResumeTemplateId } from "@/lib/pdf/template";
 import { cn } from "@/lib/utils";
 
@@ -30,12 +36,12 @@ const SAVE_DELAY_MS = 1500;
 
 const copy = strings.jobs.workspace;
 const letterCopy = strings.jobs.letters;
-const versionCopy = strings.jobs.documents.version;
-
 type Phase = "saving" | "saved" | "error";
 
 export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) {
+  const router = useRouter();
   const [content, setContent] = useState(workspace.content);
+  const [frozen, setFrozen] = useState(workspace.frozen);
   const [phase, setPhase] = useState<Phase>("saved");
   const [savedAt, setSavedAt] = useState(workspace.savedAt);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -57,6 +63,11 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
     letterId: workspace.letterId,
     templateId: workspace.templateId,
     submitted: workspace.submitted,
+    frozen,
+    onSubmitted: () => {
+      setFrozen(true);
+      router.refresh();
+    },
     rating: workspace.rating,
     templates: workspace.templates,
     content,
@@ -65,6 +76,7 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
   const savedLabel = copy.saved(formatSavedTime(savedAt, workspace.timeZone));
 
   async function persist() {
+    if (frozen) return;
     if (inFlight.current) {
       queued.current = true;
       return;
@@ -100,6 +112,7 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
     }
     if (unmounted.current) return;
     if (!result.ok) {
+      if (result.error.code === "CONFLICT") toast.error(copy.frozenSave);
       setPhase("error");
       return;
     }
@@ -113,7 +126,7 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
   }
 
   function schedule() {
-    if (unmounted.current) return;
+    if (frozen || unmounted.current) return;
     setPhase("saving");
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
@@ -149,6 +162,7 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
   }
 
   function updateContent(recipe: (current: CoverLetterContent) => CoverLetterContent) {
+    if (frozen) return;
     const next = recipe(contentRef.current);
     contentRef.current = next;
     setContent(next);
@@ -164,7 +178,7 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
   }
 
   function beginEdit(paragraph: LetterParagraph) {
-    if (editingId) return;
+    if (frozen || editingId) return;
     skipBlur.current = false;
     setEditingId(paragraph.id);
     setDraft(paragraph.text);
@@ -235,7 +249,6 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
             <ArrowLeftIcon aria-hidden className="size-4" />
             {copy.back}
           </Link>
-          <span className="text-sm text-slate">{versionCopy(workspace.version)}</span>
           <p aria-live="polite" className="text-sm text-slate">
             {phase === "error" ? (
               <button
@@ -255,6 +268,21 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
             <LetterExportBar {...exportUi.barProps} />
           </div>
         </div>
+        <VersionNameField
+          kind="letter"
+          jobId={workspace.jobId}
+          documentId={workspace.letterId}
+          label={workspace.label}
+          placeholder={workspace.title}
+        />
+        {frozen && workspace.submittedOn ? (
+          <SubmittedVersionBanner
+            kind="letter"
+            jobId={workspace.jobId}
+            documentId={workspace.letterId}
+            submittedOn={workspace.submittedOn}
+          />
+        ) : null}
         <h1 className="font-serif text-2xl font-semibold tracking-tight break-words text-ink md:text-3xl">
           {workspace.jobTitle}
         </h1>
@@ -297,6 +325,7 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
             max={LETTER_LIMITS.greeting}
             rows={2}
             templateId={templateId}
+            readOnly={frozen}
             onChange={(greeting) =>
               updateContent((current) => ({ ...current, greeting }))
             }
@@ -310,6 +339,7 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
                 paragraph={paragraph}
                 snapshot={workspace.snapshot}
                 editing={editingId === paragraph.id}
+                readOnly={frozen}
                 draft={draft}
                 fieldError={fieldError}
                 editorRef={editorRef}
@@ -340,6 +370,7 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
             max={LETTER_LIMITS.closing}
             rows={1}
             templateId={templateId}
+            readOnly={frozen}
             onChange={(closing) =>
               updateContent((current) => ({ ...current, closing }))
             }
@@ -351,6 +382,7 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
             max={LETTER_LIMITS.signature}
             rows={1}
             templateId={templateId}
+            readOnly={frozen}
             onChange={(signature) =>
               updateContent((current) => ({ ...current, signature }))
             }
@@ -382,6 +414,7 @@ function LineField({
   max,
   rows,
   templateId,
+  readOnly,
   onChange,
 }: {
   id: string;
@@ -390,6 +423,7 @@ function LineField({
   max: number;
   rows: number;
   templateId: ResumeTemplateId;
+  readOnly: boolean;
   onChange: (value: string) => void;
 }) {
   const countId = `${id}-count`;
@@ -405,6 +439,7 @@ function LineField({
         rows={rows}
         aria-labelledby={`${id}-heading`}
         aria-describedby={countId}
+        readOnly={readOnly}
         className="text-sm"
         onChange={(event) => onChange(event.target.value)}
       />
@@ -420,6 +455,7 @@ function ParagraphRow({
   paragraph,
   snapshot,
   editing,
+  readOnly,
   draft,
   fieldError,
   editorRef,
@@ -434,6 +470,7 @@ function ParagraphRow({
   paragraph: LetterParagraph;
   snapshot: LetterWorkspaceData["snapshot"];
   editing: boolean;
+  readOnly: boolean;
   draft: string;
   fieldError: string | null;
   editorRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -457,6 +494,7 @@ function ParagraphRow({
           <IncludeSwitch
             label={letterCopy.includeParagraph(index)}
             checked={paragraph.included}
+            disabled={readOnly}
             onCheckedChange={onIncluded}
           />
           <SourceButton sources={sources} />
@@ -489,6 +527,15 @@ function ParagraphRow({
             </p>
           ) : null}
         </div>
+      ) : readOnly ? (
+        <p
+          className={cn(
+            "px-2 py-1 text-sm whitespace-pre-wrap text-ink",
+            !paragraph.included && "opacity-60",
+          )}
+        >
+          {paragraph.text}
+        </p>
       ) : (
         <button
           type="button"
@@ -547,10 +594,12 @@ function SourceButton({ sources }: { sources: ReturnType<typeof letterSourceChip
 function IncludeSwitch({
   label,
   checked,
+  disabled,
   onCheckedChange,
 }: {
   label: string;
   checked: boolean;
+  disabled?: boolean;
   onCheckedChange: (included: boolean) => void;
 }) {
   const id = useId();
@@ -562,6 +611,7 @@ function IncludeSwitch({
       <Switch
         id={id}
         checked={checked}
+        disabled={disabled}
         aria-label={label}
         onCheckedChange={onCheckedChange}
       />

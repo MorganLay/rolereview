@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { strings } from "@/copy/strings";
+import { VERSION_LABEL_MAX } from "@/features/tailor/version";
 import { RESUME_TEMPLATES } from "@/lib/pdf/template";
 
 /** Stored letter caps. docs/04-DATA-MODEL.md → CoverLetterContent. */
@@ -105,6 +106,14 @@ export const setLetterTemplateSchema = z.object({
 export const markLetterSubmittedSchema = z.object({
   jobId: z.uuid(),
   letterId: z.uuid(),
+});
+
+export const setLetterLabelSchema = z.object({
+  jobId: z.uuid(),
+  letterId: z.uuid(),
+  label: z.string().trim().max(VERSION_LABEL_MAX, {
+    error: strings.jobs.workspace.labelTooLong,
+  }),
 });
 
 export type CoverLetterOptions = z.infer<typeof CoverLetterOptions>;

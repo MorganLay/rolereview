@@ -18,6 +18,11 @@ export function resolveResumeTemplate(
   return chosen;
 }
 
+/** The template stored on a submitted version. A later plan change does not rewrite it. */
+export function storedResumeTemplate(stored: string): ResumeTemplateId {
+  return parseTemplate(stored) ?? "classic";
+}
+
 function parseTemplate(value: string | null | undefined): ResumeTemplateId | null {
   if (!value) return null;
   const normalized = value.trim().toLowerCase();

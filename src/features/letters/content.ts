@@ -44,6 +44,14 @@ export type LetterWorkspaceData = {
   requirements: Requirement[];
   templateId: ResumeTemplateId;
   submitted: boolean;
+  /** Saved version name. Blank uses the company and date. */
+  label: string | null;
+  /** label, or "{Company} — {date}". */
+  title: string;
+  /** submittedAt is set. Content and template cannot change. */
+  frozen: boolean;
+  /** Calendar date of submittedAt, when this version is frozen. */
+  submittedOn: string | null;
   rating: 1 | -1 | null;
   templates: ResumeTemplateAccess;
 };

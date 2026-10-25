@@ -15,6 +15,7 @@ import {
   displayedTailorStatus,
   type JobDocuments,
 } from "./status";
+import { versionIsFrozen, versionTitle } from "./version";
 
 export type { JobDocuments };
 
@@ -31,7 +32,7 @@ export async function getJobDocuments(
     db.job.findFirst({
       where: { id: jobId, userId },
       select: {
-        submittedResumeId: true,
+        company: true,
         user: { select: { timezone: true } },
         tailoredResumes: {
           orderBy: { version: "desc" },
@@ -44,6 +45,8 @@ export async function getJobDocuments(
             matchScore: true,
             templateId: true,
             rating: true,
+            label: true,
+            submittedAt: true,
           },
         },
       },
@@ -60,7 +63,13 @@ export async function getJobDocuments(
     matchScore: resume.matchScore,
     templateId: resume.templateId,
     rating: ratingValue(resume.rating),
-    submitted: resume.id === row?.submittedResumeId,
+    submitted: versionIsFrozen(resume.submittedAt),
+    title: versionTitle({
+      label: resume.label,
+      company: row?.company ?? "",
+      createdAt: resume.createdAt,
+      timeZone,
+    }),
   }));
 
   return {
@@ -92,6 +101,9 @@ export async function getResumeWorkspace(
         status: true,
         updatedAt: true,
         templateId: true,
+        label: true,
+        submittedAt: true,
+        createdAt: true,
         content: true,
         librarySnapshot: true,
         matchReport: true,
@@ -147,6 +159,17 @@ export async function getResumeWorkspace(
       compact: true,
     }),
     submitted: row.id === row.job.submittedResumeId,
+    label: row.label,
+    title: versionTitle({
+      label: row.label,
+      company: row.job.company,
+      createdAt: row.createdAt,
+      timeZone: row.user.timezone || "America/Toronto",
+    }),
+    frozen: versionIsFrozen(row.submittedAt),
+    submittedOn: row.submittedAt
+      ? formatJobInstant(row.submittedAt.toISOString(), row.user.timezone || "America/Toronto")
+      : null,
     jobStatus: row.job.status,
     templates: {
       modern: can({ plan }, "template:modern"),

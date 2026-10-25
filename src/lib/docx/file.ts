@@ -11,6 +11,8 @@ import {
   type FileChild,
 } from "docx";
 
+import { stampDocx } from "./stamp";
+
 export const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
@@ -20,6 +22,7 @@ const LETTER_HEIGHT = convertInchesToTwip(11);
 export async function packDocx(
   children: FileChild[],
   margins: { top: number; bottom: number; left: number; right: number },
+  producedAt?: Date,
 ): Promise<Buffer> {
   const body = children.length > 0 ? children : [new Paragraph("")];
   const doc = new Document({
@@ -69,5 +72,6 @@ export async function packDocx(
       },
     ],
   });
-  return Packer.toBuffer(doc);
+  const packed = Buffer.from(await Packer.toBuffer(doc));
+  return producedAt ? stampDocx(packed, producedAt) : packed;
 }

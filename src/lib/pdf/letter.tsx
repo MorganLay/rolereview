@@ -82,15 +82,21 @@ function buildStyles(variant: ResumeTemplateId) {
 export function LetterDocument({
   model,
   variant,
+  producedAt,
 }: {
   model: LetterPdfModel;
   variant: ResumeTemplateId;
+  producedAt?: Date;
 }) {
   const styles = STYLES[variant];
   const last = model.blocks.length - 1;
 
   return (
-    <Document title="Cover letter">
+    <Document
+      title="Cover letter"
+      creationDate={producedAt}
+      modificationDate={producedAt}
+    >
       <Page size="LETTER" style={styles.page}>
         {model.blocks.map((block, index) => (
           <View key={`${index}-${block.slice(0, 24)}`} style={index === 0 ? styles.first : styles.block}>

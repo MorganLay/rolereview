@@ -139,13 +139,13 @@ test.describe("happy path", () => {
 function resumeOpenLink(page: Page) {
   return page
     .getByRole("region", { name: copy.jobs.documents.title })
-    .getByRole("link", { name: copy.jobs.documents.openVersion(1) });
+    .getByRole("link", { name: /^Open / });
 }
 
 function letterOpenLink(page: Page) {
   return page
     .getByRole("region", { name: copy.jobs.letters.title })
-    .getByRole("link", { name: copy.jobs.letters.openVersion(1) });
+    .getByRole("link", { name: /^Open / });
 }
 
 /** shadcn Button-as-Link clicks often don't run Next client navigation in Playwright. */

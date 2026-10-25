@@ -7,6 +7,7 @@ import { JobAnalysis } from "@/features/jobs/schemas";
 import { LibrarySnapshot } from "@/features/library/schemas";
 import type { Plan } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
+import { versionIsFrozen, versionTitle } from "@/features/tailor/version";
 import { resolveResumeTemplate } from "@/lib/pdf/template";
 
 import type { LetterWorkspaceData } from "./content";
@@ -31,7 +32,7 @@ export async function getJobLetters(
     db.job.findFirst({
       where: { id: jobId, userId },
       select: {
-        submittedCoverLetterId: true,
+        company: true,
         user: { select: { timezone: true } },
         coverLetters: {
           orderBy: { version: "desc" },
@@ -44,12 +45,14 @@ export async function getJobLetters(
             rating: true,
             createdAt: true,
             updatedAt: true,
+            label: true,
+            submittedAt: true,
           },
         },
         tailoredResumes: {
           where: { status: "READY" },
           orderBy: { version: "desc" },
-          select: { id: true, version: true },
+          select: { id: true, version: true, label: true, createdAt: true },
         },
       },
     }),
@@ -68,7 +71,13 @@ export async function getJobLetters(
       length: options.length,
       templateId: letter.templateId,
       rating: ratingValue(letter.rating),
-      submitted: letter.id === row?.submittedCoverLetterId,
+      submitted: versionIsFrozen(letter.submittedAt),
+      title: versionTitle({
+        label: letter.label,
+        company: row?.company ?? "",
+        createdAt: letter.createdAt,
+        timeZone,
+      }),
     };
   });
 
@@ -79,6 +88,12 @@ export async function getJobLetters(
     resumes: (row?.tailoredResumes ?? []).map((resume) => ({
       id: resume.id,
       version: resume.version,
+      title: versionTitle({
+        label: resume.label,
+        company: row?.company ?? "",
+        createdAt: resume.createdAt,
+        timeZone,
+      }),
     })),
   };
 }
@@ -109,6 +124,9 @@ export async function getLetterWorkspace(
       status: true,
       updatedAt: true,
       templateId: true,
+      label: true,
+      submittedAt: true,
+      createdAt: true,
       content: true,
       librarySnapshot: true,
       options: true,
@@ -155,6 +173,17 @@ export async function getLetterWorkspace(
       compact: true,
     }),
     submitted: row.id === row.job.submittedCoverLetterId,
+    label: row.label,
+    title: versionTitle({
+      label: row.label,
+      company: row.job.company,
+      createdAt: row.createdAt,
+      timeZone: row.user.timezone || "America/Toronto",
+    }),
+    frozen: versionIsFrozen(row.submittedAt),
+    submittedOn: row.submittedAt
+      ? formatJobInstant(row.submittedAt.toISOString(), row.user.timezone || "America/Toronto")
+      : null,
     rating: ratingValue(row.rating),
     templates: {
       modern: can({ plan }, "template:modern"),
