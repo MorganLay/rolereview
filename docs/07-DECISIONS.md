@@ -40,6 +40,16 @@ Pasting always works; scraping is brittle. The 1.2 extension captures what the u
 **D-25 — No auto-apply** · Accepted
 Contradicts the quality positioning, risks users' accounts on job boards.
 
+**D-28 — Core quality before public launch** · Accepted 2026-10-25
+- Context: 1.0 is feature-complete, but an outside UX review found contradictions (skills in the resume marked "Missing", "Not assessed" filed as missing, a future deadline looking overdue, Insights tiles and funnel counting differently, completeness shown like quality), uneven mobile layouts, and an unclear finish to the resume journey.
+- Choice: Phase Q in `06-ROADMAP.md`. No new features (including 1.1) until it's done. A private beta (T13.5a) starts mid-phase; the public launch (T13.5b) waits until the end.
+
+**D-29 — Requirement states are computed from the current resume** · Accepted 2026-10-25
+The AI's verdict at tailoring time is an input, not the answer. The match panel shows In this resume / In your library, not in this resume / Needs review / No evidence found, recomputed as the user edits. The score explains its basis and never implies a hiring probability.
+
+**D-30 — Submitted versions are frozen** · Accepted 2026-10-25
+Marking a resume or letter as submitted locks it (`submittedAt`); changes go into a new version via Create revision. The record of what was sent must not drift.
+
 ## Stack
 
 **D-02 — Next.js full-stack (server components + server actions)** · Accepted

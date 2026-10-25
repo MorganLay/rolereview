@@ -12,7 +12,9 @@
 | **M3 Walking skeleton** ⭐ | 5–7 | Posting → tailored resume → edit → PDF. **Use it for your own applications.** | ~66 h |
 | M4 Full tracker | 8–10 | Board, timeline, interviews, contacts, reminders, offers, cover letters, Insights | ~100 h |
 | M5 Monetisable | 11 | Free/Pro, Stripe, DOCX | ~110 h |
-| **M6 Launch (1.0)** | 12–13 | Marketing site, free tools, legal, prod, beta → public launch | ~138 h |
+| M6 Feature-complete 1.0 | 12–13 | Marketing site, free tools, legal, first production deploy | ~138 h (done 2026-10-23) |
+| **M6.5 Core quality** ⭐ | Q | Trustworthy match panel, frozen submitted versions, mobile fixed, clear next steps, real preview + strict fit, private beta | ~170 h |
+| **M6.9 Public launch** | Q (T13.5b) | Launch week | — |
 | M7 Release 1.1 | 14–21 | Email, gamification, interview prep kits, coach, target profiles, referrals, admin, guides | ~195 h |
 | M8 Release 1.2 | 22+ | Extension, Canadian federal mode, offers compare, annual plan | ~240 h |
 
@@ -158,13 +160,82 @@ At ~10 h/week, 1.0 is roughly a 3–4 month project. The walking skeleton comes 
 **T12.5 SEO & content plumbing:** metadata on all routes, `sitemap.ts`, `robots.ts`, JSON-LD (SoftwareApplication, FAQPage), OG images, `/about`, `/changelog` (MDX). Lighthouse SEO 100 and accessibility 100. Performance 73 and LCP 3.5 s are recorded in `09-MARKETING.md`; the 90 / 2.5 s bar stays deferred.
 **T12.6 Legal, consent & welcome email:** `/privacy`, `/terms`, Settings → Preferences (timezone, notifications, marketing consent), Resend set up + welcome email + `EmailLog`.
 
-## Phase 13 — Launch match score (~10 h)
+## Phase 13 — Launch readiness (~10 h)
 
 **T13.1 Account & trust:** data export (JSON), delete account, testimonial request on Accepted (consent form → `Testimonial`), founder note on the homepage.
 **T13.2 Hardening:** `error.tsx`/`not-found.tsx`, full security checklist, cross-user ownership audit of every route and action, rate-limit review.
 **T13.3 E2E happy path:** sign in → import fixture → job → tailored resume → letter → export → board move.
-**T13.4 Production:** prod Supabase, Vercel Pro, env vars, Stripe live + webhook, Resend domain, PostHog prod, Supabase auth URLs, a real purchase test (then refund).
-**T13.5 Beta → launch:** invite 20–50 waitlist users (free Pro), weekly feedback, fix the top issues, collect testimonials, then run the launch week from `09-MARKETING.md`.
+**T13.4 Production deploy (done 2026-10-23):** production guards, migrate-on-build, first deploy to www.rolerefine.ca. The remaining production setup moved to **T13.4b** in Phase Q.
+**T13.5 Beta → launch:** split into **T13.5a Private beta** and **T13.5b Public launch**, both in Phase Q below.
+
+---
+
+## Phase Q — Core quality (~30 h) ⭐
+
+> Added 2026-10-25 after an outside UX review (see `docs/Feedback.md` and `07-DECISIONS.md` D-28). Goal: a new user can produce a document they trust, understand why it looks that way, and keep an accurate record of what they sent. **No new features in this phase.** Every task updates the docs it touches (`02`, `04`, `05`) in the same change.
+
+### Q1 — Trust in the information
+
+**TQ.1 Requirement states (truthful match panel).** Today the match panel shows the AI's verdict frozen at tailoring time, so a skill that is in the resume can still say "Missing", and unassessed requirements are filed as missing. Replace the single verdict with four states, computed live from the current content: **In this resume** (an evidence ref is in an *included* bullet/skill, or the requirement's key term appears in included text) · **In your library, not in this resume** (evidence exists but is excluded → offer "Include") · **Needs review** (the model returned no verdict, or evidence is weak/partial) · **No evidence found**. Guard G9 now writes `verdict: "unassessed"` (add to `RequirementVerdict` in `04-DATA-MODEL.md`; read old rows whose note is "Not assessed." as unassessed). Add a short "How this is scored" popover: the score reflects your library at tailoring time, is not a hiring probability, and requirement wording varies.
+*Accept:* a requirement whose skill is in an included bullet or skill never shows "No evidence found"; excluding that bullet changes it to "In your library, not in this resume" without reloading; an unassessed requirement shows "Needs review"; unit tests cover all four states.
+
+**TQ.2 Labels and counting that agree.** (a) The automatic deadline reminder is titled "Deadline in 3 days: {company}" and shows the real deadline date; nothing says "deadline" in red until the deadline itself has passed. (b) Insights tiles and the funnel use one counting rule (documented in `04-DATA-MODEL.md` → Analytics), and a "How we count" note explains the 7-day response window. (c) Library health is renamed **Library completeness**, shown separately from a **Bullet strength** summary ("9 of 20 bullets Strong or better").
+*Accept:* seed data shows the same applied/response/interview numbers in tiles and funnel; a deadline 5 days away is not shown as overdue; 100% completeness with weak bullets reads as two clearly different facts.
+
+**TQ.3 Better writing advice.** Expand `verbs.ts` (e.g. Completed, Coordinated, Resolved, Processed, Reconciled, Maintained, Supported, Prepared), and review every fix message so advice never pushes invented numbers ("If you have a number for this, add it" — not "Add a number"). Run the meter over 40 real bullets (your own resume + eval fixtures) and fix any advice that reads mechanical or wrong.
+*Accept:* table-driven tests include the 40 bullets with expected tiers; no fix message instructs adding a metric unconditionally.
+
+**TQ.4 Summary guard.** Fix the two fabrications logged in `evals/NOTES.md` (Birchlane "three years", "worked directly with product squads"). Code check on the tailored summary: any "N years"/tenure claim must be ≤ the experience computed from snapshot dates (round down); numbers must exist in the library or be that computed tenure; otherwise revert the summary to the library's default summary (or drop the sentence) and count a revert. Tighten the prompt's summary rules. Re-run `npm run evals`.
+*Accept:* new unit tests for tenure claims; eval run recorded in `evals/NOTES.md` with no unsupported summary claims in the 5 reviewed pairs.
+
+**TQ.5 Submitted versions are frozen.** Schema: add `submittedAt DateTime?` and `label String?` to `TailoredResume` and `CoverLetter` (new migration; no new tables). "Mark as submitted" sets `submittedAt`; a submitted version opens read-only with a banner and a **Create revision** button that copies its content into a new version (no AI call, no quota). Version titles become `label` or "{Company} — {date}" instead of "v1"; label is editable.
+*Accept:* after marking submitted, edits are impossible and the exported file is byte-identical days later; Create revision makes v(n+1) with the same content; tests cover the lock.
+
+### Q2 — Mobile structure
+
+**TQ.6 Mobile shell and overflow.** No page-wide horizontal scroll on any route at 375 and 390 px (add a Playwright check: `document.documentElement.scrollWidth <= clientWidth` on every app route). Header email → compact account menu. Feedback button moves into the account menu on mobile (and off content on desktop). Check forms with the on-screen keyboard open on a real phone.
+*Accept:* the Playwright overflow check passes on all app routes; one real-phone pass recorded in `PROGRESS.md` Notes.
+
+**TQ.7 Mobile lists and job header.** Contacts become cards under `md`. Job filters collapse behind a "Filters" button so jobs show first. The job header is simplified (title, company, status, one primary action) and the "Documents is where you tailor…" explainer is removed (TQ.9 makes it unnecessary).
+*Accept:* on a phone, the first screen of /jobs shows jobs, and /contacts needs no sideways scroll.
+
+**TQ.8 Library and editor density.** From `docs/Feedback.md`: controls beside the text, wider layout on desktop, repeated per-row controls collapsed into one overflow menu on mobile, clickable weakest-bullet items that expand with an example of how to improve, larger "Default summary" heading.
+*Accept:* a 20-bullet library fits about twice as many bullets per screen on desktop as before; every action is still reachable by keyboard.
+
+### Production separation
+
+**T13.4b Separate production environment.** The rest of T13.4: `rolerefine-prod` Supabase (Canada region), Vercel Pro, per-environment `DATABASE_URL`/Stripe keys, live Stripe + webhook, Resend domain, PostHog prod, Supabase auth URLs, a real mailing address for email (CASL), then a real purchase and refund.
+*Accept:* Production, Preview and Development use different databases and Stripe keys (`vercelProductionIssues()` reports none); a live purchase upgrades and a refund works.
+
+**T13.5a Private beta (5–10 people).** Invite a small group as soon as TQ.1–TQ.8 and T13.4b are done. Free Pro. Ask each to import their real resume, tailor for 2 real postings, export, and track them, **without coaching**. Write down where they hesitate in `docs/Feedback.md`. Runs alongside Q3–Q4.
+
+### Q3 — A clear path through the product
+
+**TQ.9 State-based primary action.** Each job shows one recommended next step based on its state: Saved, no resume → **Tailor resume** · resume generated, not exported → **Review resume** · resume ready → **Preview & export** · Applied → **Log follow-up / update status** · Interviewing → **Prepare for next interview** · Offer → **Review decision date**. Same action on the board card, list row, and job header. Documents becomes clearly visible (tab label, badge with version count).
+*Accept:* a unit-tested `nextAction(job)` function; every state from the table shows the right button.
+
+**TQ.10 Dashboard with a job to do.** Rebuild the dashboard around: a compact summary strip (active, interviews, offers, urgent), **one prioritized action list** (deadlines, offer responses, interviews, follow-ups, unfinished documents; each says why it matters and links to the specific next step, not the general job page), **Continue working** (most recent resume or job in progress), and supporting context (recent activity, small weekly summary) beside the list on desktop and below it on mobile.
+*Accept:* with seed data, the top action is the most urgent dated item; no action links to a generic page when a specific one exists.
+
+### Q4 — Finishing the resume
+
+**TQ.11 Real preview and strict fit.** A Preview mode renders the actual export (PDF) with page boundaries and a page count. When length is 1 page and it overflows: auto-tighten in order (Compact spacing → contact links on one line → font step down to the template minimum), then if still over, show "Over by N lines" and suggest the least-relevant included bullets to turn off.
+*Accept:* the resume that spilled onto page 2 (`docs/Feedback.md`) fits on one page or shows the suggestion; the page count matches the downloaded PDF.
+
+**TQ.12 Save before export, identical outputs.** Every export first flushes pending autosave (or blocks with a clear message if saving failed). Save status shows Saving / Saved / Failed — Retry, and leaving the page with unsaved changes warns. Copy text, PDF and DOCX come from the same content and order; a test compares extracted text from all three. Changing the template updates the preview on screen (from `docs/Feedback.md`).
+*Accept:* edit → export immediately → file contains the edit; parity test passes.
+
+**TQ.13 Workspace navigation and recovery.** Excluded entries collapsed into "N items not included" per section; a section jump bar; **Undo** toast for deleting a bullet/entry/contact/job (5–10 s); clear loading/failed/retry states for tailoring and letters that never look like success.
+*Accept:* every delete in the app offers Undo; a forced AI failure shows a retryable failed state.
+
+### Q5 — Validate
+
+**TQ.14 Behaviour test pass.** Create `docs/QA-CHECKLIST.md` from the review's list (imperfect resume import, several postings, invented-claim check, edit → leave → return persistence, editor vs PDF vs DOCX, page breaks, links, selectable text, long documents, failures/retries/limits/slow network, a real phone) and run it. Extend the e2e happy path with: edit → navigate away → return → export contains the edit.
+*Accept:* the checklist is filled in with results; every failure becomes a fix task or a note.
+
+**TQ.15 Fix what testers hit.** Work through the top issues from T13.5a and TQ.14 in priority order (split into more tasks if needed), then decide on public launch.
+
+**T13.5b Public launch.** The original T13.5 launch week (`09-MARKETING.md`), only after Phase Q is done and the beta feedback is addressed.
 
 ---
 
