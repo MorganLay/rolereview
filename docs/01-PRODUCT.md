@@ -53,7 +53,7 @@ Inside 1.0 the **walking skeleton** (library → job → tailored resume → PDF
 | A1 | Import a resume (PDF, DOCX, paste): AI extracts entries, bullets, and skills; you review, then save | 1.0 | F/P |
 | A2 | Manual editing: profile/contact, entries (experience, projects, education, certifications, volunteer, other), bullets, skills; add, edit, delete, reorder | 1.0 | F |
 | A3 | **Bullet strength meter** (deterministic, instant): action verb, metric, length, no first person, no filler, specificity → Weak / Fair / Good / Strong / Excellent, with the specific fix to reach the next level | 1.0 | F |
-| A4 | Library health card: completeness checklist + weakest bullets | 1.0 | F |
+| A4 | Library completeness card: five checks, plus a separate bullet-strength summary and the weakest bullets | 1.0 | F |
 | A5 | **Bullet coach** (AI): stronger rewrites with `[placeholders]` for metrics you fill in; never invents numbers | 1.1 | F/P |
 | A6 | **Target profiles**: saved presets (e.g., "Data Analyst", "Frontend Developer") with preferred entries, skills, and emphasis, chosen when tailoring | 1.1 | F (1) / P (unlimited) |
 

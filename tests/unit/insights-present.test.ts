@@ -8,6 +8,7 @@ const AS_OF = new Date("2026-10-22T15:00:00.000Z");
 function metrics(partial: Partial<InsightsMetrics> = {}): InsightsMetrics {
   return {
     applied: 0,
+    responded: 0,
     response: { count: 0, of: 0, rate: null },
     interview: { count: 0, of: 0, rate: null },
     offer: { count: 0, of: 0, rate: null },
@@ -46,6 +47,7 @@ describe("insights presentation", () => {
   it("rounds rates, keeps a zero offer count, and formats the median", () => {
     const view = present({
       applied: 6,
+      responded: 5,
       response: { count: 5, of: 6, rate: 5 / 6 },
       interview: { count: 1, of: 6, rate: 1 / 6 },
       offer: { count: 0, of: 6, rate: 0 },
@@ -59,7 +61,7 @@ describe("insights presentation", () => {
       ],
     });
 
-    expect(view.kpis[1]).toMatchObject({ value: "83%", detail: "5 of 6" });
+    expect(view.kpis[1]).toMatchObject({ value: "83%", detail: "5 responded" });
     expect(view.kpis[2]).toMatchObject({ value: "17%", detail: "1 of 6" });
     expect(view.kpis[3]?.value).toBe("0");
     expect(view.kpis[4]?.value).toBe("7.3 days");

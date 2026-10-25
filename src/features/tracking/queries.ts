@@ -437,7 +437,7 @@ const reminderSelect = {
   createdAt: true,
   autoCreated: true,
   jobId: true,
-  job: { select: { title: true, company: true } },
+  job: { select: { title: true, company: true, deadline: true } },
 } as const;
 
 type ReminderRow = {
@@ -450,7 +450,7 @@ type ReminderRow = {
   createdAt: Date;
   autoCreated: boolean;
   jobId: string | null;
-  job: { title: string; company: string } | null;
+  job: { title: string; company: string; deadline: Date | null } | null;
 };
 
 function presentDueReminders(rows: ReminderRow[], now: Date, timeZone: string): ReminderView[] {
@@ -474,6 +474,7 @@ function presentOwnedReminder(row: ReminderRow, now: Date, timeZone: string): Re
       jobId: row.jobId,
       jobTitle: row.job?.title ?? null,
       jobCompany: row.job?.company ?? null,
+      jobDeadline: row.job?.deadline ?? null,
       autoCreated: row.autoCreated,
     },
     now,

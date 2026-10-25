@@ -33,7 +33,6 @@ export type DashboardRecentJob = {
 
 export type DashboardHealth = {
   percent: number;
-  belowGood: number;
 };
 
 export type DashboardData = {
@@ -125,7 +124,7 @@ export async function getDashboard(userId: string): Promise<DashboardData> {
     })),
     health:
       scored && scored.percent < HEALTH_NUDGE_BELOW
-        ? { percent: scored.percent, belowGood: scored.belowGood }
+        ? { percent: scored.percent }
         : null,
   };
 }

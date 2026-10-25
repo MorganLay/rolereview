@@ -271,7 +271,7 @@ export function JobsTable({
                   <span>
                     {row.deadlineLabel}
                     {row.deadlineNote === "soon" ? (
-                      <span className="text-destructive"> {copy.soon}</span>
+                      <span className="text-slate"> {copy.soon}</span>
                     ) : null}
                     {row.deadlineNote === "past" ? (
                       <span className="text-destructive"> {copy.past}</span>

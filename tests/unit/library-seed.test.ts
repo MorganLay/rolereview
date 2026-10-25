@@ -119,6 +119,11 @@ describe("library seed fixture", () => {
   it("scores a complete library and still names a fix on the weakest bullet", () => {
     const health = libraryHealth(asLibrary());
     expect(health.percent).toBe(100);
+    expect(health.bulletCount).toBe(EXPECTED_TIERS.length);
+    expect(health.strongOrBetter).toBe(
+      EXPECTED_TIERS.filter((tier) => tier === "strong" || tier === "excellent").length,
+    );
+    expect(health.strongOrBetter).toBeLessThan(health.bulletCount);
     expect(health.passed).toEqual([
       "profile",
       "experience",

@@ -559,7 +559,12 @@ function CardBody({
         </p>
       ) : null}
       {card.deadlineLabel ? (
-        <p className={cn("mt-1 text-xs", card.deadlineNote ? "text-destructive" : "text-slate")}>
+        <p
+          className={cn(
+            "mt-1 text-xs",
+            card.deadlineNote === "past" ? "text-destructive" : "text-slate",
+          )}
+        >
           {copy.columns.deadline} {card.deadlineLabel}
           {card.deadlineNote === "soon" ? ` ${copy.soon}` : null}
           {card.deadlineNote === "past" ? ` ${copy.past}` : null}

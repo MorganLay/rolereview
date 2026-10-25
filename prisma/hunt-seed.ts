@@ -5,6 +5,7 @@
  */
 
 import { strings } from "../src/copy/strings";
+import { deadlineReminderTitle } from "../src/features/tracking/reminders";
 import { Prisma, PrismaClient } from "../src/generated/prisma/client";
 import { JobAnalysis } from "../src/features/jobs/schemas";
 import { ProfileLinks, type LibrarySnapshot } from "../src/features/library/schemas";
@@ -307,7 +308,7 @@ async function insertSaved(tx: Tx, userId: string, clock: SeedClock, contactId: 
         create: {
           userId,
           kind: "DEADLINE",
-          title: reminderCopy.deadline,
+          title: deadlineReminderTitle("Lakeshore Civic"),
           dueAt: clock.dueToday,
           autoCreated: true,
         },

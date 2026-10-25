@@ -840,12 +840,8 @@ export const strings = {
       responses: "Responses",
       recent: "Recent jobs",
       recentEmpty: "No jobs yet.",
-      healthTitle: "Library health",
-      weakBullets: (count: number) =>
-        count === 1
-          ? "1 bullet is below Good. Strengthen it."
-          : `${count} bullets are below Good. Strengthen them.`,
-      healthLow: (percent: number) => `Library health is ${percent}%. Strengthen it.`,
+      healthTitle: "Library completeness",
+      completenessLow: (percent: number) => `Library completeness is ${percent}%.`,
     },
     library: {
       title: "Library",
@@ -1201,8 +1197,14 @@ export const strings = {
       },
     },
     health: {
-      title: "Library health",
+      title: "Library completeness",
       percent: (value: number) => `${value}% complete`,
+      strengthTitle: "Bullet strength",
+      strengthSummary: (strong: number, total: number) => {
+        if (total === 0) return "No bullets yet.";
+        const noun = total === 1 ? "bullet" : "bullets";
+        return `${strong} of ${total} ${noun} Strong or better`;
+      },
       weakestTitle: "Weakest bullets",
       checks: {
         profile: "Name, headline, location, and summary",
@@ -1871,7 +1873,8 @@ export const strings = {
       salaryPerYear: "per year",
     },
     reminder: {
-      deadline: "Application deadline",
+      deadline: "Deadline in 3 days",
+      deadlineFor: (company: string) => `Deadline in 3 days: ${company}`,
       followUp: "Follow up on your application",
       interview: "Interview tomorrow",
       thankYou: "Send a thank-you note",
@@ -2040,6 +2043,11 @@ export const strings = {
     emptyValue: "—",
     percent: (value: number) => `${value}%`,
     ofCount: (count: number, total: number) => `${count} of ${total}`,
+    respondedCount: (count: number) =>
+      count === 1 ? "1 responded" : `${count} responded`,
+    howWeCountTitle: "How we count",
+    howWeCount:
+      "Applied, Responded, Interviewed, and Offer are the same counts in the tiles and the funnel. A reply, an interview, or an offer counts as a response. An interview or an offer counts as interviewed. Response rate leaves out applications from the last 7 days, so a new application does not lower the rate.",
     oneDay: "1 day",
     days: (shown: string) => `${shown} days`,
     funnel: "Funnel",

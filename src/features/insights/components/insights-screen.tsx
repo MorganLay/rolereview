@@ -32,6 +32,10 @@ export function InsightsScreen({ data, pro }: { data: InsightsData; pro: boolean
       {data.everApplied ? (
         <>
           <KpiTiles tiles={view.kpis} />
+          <p className="max-w-xl text-sm text-slate">
+            <span className="font-medium text-ink">{copy.howWeCountTitle}. </span>
+            {copy.howWeCount}
+          </p>
           {showCharts ? (
             <>
               <FunnelSection rows={view.funnel} />

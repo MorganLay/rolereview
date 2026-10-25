@@ -92,7 +92,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Phase Q — Core quality (before public launch)
 - [x] **TQ.1** Requirement states (truthful match panel)
-- [ ] **TQ.2** Labels and counting that agree
+- [x] **TQ.2** Labels and counting that agree
 - [ ] **TQ.3** Better writing advice
 - [ ] **TQ.4** Summary guard
 - [ ] **TQ.5** Submitted versions are frozen
@@ -112,6 +112,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-25 TQ.2:** Deadline reminders read “Deadline in 3 days: {company}” and show the deadline date. Soon stays ordinary text; Overdue and red wait until that date is before today. Insights Applied, Responded, and Interviewed match the funnel (all-time seed view: 7, 5 responded, 4 of 7). The response percent still leaves out the last 7 days. Library completeness is separate from bullet strength. The signed-in library showed 100% complete and 3 of 9 bullets Strong or better.
 - **2026-10-25 TQ.1:** The match panel recomputes In this resume / In your library / Needs review / No evidence found as you edit. G9 stores unassessed, older "Not assessed." rows read the same way, and those requirements are left out of new scores. Include turns excluded evidence back on without a new tailor. The stored score does not change while you edit.
 - **2026-10-25 Phase Q:** Added after an outside UX review (D-28). T13.4 split: the code and first deploy are done; the production environment work is T13.4b, scheduled after the trust and mobile fixes and before the private beta (T13.5a). T13.5 is now T13.5a (private beta) and T13.5b (public launch). No new features until Phase Q is done.
 - **2026-10-23 T13.4:** Code is in: `vercel.json` runs `npm run db:deploy && next build`; Preview does not send mail; Production refuses a test Stripe key, a seed user id, and an http app URL. `vercelProductionIssues()` lists the Production secrets. Production deploy of `3956461` is Ready on `https://www.rolerefine.ca` after removing `SEED_USER_ID`. Team is still Hobby. `DATABASE_URL` and `STRIPE_SECRET_KEY` are still shared across Production/Preview/Development (no `rolerefine-prod` yet). Still needed: `rolerefine-prod`, Vercel Pro, live Stripe + webhook, Resend domain, PostHog prod, auth URLs, a real purchase then refund.

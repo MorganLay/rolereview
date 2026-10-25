@@ -137,8 +137,7 @@ function LibraryHealthLink({
 }: {
   health: NonNullable<DashboardData["health"]>;
 }) {
-  const body =
-    health.belowGood > 0 ? copy.weakBullets(health.belowGood) : copy.healthLow(health.percent);
+  const body = copy.completenessLow(health.percent);
   return (
     <section aria-labelledby="health-heading" className="flex flex-col gap-2">
       <h2 id="health-heading" className="text-base font-medium text-ink">

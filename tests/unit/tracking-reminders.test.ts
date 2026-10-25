@@ -29,16 +29,19 @@ vi.mock("@/lib/db", () => ({
 }));
 
 import { strings } from "@/copy/strings";
+import { formatDeadlineLabel } from "@/features/jobs/format";
 import { manualEventInstant } from "@/features/tracking/events";
 import {
   compareCompletedReminders,
   compareOpenReminders,
+  deadlineReminderTitle,
   isDueOrOverdue,
   isUpcomingInterview,
   presentReminder,
   snoozeDueAt,
   splitJobReminders,
   startOfNextLocalDay,
+  REMINDER_LIMITS,
   SNOOZE_MS,
   UPCOMING_INTERVIEW_MS,
 } from "@/features/tracking/reminders";
@@ -203,6 +206,72 @@ describe("presentReminder", () => {
     );
     expect(later.overdue).toBe(false);
     expect(later.jobLabel).toBeNull();
+  });
+
+  it("shows the real deadline and stays quiet until that date has passed", () => {
+    const now = new Date("2026-10-22T18:00:00.000Z");
+    const ahead = presentReminder(
+      {
+        id: REMINDER,
+        kind: "DEADLINE",
+        title: "Application deadline",
+        dueAt: new Date("2026-10-20T00:00:00.000Z"),
+        completedAt: null,
+        jobId: JOB,
+        jobTitle: "Editor",
+        jobCompany: "Northwind",
+        jobDeadline: new Date("2026-10-27T00:00:00.000Z"),
+        autoCreated: true,
+      },
+      now,
+      ZONE,
+    );
+    expect(ahead.title).toBe("Deadline in 3 days: Northwind");
+    expect(ahead.dueLabel).toBe(formatDeadlineLabel("2026-10-27"));
+    expect(ahead.overdue).toBe(false);
+
+    const soon = presentReminder(
+      {
+        id: REMINDER,
+        kind: "DEADLINE",
+        title: "Application deadline",
+        dueAt: new Date("2026-10-21T00:00:00.000Z"),
+        completedAt: null,
+        jobId: JOB,
+        jobTitle: "Editor",
+        jobCompany: "Northwind",
+        jobDeadline: new Date("2026-10-24T00:00:00.000Z"),
+        autoCreated: true,
+      },
+      now,
+      ZONE,
+    );
+    expect(soon.overdue).toBe(false);
+
+    const past = presentReminder(
+      {
+        id: REMINDER,
+        kind: "DEADLINE",
+        title: "Application deadline",
+        dueAt: new Date("2026-10-18T00:00:00.000Z"),
+        completedAt: null,
+        jobId: JOB,
+        jobTitle: "Editor",
+        jobCompany: "Northwind",
+        jobDeadline: new Date("2026-10-21T00:00:00.000Z"),
+        autoCreated: true,
+      },
+      now,
+      ZONE,
+    );
+    expect(past.overdue).toBe(true);
+    expect(past.dueLabel).toBe(formatDeadlineLabel("2026-10-21"));
+  });
+
+  it("cuts a long company name at the title cap", () => {
+    const title = deadlineReminderTitle("A".repeat(200));
+    expect(title.length).toBe(REMINDER_LIMITS.title);
+    expect(title.startsWith("Deadline in 3 days: ")).toBe(true);
   });
 });
 

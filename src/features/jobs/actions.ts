@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { strings } from "@/copy/strings";
 import { checkQuota, type QuotaDecision } from "@/features/billing/quota";
 import { zodFieldErrors } from "@/features/library/schemas";
+import { deadlineReminderTitle } from "@/features/tracking/reminders";
 import { Prisma } from "@/generated/prisma/client";
 import type { SessionUser } from "@/lib/auth";
 import { requireUserForAction } from "@/lib/auth";
@@ -226,7 +227,7 @@ async function insertJob(
           userId,
           jobId: job.id,
           kind: "DEADLINE",
-          title: strings.jobs.reminder.deadline,
+          title: deadlineReminderTitle(placeholders.company),
           dueAt: deadlineReminderDue(input.deadline),
           autoCreated: true,
         },
@@ -287,14 +288,18 @@ async function saveAnalysis(
   current: JobDetailColumns,
   analysis: JobAnalysis,
 ): Promise<boolean> {
+  const patch = prefillFromAnalysis(current, analysis);
   const written = await db.job.updateMany({
     where: { id: jobId, userId },
     data: {
       analysisStatus: "READY",
       analysis: toJson(analysis),
-      ...prefillFromAnalysis(current, analysis),
+      ...patch,
     },
   });
+  if (written.count > 0 && patch.company) {
+    await renameOpenDeadlineReminder(userId, jobId, patch.company);
+  }
   return written.count > 0;
 }
 
@@ -492,6 +497,7 @@ export async function updateJobIdentity(
   });
   if (written.count === 0) return fail("NOT_FOUND");
 
+  await renameOpenDeadlineReminder(user.id, data.jobId, data.company);
   revalidateJob(data.jobId);
   return ok({ id: data.jobId });
 }
@@ -512,7 +518,7 @@ export async function updateJobDetails(
   const written = await db.$transaction(async (tx) => {
     const existing = await tx.job.findFirst({
       where: { id: data.jobId, userId: user.id },
-      select: { deadline: true },
+      select: { deadline: true, company: true },
     });
     if (!existing) return false;
 
@@ -538,6 +544,7 @@ export async function updateJobDetails(
       tx,
       user.id,
       data.jobId,
+      existing.company,
       existing.deadline,
       deadline,
     );
@@ -553,6 +560,7 @@ async function syncDeadlineReminder(
   tx: DeadlineTx,
   userId: string,
   jobId: string,
+  company: string,
   previous: Date | null,
   next: Date | null,
 ): Promise<void> {
@@ -567,6 +575,7 @@ async function syncDeadlineReminder(
     completedAt: null,
     dismissedAt: null,
   };
+  const title = deadlineReminderTitle(company);
 
   if (plan.action === "dismiss") {
     await tx.reminder.updateMany({
@@ -578,7 +587,7 @@ async function syncDeadlineReminder(
 
   const moved = await tx.reminder.updateMany({
     where: open,
-    data: { dueAt: plan.dueAt },
+    data: { dueAt: plan.dueAt, title },
   });
   if (moved.count > 0) return;
 
@@ -587,10 +596,28 @@ async function syncDeadlineReminder(
       userId,
       jobId,
       kind: "DEADLINE",
-      title: strings.jobs.reminder.deadline,
+      title,
       dueAt: plan.dueAt,
       autoCreated: true,
     },
+  });
+}
+
+async function renameOpenDeadlineReminder(
+  userId: string,
+  jobId: string,
+  company: string,
+): Promise<void> {
+  await db.reminder.updateMany({
+    where: {
+      userId,
+      jobId,
+      kind: "DEADLINE",
+      autoCreated: true,
+      completedAt: null,
+      dismissedAt: null,
+    },
+    data: { title: deadlineReminderTitle(company) },
   });
 }
 

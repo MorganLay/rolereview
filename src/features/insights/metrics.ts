@@ -105,6 +105,8 @@ export type InsightsFunnelStage = {
 
 export type InsightsMetrics = {
   applied: number;
+  /** Applied jobs that reached a response. Same count as the funnel’s Responded stage. */
+  responded: number;
   response: InsightsRate;
   interview: InsightsRate;
   offer: InsightsRate;
@@ -171,6 +173,7 @@ export function insightsMetrics(
 
   return {
     applied: applied.length,
+    responded: applied.filter(reachedResponse).length,
     ...headline,
     bySource: breakdown(applied, options.now, sourceKey, [...JOB_SOURCES, SOURCE_NONE]),
     byMatchBand: breakdown(applied, options.now, bandKey, MATCH_BANDS),
@@ -190,8 +193,8 @@ function inRange(appliedAt: Date | null, start: Date | null, now: Date): applied
 
 function figures(jobs: readonly InsightsJob[], now: Date) {
   const eligible = jobs.filter((job) => responseEligible(job, now));
-  const responded = eligible.filter((job) => job.firstResponseAt !== null);
-  const interviewed = jobs.filter((job) => job.interviewCount >= 1);
+  const responded = eligible.filter(reachedResponse);
+  const interviewed = jobs.filter(reachedInterview);
   const offers = jobs.filter(reachedOffer);
   const days: number[] = [];
   for (const job of jobs) {

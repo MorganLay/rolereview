@@ -55,22 +55,28 @@ export function HealthCard({ health }: HealthCardProps) {
             );
           })}
         </ul>
-        {health.weakest.length > 0 ? (
-          <div className="grid gap-3">
-            <h3 className="text-sm font-medium text-ink">{copy.weakestTitle}</h3>
-            <ul className="grid gap-3">
-              {health.weakest.map((bullet) => (
-                <li key={bullet.id} className="grid gap-1 border-t border-line pt-3">
-                  <p className="text-sm whitespace-pre-wrap text-ink">{bullet.text}</p>
-                  <p className="text-xs text-slate">
-                    {bullet.entryTitle} · {strings.strength[bullet.tier]}
-                  </p>
-                  {bullet.fix ? <p className="text-xs text-ink">{bullet.fix}</p> : null}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+        <div className="grid gap-3 border-t border-line pt-4">
+          <h3 className="text-sm font-medium text-ink">{copy.strengthTitle}</h3>
+          <p className="text-sm text-slate tabular-nums">
+            {copy.strengthSummary(health.strongOrBetter, health.bulletCount)}
+          </p>
+          {health.weakest.length > 0 ? (
+            <div className="grid gap-3">
+              <h4 className="text-sm font-medium text-ink">{copy.weakestTitle}</h4>
+              <ul className="grid gap-3">
+                {health.weakest.map((bullet) => (
+                  <li key={bullet.id} className="grid gap-1 border-t border-line pt-3">
+                    <p className="text-sm whitespace-pre-wrap text-ink">{bullet.text}</p>
+                    <p className="text-xs text-slate">
+                      {bullet.entryTitle} · {strings.strength[bullet.tier]}
+                    </p>
+                    {bullet.fix ? <p className="text-xs text-ink">{bullet.fix}</p> : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   );

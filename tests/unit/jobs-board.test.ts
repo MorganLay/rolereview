@@ -73,4 +73,13 @@ describe("presentBoardCard", () => {
     expect(shown.deadlineNote).toBe("past");
     expect(shown.matchLabel).toBe("—");
   });
+
+  it("leaves a deadline five days away unmarked", () => {
+    const shown = presentBoardCard(
+      card({ deadline: "2026-05-07" }),
+      "America/Toronto",
+      "2026-05-02",
+    );
+    expect(shown.deadlineNote).toBeNull();
+  });
 });

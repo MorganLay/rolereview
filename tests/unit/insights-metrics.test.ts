@@ -129,8 +129,9 @@ describe("seed-like hunt", () => {
       ["INTERVIEWED", 4],
       ["OFFER", 2],
     ]);
+    expect(metrics.responded).toBe(5);
     expect(metrics.response).toEqual({ count: 5, of: 6, rate: 5 / 6 });
-    expect(metrics.interview).toEqual({ count: 2, of: 7, rate: 2 / 7 });
+    expect(metrics.interview).toEqual({ count: 4, of: 7, rate: 4 / 7 });
     expect(metrics.offer).toEqual({ count: 2, of: 7, rate: 2 / 7 });
     expect(metrics.medianDaysToResponse).toBe(8);
     expect(metrics.bySource).toEqual([]);
@@ -140,7 +141,7 @@ describe("seed-like hunt", () => {
         key: "NOT_TAILORED",
         applications: 6,
         response: { count: 5, of: 6, rate: 5 / 6 },
-        interview: { count: 2, of: 6, rate: 2 / 6 },
+        interview: { count: 4, of: 6, rate: 4 / 6 },
         offer: { count: 2, of: 6, rate: 2 / 6 },
         medianDaysToResponse: 8,
       },
@@ -158,6 +159,7 @@ describe("seed-like hunt", () => {
       ["INTERVIEWED", 1, 1 / 2],
       ["OFFER", 0, 0],
     ]);
+    expect(metrics.responded).toBe(2);
     expect(metrics.response).toEqual({ count: 2, of: 2, rate: 1 });
     expect(metrics.interview).toEqual({ count: 1, of: 3, rate: 1 / 3 });
     expect(metrics.offer).toEqual({ count: 0, of: 3, rate: 0 });
@@ -187,6 +189,7 @@ describe("response window and offer evidence", () => {
     );
 
     expect(metrics.applied).toBe(3);
+    expect(metrics.responded).toBe(2);
     expect(metrics.response).toEqual({ count: 1, of: 2, rate: 1 / 2 });
     expect(metrics.medianDaysToResponse).toBe(2);
   });
@@ -204,7 +207,8 @@ describe("response window and offer evidence", () => {
     );
 
     expect(metrics.offer).toEqual({ count: 3, of: 5, rate: 3 / 5 });
-    expect(metrics.interview.rate).toBe(0);
+    expect(metrics.interview).toEqual({ count: 3, of: 5, rate: 3 / 5 });
+    expect(metrics.responded).toBe(3);
   });
 
   it("counts two interviews on one job as one interviewed application", () => {
@@ -371,7 +375,9 @@ describe("funnel window", () => {
     );
 
     expect(metrics.applied).toBe(1);
-    expect(metrics.interview).toEqual({ count: 0, of: 1, rate: 0 });
+    expect(metrics.responded).toBe(1);
+    expect(metrics.interview).toEqual({ count: 1, of: 1, rate: 1 });
+    expect(metrics.response).toEqual({ count: 0, of: 0, rate: null });
     expect(metrics.funnel.map((stage) => [stage.key, stage.count])).toEqual([
       ["SAVED", 2],
       ["APPLIED", 1],

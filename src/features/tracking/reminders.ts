@@ -3,7 +3,14 @@
  * "Today" ends at the next local midnight. Snooze is exactly 24 hours from now.
  */
 
-import { calendarDateInTimeZone, isCalendarDate } from "@/features/jobs/dates";
+import { strings } from "@/copy/strings";
+import {
+  calendarDateInTimeZone,
+  daysUntilDeadline,
+  formatDeadlineDate,
+  isCalendarDate,
+} from "@/features/jobs/dates";
+import { formatDeadlineLabel } from "@/features/jobs/format";
 
 import { formatEventWhen } from "./events";
 import {
@@ -37,6 +44,14 @@ const KIND_SET: ReadonlySet<string> = new Set(REMINDER_KINDS);
 
 export function isReminderKind(value: string): value is ReminderKind {
   return KIND_SET.has(value);
+}
+
+/** Automatic deadline reminder. A long company name is cut at the title cap. */
+export function deadlineReminderTitle(company: string): string {
+  const name = company.trim();
+  const title =
+    name.length > 0 ? strings.jobs.reminder.deadlineFor(name) : strings.jobs.reminder.deadline;
+  return title.length <= REMINDER_LIMITS.title ? title : title.slice(0, REMINDER_LIMITS.title);
 }
 
 /** Due again 24 hours after `now`. */
@@ -162,19 +177,32 @@ export function presentReminder(
     jobId: string | null;
     jobTitle: string | null;
     jobCompany: string | null;
+    /** Job deadline for an automatic deadline reminder. Null for every other kind. */
+    jobDeadline?: Date | null;
     autoCreated: boolean;
   },
   now: Date,
   timeZone: string,
 ): ReminderView {
   const custom = row.kind === "CUSTOM";
+  const deadline =
+    row.kind === "DEADLINE" && row.autoCreated && row.jobDeadline
+      ? formatDeadlineDate(row.jobDeadline)
+      : null;
+  const today = calendarDateInTimeZone(now, timeZone);
+  const daysLeft = deadline ? daysUntilDeadline(deadline, today) : null;
   return {
     id: row.id,
     kind: row.kind,
-    title: row.title,
-    dueAt: row.dueAt.toISOString(),
-    dueLabel: formatEventWhen(row.dueAt, timeZone, custom),
-    overdue: row.completedAt === null && row.dueAt.getTime() < now.getTime(),
+    title:
+      row.kind === "DEADLINE" && row.autoCreated
+        ? deadlineReminderTitle(row.jobCompany ?? "")
+        : row.title,
+    dueAt: deadline ? `${deadline}T00:00:00.000Z` : row.dueAt.toISOString(),
+    dueLabel: deadline ? formatDeadlineLabel(deadline) : formatEventWhen(row.dueAt, timeZone, custom),
+    overdue:
+      row.completedAt === null &&
+      (deadline ? daysLeft !== null && daysLeft < 0 : row.dueAt.getTime() < now.getTime()),
     completedAt: row.completedAt?.toISOString() ?? null,
     completedLabel: row.completedAt
       ? formatEventWhen(row.completedAt, timeZone, false)

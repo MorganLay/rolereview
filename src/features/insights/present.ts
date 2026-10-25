@@ -76,7 +76,7 @@ export function presentInsights(data: Presentable): InsightsPresentation {
   return {
     kpis: [
       { label: copy.applied, value: String(data.applied), detail: null },
-      rateTile(copy.responseRate, data.response),
+      responseTile(data.responded, data.response),
       rateTile(copy.interviewRate, data.interview),
       {
         label: copy.offers,
@@ -124,6 +124,18 @@ export function formatWeekLabel(iso: string, today: string): string {
     day: "numeric",
     ...(today.startsWith(`${year}-`) ? {} : { year: "numeric" }),
   }).format(date);
+}
+
+/** The percent uses the 7-day window. The count is the funnel’s Responded number. */
+function responseTile(responded: number, rate: InsightsRate): KpiTile {
+  if (rate.rate === null && responded === 0) {
+    return { label: copy.responseRate, value: copy.emptyValue, detail: null };
+  }
+  return {
+    label: copy.responseRate,
+    value: rate.rate === null ? copy.emptyValue : copy.percent(Math.round(rate.rate * 100)),
+    detail: copy.respondedCount(responded),
+  };
 }
 
 function rateTile(label: string, rate: InsightsRate): KpiTile {

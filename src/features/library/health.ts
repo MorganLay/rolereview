@@ -31,14 +31,19 @@ export type LibraryHealth = {
   percent: number;
   passed: HealthCheckId[];
   weakest: WeakBullet[];
-  /** Bullets scoring under Good. The dashboard uses this when health is under 70%. */
+  /** Bullets scoring under Good. */
   belowGood: number;
+  /** Bullets in the library. */
+  bulletCount: number;
+  /** Score 5 or 6: Strong or Excellent. Separate from the completeness percent. */
+  strongOrBetter: number;
 };
 
 const SKILL_TARGET = 5;
 const RECENT_BULLET_TARGET = 3;
 const WEAKEST_LIMIT = 5;
 const GOOD_SCORE = 4;
+const STRONG_SCORE = 5;
 const EXCELLENT_SCORE = 6;
 
 export function libraryHealth(library: Library): LibraryHealth {
@@ -66,6 +71,7 @@ export function libraryHealth(library: Library): LibraryHealth {
     })),
   );
   const belowGood = scored.filter((item) => item.strength.score < GOOD_SCORE).length;
+  const strongOrBetter = scored.filter((item) => item.strength.score >= STRONG_SCORE).length;
   const goodCount = scored.length - belowGood;
   if (scored.length > 0 && goodCount * 2 >= scored.length) passed.push("goodBullets");
 
@@ -90,7 +96,14 @@ export function libraryHealth(library: Library): LibraryHealth {
       fix: item.strength.fixes[0] ?? null,
     }));
 
-  return { percent: passed.length * 20, passed, weakest, belowGood };
+  return {
+    percent: passed.length * 20,
+    passed,
+    weakest,
+    belowGood,
+    bulletCount: scored.length,
+    strongOrBetter,
+  };
 }
 
 function profileComplete(profile: LibraryProfile): boolean {

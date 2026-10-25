@@ -82,8 +82,9 @@ These keep the tracking data accurate without the user doing extra work. Put the
 
 | Trigger | Side effects |
 |---|---|
-| Job created | `JobEvent(CREATED)`; if `deadline` → `Reminder(DEADLINE, dueAt = deadline − 3 days)` |
-| Deadline edited | If the date changes, move each open auto `Reminder(DEADLINE)` to the new `deadline − 3 days`, or create that reminder when none is open. Clearing the deadline dismisses those open reminders. Completed or already dismissed reminders stay. |
+| Job created | `JobEvent(CREATED)`; if `deadline` → `Reminder(DEADLINE, dueAt = deadline − 3 days, title “Deadline in 3 days: {company}”)` |
+| Deadline edited | If the date changes, move each open auto `Reminder(DEADLINE)` to the new `deadline − 3 days` and refresh the title from the current company, or create that reminder when none is open. Clearing the deadline dismisses those open reminders. Completed or already dismissed reminders stay. |
+| Company edited | Each open auto `Reminder(DEADLINE)` title becomes “Deadline in 3 days: {company}”. Analysis does the same when it fills the company. |
 | Status → `APPLIED` (first time) | set `appliedAt`; `JobEvent(APPLIED)`; `Reminder(FOLLOW_UP, +7 days, autoCreated)`; if no `submittedResumeId` and a READY tailored resume exists → set it to the latest exported tailor (user can change) |
 | Status leaves `APPLIED` to SCREENING / INTERVIEWING / OFFER / REJECTED (first time) | set `firstResponseAt`; `JobEvent(RESPONSE_RECEIVED)`; complete any open auto FOLLOW_UP reminder |
 | Status → ACCEPTED / REJECTED / WITHDRAWN / NO_RESPONSE | set `closedAt`; dismiss open reminders for the job |
@@ -138,6 +139,8 @@ Caps for a contact. Blank text stores null. One role per job (`JobContact.role`)
 ### Reminder fields
 
 A reminder is stored on the account and shown in the app (bell, Dashboard Today, and the job Reminders tab). It does not schedule a device notification. The daily email is 1.1. Open means `completedAt` and `dismissedAt` are both null. Due today or overdue means `dueAt` is before the start of the next calendar day in `User.timezone`. Snooze sets `dueAt` to exactly 24×60×60×1000 ms after now and leaves the reminder open. Done sets `completedAt`. Dismiss sets `dismissedAt`. A dismissed reminder stays stored and leaves the lists. A row that is already done or dismissed cannot be changed.
+
+An automatic deadline reminder is titled “Deadline in 3 days: {company}”, cut at 120 characters. The lists show the job’s deadline date, not `dueAt`. The Overdue label, and any red deadline on the board or list, applies only when that deadline date is before today in the user’s timezone. The reminder can still appear in Today three days earlier. Soon stays ordinary text.
 
 | Field | Max | Blank saves as |
 |---|---|---|
@@ -387,21 +390,21 @@ Soonest `expiresAt` first. `expiresAt` null (no expiry) is last. The same expiry
 | Metric | Definition |
 |---|---|
 | Applied | jobs with `appliedAt` in range |
-| Response rate | applied jobs with `firstResponseAt` not null ÷ applied jobs (exclude those applied < 7 days ago) |
-| Interview rate | applied jobs with ≥ 1 `Interview` ÷ applied jobs |
+| Response rate | applied jobs that reached a response, among those applied at least 7×24 hours ago ÷ those jobs. A response is `firstResponseAt`, an interview, or an offer — the same membership as funnel Responded. The count shown beside the rate is every Responded job in range, including ones still inside the 7 days |
+| Interview rate | applied jobs that reached an interview or an offer ÷ applied jobs. Same membership as funnel Interviewed |
 | Offer rate | applied jobs that reached OFFER or ACCEPTED (event or status) ÷ applied |
 | Median days to response | median(`firstResponseAt − appliedAt`) |
 | By source | the above grouped by `source` |
 | By match score band | the above grouped by the submitted resume's `matchScore` band (<50, 50–74, 75+) |
 | Tailored vs not | grouped by `submittedResumeId` null vs not |
 | Weekly activity / streak | per ISO week (user timezone): count of meaningful actions = jobs applied with a submitted resume + FOLLOW_UP_SENT events + interviews logged + prep kits practised. Streak = consecutive weeks with ≥ 1. |
-| Funnel | Saved → Applied → Responded → Interviewed → Offer, each as a share of the previous stage |
+| Funnel | Saved → Applied → Responded → Interviewed → Offer, each as a share of the previous stage. Applied, Responded, Interviewed, and Offer use the same counts as the tiles |
 
 Hide a breakdown until it has at least 5 jobs per group, and label small samples ("based on 7 applications").
 
-T10.1 computes every row except the funnel and the activity streak. Archived jobs stay in the counts. A range of 30 or 90 days is that many calendar days in `User.timezone`, from local midnight through now. All time has no start and still stops at now. Response rate uses 7×24 hours: a job applied exactly 7 days ago still counts, and a newer application counts as Applied but not in that rate. Interview rate counts an interview with no date. Offer rate counts status Offer or Accepted, a status event into either, or an offer-received event. Median days includes every applied job in range that has `firstResponseAt`, including ones too new for the response rate. An even count averages the two middle values. No eligible jobs leaves a rate empty rather than zero. Match bands are the submitted resume's score: under 50, 50–74, and 75 or higher. No score, or no submitted resume, is left out of the bands. A missing source is its own group. A breakdown group under 5 applications is omitted. The application count on each shown group is the "based on 7 applications" label. Weekly bars count applications per Monday-start week in the user's timezone, split by whether a resume was submitted. The activity streak, including prep kits, is Release 1.1 (`momentum/streak.ts`).
+T10.1 computes every row except the funnel and the activity streak. Archived jobs stay in the counts. A range of 30 or 90 days is that many calendar days in `User.timezone`, from local midnight through now. All time has no start and still stops at now. Response rate uses 7×24 hours: a job applied exactly 7 days ago still counts, and a newer application counts as Applied and, if it already reached a response, in the Responded count, but not in the response-rate percent. Interview rate counts an interview with no date, and an offer with no interview row. Offer rate counts status Offer or Accepted, a status event into either, or an offer-received event. Median days includes every applied job in range that has `firstResponseAt`, including ones too new for the response rate. An even count averages the two middle values. No eligible jobs leaves a rate empty rather than zero. Match bands are the submitted resume's score: under 50, 50–74, and 75 or higher. No score, or no submitted resume, is left out of the bands. A missing source is its own group. A breakdown group under 5 applications is omitted. The application count on each shown group is the "based on 7 applications" label. Weekly bars count applications per Monday-start week in the user's timezone, split by whether a resume was submitted. The activity streak, including prep kits, is Release 1.1 (`momentum/streak.ts`).
 
-T10.2 draws the funnel for that same window. A job with `appliedAt` in the window is counted from Saved on. A job with no `appliedAt` is Saved only when `createdAt` is in the window; once `appliedAt` is set, `createdAt` does not place it. A later stage is included in every earlier stage, so an offer with no interview still counts as interviewed and responded, and an interview with no `firstResponseAt` still counts as responded. The Offers tile is that offer count. Response rate and interview rate stay the rows above and are not the funnel shares. The page defaults to 30 days. Free accounts see a blurred layout preview of What's working and do not receive the breakdown figures.
+T10.2 draws the funnel for that same window. A job with `appliedAt` in the window is counted from Saved on. A job with no `appliedAt` is Saved only when `createdAt` is in the window; once `appliedAt` is set, `createdAt` does not place it. A later stage is included in every earlier stage, so an offer with no interview still counts as interviewed and responded, and an interview with no `firstResponseAt` still counts as responded. Those are the same counts as the Applied, Responded, Interviewed, and Offers tiles. Interview rate divides that Interviewed count by Applied. Response rate uses that Responded membership and then leaves out applications newer than 7×24 hours; the count under the percent is still the full Responded count. A How we count note on the page explains the window. The page defaults to 30 days. Free accounts see a blurred layout preview of What's working and do not receive the breakdown figures. What's working uses the same Interviewed membership.
 
 ## Weak queries → indexes
 

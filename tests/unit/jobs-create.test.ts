@@ -8,11 +8,12 @@ const { checkQuota, runStructured, requireUserForAction, revalidatePath } =
     revalidatePath: vi.fn(),
   }));
 
-const { jobCreate, jobEventCreate, reminderCreate, jobUpdateMany, jobFindFirst } =
+const { jobCreate, jobEventCreate, reminderCreate, reminderUpdateMany, jobUpdateMany, jobFindFirst } =
   vi.hoisted(() => ({
     jobCreate: vi.fn(),
     jobEventCreate: vi.fn(),
     reminderCreate: vi.fn(),
+    reminderUpdateMany: vi.fn(),
     jobUpdateMany: vi.fn(),
     jobFindFirst: vi.fn(),
   }));
@@ -33,6 +34,7 @@ vi.mock("@/lib/db", () => ({
       updateMany: jobUpdateMany,
       findFirst: jobFindFirst,
     },
+    reminder: { updateMany: reminderUpdateMany },
   },
 }));
 
@@ -50,6 +52,7 @@ vi.mock("@/lib/auth", () => ({
 
 import { strings } from "@/copy/strings";
 import { createJob, retryAnalysis } from "@/features/jobs/actions";
+import { deadlineReminderTitle } from "@/features/tracking/reminders";
 import type { AnalyzeOutput } from "@/lib/ai/prompts/analyze";
 
 const user = { id: "user-1", plan: "FREE" as const, email: "a@b.c", role: "USER" as const };
@@ -95,6 +98,7 @@ beforeEach(() => {
   jobCreate.mockResolvedValue({ id: jobId });
   jobEventCreate.mockResolvedValue({ id: "event-1" });
   reminderCreate.mockResolvedValue({ id: "reminder-1" });
+  reminderUpdateMany.mockResolvedValue({ count: 1 });
   jobUpdateMany.mockResolvedValue({ count: 1 });
 });
 
@@ -142,7 +146,7 @@ describe("createJob", () => {
         userId: user.id,
         jobId,
         kind: "DEADLINE",
-        title: strings.jobs.reminder.deadline,
+        title: deadlineReminderTitle(placeholders.company),
         dueAt: new Date("2026-02-26T00:00:00.000Z"),
         autoCreated: true,
       },
@@ -186,6 +190,17 @@ describe("createJob", () => {
     const saved = jobUpdateMany.mock.calls[0]?.[0].data;
     expect(saved.status).toBeUndefined();
     expect(saved.analysis.requirements[0].id).toBe("r1");
+    expect(reminderUpdateMany).toHaveBeenCalledWith({
+      where: {
+        userId: user.id,
+        jobId,
+        kind: "DEADLINE",
+        autoCreated: true,
+        completedAt: null,
+        dismissedAt: null,
+      },
+      data: { title: deadlineReminderTitle("Acme") },
+    });
   });
 });
 
