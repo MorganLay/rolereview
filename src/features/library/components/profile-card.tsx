@@ -70,7 +70,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         ) : null}
 
         <div className="grid gap-1">
-          <h3 className="text-base font-medium text-ink">{copy.summary}</h3>
+          <h3 className="text-lg font-semibold text-ink">{copy.summary}</h3>
           {profile.summary ? (
             <p className="whitespace-pre-wrap text-sm text-ink">{profile.summary}</p>
           ) : (

@@ -30,7 +30,7 @@ export default async function LibraryPage() {
   const empty = library.entries.length === 0 && library.skills.length === 0;
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-6">
+    <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">
@@ -44,8 +44,10 @@ export default async function LibraryPage() {
           <Link href="/library/import">{strings.library.importResume}</Link>
         </Button>
       </div>
-      <ProfileCard profile={library.profile} />
-      <HealthCard health={libraryHealth(library)} />
+      <div className="grid items-start gap-6 xl:grid-cols-2">
+        <ProfileCard profile={library.profile} />
+        <HealthCard health={libraryHealth(library)} />
+      </div>
       {empty ? (
         <LibraryEmpty
           entries={library.entries}

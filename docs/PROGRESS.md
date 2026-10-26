@@ -98,7 +98,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **TQ.5** Submitted versions are frozen
 - [x] **TQ.6** Mobile shell and overflow
 - [x] **TQ.7** Mobile lists and job header
-- [ ] **TQ.8** Library and editor density
+- [x] **TQ.8** Library and editor density
 - [ ] **T13.4b** Separate production environment
 - [ ] **T13.5a** Private beta (5–10 people)
 - [ ] **TQ.9** State-based primary action
@@ -112,6 +112,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-26 TQ.8:** The library uses the wide content width. A bullet row is the text, the meter, and the actions on one line (28px on desktop). Under `md`, move and delete are one menu. Weakest bullets open to a shape example; a missing number stays “[a number you have]”. Default summary is 18px semibold. All 20 bullets of a test library fit in one 900px desktop viewport. A physical phone was not used.
 - **2026-10-25 TQ.7:** Under `md`, contacts are cards and job filters sit behind Filters. The job header is the title, company, status, and Open Documents. Priority and the posting URL are on Overview. At 375×667 the first screen of /jobs showed a job, and /contacts did not scroll sideways.
 - **2026-10-25 TQ.6:** Playwright overflow check passed at 375 and 390 on every signed-in app route. The header is an account icon; the email is inside the menu. Feedback is in that menu on a phone and in the sidebar on a wider screen. A 390×480 browser viewport kept the feedback form on screen. A physical phone with the on-screen keyboard was not used.
 - **2026-10-25 TQ.5:** Marking a resume or letter submitted stamps `submittedAt` and freezes that version. The card title is the saved label, or "{Company} — {date}". Create revision copies it into the next version number with no model call. A frozen PDF or DOCX keeps the file timestamp at `submittedAt`.

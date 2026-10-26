@@ -25,6 +25,8 @@ export type WeakBullet = {
   score: number;
   tier: StrengthTier;
   fix: string | null;
+  fixes: string[];
+  example: string | null;
 };
 
 export type LibraryHealth = {
@@ -94,6 +96,8 @@ export function libraryHealth(library: Library): LibraryHealth {
       score: item.strength.score,
       tier: item.strength.tier,
       fix: item.strength.fixes[0] ?? null,
+      fixes: item.strength.fixes,
+      example: item.strength.example,
     }));
 
   return {

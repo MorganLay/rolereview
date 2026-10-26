@@ -373,6 +373,23 @@ describe("strength fixes", () => {
     ).toEqual([fixes.metric(excellent)]);
   });
 
+  it("picks an example for the first failing check and none when every check passes", () => {
+    const examples = strings.strength.examples;
+    expect(bulletStrength("Hello there friend from town today.", []).example).toBe(examples.verb);
+    expect(
+      bulletStrength("Led a team of two engineers using React and SQL daily.", []).example,
+    ).toBe(examples.metricDigit);
+    expect(
+      bulletStrength("Led one of the React and SQL platform teams each week.", []).example,
+    ).toBe(examples.metric);
+    expect(bulletStrength(EXCELLENT, []).example).toBeNull();
+    expect(examples.metric).toContain("[a number you have]");
+    expect(examples.metric).not.toMatch(/\d/);
+    for (const example of Object.values(examples)) {
+      expect(example).not.toMatch(/^Add a (number|metric)\b/i);
+    }
+  });
+
   it("never tells you to add a number outright", () => {
     const samples = [
       fixes.verb("Strong"),

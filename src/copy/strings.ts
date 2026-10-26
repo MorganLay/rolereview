@@ -87,6 +87,20 @@ export const strings = {
       specific: (tier: string) =>
         `If a skill or tool belongs here, name it to reach ${tier}.`,
     },
+    examples: {
+      verb: "Led the weekly release and shipped it for the team that owned it.",
+      metric: "Led the weekly release and cut failed deploys by [a number you have].",
+      metricDigit: "“twelve clients” becomes “12 clients”.",
+      lengthShort:
+        "Built the onboarding checklist in the tool the team already used, and handed it to the new hires that month.",
+      lengthLong:
+        "Led the database migration for the payments team and kept the weekend jobs on schedule.",
+      voice: "“I led the launch” becomes “Led the launch”.",
+      filler: "“Responsible for the launch” becomes “Led the launch”.",
+      specific: "Built the weekly report in Excel for the finance team.",
+    },
+    exampleLead: "Example",
+    exampleNote: "A shape to compare with. Use numbers and tools you already have.",
   },
   shell: {
     placeholderBody: "This screen arrives in a later task.",
@@ -946,6 +960,7 @@ export const strings = {
       edit: "Edit",
       moveUp: "Move up",
       moveDown: "Move down",
+      actionsLabel: (title: string) => `Actions for ${title}`,
       present: "Present",
       month: "Month",
       year: "Year",
@@ -1036,6 +1051,7 @@ export const strings = {
       moveDown: "Move down",
       moveUpLabel: "Move bullet up",
       moveDownLabel: "Move bullet down",
+      actionsLabel: (text: string) => `Bullet actions: ${text}`,
       delete: "Delete bullet",
       count: (length: number, max: number) => `${length} / ${max}`,
       saveFailed: "Couldn’t save this bullet. Try again.",
@@ -1209,6 +1225,8 @@ export const strings = {
         return `${strong} of ${total} ${noun} Strong or better`;
       },
       weakestTitle: "Weakest bullets",
+      expand: "How to improve",
+      collapse: "Hide",
       checks: {
         profile: "Name, headline, location, and summary",
         experience: "At least one experience entry",

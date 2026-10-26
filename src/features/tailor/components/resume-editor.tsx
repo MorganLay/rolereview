@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowLeftIcon, InfoIcon, XIcon } from "lucide-react";
+import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon, InfoIcon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { RowActions } from "@/components/row-actions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -806,7 +807,7 @@ function EntryBlock({
         />
       </div>
       {entry.bullets.length > 0 ? (
-        <ul className="mt-3 grid gap-3">
+        <ul className="mt-2 grid gap-1">
           {entry.bullets.map((bullet, index) => (
             <BulletRow
               key={bullet.id}
@@ -887,18 +888,18 @@ function BulletRow({
     <li
       id={bulletElementId(bullet.id)}
       className={cn(
-        "grid scroll-mt-20 gap-1 border-t border-line pt-3",
+        "grid scroll-mt-20 gap-1 border-t border-line pt-2",
         highlighted && "bg-marigold-100",
       )}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex flex-wrap items-start gap-1.5">
         <IncludeSwitch
           label={copy.includeBullet(bullet.text)}
           checked={bullet.included}
           disabled={readOnly}
           onCheckedChange={onIncluded}
         />
-        <div className="min-w-0 flex-1">
+        <div className="min-w-32 flex-1">
           {editing ? (
             <BulletEditor
               fieldId={fieldId}
@@ -912,7 +913,7 @@ function BulletRow({
           ) : readOnly ? (
             <p
               className={cn(
-                "px-2 py-1 text-sm whitespace-pre-wrap text-ink",
+                "px-1 py-0.5 text-sm leading-5 break-words whitespace-pre-wrap text-ink",
                 !bullet.included || !entryIncluded ? "opacity-60" : "",
               )}
             >
@@ -922,7 +923,7 @@ function BulletRow({
             <button
               type="button"
               className={cn(
-                "w-full rounded-md px-2 py-1 text-left text-sm whitespace-pre-wrap text-ink hover:bg-pine-50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60",
+                "w-full rounded-md px-1 py-0.5 text-left text-sm leading-5 break-words whitespace-pre-wrap text-ink hover:bg-pine-50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60",
                 !bullet.included || !entryIncluded ? "opacity-60" : "",
               )}
               disabled={locked}
@@ -933,37 +934,36 @@ function BulletRow({
             </button>
           )}
         </div>
+        {editing ? null : <StrengthMeter text={bullet.text} skills={skills} />}
         <SourceButton title={facts.title.trim() || copy.untitled} sources={sources} />
+        {editing || readOnly ? null : (
+          <RowActions
+            menuLabel={bulletCopy.actionsLabel(bullet.text)}
+            actions={[
+              {
+                id: "up",
+                label: bulletCopy.moveUp,
+                ariaLabel: `${bulletCopy.moveUpLabel}: ${bullet.text}`,
+                icon: ChevronUpIcon,
+                disabled: locked || !canMoveUp,
+                onSelect: () => onMove("up"),
+              },
+              {
+                id: "down",
+                label: bulletCopy.moveDown,
+                ariaLabel: `${bulletCopy.moveDownLabel}: ${bullet.text}`,
+                icon: ChevronDownIcon,
+                disabled: locked || !canMoveDown,
+                onSelect: () => onMove("down"),
+              },
+            ]}
+          />
+        )}
       </div>
       {editing || !bullet.reverted ? null : (
         <p className="w-fit rounded-full bg-marigold-100 px-2 py-0.5 text-xs text-marigold-700">
           {copy.restored}
         </p>
-      )}
-      {editing ? null : <StrengthMeter text={bullet.text} skills={skills} />}
-      {editing || readOnly ? null : (
-        <div className="flex flex-wrap gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-label={`${bulletCopy.moveUpLabel}: ${bullet.text}`}
-            disabled={locked || !canMoveUp}
-            onClick={() => onMove("up")}
-          >
-            {bulletCopy.moveUp}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-label={`${bulletCopy.moveDownLabel}: ${bullet.text}`}
-            disabled={locked || !canMoveDown}
-            onClick={() => onMove("down")}
-          >
-            {bulletCopy.moveDown}
-          </Button>
-        </div>
       )}
     </li>
   );

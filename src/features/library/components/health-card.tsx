@@ -1,4 +1,4 @@
-import { CheckIcon, XIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -64,15 +64,58 @@ export function HealthCard({ health }: HealthCardProps) {
             <div className="grid gap-3">
               <h4 className="text-sm font-medium text-ink">{copy.weakestTitle}</h4>
               <ul className="grid gap-3">
-                {health.weakest.map((bullet) => (
-                  <li key={bullet.id} className="grid gap-1 border-t border-line pt-3">
-                    <p className="text-sm whitespace-pre-wrap text-ink">{bullet.text}</p>
-                    <p className="text-xs text-slate">
-                      {bullet.entryTitle} · {strings.strength[bullet.tier]}
-                    </p>
-                    {bullet.fix ? <p className="text-xs text-ink">{bullet.fix}</p> : null}
-                  </li>
-                ))}
+                {health.weakest.map((bullet) => {
+                  const more = bullet.fixes.slice(1);
+                  return (
+                    <li key={bullet.id} className="border-t border-line pt-3">
+                      <details className="group">
+                        <summary className="flex cursor-pointer list-none items-start gap-2 rounded-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm whitespace-pre-wrap text-ink">
+                              {bullet.text}
+                            </span>
+                            <span className="mt-0.5 block text-xs text-slate">
+                              {bullet.entryTitle} · {strings.strength[bullet.tier]}
+                            </span>
+                            {bullet.fix ? (
+                              <span className="mt-1 block text-xs text-ink">{bullet.fix}</span>
+                            ) : null}
+                          </span>
+                          <span className="flex shrink-0 items-center gap-1 pt-0.5 text-xs text-pine">
+                            <span className="group-open:hidden">{copy.expand}</span>
+                            <span className="hidden group-open:inline">{copy.collapse}</span>
+                            <ChevronDownIcon
+                              className="size-3.5 motion-safe:transition-transform group-open:rotate-180"
+                              aria-hidden
+                            />
+                          </span>
+                        </summary>
+                        <div className="mt-2 grid gap-2">
+                          {more.length > 0 ? (
+                            <ul className="grid gap-1">
+                              {more.map((fix) => (
+                                <li key={fix} className="text-xs text-ink">
+                                  {fix}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
+                          {bullet.example ? (
+                            <div className="grid gap-1">
+                              <p className="text-xs font-medium text-ink">
+                                {strings.strength.exampleLead}
+                              </p>
+                              <p className="text-sm whitespace-pre-wrap text-ink">
+                                {bullet.example}
+                              </p>
+                              <p className="text-xs text-slate">{strings.strength.exampleNote}</p>
+                            </div>
+                          ) : null}
+                        </div>
+                      </details>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ) : null}

@@ -33,6 +33,8 @@ export type BulletStrength = {
   tier: StrengthTier;
   passed: CheckId[];
   fixes: string[];
+  /** Shape for the first failing check. Null when every check passes. */
+  example: string | null;
 };
 
 /** Tools and domain terms that satisfy `specific` without a matching skill. */
@@ -204,11 +206,13 @@ export function bulletStrength(
   const passed = CHECK_IDS.filter((id) => !failed.has(id));
   const score = passed.length;
 
+  const first = failures[0];
   return {
     score,
     tier: tierForScore(score),
     passed,
     fixes: score >= CHECK_IDS.length ? [] : failures.map((failure) => fixFor(failure, score)),
+    example: first ? exampleFor(first) : null,
   };
 }
 
@@ -228,6 +232,24 @@ function fixFor(failure: Failure, score: number): string {
       return copy.filler(failure.phrase, tier);
     case "specific":
       return copy.specific(tier);
+  }
+}
+
+function exampleFor(failure: Failure): string {
+  const copy = strings.strength.examples;
+  switch (failure.id) {
+    case "verb":
+      return copy.verb;
+    case "metric":
+      return failure.kind === "spelled" ? copy.metricDigit : copy.metric;
+    case "length":
+      return failure.kind === "short" ? copy.lengthShort : copy.lengthLong;
+    case "voice":
+      return copy.voice;
+    case "filler":
+      return copy.filler;
+    case "specific":
+      return copy.specific;
   }
 }
 

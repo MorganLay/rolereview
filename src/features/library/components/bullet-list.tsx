@@ -1,8 +1,10 @@
 "use client";
 
+import { ChevronDownIcon, ChevronUpIcon, Trash2Icon } from "lucide-react";
 import { useEffect, useId, useOptimistic, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { RowActions } from "@/components/row-actions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -154,11 +156,11 @@ export function BulletList({ entryId, bullets, skills }: BulletListProps) {
   const showEditor = adding || editingId !== null;
 
   return (
-    <div className="mt-3 grid gap-2">
+    <div className="mt-2 grid gap-1">
       {optimisticBullets.length > 0 ? (
-        <ul className="grid gap-2">
+        <ul className="grid gap-0.5">
           {optimisticBullets.map((bullet, index) => (
-            <li key={bullet.id} className="grid gap-1">
+            <li key={bullet.id}>
               {editingId === bullet.id ? (
                 <BulletEditor
                   draft={draft}
@@ -170,53 +172,48 @@ export function BulletList({ entryId, bullets, skills }: BulletListProps) {
                   onBlur={onBlur}
                 />
               ) : (
-                <button
-                  type="button"
-                  className="w-full rounded-md px-2 py-1 text-left text-sm whitespace-pre-wrap text-ink hover:bg-pine-50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60"
-                  onClick={() => beginEdit(bullet)}
-                  disabled={pending || showEditor}
-                >
-                  <span className="sr-only">{copy.edit}: </span>
-                  {bullet.text}
-                </button>
-              )}
-              {editingId === bullet.id ? null : (
-                <StrengthMeter text={bullet.text} skills={skills} />
-              )}
-              {editingId === bullet.id ? null : (
-                <div className="flex flex-wrap gap-1">
-                  <Button
+                <div className="flex items-start gap-1">
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`${copy.moveUpLabel}: ${bullet.text}`}
-                    disabled={pending || showEditor || index === 0}
-                    onClick={() => onMove(bullet.id, "up")}
-                  >
-                    {copy.moveUp}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`${copy.moveDownLabel}: ${bullet.text}`}
-                    disabled={
-                      pending || showEditor || index === optimisticBullets.length - 1
-                    }
-                    onClick={() => onMove(bullet.id, "down")}
-                  >
-                    {copy.moveDown}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`${copy.delete}: ${bullet.text}`}
+                    className="min-w-0 flex-1 rounded-md px-1 py-0.5 text-left text-sm leading-5 break-words whitespace-pre-wrap text-ink hover:bg-pine-50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60"
+                    onClick={() => beginEdit(bullet)}
                     disabled={pending || showEditor}
-                    onClick={() => onDelete(bullet.id)}
                   >
-                    {copy.delete}
-                  </Button>
+                    <span className="sr-only">{copy.edit}: </span>
+                    {bullet.text}
+                  </button>
+                  <StrengthMeter text={bullet.text} skills={skills} />
+                  <RowActions
+                    menuLabel={copy.actionsLabel(bullet.text)}
+                    actions={[
+                      {
+                        id: "up",
+                        label: copy.moveUp,
+                        ariaLabel: `${copy.moveUpLabel}: ${bullet.text}`,
+                        icon: ChevronUpIcon,
+                        disabled: pending || showEditor || index === 0,
+                        onSelect: () => onMove(bullet.id, "up"),
+                      },
+                      {
+                        id: "down",
+                        label: copy.moveDown,
+                        ariaLabel: `${copy.moveDownLabel}: ${bullet.text}`,
+                        icon: ChevronDownIcon,
+                        disabled:
+                          pending || showEditor || index === optimisticBullets.length - 1,
+                        onSelect: () => onMove(bullet.id, "down"),
+                      },
+                      {
+                        id: "delete",
+                        label: copy.delete,
+                        ariaLabel: `${copy.delete}: ${bullet.text}`,
+                        icon: Trash2Icon,
+                        destructive: true,
+                        disabled: pending || showEditor,
+                        onSelect: () => onDelete(bullet.id),
+                      },
+                    ]}
+                  />
                 </div>
               )}
             </li>

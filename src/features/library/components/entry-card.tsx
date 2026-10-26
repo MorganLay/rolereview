@@ -1,4 +1,8 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { ChevronDownIcon, ChevronUpIcon, PencilIcon, Trash2Icon } from "lucide-react";
+
+import { RowActions } from "@/components/row-actions";
 import { strings } from "@/copy/strings";
 import { formatResumeDateRange } from "@/features/library/dates";
 
@@ -45,57 +49,68 @@ export function EntryCard({
     entry.isCurrent,
     copy.present,
   );
+  const meta = [place, dates]
+    .filter((part): part is string => part !== null && part.length > 0)
+    .join(" · ");
   const url = entry.url ? httpUrl(entry.url) : null;
 
   return (
     <article className="rounded-lg border border-line p-3" aria-labelledby={`${entry.id}-title`}>
-      <h3 id={`${entry.id}-title`} className="text-sm font-medium text-ink">
-        {entry.title}
-      </h3>
-      {place ? <p className="mt-1 text-sm text-slate">{place}</p> : null}
-      {dates ? <p className="mt-1 text-sm text-slate">{dates}</p> : null}
-      {url ? (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-1 block break-all text-sm text-pine underline-offset-4 hover:underline"
-        >
-          {url}
-        </a>
-      ) : null}
-      <BulletList entryId={entry.id} bullets={entry.bullets} skills={skills} />
-      <div className="mt-3 flex flex-wrap gap-1">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={!canMoveUp || moving}
-          onClick={() => onMove("up")}
-        >
-          {copy.moveUp}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={!canMoveDown || moving}
-          onClick={() => onMove("down")}
-        >
-          {copy.moveDown}
-        </Button>
-        <Button type="button" variant="outline" size="sm" onClick={onEdit}>
-          {copy.edit}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onDelete}
-        >
-          {strings.common.delete}
-        </Button>
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <h3 id={`${entry.id}-title`} className="text-sm font-medium text-ink">
+            {entry.title}
+          </h3>
+          {meta ? <p className="text-sm text-slate">{meta}</p> : null}
+          {url ? (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-0.5 block break-all text-sm text-pine underline-offset-4 hover:underline"
+            >
+              {url}
+            </a>
+          ) : null}
+        </div>
+        <RowActions
+          menuLabel={copy.actionsLabel(entry.title)}
+          actions={[
+            {
+              id: "up",
+              label: copy.moveUp,
+              ariaLabel: `${copy.moveUp}: ${entry.title}`,
+              icon: ChevronUpIcon,
+              disabled: !canMoveUp || moving,
+              onSelect: () => onMove("up"),
+            },
+            {
+              id: "down",
+              label: copy.moveDown,
+              ariaLabel: `${copy.moveDown}: ${entry.title}`,
+              icon: ChevronDownIcon,
+              disabled: !canMoveDown || moving,
+              onSelect: () => onMove("down"),
+            },
+            {
+              id: "edit",
+              label: copy.edit,
+              ariaLabel: `${copy.edit}: ${entry.title}`,
+              icon: PencilIcon,
+              onSelect: onEdit,
+            },
+            {
+              id: "delete",
+              label: strings.common.delete,
+              ariaLabel: `${strings.common.delete}: ${entry.title}`,
+              icon: Trash2Icon,
+              destructive: true,
+              onSelect: onDelete,
+            },
+          ]}
+        />
       </div>
+      <BulletList entryId={entry.id} bullets={entry.bullets} skills={skills} />
     </article>
   );
 }

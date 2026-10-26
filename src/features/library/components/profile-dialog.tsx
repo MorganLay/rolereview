@@ -342,6 +342,7 @@ export function ProfileDialog({ profile }: ProfileDialogProps) {
             <Field
               id="profile-summary"
               label={copy.summary}
+              labelClassName="text-base"
               hint={copy.summaryHint}
               error={fieldMessage(fields, "summary")}
               extra={
@@ -387,6 +388,7 @@ export function ProfileDialog({ profile }: ProfileDialogProps) {
 function Field({
   id,
   label,
+  labelClassName,
   hint,
   error,
   extra,
@@ -394,6 +396,7 @@ function Field({
 }: {
   id: string;
   label: string;
+  labelClassName?: string;
   hint?: string;
   error?: string;
   extra?: ReactNode;
@@ -402,7 +405,9 @@ function Field({
   return (
     <div className="grid gap-2">
       <div className="flex items-baseline justify-between gap-3">
-        <Label htmlFor={id}>{label}</Label>
+        <Label htmlFor={id} className={labelClassName}>
+          {label}
+        </Label>
         {extra ? <div id={`${id}-count`}>{extra}</div> : null}
       </div>
       {children}

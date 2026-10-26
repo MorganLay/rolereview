@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { strings } from "@/copy/strings";
 import { libraryHealth } from "@/features/library/health";
 import type { Library, LibraryBullet, LibraryEntry, LibraryProfile, LibrarySkill } from "@/features/library/types";
 
@@ -360,6 +361,8 @@ describe("libraryHealth", () => {
       tier: "weak",
     });
     expect(result.weakest[0]?.fix).toBe("Start with an action verb to reach Fair.");
+    expect(result.weakest[0]?.example).toBe(strings.strength.examples.verb);
+    expect(result.weakest[0]?.fixes[0]).toBe(result.weakest[0]?.fix);
   });
 
   it("lists at most five bullets, lowest score first", () => {

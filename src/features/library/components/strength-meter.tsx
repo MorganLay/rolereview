@@ -25,7 +25,7 @@ export function StrengthMeter({ text, skills }: StrengthMeterProps) {
       <TooltipTrigger asChild>
         <button
           type="button"
-          className="flex w-fit items-center gap-2 rounded-md px-1 py-1 text-left focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="flex w-fit shrink-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-left focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           aria-label={copy.meterAria(label, detail)}
         >
           <span className="flex gap-0.5" aria-hidden>
