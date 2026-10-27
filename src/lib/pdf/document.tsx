@@ -1,7 +1,7 @@
 /**
  * Single-column resume. Templates differ by type size and rules only.
- * A 1-page tailor can use a tighter density so the PDF stays on one Letter page.
- * docs/03-ARCHITECTURE.md → ATS rules. docs/10-BRAND.md → Exported documents.
+ * A 1-page tailor tightens spacing, then groups links, then steps type down
+ * to the template minimum. docs/03-ARCHITECTURE.md → ATS rules.
  */
 
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
@@ -268,6 +268,52 @@ const METRICS: Record<ResumeTemplateId, Record<PdfDensity, Metrics>> = {
   compact: COMPACT,
 };
 
+/** Spacing from one density and type size from another. Numbers stay on the ladder. */
+export type PdfLayout = {
+  spacing: PdfDensity;
+  type: PdfDensity;
+  groupLinks: boolean;
+};
+
+const TYPE_FIELDS = [
+  "fontSize",
+  "nameSize",
+  "headlineSize",
+  "contactSize",
+  "headingSize",
+  "metaSize",
+] as const;
+
+/** `grouped` is regular type with links on one line. Other densities match their metrics. */
+export function layoutFromDensity(density: PdfDensity): PdfLayout {
+  return {
+    spacing: density,
+    type: density,
+    groupLinks: density !== "regular",
+  };
+}
+
+export function composeMetrics(variant: ResumeTemplateId, layout: PdfLayout): Metrics {
+  const spacing = METRICS[variant][layout.spacing];
+  const type = METRICS[variant][layout.type];
+  const metrics: Metrics = { ...spacing };
+  for (const field of TYPE_FIELDS) metrics[field] = type[field];
+  return metrics;
+}
+
+/** Smallest body size already defined for this template. The fit ladder stops here. */
+export function minimumFontSize(variant: ResumeTemplateId): number {
+  let min = METRICS[variant].regular.fontSize;
+  for (const density of PDF_DENSITIES) {
+    min = Math.min(min, METRICS[variant][density].fontSize);
+  }
+  return min;
+}
+
+export function layoutFontSize(variant: ResumeTemplateId, layout: PdfLayout): number {
+  return composeMetrics(variant, layout).fontSize;
+}
+
 const STYLES = {
   classic: stylesFor("classic"),
   modern: stylesFor("modern"),
@@ -281,6 +327,18 @@ function stylesFor(variant: ResumeTemplateId): Record<PdfDensity, VariantStyle> 
     tight: buildStyles(variant, METRICS[variant].tight),
     tighter: buildStyles(variant, METRICS[variant].tighter),
   };
+}
+
+const mixedStyles = new Map<string, VariantStyle>();
+
+function stylesForLayout(variant: ResumeTemplateId, layout: PdfLayout): VariantStyle {
+  if (layout.spacing === layout.type) return STYLES[variant][layout.spacing];
+  const key = `${variant}:${layout.spacing}:${layout.type}`;
+  const cached = mixedStyles.get(key);
+  if (cached) return cached;
+  const created = buildStyles(variant, composeMetrics(variant, layout));
+  mixedStyles.set(key, created);
+  return created;
 }
 
 function buildStyles(variant: ResumeTemplateId, metrics: Metrics): VariantStyle {
@@ -338,19 +396,22 @@ export function ResumeDocument({
   model,
   variant,
   density = "regular",
+  layout,
   producedAt,
 }: {
   model: ResumePdfModel;
   variant: ResumeTemplateId;
   density?: PdfDensity;
+  /** When set, spacing, type, and link grouping come from here instead of `density`. */
+  layout?: PdfLayout;
   producedAt?: Date;
 }) {
-  const styles = STYLES[variant][density];
+  const resolved = layout ?? layoutFromDensity(density);
+  const styles = stylesForLayout(variant, resolved);
   const hasHeader = Boolean(
     model.name || model.headline || model.contact || model.links.length > 0,
   );
-  const links =
-    density === "regular" ? model.links : groupedLinks(model.links);
+  const links = resolved.groupLinks ? groupedLinks(model.links) : model.links;
 
   return (
     <Document

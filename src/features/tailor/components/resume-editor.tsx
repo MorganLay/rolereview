@@ -51,11 +51,13 @@ import { cn } from "@/lib/utils";
 import { resumeTemplateLabel } from "../template-label";
 import { MatchPanel } from "./match-panel";
 import { ExportAppliedDialog, ResumeExportBar, useResumeExport } from "./resume-export-bar";
+import { ResumePreview } from "./resume-preview";
 import { SubmittedVersionBanner, VersionNameField } from "./version-chrome";
 
 const SAVE_DELAY_MS = 1500;
 
 const copy = strings.jobs.workspace;
+const previewCopy = strings.resumePreview;
 const bulletCopy = strings.library.bullets;
 const entryCopy = strings.library.entries;
 const skillCopy = strings.library.skills;
@@ -85,6 +87,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const summaryId = useId();
   const [tab, setTab] = useState<"resume" | "match" | "export">("resume");
+  const [previewing, setPreviewing] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const pendingScroll = useRef<string | null>(null);
   const exportUi = useResumeExport({
@@ -209,6 +212,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   }, [tab, highlightId]);
 
   function showEvidence(elementId: string) {
+    setPreviewing(false);
     setHighlightId(elementId);
     setTab("resume");
     const node = document.getElementById(elementId);
@@ -448,7 +452,21 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
           {workspace.jobTitle}
         </h1>
         <p className="text-sm text-slate">{workspace.company}</p>
-        <p className="text-sm text-slate">{copy.templateLook(resumeTemplateLabel(templateId))}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-slate">{copy.templateLook(resumeTemplateLabel(templateId))}</p>
+          <Button
+            type="button"
+            variant="outline"
+            className="ml-auto"
+            aria-pressed={previewing}
+            onClick={() => {
+              setPreviewing((open) => !open);
+              setTab("resume");
+            }}
+          >
+            {previewing ? previewCopy.back : previewCopy.open}
+          </Button>
+        </div>
       </div>
 
       <div className="min-w-0 overflow-x-auto lg:hidden">
@@ -473,9 +491,13 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
           className={cn(
             "flex flex-col lg:col-span-3",
             templateId === "compact" ? "gap-4" : "gap-6",
-            tab !== "resume" && "max-lg:hidden",
+            !previewing && tab !== "resume" && "max-lg:hidden",
           )}
         >
+      {previewing ? (
+        <ResumePreview resumeId={workspace.resumeId} templateId={templateId} />
+      ) : (
+      <>
       <ProfileHeader profile={workspace.snapshot.profile} templateId={templateId} />
 
       <section className="grid gap-2" aria-labelledby={`${summaryId}-heading`}>
@@ -629,6 +651,8 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
           <p className="text-sm text-slate">{copy.skillsAllAdded}</p>
         ) : null}
       </section>
+      </>
+      )}
         </div>
         <aside
           aria-label={copy.panelLabel}

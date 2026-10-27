@@ -2155,4 +2155,17 @@ export const strings = {
     title: "Admin",
     body: "Admin tools arrive in a later release.",
   },
+  resumePreview: {
+    open: "Preview",
+    back: "Back to edit",
+    title: "Preview",
+    regionLabel: "Resume preview",
+    loading: "Preparing the preview…",
+    failed: "Couldn’t load the preview.",
+    retry: "Try again",
+    pageCount: (count: number) => (count === 1 ? "1 page" : `${count} pages`),
+    overBy: (lines: number) => (lines === 1 ? "Over by 1 line" : `Over by ${lines} lines`),
+    suggest: "Turn one of these off in the editor to fit one page.",
+    frameTitle: "Resume PDF",
+  },
 } as const;
