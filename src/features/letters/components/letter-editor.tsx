@@ -203,6 +203,8 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
   useUnsavedChangesWarning(() => !frozen && dirty(), copy.unsavedLeave);
 
   useEffect(() => {
+    // Development runs this cleanup once on mount. Reset the flag or autosave never starts.
+    unmounted.current = false;
     return () => {
       unmounted.current = true;
       if (timerRef.current) {
