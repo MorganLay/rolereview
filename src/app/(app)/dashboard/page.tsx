@@ -7,8 +7,6 @@ import { HomeSections } from "@/features/dashboard/components/home-sections";
 import { onboardingComplete } from "@/features/dashboard/metrics";
 import { completeOnboarding } from "@/features/dashboard/onboarding";
 import { getDashboard } from "@/features/dashboard/queries";
-import { TodayPanel } from "@/features/tracking/components/today-panel";
-import { listToday } from "@/features/tracking/queries";
 import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -31,10 +29,15 @@ export default async function DashboardPage() {
     justCompleted ||
     (completedAt !== null && home.asOf.getTime() - completedAt < 60_000);
   const returning = home.onboardingCompleted || justCompleted || ready;
-  const today = returning ? await listToday(user.id) : null;
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-8">
+    <div
+      className={
+        returning
+          ? "mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-8"
+          : "mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-8"
+      }
+    >
       <div>
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">
           {strings.pages.dashboard.title}
@@ -46,14 +49,7 @@ export default async function DashboardPage() {
           {strings.pages.dashboard.success}
         </p>
       ) : null}
-      {returning && today ? (
-        <>
-          <TodayPanel due={today.reminders} upcoming={today.interviews} />
-          <HomeSections home={home} />
-        </>
-      ) : (
-        <GettingStarted steps={home.steps} />
-      )}
+      {returning ? <HomeSections home={home} /> : <GettingStarted steps={home.steps} />}
     </div>
   );
 }
