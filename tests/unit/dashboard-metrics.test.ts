@@ -2,14 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   addCalendarDays,
-  dashboardNudges,
   onboardingComplete,
   onboardingSteps,
   pipelineCounts,
   recentJobs,
   thisWeek,
   weekBounds,
-  type NudgeJob,
   type WeekJob,
 } from "@/features/dashboard/metrics";
 
@@ -17,19 +15,6 @@ const ZONE = "America/Toronto";
 
 /** Thursday 22 Oct 2026, 11:00 EDT. */
 const NOW = new Date("2026-10-22T15:00:00.000Z");
-
-function job(partial: Partial<NudgeJob> & Pick<NudgeJob, "id">): NudgeJob {
-  return {
-    company: "Acme",
-    title: "Designer",
-    status: "SAVED",
-    archived: false,
-    appliedAt: null,
-    deadline: null,
-    respondBy: null,
-    ...partial,
-  };
-}
 
 function weekJob(partial: Partial<WeekJob>): WeekJob {
   return {
@@ -76,107 +61,6 @@ describe("weekBounds", () => {
     const { start, end } = weekBounds(NOW, "Not/AZone");
     expect(start.toISOString()).toBe("2026-10-19T00:00:00.000Z");
     expect(end.toISOString()).toBe("2026-10-26T00:00:00.000Z");
-  });
-});
-
-describe("dashboardNudges", () => {
-  it("includes a job that is still Applied on day 30, and leaves out day 29", () => {
-    const nudges = dashboardNudges(
-      [
-        job({
-          id: "old",
-          status: "APPLIED",
-          appliedAt: new Date("2026-09-22T16:00:00.000Z"),
-        }),
-        job({
-          id: "young",
-          status: "APPLIED",
-          appliedAt: new Date("2026-09-23T16:00:00.000Z"),
-        }),
-        job({
-          id: "moved",
-          status: "SCREENING",
-          appliedAt: new Date("2026-08-01T16:00:00.000Z"),
-        }),
-      ],
-      NOW,
-      ZONE,
-    );
-    expect(nudges.map((item) => item.jobId)).toEqual(["old"]);
-    expect(nudges[0]).toMatchObject({
-      kind: "noResponse",
-      href: "/jobs/old",
-    });
-  });
-
-  it("counts a UTC morning that is still the previous evening locally", () => {
-    const nudges = dashboardNudges(
-      [
-        job({
-          id: "evening",
-          status: "APPLIED",
-          appliedAt: new Date("2026-09-23T03:30:00.000Z"),
-        }),
-      ],
-      NOW,
-      ZONE,
-    );
-    expect(nudges.map((item) => item.jobId)).toEqual(["evening"]);
-  });
-
-  it("flags deadlines and offer dates from today through three days ahead", () => {
-    const nudges = dashboardNudges(
-      [
-        job({ id: "past", deadline: "2026-10-21" }),
-        job({ id: "today", deadline: "2026-10-22" }),
-        job({ id: "third", deadline: "2026-10-25" }),
-        job({ id: "fourth", deadline: "2026-10-26" }),
-        job({ id: "offer-past", respondBy: "2026-10-21" }),
-        job({ id: "offer", status: "OFFER", respondBy: "2026-10-24" }),
-        job({ id: "archived", archived: true, deadline: "2026-10-22" }),
-      ],
-      NOW,
-      ZONE,
-    );
-    expect(nudges.map((item) => `${item.kind}:${item.jobId}`)).toEqual([
-      "deadline:today",
-      "deadline:third",
-      "offer:offer",
-    ]);
-    expect(nudges.find((item) => item.jobId === "offer")?.href).toBe(
-      "/jobs/offer?tab=offer",
-    );
-  });
-
-  it("lists the oldest unanswered application first, then the soonest date", () => {
-    const nudges = dashboardNudges(
-      [
-        job({
-          id: "b",
-          status: "APPLIED",
-          appliedAt: new Date("2026-09-01T16:00:00.000Z"),
-          deadline: "2026-10-24",
-        }),
-        job({
-          id: "a",
-          status: "APPLIED",
-          appliedAt: new Date("2026-08-01T16:00:00.000Z"),
-          deadline: "2026-10-22",
-        }),
-      ],
-      NOW,
-      ZONE,
-    );
-    expect(nudges.map((item) => `${item.kind}:${item.jobId}`)).toEqual([
-      "noResponse:a",
-      "noResponse:b",
-      "deadline:a",
-      "deadline:b",
-    ]);
-  });
-
-  it("returns nothing for an empty list", () => {
-    expect(dashboardNudges([], NOW, ZONE)).toEqual([]);
   });
 });
 
