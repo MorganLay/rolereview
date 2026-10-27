@@ -1,7 +1,6 @@
 "use client";
 
 import { useId, useState, type FormEvent, type MouseEvent } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, Star } from "lucide-react";
 import { toast } from "sonner";
@@ -49,8 +48,10 @@ import { strings } from "@/copy/strings";
 import { cn } from "@/lib/utils";
 import type { FieldErrors } from "@/lib/result";
 
+import type { LatestReadyResume } from "../next-action";
 import { CloseJobDialog } from "./close-job-dialog";
 import { AcceptedCelebration } from "./accepted-celebration";
+import { JobNextActionLink } from "./job-next-action";
 import {
   deleteJob,
   setJobArchived,
@@ -67,7 +68,6 @@ import {
 } from "../schemas";
 
 const copy = strings.jobs.detail;
-const documentsCopy = strings.jobs.documents;
 
 type JobHeaderProps = {
   jobId: string;
@@ -78,6 +78,9 @@ type JobHeaderProps = {
   status: JobStatusValue;
   archived: boolean;
   offerTabVisible: boolean;
+  analysisReady: boolean;
+  latestReadyResume: LatestReadyResume | null;
+  hasOffer: boolean;
 };
 
 type HeaderOverlay = {
@@ -294,9 +297,16 @@ export function JobHeader(props: JobHeaderProps) {
             </SelectContent>
           </Select>
         </div>
-        <Button asChild className="w-full sm:w-auto">
-          <Link href={`/jobs/${props.jobId}?tab=documents`}>{documentsCopy.promptAction}</Link>
-        </Button>
+        <JobNextActionLink
+          input={{
+            jobId: props.jobId,
+            status,
+            analysisReady: props.analysisReady,
+            latestReadyResume: props.latestReadyResume,
+            hasOffer: props.hasOffer,
+          }}
+          className="w-full sm:w-auto"
+        />
       </div>
 
       <EditDetailsDialog

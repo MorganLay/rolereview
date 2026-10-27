@@ -23,6 +23,7 @@ import type { InterviewView } from "@/features/tracking/interviews";
 import type { OfferView } from "@/features/tracking/offers";
 import type { ReminderView } from "@/features/tracking/reminders";
 
+import { newestReadyResume, readyVersionCount } from "../next-action";
 import type { JobPageData } from "../queries";
 import type { Requirement } from "../schemas";
 import { JobAnalysisControls } from "./job-analysis-controls";
@@ -85,6 +86,16 @@ export function JobResult({
   showOffer,
 }: JobResultProps) {
   const ready = job.analysisStatus === "READY";
+  const latestReadyResume = newestReadyResume(
+    documents.versions
+      .filter((version) => version.status === "READY")
+      .map((version) => ({
+        id: version.id,
+        version: version.version,
+        exported: version.exported,
+      })),
+  );
+  const documentCount = readyVersionCount(documents.versions, letters.versions);
   const must = job.requirements.filter((item) => item.importance === "must");
   const nice = job.requirements.filter((item) => item.importance === "nice");
 
@@ -99,6 +110,9 @@ export function JobResult({
         status={job.status}
         archived={job.archived}
         offerTabVisible={showOffer}
+        analysisReady={ready}
+        latestReadyResume={latestReadyResume}
+        hasOffer={offer !== null}
       />
 
       {job.analysisStatus === "PENDING" ? (
@@ -121,6 +135,7 @@ export function JobResult({
         initialTab={initialTab}
         hideAuto={hideAuto}
         showOffer={showOffer}
+        documentCount={documentCount}
       >
         <TabsContent value="overview" className="flex flex-col gap-6 pt-4">
           {ready && job.summary ? (

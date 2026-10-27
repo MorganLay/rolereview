@@ -16,6 +16,9 @@ function card(partial: Partial<BoardCardRecord> = {}): BoardCardRecord {
     boardOrder: 0,
     nextKind: null,
     nextAt: null,
+    analysisReady: true,
+    latestReadyResume: null,
+    hasOffer: false,
     ...partial,
   };
 }

@@ -2,6 +2,7 @@ import { strings } from "@/copy/strings";
 
 import { deadlineUrgency } from "./dates";
 import type { JobListRecord } from "./list-params";
+import type { LatestReadyResume } from "./next-action";
 import type { JobStatusValue } from "./schemas";
 
 const copy = strings.jobs.result;
@@ -72,6 +73,9 @@ export type BoardCardRecord = {
   boardOrder: number;
   nextKind: BoardCueKind | null;
   nextAt: string | null;
+  analysisReady: boolean;
+  latestReadyResume: LatestReadyResume | null;
+  hasOffer: boolean;
 };
 
 export type BoardCardDisplay = {
@@ -88,6 +92,9 @@ export type BoardCardDisplay = {
   boardOrder: number;
   nextKind: BoardCueKind | null;
   nextLabel: string | null;
+  analysisReady: boolean;
+  latestReadyResume: LatestReadyResume | null;
+  hasOffer: boolean;
 };
 
 export function presentBoardCard(
@@ -111,6 +118,9 @@ export function presentBoardCard(
     boardOrder: card.boardOrder,
     nextKind: card.nextKind,
     nextLabel: nextLabel === board.emptyValue ? null : nextLabel,
+    analysisReady: card.analysisReady,
+    latestReadyResume: card.latestReadyResume,
+    hasOffer: card.hasOffer,
   };
 }
 
@@ -126,6 +136,9 @@ export type JobListDisplay = {
   deadlineLabel: string | null;
   deadlineNote: "soon" | "past" | null;
   archived: boolean;
+  analysisReady: boolean;
+  latestReadyResume: LatestReadyResume | null;
+  hasOffer: boolean;
 };
 
 export function presentJobListRow(
@@ -146,6 +159,9 @@ export function presentJobListRow(
     deadlineLabel: row.deadline ? formatDeadlineLabel(row.deadline) : null,
     deadlineNote: urgency === "soon" || urgency === "past" ? urgency : null,
     archived: row.archived,
+    analysisReady: row.analysisReady,
+    latestReadyResume: row.latestReadyResume,
+    hasOffer: row.hasOffer,
   };
 }
 

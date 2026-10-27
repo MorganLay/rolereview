@@ -42,7 +42,11 @@ Contradicts the quality positioning, risks users' accounts on job boards.
 
 **D-28 — Core quality before public launch** · Accepted 2026-10-25
 - Context: 1.0 is feature-complete, but an outside UX review found contradictions (skills in the resume marked "Missing", "Not assessed" filed as missing, a future deadline looking overdue, Insights tiles and funnel counting differently, completeness shown like quality), uneven mobile layouts, and an unclear finish to the resume journey.
-- Choice: Phase Q in `06-ROADMAP.md`. No new features (including 1.1) until it's done. A private beta (T13.5a) starts mid-phase; the public launch (T13.5b) waits until the end.
+- Choice: Phase Q in `06-ROADMAP.md`. No 1.1 features until it is done. The public launch (T13.5b) waits until the end. Updated 2026-10-26 by D-31: the private beta starts after Phase S and the production split, not midway through Q3.
+
+**D-31 — Production split after a week of use** · Accepted 2026-10-26
+- Context: T13.4b was next in line, before Q3 and Q4. The live site can stay on the shared database while more of the product is built and used.
+- Choice: Build TQ.9–TQ.13 next, and use the app on your own search that same week. Phase S then turns that week's notes into feature changes and bug fixes, and finishes them before T13.4b. The private beta (T13.5a) starts after Phase S and T13.4b.
 
 **D-29 — Requirement states are computed from the current resume** · Accepted 2026-10-25
 The AI's verdict at tailoring time is an input, not the answer. The match panel shows In this resume / In your library, not in this resume / Needs review / No evidence found, recomputed as the user edits. The score explains its basis and never implies a hiring probability.

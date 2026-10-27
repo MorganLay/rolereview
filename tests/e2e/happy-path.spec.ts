@@ -76,7 +76,7 @@ test.describe("happy path", () => {
 
     await openHref(
       page,
-      page.getByRole("link", { name: copy.jobs.documents.promptAction }),
+      page.getByRole("link", { name: copy.jobs.nextAction.tailor }),
     );
     await expect(page).toHaveURL(/tab=documents/, { timeout: 15_000 });
     await expect(page.getByRole("button", { name: copy.actions.tailorResume })).toBeEnabled({

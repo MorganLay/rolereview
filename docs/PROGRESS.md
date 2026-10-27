@@ -99,19 +99,27 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **TQ.6** Mobile shell and overflow
 - [x] **TQ.7** Mobile lists and job header
 - [x] **TQ.8** Library and editor density
-- [ ] **T13.4b** Separate production environment
-- [ ] **T13.5a** Private beta (5–10 people)
-- [ ] **TQ.9** State-based primary action
+- [x] **TQ.9** State-based primary action
 - [ ] **TQ.10** Dashboard with a job to do
 - [ ] **TQ.11** Real preview and strict fit
 - [ ] **TQ.12** Save before export, identical outputs
 - [ ] **TQ.13** Workspace navigation and recovery
+
+## Phase S — Revisions from this week
+- [ ] **TS.1** Turn the week's notes into tasks
+- Further **TS.*** tasks are added by TS.1. T13.4b waits until they are ticked.
+
+## Production and launch
+- [ ] **T13.4b** Separate production environment
+- [ ] **T13.5a** Private beta (5–10 people)
 - [ ] **TQ.14** Behaviour test pass
 - [ ] **TQ.15** Fix what testers hit
 - [ ] **T13.5b** Public launch
 
 ## Notes
 
+- **2026-10-27 TQ.9:** Each job has one next step from `nextAction`. Screening follows Applied. Accepted opens the offer only when one is saved. Rejected, Withdrawn, and No response have no button. The same action is on the header, the board card, and the company cell in the list. Documents shows a badge of ready resume and letter versions, hidden at zero. Preview & export opens that resume; a real PDF preview stays on TQ.11. A signed-in click-through was not done.
+- **2026-10-26 D-31:** T13.4b is no longer in progress. TQ.9–TQ.13 come first. While those are built, use the app and log changes in `docs/Feedback.md`. Phase S (TS.1, then one task per remaining note) finishes before the production split. The private beta starts after Phase S and T13.4b. `www.rolerefine.ca` stays on the shared database until then.
 - **2026-10-26 TQ.8:** The library uses the wide content width. A bullet row is the text, the meter, and the actions on one line (28px on desktop). Under `md`, move and delete are one menu. Weakest bullets open to a shape example; a missing number stays “[a number you have]”. Default summary is 18px semibold. All 20 bullets of a test library fit in one 900px desktop viewport. A physical phone was not used.
 - **2026-10-25 TQ.7:** Under `md`, contacts are cards and job filters sit behind Filters. The job header is the title, company, status, and Open Documents. Priority and the posting URL are on Overview. At 375×667 the first screen of /jobs showed a job, and /contacts did not scroll sideways.
 - **2026-10-25 TQ.6:** Playwright overflow check passed at 375 and 390 on every signed-in app route. The header is an account icon; the email is inside the menu. Feedback is in that menu on a phone and in the sidebar on a wider screen. A 390×480 browser viewport kept the feedback form on screen. A physical phone with the on-screen keyboard was not used.

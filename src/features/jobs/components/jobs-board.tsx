@@ -46,6 +46,7 @@ import { cn } from "@/lib/utils";
 import { moveJob } from "../actions";
 import { boardInsertIndex, dragInsertIndex, planColumnMove } from "../board-order";
 import type { BoardCardDisplay } from "../format";
+import { JobNextActionLink } from "./job-next-action";
 import {
   BOARD_STAGES,
   CLOSED_JOB_STATUSES,
@@ -570,6 +571,18 @@ function CardBody({
           {card.deadlineNote === "past" ? ` ${copy.past}` : null}
         </p>
       ) : null}
+      <JobNextActionLink
+        input={{
+          jobId: card.id,
+          status: card.status,
+          analysisReady: card.analysisReady,
+          latestReadyResume: card.latestReadyResume,
+          hasOffer: card.hasOffer,
+        }}
+        size="sm"
+        stopPointer
+        className="h-auto w-full whitespace-normal"
+      />
     </div>
   );
 }

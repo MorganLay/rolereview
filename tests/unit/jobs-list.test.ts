@@ -30,6 +30,9 @@ function row(partial: Partial<JobListRecord> & Pick<JobListRecord, "id">): JobLi
     updatedAt: "2026-01-01T00:00:00.000Z",
     deadline: null,
     archived: false,
+    analysisReady: true,
+    latestReadyResume: null,
+    hasOffer: false,
     ...partial,
   };
 }

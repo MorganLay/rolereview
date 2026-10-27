@@ -13,7 +13,7 @@
 | M4 Full tracker | 8–10 | Board, timeline, interviews, contacts, reminders, offers, cover letters, Insights | ~100 h |
 | M5 Monetisable | 11 | Free/Pro, Stripe, DOCX | ~110 h |
 | M6 Feature-complete 1.0 | 12–13 | Marketing site, free tools, legal, first production deploy | ~138 h (done 2026-10-23) |
-| **M6.5 Core quality** ⭐ | Q | Trustworthy match panel, frozen submitted versions, mobile fixed, clear next steps, real preview + strict fit, private beta | ~170 h |
+| **M6.5 Core quality** ⭐ | Q, then S | Trustworthy match panel, frozen submitted versions, mobile fixed, clear next steps, real preview + strict fit, revisions from a week of use, then the production split and private beta | ~170 h |
 | **M6.9 Public launch** | Q (T13.5b) | Launch week | — |
 | M7 Release 1.1 | 14–21 | Email, gamification, interview prep kits, coach, target profiles, referrals, admin, guides | ~195 h |
 | M8 Release 1.2 | 22+ | Extension, Canadian federal mode, offers compare, annual plan | ~240 h |
@@ -165,14 +165,14 @@ At ~10 h/week, 1.0 is roughly a 3–4 month project. The walking skeleton comes 
 **T13.1 Account & trust:** data export (JSON), delete account, testimonial request on Accepted (consent form → `Testimonial`), founder note on the homepage.
 **T13.2 Hardening:** `error.tsx`/`not-found.tsx`, full security checklist, cross-user ownership audit of every route and action, rate-limit review.
 **T13.3 E2E happy path:** sign in → import fixture → job → tailored resume → letter → export → board move.
-**T13.4 Production deploy (done 2026-10-23):** production guards, migrate-on-build, first deploy to www.rolerefine.ca. The remaining production setup moved to **T13.4b** in Phase Q.
+**T13.4 Production deploy (done 2026-10-23):** production guards, migrate-on-build, first deploy to www.rolerefine.ca. The remaining production setup is **T13.4b**, after Phase S.
 **T13.5 Beta → launch:** split into **T13.5a Private beta** and **T13.5b Public launch**, both in Phase Q below.
 
 ---
 
 ## Phase Q — Core quality (~30 h) ⭐
 
-> Added 2026-10-25 after an outside UX review (see `docs/Feedback.md` and `07-DECISIONS.md` D-28). Goal: a new user can produce a document they trust, understand why it looks that way, and keep an accurate record of what they sent. **No new features in this phase.** Every task updates the docs it touches (`02`, `04`, `05`) in the same change.
+> Added 2026-10-25 after an outside UX review (see `docs/Feedback.md` and `07-DECISIONS.md` D-28). Goal: a new user can produce a document they trust, understand why it looks that way, and keep an accurate record of what they sent. **No 1.1 features in this phase.** Every task updates the docs it touches (`02`, `04`, `05`) in the same change. Q3 and Q4 are next. While you build them, use the app on your own search and append what you would change to `docs/Feedback.md`. Phase S turns that week into tasks. The production split (T13.4b) waits until Phase S is done (D-31).
 
 ### Q1 — Trust in the information
 
@@ -202,13 +202,6 @@ At ~10 h/week, 1.0 is roughly a 3–4 month project. The walking skeleton comes 
 **TQ.8 Library and editor density.** From `docs/Feedback.md`: controls beside the text, wider layout on desktop, repeated per-row controls collapsed into one overflow menu on mobile, clickable weakest-bullet items that expand with an example of how to improve, larger "Default summary" heading.
 *Accept:* a 20-bullet library fits about twice as many bullets per screen on desktop as before; every action is still reachable by keyboard.
 
-### Production separation
-
-**T13.4b Separate production environment.** The rest of T13.4: `rolerefine-prod` Supabase (Canada region), Vercel Pro, per-environment `DATABASE_URL`/Stripe keys, live Stripe + webhook, Resend domain, PostHog prod, Supabase auth URLs, a real mailing address for email (CASL), then a real purchase and refund.
-*Accept:* Production, Preview and Development use different databases and Stripe keys (`vercelProductionIssues()` reports none); a live purchase upgrades and a refund works.
-
-**T13.5a Private beta (5–10 people).** Invite a small group as soon as TQ.1–TQ.8 and T13.4b are done. Free Pro. Ask each to import their real resume, tailor for 2 real postings, export, and track them, **without coaching**. Write down where they hesitate in `docs/Feedback.md`. Runs alongside Q3–Q4.
-
 ### Q3 — A clear path through the product
 
 **TQ.9 State-based primary action.** Each job shows one recommended next step based on its state: Saved, no resume → **Tailor resume** · resume generated, not exported → **Review resume** · resume ready → **Preview & export** · Applied → **Log follow-up / update status** · Interviewing → **Prepare for next interview** · Offer → **Review decision date**. Same action on the board card, list row, and job header. Documents becomes clearly visible (tab label, badge with version count).
@@ -228,14 +221,30 @@ At ~10 h/week, 1.0 is roughly a 3–4 month project. The walking skeleton comes 
 **TQ.13 Workspace navigation and recovery.** Excluded entries collapsed into "N items not included" per section; a section jump bar; **Undo** toast for deleting a bullet/entry/contact/job (5–10 s); clear loading/failed/retry states for tailoring and letters that never look like success.
 *Accept:* every delete in the app offers Undo; a forced AI failure shows a retryable failed state.
 
-### Q5 — Validate
+### S — Revisions from this week
+
+> Added 2026-10-26 (D-31). You are using RoleRefine while building Q3 and Q4. This phase is the feature changes and bugs from that week, worked through before any separate production environment. Log as you go in `docs/Feedback.md`. Do not pull in 1.1 work (scraping, prep kits, bullet coach, and the rest of Release 1.1 stay there). Anything already specified as TQ.9–TQ.13 stays in that task.
+
+**TS.1 Turn the week's notes into tasks.** Read this week's notes in `docs/Feedback.md`. Add one task to this phase, in `06-ROADMAP.md` and `docs/PROGRESS.md`, for each feature change or bug you still want, in the order you will do them. Each task keeps the usual shape: what changes, and how you will know it is done. Note items that TQ.9–TQ.13 already cover, and items that wait for 1.1, and do not add those as tasks.
+*Accept:* every remaining note from the week is either a task in Phase S or a one-line deferral; T13.4b is still unticked.
+
+Phase S tasks added by TS.1 are done in order. **T13.4b does not start until they are ticked.**
+
+### Production separation
+
+**T13.4b Separate production environment.** After Phase S. The rest of T13.4: `rolerefine-prod` Supabase (Canada region), Vercel Pro, per-environment `DATABASE_URL`/Stripe keys, live Stripe + webhook, Resend domain, PostHog prod, Supabase auth URLs, a real mailing address for email (CASL), then a real purchase and refund. Until then, `www.rolerefine.ca` stays on the current shared database and test Stripe keys.
+*Accept:* Production, Preview and Development use different databases and Stripe keys (`vercelProductionIssues()` reports none); a live purchase upgrades and a refund works.
+
+**T13.5a Private beta (5–10 people).** Invite a small group after Phase S and T13.4b. Free Pro. Ask each to import their real resume, tailor for 2 real postings, export, and track them, **without coaching**. Write down where they hesitate in `docs/Feedback.md`.
+
+### Q6 — Validate
 
 **TQ.14 Behaviour test pass.** Create `docs/QA-CHECKLIST.md` from the review's list (imperfect resume import, several postings, invented-claim check, edit → leave → return persistence, editor vs PDF vs DOCX, page breaks, links, selectable text, long documents, failures/retries/limits/slow network, a real phone) and run it. Extend the e2e happy path with: edit → navigate away → return → export contains the edit.
 *Accept:* the checklist is filled in with results; every failure becomes a fix task or a note.
 
 **TQ.15 Fix what testers hit.** Work through the top issues from T13.5a and TQ.14 in priority order (split into more tasks if needed), then decide on public launch.
 
-**T13.5b Public launch.** The original T13.5 launch week (`09-MARKETING.md`), only after Phase Q is done and the beta feedback is addressed.
+**T13.5b Public launch.** The original T13.5 launch week (`09-MARKETING.md`), only after Phase Q, Phase S, and the beta feedback are done.
 
 ---
 

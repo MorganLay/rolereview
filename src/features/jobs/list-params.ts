@@ -1,3 +1,4 @@
+import type { LatestReadyResume } from "./next-action";
 import {
   JOB_SOURCES,
   JOB_STATUSES,
@@ -55,6 +56,9 @@ export type JobListRecord = {
   updatedAt: string;
   deadline: string | null;
   archived: boolean;
+  analysisReady: boolean;
+  latestReadyResume: LatestReadyResume | null;
+  hasOffer: boolean;
 };
 
 const sorts: ReadonlySet<string> = new Set(JOB_LIST_SORTS);

@@ -15,6 +15,7 @@ import { canRetryAnalysis, displayedAnalysisStatus } from "./analyze";
 import { formatDeadlineDate } from "./dates";
 import { earlierBoardCue, type BoardCardRecord } from "./format";
 import type { JobListQuery, JobListRecord } from "./list-params";
+import { newestReadyResume, type LatestReadyResume } from "./next-action";
 import {
   JobAnalysis,
   type JobAnalysis as JobAnalysisData,
@@ -79,31 +80,35 @@ export async function listJobs(
         appliedAt: true,
         updatedAt: true,
         deadline: true,
-        tailoredResumes: {
-          where: { status: "READY", matchScore: { not: null } },
-          orderBy: { matchScore: "desc" },
-          take: 1,
-          select: { matchScore: true },
-        },
+        analysisStatus: true,
+        offer: { select: { id: true } },
+        tailoredResumes: readyResumeSelect,
       },
     }),
   ]);
 
+  const now = new Date();
   return {
     timeZone: owner?.timezone ?? "America/Toronto",
     total,
-    jobs: rows.map((row) => ({
-      id: row.id,
-      company: row.company,
-      title: row.title,
-      status: row.status,
-      priority: row.priority,
-      matchScore: row.tailoredResumes[0]?.matchScore ?? null,
-      appliedAt: row.appliedAt ? row.appliedAt.toISOString() : null,
-      updatedAt: row.updatedAt.toISOString(),
-      deadline: row.deadline ? formatDeadlineDate(row.deadline) : null,
-      archived: row.archivedAt !== null,
-    })),
+    jobs: rows.map((row) => {
+      const steps = resumeSteps(row.tailoredResumes);
+      return {
+        id: row.id,
+        company: row.company,
+        title: row.title,
+        status: row.status,
+        priority: row.priority,
+        matchScore: steps.matchScore,
+        appliedAt: row.appliedAt ? row.appliedAt.toISOString() : null,
+        updatedAt: row.updatedAt.toISOString(),
+        deadline: row.deadline ? formatDeadlineDate(row.deadline) : null,
+        archived: row.archivedAt !== null,
+        analysisReady: displayedAnalysisStatus(row.analysisStatus, row.updatedAt, now) === "READY",
+        latestReadyResume: steps.latestReadyResume,
+        hasOffer: row.offer !== null,
+      };
+    }),
   };
 }
 
@@ -138,12 +143,10 @@ export async function listBoardJobs(
         deadline: true,
         boardOrder: true,
         submittedResumeId: true,
-        tailoredResumes: {
-          where: { status: "READY", matchScore: { not: null } },
-          orderBy: { matchScore: "desc" },
-          take: 1,
-          select: { matchScore: true },
-        },
+        analysisStatus: true,
+        updatedAt: true,
+        offer: { select: { id: true } },
+        tailoredResumes: readyResumeSelect,
         reminders: {
           where: { completedAt: null, dismissedAt: null },
           orderBy: { dueAt: "asc" },
@@ -168,21 +171,60 @@ export async function listBoardJobs(
         row.reminders[0]?.dueAt.toISOString() ?? null,
         row.interviews[0]?.scheduledAt?.toISOString() ?? null,
       );
+      const steps = resumeSteps(row.tailoredResumes);
       return {
         id: row.id,
         company: row.company,
         title: row.title,
         status: row.status,
         priority: row.priority,
-        matchScore: row.tailoredResumes[0]?.matchScore ?? null,
+        matchScore: steps.matchScore,
         submitted: row.submittedResumeId !== null,
         deadline: row.deadline ? formatDeadlineDate(row.deadline) : null,
         archived: row.archivedAt !== null,
         boardOrder: row.boardOrder,
         nextKind: cue?.kind ?? null,
         nextAt: cue?.at ?? null,
+        analysisReady: displayedAnalysisStatus(row.analysisStatus, row.updatedAt, now) === "READY",
+        latestReadyResume: steps.latestReadyResume,
+        hasOffer: row.offer !== null,
       };
     }),
+  };
+}
+
+const readyResumeSelect = {
+  where: { status: "READY" as const },
+  select: {
+    id: true,
+    version: true,
+    matchScore: true,
+    exportedAt: true,
+  },
+};
+
+function resumeSteps(
+  resumes: {
+    id: string;
+    version: number;
+    matchScore: number | null;
+    exportedAt: Date | null;
+  }[],
+): { matchScore: number | null; latestReadyResume: LatestReadyResume | null } {
+  let matchScore: number | null = null;
+  for (const resume of resumes) {
+    if (resume.matchScore === null) continue;
+    if (matchScore === null || resume.matchScore > matchScore) matchScore = resume.matchScore;
+  }
+  return {
+    matchScore,
+    latestReadyResume: newestReadyResume(
+      resumes.map((resume) => ({
+        id: resume.id,
+        version: resume.version,
+        exported: resume.exportedAt !== null,
+      })),
+    ),
   };
 }
 

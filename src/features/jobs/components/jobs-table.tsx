@@ -32,6 +32,7 @@ import { strings } from "@/copy/strings";
 
 import { archiveJobs, updateJobStatus } from "../actions";
 import type { JobListDisplay } from "../format";
+import { JobNextActionLink } from "./job-next-action";
 import {
   jobListHref,
   toggledSort,
@@ -247,6 +248,17 @@ export function JobsTable({
                     <Badge variant="outline">{detail.archived}</Badge>
                   ) : null}
                 </div>
+                <JobNextActionLink
+                  input={{
+                    jobId: row.id,
+                    status: row.status,
+                    analysisReady: row.analysisReady,
+                    latestReadyResume: row.latestReadyResume,
+                    hasOffer: row.hasOffer,
+                  }}
+                  size="sm"
+                  className="mt-2 h-auto max-w-48 whitespace-normal"
+                />
               </TableCell>
               <TableCell className="max-w-64 whitespace-normal">
                 <span className="break-words">{row.title}</span>

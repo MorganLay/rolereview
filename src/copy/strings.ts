@@ -1468,11 +1468,20 @@ export const strings = {
       posting: "Original posting",
       postingHint: "The text you pasted.",
     },
+    nextAction: {
+      tailor: "Tailor resume",
+      review: "Review resume",
+      preview: "Preview & export",
+      followUp: "Log follow-up / update status",
+      interview: "Prepare for next interview",
+      decision: "Review decision date",
+    },
     documents: {
       tabsLabel: "Job sections",
       overviewTab: "Overview",
       documentsTab: "Documents",
-      promptAction: "Open Documents",
+      readyVersions: (count: number) =>
+        count === 1 ? "1 ready version" : `${count.toLocaleString("en-CA")} ready versions`,
       openVersion: (title: string) => `Open ${title}`,
       title: "Tailored resumes",
       empty: "No tailored resumes yet.",

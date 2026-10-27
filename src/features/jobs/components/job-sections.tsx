@@ -3,6 +3,7 @@
 import { useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { strings } from "@/copy/strings";
 
@@ -27,12 +28,14 @@ export function JobSections({
   initialTab,
   hideAuto,
   showOffer,
+  documentCount,
   children,
 }: {
   jobId: string;
   initialTab: JobSectionTab;
   hideAuto: boolean;
   showOffer: boolean;
+  documentCount: number;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -65,7 +68,15 @@ export function JobSections({
       <div className="w-full min-w-0 max-w-full overflow-x-auto" aria-busy={pending}>
         <TabsList aria-label={documentsCopy.tabsLabel}>
           <TabsTrigger value="overview">{documentsCopy.overviewTab}</TabsTrigger>
-          <TabsTrigger value="documents">{documentsCopy.documentsTab}</TabsTrigger>
+          <TabsTrigger value="documents">
+            {documentsCopy.documentsTab}
+            {documentCount > 0 ? (
+              <Badge variant="secondary" className="h-4 px-1.5">
+                <span className="sr-only">{documentsCopy.readyVersions(documentCount)}</span>
+                <span aria-hidden>{documentCount.toLocaleString("en-CA")}</span>
+              </Badge>
+            ) : null}
+          </TabsTrigger>
           <TabsTrigger value="interviews">{interviewsCopy.tab}</TabsTrigger>
           <TabsTrigger value="contacts">{contactsCopy}</TabsTrigger>
           <TabsTrigger value="timeline">{timelineCopy.tab}</TabsTrigger>

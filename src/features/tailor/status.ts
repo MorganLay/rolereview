@@ -13,6 +13,8 @@ export type ResumeVersion = {
   rating: 1 | -1 | null;
   /** This version has been marked submitted. */
   submitted: boolean;
+  /** A PDF or DOCX of this version has been downloaded. */
+  exported: boolean;
   /** label, or "{Company} — {date}". */
   title: string;
 };

@@ -47,6 +47,7 @@ export async function getJobDocuments(
             rating: true,
             label: true,
             submittedAt: true,
+            exportedAt: true,
           },
         },
       },
@@ -64,6 +65,7 @@ export async function getJobDocuments(
     templateId: resume.templateId,
     rating: ratingValue(resume.rating),
     submitted: versionIsFrozen(resume.submittedAt),
+    exported: resume.exportedAt !== null,
     title: versionTitle({
       label: resume.label,
       company: row?.company ?? "",
