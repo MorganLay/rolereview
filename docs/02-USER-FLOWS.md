@@ -96,7 +96,7 @@ Toolbar: view toggle **Board | List**, search (company/title), filters (source, 
 
 **Board view (default)**
 - Columns: Saved · Applied · Screening · Interviewing · Offer · Closed (Closed stacks Accepted, Rejected, Withdrawn, No response, each with its own chip).
-- Card: company, title, priority stars, match score badge (best READY tailored resume), next reminder or interview date, deadline, tailored ✓ icon if a tailored resume was submitted, and the same primary action as the job header when the job has one. A deadline on or before three days from today is marked Soon in ordinary text. A deadline before today is marked Past, in red.
+- Card: company, title, priority stars, tailored ✓ icon if a tailored resume was submitted, Archived when the job is archived, and the same primary action as the job header when the job has one. One secondary line: the deadline when it is Soon or Past, otherwise the match score (best READY tailored resume). A deadline on or before three days from today is marked Soon in ordinary text. A deadline before today is marked Past, in red. The posting summary and requirements stay on the job.
 - Drag between columns → `moveJob({ jobId, toStatus, beforeId?, afterId? })` → runs `applyStatusChange` side effects and fractional `boardOrder`. Moving to Closed asks which closed status (+ optional reason). Keyboard alternative: each card's "Move to…" menu, which places the card at the top of that stage.
 - Mobile: one column at a time with a stage picker; "Move to…" menu instead of drag.
 

@@ -46,6 +46,7 @@ import { cn } from "@/lib/utils";
 import { moveJob } from "../actions";
 import { boardInsertIndex, dragInsertIndex, planColumnMove } from "../board-order";
 import type { BoardCardDisplay } from "../format";
+import { boardCardSecondaryLine } from "./board-card-line";
 import { JobNextActionLink } from "./job-next-action";
 import {
   BOARD_STAGES,
@@ -520,6 +521,9 @@ function CardBody({
   onMove?: (card: BoardCardDisplay, status: JobStatusValue) => void;
   onClose?: (card: BoardCardDisplay) => void;
 }) {
+  const secondary = boardCardSecondaryLine(card.deadlineNote);
+  const showMeta = card.priority !== null || card.submitted || card.archived;
+
   return (
     <div className="rounded-lg border border-border bg-card p-3">
       <div className="flex items-start gap-2">
@@ -541,36 +545,34 @@ function CardBody({
           </div>
         ) : null}
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <PriorityStars priority={card.priority} />
-        <Badge variant="outline">
-          {copy.matchScore} {card.matchLabel}
-        </Badge>
-        {card.submitted ? (
-          <span className="inline-flex items-center gap-1 text-xs text-ink">
-            <Check className="size-3.5" aria-hidden />
-            {copy.submitted}
-          </span>
-        ) : null}
-        {card.archived ? <Badge variant="outline">{detail.archived}</Badge> : null}
-      </div>
-      {card.nextKind && card.nextLabel ? (
-        <p className="mt-2 text-xs text-slate">
-          {card.nextKind === "reminder" ? copy.nextReminder : copy.nextInterview} {card.nextLabel}
-        </p>
+      {showMeta ? (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <PriorityStars priority={card.priority} />
+          {card.submitted ? (
+            <span className="inline-flex items-center gap-1 text-xs text-ink">
+              <Check className="size-3.5" aria-hidden />
+              {copy.submitted}
+            </span>
+          ) : null}
+          {card.archived ? <Badge variant="outline">{detail.archived}</Badge> : null}
+        </div>
       ) : null}
-      {card.deadlineLabel ? (
+      {secondary.kind === "deadline" ? (
         <p
           className={cn(
-            "mt-1 text-xs",
-            card.deadlineNote === "past" ? "text-destructive" : "text-slate",
+            "mt-2 text-xs",
+            secondary.note === "past" ? "text-destructive" : "text-slate",
           )}
         >
           {copy.columns.deadline} {card.deadlineLabel}
-          {card.deadlineNote === "soon" ? ` ${copy.soon}` : null}
-          {card.deadlineNote === "past" ? ` ${copy.past}` : null}
+          {secondary.note === "soon" ? ` ${copy.soon}` : null}
+          {secondary.note === "past" ? ` ${copy.past}` : null}
         </p>
-      ) : null}
+      ) : (
+        <p className="mt-2 text-xs text-slate">
+          {copy.matchScore} {card.matchLabel}
+        </p>
+      )}
       <JobNextActionLink
         input={{
           jobId: card.id,

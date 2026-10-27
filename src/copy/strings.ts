@@ -1964,8 +1964,6 @@ export const strings = {
       jobCount: (count: number) => (count === 1 ? "1 job" : `${count} jobs`),
       matchScore: "Match",
       submitted: "Submitted",
-      nextReminder: "Reminder",
-      nextInterview: "Interview",
       closedStatusLabel: "Closed status",
       closedStatusPlaceholder: "Choose a status",
       emptyBody: "No jobs yet. Paste a job posting to accept your first job.",
