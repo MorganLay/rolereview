@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { strings } from "@/copy/strings";
 import { BULLET_LIMITS, bulletTextSchema } from "@/features/library/schemas";
+import { addHidden, removeHidden } from "@/lib/undo-delete";
+import { useUndoDelete } from "@/lib/use-undo-delete";
 
 import { createBullet, deleteBullet, reorderBullet, updateBullet } from "../actions";
 import { applyBulletAction } from "../bullet-state";
@@ -31,6 +33,8 @@ export function BulletList({ entryId, bullets, skills }: BulletListProps) {
   const [draft, setDraft] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
+  const { schedule } = useUndoDelete();
   const skipBlur = useRef(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
 
@@ -114,12 +118,29 @@ export function BulletList({ entryId, bullets, skills }: BulletListProps) {
     });
   }
 
+  function showBullet(id: string) {
+    setHidden((current) => removeHidden(current, id));
+  }
+
   function onDelete(id: string) {
-    if (pending || editingId || adding) return;
-    startTransition(async () => {
-      addOptimistic({ type: "delete", id });
-      const result = await deleteBullet({ id });
-      if (!result.ok) toast.error(copy.deleteFailed);
+    if (pending || editingId || adding || hidden.has(id)) return;
+    setHidden((current) => addHidden(current, id));
+    schedule({
+      id,
+      message: copy.deleted,
+      restore: () => showBullet(id),
+      commit: async () => {
+        try {
+          const result = await deleteBullet({ id });
+          if (!result.ok) {
+            toast.error(copy.deleteFailed);
+            showBullet(id);
+          }
+        } catch {
+          toast.error(copy.deleteFailed);
+          showBullet(id);
+        }
+      },
     });
   }
 
@@ -154,12 +175,13 @@ export function BulletList({ entryId, bullets, skills }: BulletListProps) {
   }
 
   const showEditor = adding || editingId !== null;
+  const visibleBullets = optimisticBullets.filter((bullet) => !hidden.has(bullet.id));
 
   return (
     <div className="mt-2 grid gap-1">
-      {optimisticBullets.length > 0 ? (
+      {visibleBullets.length > 0 ? (
         <ul className="grid gap-0.5">
-          {optimisticBullets.map((bullet, index) => (
+          {visibleBullets.map((bullet, index) => (
             <li key={bullet.id}>
               {editingId === bullet.id ? (
                 <BulletEditor
@@ -199,8 +221,7 @@ export function BulletList({ entryId, bullets, skills }: BulletListProps) {
                         label: copy.moveDown,
                         ariaLabel: `${copy.moveDownLabel}: ${bullet.text}`,
                         icon: ChevronDownIcon,
-                        disabled:
-                          pending || showEditor || index === optimisticBullets.length - 1,
+                        disabled: pending || showEditor || index === visibleBullets.length - 1,
                         onSelect: () => onMove(bullet.id, "down"),
                       },
                       {

@@ -1,4 +1,4 @@
-import type { LetterLength, LetterTone } from "./schemas";
+import { CoverLetterOptions, type LetterLength, type LetterTone } from "./schemas";
 
 /** A PENDING cover letter older than this is treated as FAILED. */
 export const LETTER_STALE_MS = 5 * 60 * 1000;
@@ -18,7 +18,37 @@ export type LetterVersion = {
   submitted: boolean;
   /** label, or "{Company} — {date}". */
   title: string;
+  /** Stored letter options, so Retry can call the same action. */
+  recipientName: string;
+  whyCompany: string;
+  resumeId: string | null;
 };
+
+export function letterRetry(options: unknown): {
+  tone: LetterTone;
+  length: LetterLength;
+  recipientName: string;
+  whyCompany: string;
+  resumeId: string | null;
+} {
+  const parsed = CoverLetterOptions.safeParse(options ?? {});
+  if (!parsed.success) {
+    return {
+      tone: "professional",
+      length: "standard",
+      recipientName: "",
+      whyCompany: "",
+      resumeId: null,
+    };
+  }
+  return {
+    tone: parsed.data.tone,
+    length: parsed.data.length,
+    recipientName: parsed.data.recipientName ?? "",
+    whyCompany: parsed.data.whyCompany ?? "",
+    resumeId: parsed.data.resumeId ?? null,
+  };
+}
 
 export type LetterAlignChoice = {
   id: string;

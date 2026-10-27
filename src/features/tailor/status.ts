@@ -1,3 +1,5 @@
+import { TailorOptions } from "@/features/tailor/schemas";
+
 /** A PENDING tailored resume older than this is treated as FAILED. */
 export const TAILOR_STALE_MS = 5 * 60 * 1000;
 
@@ -17,7 +19,16 @@ export type ResumeVersion = {
   exported: boolean;
   /** label, or "{Company} — {date}". */
   title: string;
+  /** Stored tailor options, so Retry can call the same action. */
+  length: 1 | 2;
+  emphasis: string;
 };
+
+export function tailorRetry(options: unknown): { length: 1 | 2; emphasis: string } {
+  const parsed = TailorOptions.safeParse(options ?? {});
+  if (!parsed.success) return { length: 1, emphasis: "" };
+  return { length: parsed.data.length, emphasis: parsed.data.emphasis ?? "" };
+}
 
 export type JobDocuments = {
   canTailor: boolean;

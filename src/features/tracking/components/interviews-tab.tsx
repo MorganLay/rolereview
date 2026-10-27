@@ -35,6 +35,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { strings } from "@/copy/strings";
 import type { FieldErrors } from "@/lib/result";
+import { addHidden, removeHidden } from "@/lib/undo-delete";
+import { useUndoDelete } from "@/lib/use-undo-delete";
 
 import { createInterview, deleteInterview, updateInterview } from "../actions";
 import {
@@ -67,6 +69,38 @@ export function InterviewsTab({
 }) {
   const [mode, setMode] = useState<DialogMode | null>(null);
   const [deleting, setDeleting] = useState<InterviewView | null>(null);
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
+  const { schedule } = useUndoDelete();
+  const router = useRouter();
+  const visible = interviews.filter((interview) => !hidden.has(interview.id));
+
+  function showInterview(id: string) {
+    setHidden((current) => removeHidden(current, id));
+  }
+
+  function holdDelete(interview: InterviewView) {
+    setDeleting(null);
+    setHidden((current) => addHidden(current, interview.id));
+    schedule({
+      id: interview.id,
+      message: copy.deleted,
+      restore: () => showInterview(interview.id),
+      commit: async () => {
+        try {
+          const result = await deleteInterview({ jobId, interviewId: interview.id });
+          if (!result.ok) {
+            toast.error(result.error.code === "NOT_FOUND" ? copy.notFound : copy.deleteFailed);
+            showInterview(interview.id);
+            return;
+          }
+          router.refresh();
+        } catch {
+          toast.error(copy.deleteFailed);
+          showInterview(interview.id);
+        }
+      },
+    });
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -76,11 +110,11 @@ export function InterviewsTab({
         </Button>
       </div>
 
-      {interviews.length === 0 ? (
+      {visible.length === 0 ? (
         <p className="text-sm text-slate">{copy.empty}</p>
       ) : (
         <ol aria-label={copy.listLabel} className="flex flex-col">
-          {interviews.map((interview) => (
+          {visible.map((interview) => (
             <li
               key={interview.id}
               className="flex flex-col gap-2 border-b border-line py-3 last:border-b-0"
@@ -181,11 +215,11 @@ export function InterviewsTab({
         }}
       />
       <DeleteInterviewDialog
-        jobId={jobId}
         interview={deleting}
         onOpenChange={(open) => {
           if (!open) setDeleting(null);
         }}
+        onConfirm={holdDelete}
       />
     </div>
   );
@@ -494,48 +528,31 @@ function InterviewDialog({
 }
 
 function DeleteInterviewDialog({
-  jobId,
   interview,
   onOpenChange,
+  onConfirm,
 }: {
-  jobId: string;
   interview: InterviewView | null;
   onOpenChange: (open: boolean) => void;
+  onConfirm: (interview: InterviewView) => void;
 }) {
-  const router = useRouter();
-  const [pending, setPending] = useState(false);
-
-  async function onConfirm(event: MouseEvent) {
+  function confirm(event: MouseEvent) {
     event.preventDefault();
-    if (pending || !interview) return;
-    setPending(true);
-    try {
-      const result = await deleteInterview({ jobId, interviewId: interview.id });
-      if (!result.ok) {
-        toast.error(result.error.code === "NOT_FOUND" ? copy.notFound : copy.deleteFailed);
-        return;
-      }
-      toast.success(copy.deleted);
-      onOpenChange(false);
-      router.refresh();
-    } catch {
-      toast.error(copy.deleteFailed);
-    } finally {
-      setPending(false);
-    }
+    if (!interview) return;
+    onConfirm(interview);
   }
 
   return (
-    <AlertDialog open={interview !== null} onOpenChange={(next) => !pending && onOpenChange(next)}>
+    <AlertDialog open={interview !== null} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="font-sans">{copy.deleteTitle}</AlertDialogTitle>
           <AlertDialogDescription>{copy.deleteBody}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>{strings.common.cancel}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" disabled={pending} onClick={onConfirm}>
-            {pending ? copy.deleting : strings.common.delete}
+          <AlertDialogCancel>{strings.common.cancel}</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={confirm}>
+            {strings.common.delete}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

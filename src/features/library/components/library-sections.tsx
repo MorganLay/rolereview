@@ -6,8 +6,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { strings } from "@/copy/strings";
 import { ENTRY_KINDS } from "@/features/library/schemas";
+import { addHidden, removeHidden } from "@/lib/undo-delete";
+import { useUndoDelete } from "@/lib/use-undo-delete";
 
-import { reorderEntry } from "../actions";
+import { deleteEntry, reorderEntry } from "../actions";
 import type { LibraryEntry } from "../types";
 import { DeleteEntryDialog } from "./delete-entry-dialog";
 import { EntryCard } from "./entry-card";
@@ -24,7 +26,37 @@ export function LibrarySections({ entries, skills }: LibrarySectionsProps) {
   const [editor, setEditor] = useState<EntryEditor | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LibraryEntry | null>(null);
   const [movingId, setMovingId] = useState<string | null>(null);
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
+  const { schedule } = useUndoDelete();
   const [, startTransition] = useTransition();
+
+  function showEntry(id: string) {
+    setHidden((current) => removeHidden(current, id));
+  }
+
+  function confirmDelete() {
+    const entry = deleteTarget;
+    if (!entry) return;
+    setDeleteTarget(null);
+    setHidden((current) => addHidden(current, entry.id));
+    schedule({
+      id: entry.id,
+      message: copy.deleted,
+      restore: () => showEntry(entry.id),
+      commit: async () => {
+        try {
+          const result = await deleteEntry({ id: entry.id });
+          if (!result.ok) {
+            toast.error(copy.deleteFailed);
+            showEntry(entry.id);
+          }
+        } catch {
+          toast.error(copy.deleteFailed);
+          showEntry(entry.id);
+        }
+      },
+    });
+  }
 
   function onMove(id: string, direction: "up" | "down") {
     setMovingId(id);
@@ -39,7 +71,9 @@ export function LibrarySections({ entries, skills }: LibrarySectionsProps) {
     <div className="flex flex-col gap-8">
       {ENTRY_KINDS.map((kind) => {
         const kindCopy = copy.kinds[kind];
-        const section = entries.filter((entry) => entry.kind === kind);
+        const section = entries.filter(
+          (entry) => entry.kind === kind && !hidden.has(entry.id),
+        );
         return (
           <section key={kind} className="grid gap-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -86,8 +120,8 @@ export function LibrarySections({ entries, skills }: LibrarySectionsProps) {
 
       {deleteTarget ? (
         <DeleteEntryDialog
-          entry={deleteTarget}
           onClose={() => setDeleteTarget(null)}
+          onConfirm={confirmDelete}
         />
       ) : null}
     </div>

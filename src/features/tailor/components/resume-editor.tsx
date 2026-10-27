@@ -11,15 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { strings } from "@/copy/strings";
@@ -48,8 +39,18 @@ import {
 import type { ResumeTemplateId } from "@/lib/pdf/template";
 import { cn } from "@/lib/utils";
 
+import {
+  entrySectionId,
+  excludedGroupKey,
+  excludedSkills,
+  sectionJumpTargets,
+  splitByIncluded,
+  SUMMARY_SECTION_ID,
+} from "../workspace-nav";
 import { resumeTemplateLabel } from "../template-label";
+import { ExcludedGroup } from "./excluded-group";
 import { MatchPanel } from "./match-panel";
+import { SectionJump } from "./section-jump";
 import { ExportAppliedDialog, ResumeExportBar, useResumeExport } from "./resume-export-bar";
 import { ResumePreview } from "./resume-preview";
 import { useUnsavedChangesWarning } from "./unsaved-changes";
@@ -93,6 +94,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   const [tab, setTab] = useState<"resume" | "match" | "export">("resume");
   const [previewing, setPreviewing] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [openExcluded, setOpenExcluded] = useState<ReadonlySet<string>>(() => new Set());
   const pendingScroll = useRef<string | null>(null);
   const exportUi = useResumeExport({
     jobId: workspace.jobId,
@@ -272,9 +274,26 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
       if (node) scrollToElement(node);
     });
     return () => cancelAnimationFrame(frame);
-  }, [tab, highlightId]);
+  }, [tab, highlightId, openExcluded]);
+
+  function setExcludedOpen(key: string, open: boolean) {
+    setOpenExcluded((current) => {
+      if (current.has(key) === open) return current;
+      const next = new Set(current);
+      if (open) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  }
 
   function showEvidence(elementId: string) {
+    const key = excludedGroupKey({
+      elementId,
+      entries: contentRef.current.entries,
+      skills: workspace.snapshot.skills,
+      includedSkillNames: skillNamesOf(contentRef.current),
+    });
+    if (key) setExcludedOpen(key, true);
     setPreviewing(false);
     setHighlightId(elementId);
     setTab("resume");
@@ -452,8 +471,6 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   }
 
   const shownSkills = resumeSkills(workspace.snapshot, skillNamesOf(content)) ?? content.skills;
-  const usedNames = new Set(skillNamesOf(content));
-  const available = availableSkills(workspace.snapshot, usedNames);
   const savedLabel = copy.saved(formatSavedTime(savedAt, workspace.timeZone));
   const skillElementByName = new Map<string, string>();
   for (const skill of workspace.snapshot.skills) {
@@ -462,8 +479,60 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
     }
   }
 
+  function jumpTo(id: string) {
+    const node = document.getElementById(id);
+    if (!(node instanceof HTMLElement)) return;
+    node.focus({ preventScroll: true });
+    scrollToElement(node);
+  }
+
+  function entryNode(entry: ContentEntry) {
+    const facts = snapshotByRef.get(entry.ref);
+    if (!facts) return null;
+    return (
+      <EntryBlock
+        key={entry.ref}
+        entry={entry}
+        facts={facts}
+        skills={skillNames}
+        highlighted={highlightId === entryElementId(entry.ref)}
+        highlightId={highlightId}
+        editingId={editingId}
+        readOnly={frozen}
+        draft={draft}
+        fieldError={fieldError}
+        editorRef={editorRef}
+        onDraft={(value) => {
+          setDraft(value);
+          if (fieldError) setFieldError(null);
+        }}
+        onIncluded={(included) => setEntryIncluded(entry.ref, included)}
+        onBulletIncluded={(bulletId, included) =>
+          setBulletIncluded(entry.ref, bulletId, included)
+        }
+        onBeginEdit={beginEdit}
+        onEditKeyDown={(event, bulletId) => onEditKeyDown(event, entry.ref, bulletId)}
+        onEditBlur={(bulletId) => onEditBlur(entry.ref, bulletId)}
+        onMove={(bulletId, direction) => moveBullet(entry.ref, bulletId, direction)}
+      />
+    );
+  }
+
+  const jumpTargets = sectionJumpTargets({
+    summary: { id: SUMMARY_SECTION_ID, label: copy.summary },
+    sections: ENTRY_KINDS.map((kind) => ({
+      id: entrySectionId(kind),
+      label: entryCopy.kinds[kind].title,
+      count: content.entries.filter(
+        (entry) => entry.kind === kind && snapshotByRef.has(entry.ref),
+      ).length,
+    })),
+    skills: { id: SKILLS_SECTION_ID, label: skillCopy.title },
+  });
+  const excludedSkillList = excludedSkills(workspace.snapshot.skills, skillNamesOf(content));
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-w-0 flex-col gap-6">
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <Link
@@ -545,10 +614,10 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         </div>
       ) : null}
 
-      <div className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-8">
+      <div className="min-w-0 lg:grid lg:grid-cols-5 lg:items-start lg:gap-8">
         <div
           className={cn(
-            "flex flex-col lg:col-span-3",
+            "flex min-w-0 flex-col lg:col-span-3",
             templateId === "compact" ? "gap-4" : "gap-6",
             !previewing && tab !== "resume" && "max-lg:hidden",
           )}
@@ -557,9 +626,15 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         <ResumePreview resumeId={workspace.resumeId} templateId={templateId} />
       ) : (
       <>
+      <SectionJump label={copy.jumpLabel} targets={jumpTargets} onJump={jumpTo} />
       <ProfileHeader profile={workspace.snapshot.profile} templateId={templateId} />
 
-      <section className="grid gap-2" aria-labelledby={`${summaryId}-heading`}>
+      <section
+        id={SUMMARY_SECTION_ID}
+        tabIndex={-1}
+        className="grid scroll-mt-20 gap-2 outline-none"
+        aria-labelledby={`${summaryId}-heading`}
+      >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 id={`${summaryId}-heading`} className={sectionHeading(templateId)}>
             {copy.summary}
@@ -599,50 +674,37 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
       </section>
 
       {ENTRY_KINDS.map((kind) => {
-        const entries = content.entries.filter((entry) => entry.kind === kind);
+        const entries = content.entries.filter(
+          (entry) => entry.kind === kind && snapshotByRef.has(entry.ref),
+        );
         if (entries.length === 0) return null;
+        const { included, excluded } = splitByIncluded(entries);
         return (
-          <section key={kind} className="grid gap-3">
+          <section
+            key={kind}
+            id={entrySectionId(kind)}
+            tabIndex={-1}
+            className="grid scroll-mt-20 gap-3 outline-none"
+          >
             <h2 className={sectionHeading(templateId)}>{entryCopy.kinds[kind].title}</h2>
-            {entries.map((entry) => {
-              const facts = snapshotByRef.get(entry.ref);
-              if (!facts) return null;
-              return (
-                <EntryBlock
-                  key={entry.ref}
-                  entry={entry}
-                  facts={facts}
-                  skills={skillNames}
-                  highlighted={highlightId === entryElementId(entry.ref)}
-                  highlightId={highlightId}
-                  editingId={editingId}
-                  readOnly={frozen}
-                  draft={draft}
-                  fieldError={fieldError}
-                  editorRef={editorRef}
-                  onDraft={(value) => {
-                    setDraft(value);
-                    if (fieldError) setFieldError(null);
-                  }}
-                  onIncluded={(included) => setEntryIncluded(entry.ref, included)}
-                  onBulletIncluded={(bulletId, included) =>
-                    setBulletIncluded(entry.ref, bulletId, included)
-                  }
-                  onBeginEdit={beginEdit}
-                  onEditKeyDown={(event, bulletId) => onEditKeyDown(event, entry.ref, bulletId)}
-                  onEditBlur={(bulletId) => onEditBlur(entry.ref, bulletId)}
-                  onMove={(bulletId, direction) => moveBullet(entry.ref, bulletId, direction)}
-                />
-              );
-            })}
+            {included.map((entry) => entryNode(entry))}
+            <ExcludedGroup
+              count={excluded.length}
+              label={copy.notIncluded(excluded.length)}
+              open={openExcluded.has(kind)}
+              onOpenChange={(open) => setExcludedOpen(kind, open)}
+            >
+              {excluded.map((entry) => entryNode(entry))}
+            </ExcludedGroup>
           </section>
         );
       })}
 
       <section
         id={SKILLS_SECTION_ID}
+        tabIndex={-1}
         className={cn(
-          "grid scroll-mt-20 gap-3",
+          "grid scroll-mt-20 gap-3 outline-none",
           highlightId === SKILLS_SECTION_ID && "rounded-lg bg-marigold-100 p-2",
         )}
       >
@@ -688,25 +750,40 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
             ))}
           </div>
         )}
-        {frozen ? null : available.length > 0 ? (
-          <Select key={skillNamesOf(content).join("|")} onValueChange={addSkill}>
-            <SelectTrigger aria-label={copy.addSkillLabel} className="w-full sm:w-72">
-              <SelectValue placeholder={copy.addSkill} />
-            </SelectTrigger>
-            <SelectContent>
-              {available.map((group) => (
-                <SelectGroup key={group.key}>
-                  <SelectLabel>{group.label}</SelectLabel>
-                  {group.skills.map((skill) => (
-                    <SelectItem key={skill.id} value={skill.id}>
-                      {skill.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : workspace.snapshot.skills.length > 0 ? (
+        {excludedSkillList.length > 0 ? (
+          <ExcludedGroup
+            count={excludedSkillList.length}
+            label={copy.notIncluded(excludedSkillList.length)}
+            open={openExcluded.has("skills")}
+            onOpenChange={(open) => setExcludedOpen("skills", open)}
+          >
+            <ul className="grid gap-2">
+              {excludedSkillList.map((skill) => {
+                const elementId = skillElementId(skill.ref);
+                return (
+                  <li
+                    key={skill.id}
+                    id={elementId}
+                    className={cn(
+                      "flex scroll-mt-20 items-center justify-between gap-3",
+                      highlightId === elementId && "rounded-lg bg-marigold-100 px-2 py-1",
+                    )}
+                  >
+                    <span className="min-w-0 break-words text-sm text-ink">{skill.name}</span>
+                    <IncludeSwitch
+                      label={copy.includeFor(skill.name)}
+                      checked={false}
+                      disabled={frozen}
+                      onCheckedChange={(included) => {
+                        if (included) addSkill(skill.id);
+                      }}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </ExcludedGroup>
+        ) : !frozen && workspace.snapshot.skills.length > 0 ? (
           <p className="text-sm text-slate">{copy.skillsAllAdded}</p>
         ) : null}
       </section>
@@ -1160,33 +1237,6 @@ function IncludeSwitch({
       />
     </div>
   );
-}
-
-function availableSkills(snapshot: LibrarySnapshot, used: Set<string>) {
-  const groups: {
-    key: string;
-    label: string;
-    skills: { id: string; name: string }[];
-  }[] = [];
-  const index = new Map<string, number>();
-  for (const skill of snapshot.skills) {
-    if (used.has(skill.name)) continue;
-    const key = skill.category ?? "\0";
-    let at = index.get(key);
-    if (at === undefined) {
-      at = groups.length;
-      index.set(key, at);
-      groups.push({
-        key,
-        label: skill.category ?? skillCopy.uncategorized,
-        skills: [],
-      });
-    }
-    const group = groups[at];
-    if (!group || group.skills.some((item) => item.name === skill.name)) continue;
-    group.skills.push({ id: skill.id, name: skill.name });
-  }
-  return groups;
 }
 
 function skillNamesOf(content: ResumeContent): string[] {

@@ -45,6 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { strings } from "@/copy/strings";
+import { useUndoDelete } from "@/lib/use-undo-delete";
 import { cn } from "@/lib/utils";
 import type { FieldErrors } from "@/lib/result";
 
@@ -132,7 +133,35 @@ export function JobHeader(props: JobHeaderProps) {
   const [closeOpen, setCloseOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<JobStatusValue | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [holdingDelete, setHoldingDelete] = useState(false);
+  const { schedule } = useUndoDelete();
   const [acceptedOpen, setAcceptedOpen] = useState(false);
+
+  function confirmDelete() {
+    if (holdingDelete) return;
+    setDeleteOpen(false);
+    setHoldingDelete(true);
+    schedule({
+      id: props.jobId,
+      message: copy.deleted,
+      restore: () => setHoldingDelete(false),
+      commit: async () => {
+        try {
+          const result = await deleteJob({ jobId: props.jobId });
+          if (!result.ok) {
+            toast.error(copy.deleteFailed);
+            setHoldingDelete(false);
+            return;
+          }
+          router.push("/jobs");
+          router.refresh();
+        } catch {
+          toast.error(copy.deleteFailed);
+          setHoldingDelete(false);
+        }
+      },
+    });
+  }
 
   function clearOverlay(key: keyof HeaderOverlay) {
     setOverlay((current) => {
@@ -256,6 +285,7 @@ export function JobHeader(props: JobHeaderProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
+              disabled={holdingDelete}
               onSelect={() => setDeleteOpen(true)}
             >
               {strings.common.delete}
@@ -348,8 +378,8 @@ export function JobHeader(props: JobHeaderProps) {
 
       <DeleteJobDialog
         open={deleteOpen}
-        jobId={props.jobId}
         onOpenChange={setDeleteOpen}
+        onDelete={confirmDelete}
       />
 
       <AcceptedCelebration open={acceptedOpen} onOpenChange={setAcceptedOpen} />
@@ -607,52 +637,29 @@ function EditDetailsDialog({
 
 function DeleteJobDialog({
   open,
-  jobId,
   onOpenChange,
+  onDelete,
 }: {
   open: boolean;
-  jobId: string;
   onOpenChange: (open: boolean) => void;
+  onDelete: () => void;
 }) {
-  const router = useRouter();
-  const [pending, setPending] = useState(false);
-
-  async function onConfirm(event: MouseEvent) {
+  function onConfirm(event: MouseEvent) {
     event.preventDefault();
-    if (pending) return;
-    setPending(true);
-    try {
-      const result = await deleteJob({ jobId });
-      if (!result.ok) {
-        toast.error(copy.deleteFailed);
-        return;
-      }
-      toast.success(copy.deleted);
-      onOpenChange(false);
-      router.push("/jobs");
-      router.refresh();
-    } catch {
-      toast.error(copy.deleteFailed);
-    } finally {
-      setPending(false);
-    }
+    onDelete();
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={(next) => !pending && onOpenChange(next)}>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="font-sans">{copy.deleteTitle}</AlertDialogTitle>
           <AlertDialogDescription>{copy.deleteBody}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>{strings.common.cancel}</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            disabled={pending}
-            onClick={onConfirm}
-          >
-            {pending ? copy.deleting : strings.common.delete}
+          <AlertDialogCancel>{strings.common.cancel}</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={onConfirm}>
+            {strings.common.delete}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -13,6 +13,7 @@ import type { LibraryEntryOption, ResumeWorkspaceData } from "./content";
 import { MatchReport, ResumeContent } from "./schemas";
 import {
   displayedTailorStatus,
+  tailorRetry,
   type JobDocuments,
 } from "./status";
 import { versionIsFrozen, versionTitle } from "./version";
@@ -48,6 +49,7 @@ export async function getJobDocuments(
             label: true,
             submittedAt: true,
             exportedAt: true,
+            options: true,
           },
         },
       },
@@ -56,23 +58,28 @@ export async function getJobDocuments(
 
   const now = new Date();
   const timeZone = row?.user.timezone || "America/Toronto";
-  const versions = (row?.tailoredResumes ?? []).map((resume) => ({
-    id: resume.id,
-    version: resume.version,
-    status: displayedTailorStatus(resume.status, resume.updatedAt, now),
-    createdLabel: formatJobInstant(resume.createdAt.toISOString(), timeZone),
-    matchScore: resume.matchScore,
-    templateId: resume.templateId,
-    rating: ratingValue(resume.rating),
-    submitted: versionIsFrozen(resume.submittedAt),
-    exported: resume.exportedAt !== null,
-    title: versionTitle({
-      label: resume.label,
-      company: row?.company ?? "",
-      createdAt: resume.createdAt,
-      timeZone,
-    }),
-  }));
+  const versions = (row?.tailoredResumes ?? []).map((resume) => {
+    const retry = tailorRetry(resume.options);
+    return {
+      id: resume.id,
+      version: resume.version,
+      status: displayedTailorStatus(resume.status, resume.updatedAt, now),
+      createdLabel: formatJobInstant(resume.createdAt.toISOString(), timeZone),
+      matchScore: resume.matchScore,
+      templateId: resume.templateId,
+      rating: ratingValue(resume.rating),
+      submitted: versionIsFrozen(resume.submittedAt),
+      exported: resume.exportedAt !== null,
+      title: versionTitle({
+        label: resume.label,
+        company: row?.company ?? "",
+        createdAt: resume.createdAt,
+        timeZone,
+      }),
+      length: retry.length,
+      emphasis: retry.emphasis,
+    };
+  });
 
   return {
     canTailor: entries + skills > 0,
