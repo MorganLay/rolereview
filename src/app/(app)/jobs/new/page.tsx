@@ -36,6 +36,7 @@ export default async function NewJobPage({
           {strings.pages.jobsNew.body}
         </p>
       </div>
+      {/* The key remounts when the router applies `new`. The form also clears state the app router and the back-forward cache keep. */}
       <NewJobForm key={fresh ?? "new"} analysesLeft={analysesLeft} />
     </div>
   );

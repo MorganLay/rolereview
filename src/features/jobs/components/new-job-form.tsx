@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import { useRouter } from "next/navigation";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
@@ -22,6 +31,7 @@ import type { FieldErrors } from "@/lib/result";
 import { cn } from "@/lib/utils";
 
 import { createJob } from "../actions";
+import { subscribeNewJobVisit } from "./new-job-link";
 import { JOB_LIMITS, JOB_SOURCES } from "../schemas";
 
 const copy = strings.jobs;
@@ -54,6 +64,20 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
   const live = useRef(true);
   const postingRef = useRef<HTMLTextAreaElement>(null);
   const scrollPosting = useRef(false);
+  const draftGeneration = useRef(0);
+  const resetDraft = useCallback(() => {
+    draftGeneration.current += 1;
+    busy.current = false;
+    scrollPosting.current = false;
+    setPosting("");
+    setUrl("");
+    setDeadline("");
+    setSource(NONE);
+    setPriority(null);
+    setFields({});
+    setReading(false);
+    setStage(0);
+  }, []);
 
   useEffect(() => {
     live.current = true;
@@ -62,23 +86,31 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
     };
   }, []);
 
+  useLayoutEffect(() => {
+    // Cache Components keeps this page mounted. Clear it when the page is
+    // hidden so the next visit is a blank form, not "Analyzing the posting".
+    return () => {
+      resetDraft();
+    };
+  }, [resetDraft]);
+
   useEffect(() => {
     function onPageShow(event: PageTransitionEvent) {
       if (!event.persisted) return;
-      busy.current = false;
-      setReading(false);
+      resetDraft();
     }
     window.addEventListener("pageshow", onPageShow);
     return () => window.removeEventListener("pageshow", onPageShow);
-  }, []);
+  }, [resetDraft]);
 
-  useEffect(() => {
+  useEffect(() => subscribeNewJobVisit(resetDraft), [resetDraft]);
+
+  useLayoutEffect(() => {
     if (!scrollPosting.current) return;
     scrollPosting.current = false;
     const node = postingRef.current;
     if (!node) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    node.scrollIntoView({ block: "end", behavior: reduce ? "auto" : "smooth" });
+    node.scrollTop = node.scrollHeight;
   }, [posting]);
 
   useEffect(() => {
@@ -98,6 +130,7 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
     }
 
     const parsedSource = JOB_SOURCES.find((value) => value === source) ?? null;
+    const generation = draftGeneration.current;
     busy.current = true;
     setFields({});
     setStage(0);
@@ -112,12 +145,14 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
       });
       if (!result.ok) {
         if (!live.current) return;
-        setReading(false);
+        const sameVisit = draftGeneration.current === generation;
+        if (sameVisit) setReading(false);
         if (result.error.code === "QUOTA_EXCEEDED") {
           openUpgradeModal({ kind: "quota", meter: "ANALYZE" });
           setAnalysesAdjust({ base: analysesLeftProp, delta: analysesLeftProp });
           return;
         }
+        if (!sameVisit) return;
         if (result.error.code === "VALIDATION") {
           setFields(result.error.fields ?? {});
           return;
@@ -128,16 +163,17 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
       if (!live.current) return;
       if (result.data.analysisStatus === "READY") {
         setAnalysesAdjust((current) => ({ ...current, delta: current.delta + 1 }));
-      } else {
+      } else if (draftGeneration.current === generation) {
         toast.error(copy.aiFailed);
       }
+      if (draftGeneration.current !== generation) return;
       router.push(`/jobs/${result.data.jobId}`);
     } catch {
-      if (!live.current) return;
+      if (!live.current || draftGeneration.current !== generation) return;
       setReading(false);
       toast.error(copy.saveFailed);
     } finally {
-      busy.current = false;
+      if (draftGeneration.current === generation) busy.current = false;
     }
   }
 
@@ -189,6 +225,7 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
           onChange={(event) => onPostingChange(event)}
           placeholder={copy.postingPlaceholder}
           rows={12}
+          className="field-sizing-fixed max-h-80 overflow-y-auto"
           required
           aria-invalid={Boolean(postingError)}
           aria-describedby={`${formId}-posting-hint`}
