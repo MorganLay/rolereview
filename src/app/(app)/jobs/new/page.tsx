@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 
 import { strings } from "@/copy/strings";
 import { NewJobForm } from "@/features/jobs/components/new-job-form";
@@ -21,6 +22,7 @@ export default async function NewJobPage({
 }: {
   searchParams: Promise<{ new?: string | string[] }>;
 }) {
+  await connection();
   const user = await requireUser();
   const params = await searchParams;
   const fresh = Array.isArray(params.new) ? params.new[0] : params.new;

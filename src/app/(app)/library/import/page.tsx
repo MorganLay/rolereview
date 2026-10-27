@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
 import { strings } from "@/copy/strings";
 import { ImportFlow } from "@/features/import/components/import-flow";
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function LibraryImportPage() {
+  await connection();
   const user = await requireUser();
   const page = await getImportPage(user);
   if (!page) notFound();
