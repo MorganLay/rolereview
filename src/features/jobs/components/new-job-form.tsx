@@ -31,6 +31,12 @@ import type { FieldErrors } from "@/lib/result";
 import { cn } from "@/lib/utils";
 
 import { createJob } from "../actions";
+import {
+  noteSuccessfulAnalysis,
+  pendingAnalysesFor,
+  reconcileAnalysesAdjust,
+  rememberAnalyses,
+} from "../analyses-left";
 import { subscribeNewJobVisit } from "./new-job-link";
 import { JOB_LIMITS, JOB_SOURCES } from "../schemas";
 
@@ -52,12 +58,11 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
   const [fields, setFields] = useState<FieldErrors>({});
   const [reading, setReading] = useState(false);
   const [stage, setStage] = useState(0);
-  const [analysesAdjust, setAnalysesAdjust] = useState({
-    base: analysesLeftProp,
-    delta: 0,
-  });
+  const [analysesAdjust, setAnalysesAdjust] = useState(() =>
+    pendingAnalysesFor(analysesLeftProp),
+  );
   if (analysesAdjust.base !== analysesLeftProp) {
-    setAnalysesAdjust({ base: analysesLeftProp, delta: 0 });
+    setAnalysesAdjust(reconcileAnalysesAdjust(analysesLeftProp, analysesAdjust));
   }
   const analysesLeft = Math.max(0, analysesLeftProp - analysesAdjust.delta);
   const busy = useRef(false);
@@ -131,6 +136,8 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
 
     const parsedSource = JOB_SOURCES.find((value) => value === source) ?? null;
     const generation = draftGeneration.current;
+    const baseAtSubmit = analysesAdjust.base;
+    const visibleAtSubmit = analysesLeft;
     busy.current = true;
     setFields({});
     setStage(0);
@@ -149,7 +156,9 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
         if (sameVisit) setReading(false);
         if (result.error.code === "QUOTA_EXCEEDED") {
           openUpgradeModal({ kind: "quota", meter: "ANALYZE" });
-          setAnalysesAdjust({ base: analysesLeftProp, delta: analysesLeftProp });
+          const next = { base: analysesLeftProp, delta: analysesLeftProp };
+          rememberAnalyses(next);
+          setAnalysesAdjust(next);
           return;
         }
         if (!sameVisit) return;
@@ -162,7 +171,13 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
       }
       if (!live.current) return;
       if (result.data.analysisStatus === "READY") {
-        setAnalysesAdjust((current) => ({ ...current, delta: current.delta + 1 }));
+        const next = noteSuccessfulAnalysis({
+          baseAtSubmit,
+          visibleAtSubmit,
+          baseNow: analysesAdjust.base,
+        });
+        rememberAnalyses(next);
+        setAnalysesAdjust(next);
       } else if (draftGeneration.current === generation) {
         toast.error(copy.aiFailed);
       }

@@ -86,17 +86,19 @@ export function selectBonusCredit<T extends BonusCreditCandidate>(
       credit.remaining > 0 &&
       (credit.expiresAt === null || credit.expiresAt > now),
   );
-  usable.sort((a, b) => {
-    if (a.expiresAt === null && b.expiresAt === null) {
-      return a.createdAt.getTime() - b.createdAt.getTime();
-    }
-    if (a.expiresAt === null) return 1;
-    if (b.expiresAt === null) return -1;
-    const expiry = a.expiresAt.getTime() - b.expiresAt.getTime();
-    if (expiry !== 0) return expiry;
-    return a.createdAt.getTime() - b.createdAt.getTime();
-  });
+  usable.sort(compareBonusCredits);
   return usable[0] ?? null;
+}
+
+function compareBonusCredits(a: BonusCreditCandidate, b: BonusCreditCandidate): number {
+  if (a.expiresAt === null && b.expiresAt === null) {
+    return a.createdAt.getTime() - b.createdAt.getTime();
+  }
+  if (a.expiresAt === null) return 1;
+  if (b.expiresAt === null) return -1;
+  const expiry = a.expiresAt.getTime() - b.expiresAt.getTime();
+  if (expiry !== 0) return expiry;
+  return a.createdAt.getTime() - b.createdAt.getTime();
 }
 
 async function loadQuotaCounts(
@@ -146,4 +148,47 @@ export async function quotaSnapshot(
 ): Promise<QuotaSnapshot> {
   const counts = await loadQuotaCounts(user, kind, now);
   return { ...counts, remaining: quotaRemaining(counts) };
+}
+
+/**
+ * A model success is recorded before the analysis is saved. If that save does
+ * not stick, drop the charge so a retry is not a second use. Restores a bonus
+ * credit when the row spent one.
+ */
+export async function releaseUnsavedAnalysis(userId: string, refId: string): Promise<void> {
+  await db.$transaction(async (tx) => {
+    const rows = await tx.aiCall.findMany({
+      where: { userId, refId, kind: "ANALYZE", success: true },
+      select: { id: true, usedBonusCredit: true },
+    });
+    if (rows.length === 0) return;
+    await tx.aiCall.updateMany({
+      where: { userId, id: { in: rows.map((row) => row.id) } },
+      data: { success: false, errorCode: "AI_FAILED" },
+    });
+    let restore = rows.filter((row) => row.usedBonusCredit).length;
+    if (restore === 0) return;
+    const credits = await tx.bonusCredit.findMany({
+      where: { userId, kind: "ANALYZE" },
+      select: {
+        id: true,
+        remaining: true,
+        amount: true,
+        expiresAt: true,
+        createdAt: true,
+      },
+    });
+    const ordered = credits
+      .filter((credit) => credit.remaining < credit.amount)
+      .sort(compareBonusCredits);
+    for (const credit of ordered) {
+      if (restore === 0) break;
+      const give = Math.min(credit.amount - credit.remaining, restore);
+      const updated = await tx.bonusCredit.updateMany({
+        where: { id: credit.id, userId, remaining: credit.remaining },
+        data: { remaining: { increment: give } },
+      });
+      if (updated.count === 1) restore -= give;
+    }
+  });
 }

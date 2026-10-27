@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { checkQuota, runStructured, requireUserForAction, revalidatePath } =
+const { checkQuota, releaseUnsavedAnalysis, runStructured, requireUserForAction, revalidatePath } =
   vi.hoisted(() => ({
     checkQuota: vi.fn(),
+    releaseUnsavedAnalysis: vi.fn(),
     runStructured: vi.fn(),
     requireUserForAction: vi.fn(),
     revalidatePath: vi.fn(),
@@ -40,6 +41,7 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/features/billing/quota", () => ({
   checkQuota,
+  releaseUnsavedAnalysis,
 }));
 
 vi.mock("@/lib/ai/run", () => ({
@@ -190,6 +192,7 @@ describe("createJob", () => {
     const saved = jobUpdateMany.mock.calls[0]?.[0].data;
     expect(saved.status).toBeUndefined();
     expect(saved.analysis.requirements[0].id).toBe("r1");
+    expect(releaseUnsavedAnalysis).not.toHaveBeenCalled();
     expect(reminderUpdateMany).toHaveBeenCalledWith({
       where: {
         userId: user.id,
@@ -201,6 +204,27 @@ describe("createJob", () => {
       },
       data: { title: deadlineReminderTitle("Acme") },
     });
+  });
+
+  it("releases the charge when the model output cannot be saved", async () => {
+    runStructured.mockResolvedValue({
+      ok: true,
+      data: {
+        ...analyzed(),
+        requirements: [{ text: null, kind: "skill", importance: "must" }],
+      },
+    });
+    const result = await createJob(input());
+    expect(result).toEqual({
+      ok: true,
+      data: { jobId, analysisStatus: "FAILED" },
+    });
+    expect(releaseUnsavedAnalysis).toHaveBeenCalledWith(user.id, jobId);
+    expect(jobUpdateMany).toHaveBeenCalledWith({
+      where: { id: jobId, userId: user.id },
+      data: { analysisStatus: "FAILED" },
+    });
+    expect(runStructured).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -228,6 +252,7 @@ describe("retryAnalysis", () => {
     expect(result).toEqual({ ok: false, error: { code: "CONFLICT" } });
     expect(runStructured).not.toHaveBeenCalled();
     expect(jobUpdateMany).not.toHaveBeenCalled();
+    expect(releaseUnsavedAnalysis).not.toHaveBeenCalled();
   });
 
   it("retries a FAILED job and still does not replace fields the user set", async () => {
@@ -258,5 +283,6 @@ describe("retryAnalysis", () => {
     expect(saved.workMode).toBeUndefined();
     expect(saved.company).toBe("Acme");
     expect(saved.referenceNumber).toBe("REF-9");
+    expect(releaseUnsavedAnalysis).toHaveBeenCalledWith(user.id, jobId);
   });
 });
