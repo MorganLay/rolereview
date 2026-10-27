@@ -14,7 +14,7 @@ import {
 import { letterPdfLines, letterPdfModel } from "@/lib/pdf/letter-model";
 import { resumePdfLines, resumePdfModel, type ResumePdfModel } from "@/lib/pdf/model";
 import { pdfPageCount } from "@/lib/pdf/pages";
-import { renderLetterPdf, renderResumePdf } from "@/lib/pdf/render";
+import { fitResumePdf, renderLetterPdf, renderResumePdf } from "@/lib/pdf/render";
 import { resolveResumeTemplate, storedResumeTemplate } from "@/lib/pdf/template";
 import { SEED_LIBRARY } from "../../prisma/library-seed";
 
@@ -155,6 +155,13 @@ describe("renderResumePdf", () => {
 
     expect(pdfPageCount(spilled)).toBeGreaterThan(1);
     expect(pdfPageCount(fitted)).toBe(1);
+  }, 20000);
+
+  it("uses pdfPageCount for the preview page count after a one-page fit", async () => {
+    const fit = await fitResumePdf(longResume(), "classic", { pages: 1 });
+    expect(fit.pageCount).toBe(pdfPageCount(fit.pdf));
+    expect(fit.pageCount).toBe(1);
+    expect(fit.overByLines).toBe(0);
   }, 20000);
 
   it("is byte-identical when the same submitted timestamp is used again", async () => {
