@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useState, type CSSProperties } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -48,6 +47,7 @@ import { boardInsertIndex, dragInsertIndex, planColumnMove } from "../board-orde
 import type { BoardCardDisplay } from "../format";
 import { boardCardSecondaryLine } from "./board-card-line";
 import { JobNextActionLink } from "./job-next-action";
+import { JobOpenLink } from "./job-open-link";
 import {
   BOARD_STAGES,
   CLOSED_JOB_STATUSES,
@@ -64,6 +64,7 @@ import { CloseJobDialog } from "./close-job-dialog";
 const copy = strings.jobs.board;
 const detail = strings.jobs.detail;
 const COLUMN_PREFIX = "column:";
+const ALL_STAGES = "ALL";
 
 const MOBILE_QUERY = "(max-width: 767px)";
 const REDUCE_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
@@ -82,7 +83,7 @@ export function JobsBoard({
   const incoming = boardCardsKey(initial);
   const [seen, setSeen] = useState(incoming);
   const [cards, setCards] = useState(initial);
-  const [stage, setStage] = useState<BoardStage>("SAVED");
+  const [stage, setStage] = useState<BoardStage | typeof ALL_STAGES>("SAVED");
   const [pending, setPending] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [closeMove, setCloseMove] = useState<{
@@ -98,6 +99,8 @@ export function JobsBoard({
 
   const drag = !mobile && !pending;
   const stages = lockedStage ? [lockedStage] : BOARD_STAGES;
+  const showAll = lockedStage === null && stage === ALL_STAGES;
+  const singlePhone = lockedStage === null && !showAll;
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
@@ -244,13 +247,14 @@ export function JobsBoard({
           <Select
             value={stage}
             onValueChange={(value) => {
-              if (isBoardStage(value)) setStage(value);
+              if (value === ALL_STAGES || isBoardStage(value)) setStage(value);
             }}
           >
             <SelectTrigger id={stageId} className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value={ALL_STAGES}>{copy.allStages}</SelectItem>
               {BOARD_STAGES.map((value) => (
                 <SelectItem key={value} value={value}>
                   {copy.stageOption(stageName(value), stageCount(cards, value))}
@@ -271,7 +275,14 @@ export function JobsBoard({
         onDragEnd={onDragEnd}
         onDragCancel={() => setActiveId(null)}
       >
-        <div className="flex w-full min-w-0 max-w-full gap-3 overflow-x-auto pb-3">
+        <div
+          className={cn(
+            "flex w-full min-w-0 max-w-full gap-3 pb-3",
+            singlePhone
+              ? "max-md:overflow-x-hidden md:overflow-x-auto"
+              : "touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain",
+          )}
+        >
           {stages.map((value) => (
             <BoardColumn
               key={value}
@@ -279,7 +290,8 @@ export function JobsBoard({
               cards={cards}
               drag={drag}
               pending={pending}
-              selected={lockedStage !== null || stage === value}
+              selected={lockedStage !== null || showAll || stage === value}
+              spread={showAll}
               solo={lockedStage !== null}
               reduceMotion={reduceMotion}
               onMove={moveToTop}
@@ -322,6 +334,7 @@ function BoardColumn({
   drag,
   pending,
   selected,
+  spread,
   solo,
   reduceMotion,
   onMove,
@@ -332,6 +345,7 @@ function BoardColumn({
   drag: boolean;
   pending: boolean;
   selected: boolean;
+  spread: boolean;
   solo: boolean;
   reduceMotion: boolean;
   onMove: (card: BoardCardDisplay, status: JobStatusValue) => void;
@@ -351,8 +365,9 @@ function BoardColumn({
     <section
       aria-labelledby={headingId}
       className={cn(
-        "w-full shrink-0 flex-col gap-2 md:flex",
-        solo ? "md:max-w-xl" : "md:w-72",
+        "min-w-0 flex-col gap-2 md:flex",
+        spread ? "w-72 shrink-0 md:w-72" : "w-full max-w-full md:w-72 md:shrink-0",
+        solo && "md:max-w-xl",
         selected ? "flex" : "max-md:hidden",
         isOver && drag && "rounded-lg bg-muted/50",
       )}
@@ -531,12 +546,11 @@ function CardBody({
           <GripVertical className="mt-0.5 size-4 shrink-0 text-slate" aria-hidden />
         ) : null}
         <div className="min-w-0 flex-1">
-          <Link
+          <JobOpenLink
             href={`/jobs/${card.id}`}
+            company={card.company}
             className="block font-medium break-words text-ink underline-offset-4 hover:underline"
-          >
-            {card.company}
-          </Link>
+          />
           <p className="break-words text-sm text-slate">{card.title}</p>
         </div>
         {onMove && onClose ? (

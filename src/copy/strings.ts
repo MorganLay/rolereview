@@ -1965,6 +1965,7 @@ export const strings = {
       stageLabel: "Stage",
       stageOption: (stage: string, count: number) => `${stage} (${count})`,
       allStages: "All stages",
+      opening: "Opening…",
       showingStage: (stage: string) => `Showing ${stage}.`,
       jobCount: (count: number) => (count === 1 ? "1 job" : `${count} jobs`),
       matchScore: "Match",

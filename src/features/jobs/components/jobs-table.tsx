@@ -33,6 +33,7 @@ import { strings } from "@/copy/strings";
 import { archiveJobs, updateJobStatus } from "../actions";
 import type { JobListDisplay } from "../format";
 import { JobNextActionLink } from "./job-next-action";
+import { JobOpenLink } from "./job-open-link";
 import {
   jobListHref,
   toggledSort,
@@ -238,12 +239,11 @@ export function JobsTable({
               </TableCell>
               <TableCell className="max-w-48 whitespace-normal">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link
+                  <JobOpenLink
                     href={`/jobs/${row.id}`}
+                    company={row.company}
                     className="font-medium break-words text-ink underline-offset-4 hover:underline"
-                  >
-                    {row.company}
-                  </Link>
+                  />
                   {row.archived ? (
                     <Badge variant="outline">{detail.archived}</Badge>
                   ) : null}

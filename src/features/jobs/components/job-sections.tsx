@@ -65,10 +65,15 @@ export function JobSections({
 
   return (
     <Tabs key={initialTab} defaultValue={initialTab} onValueChange={onValueChange}>
-      <div className="w-full min-w-0 max-w-full overflow-x-auto" aria-busy={pending}>
-        <TabsList aria-label={documentsCopy.tabsLabel}>
-          <TabsTrigger value="overview">{documentsCopy.overviewTab}</TabsTrigger>
-          <TabsTrigger value="documents">
+      <div
+        className="w-full min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain"
+        aria-busy={pending}
+      >
+        <TabsList aria-label={documentsCopy.tabsLabel} className="h-auto w-max flex-nowrap justify-start">
+          <TabsTrigger value="overview" className="flex-none">
+            {documentsCopy.overviewTab}
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="flex-none">
             {documentsCopy.documentsTab}
             {documentCount > 0 ? (
               <Badge variant="secondary" className="h-4 px-1.5">
@@ -77,11 +82,23 @@ export function JobSections({
               </Badge>
             ) : null}
           </TabsTrigger>
-          <TabsTrigger value="interviews">{interviewsCopy.tab}</TabsTrigger>
-          <TabsTrigger value="contacts">{contactsCopy}</TabsTrigger>
-          <TabsTrigger value="timeline">{timelineCopy.tab}</TabsTrigger>
-          <TabsTrigger value="reminders">{remindersCopy.tab}</TabsTrigger>
-          {showOffer ? <TabsTrigger value="offer">{offerCopy.tab}</TabsTrigger> : null}
+          <TabsTrigger value="interviews" className="flex-none">
+            {interviewsCopy.tab}
+          </TabsTrigger>
+          <TabsTrigger value="contacts" className="flex-none">
+            {contactsCopy}
+          </TabsTrigger>
+          <TabsTrigger value="timeline" className="flex-none">
+            {timelineCopy.tab}
+          </TabsTrigger>
+          <TabsTrigger value="reminders" className="flex-none">
+            {remindersCopy.tab}
+          </TabsTrigger>
+          {showOffer ? (
+            <TabsTrigger value="offer" className="flex-none">
+              {offerCopy.tab}
+            </TabsTrigger>
+          ) : null}
         </TabsList>
       </div>
       {children}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
 import { strings } from "@/copy/strings";
 
@@ -20,6 +21,7 @@ export default async function LetterWorkspacePage({
 }: {
   params: Promise<{ jobId: string; letterId: string }>;
 }) {
+  await connection();
   const { jobId, letterId } = await params;
   const user = await requireUser();
   const workspace = await getLetterWorkspace(user.id, user.plan, jobId, letterId);
