@@ -193,11 +193,11 @@ async function appendTokenToIncludedBullet(page: Page, token: string) {
         { timeout: 20_000 },
       );
       await field.press("Enter");
+      await saveResponse;
       await expect(field).toBeHidden();
       await expect(editedBullet(page, token)).toBeVisible();
-      await saveResponse;
       await expect(page.getByText(copy.jobs.workspace.saveFailed)).toHaveCount(0);
-      await expect(editedBullet(page, token)).toBeVisible();
+      await expect(page.getByText(/^Saved \d{2}:\d{2}$/)).toBeVisible();
       return;
     }
   }
