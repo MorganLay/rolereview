@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 
 import { strings } from "@/copy/strings";
-import { checkQuota, type QuotaDecision } from "@/features/billing/quota";
+import {
+  checkQuota,
+  releaseUnsavedAnalysis,
+  type QuotaDecision,
+} from "@/features/billing/quota";
 import { zodFieldErrors } from "@/features/library/schemas";
 import { deadlineReminderTitle } from "@/features/tracking/reminders";
 import { Prisma } from "@/generated/prisma/client";
@@ -120,6 +124,8 @@ export async function retryAnalysis(
     });
     return still ? fail("CONFLICT") : fail("NOT_FOUND");
   }
+
+  await releaseUnsavedAnalysis(user.id, existing.id);
 
   return analyzeAndSave(
     user,
@@ -264,6 +270,7 @@ async function analyzeAndSave(
   try {
     analysis = postProcessAnalyze(result.data);
   } catch {
+    await releaseUnsavedAnalysis(user.id, jobId);
     await markAnalysisFailed(user.id, jobId);
     revalidateJob(jobId);
     return ok({ jobId, analysisStatus: "FAILED" });
@@ -271,8 +278,12 @@ async function analyzeAndSave(
 
   try {
     const saved = await saveAnalysis(user.id, jobId, current, analysis);
-    if (!saved) return fail("NOT_FOUND");
+    if (!saved) {
+      await releaseUnsavedAnalysis(user.id, jobId);
+      return fail("NOT_FOUND");
+    }
   } catch {
+    await releaseUnsavedAnalysis(user.id, jobId);
     await markAnalysisFailed(user.id, jobId).catch(() => undefined);
     revalidateJob(jobId);
     return ok({ jobId, analysisStatus: "FAILED" });
