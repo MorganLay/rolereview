@@ -109,7 +109,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **TS.1** Turn the week's notes into tasks
 - [x] **TS.2** Short board cards
 - [x] **TS.3** Sidebar usage stays put
-- [ ] **TS.4** Analyses left drops by one
+- [x] **TS.4** Analyses left drops by one
 - [x] **TS.5** New job paste and a blank form
 - T13.4b waits until TS.2–TS.5 are ticked.
 
@@ -122,6 +122,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-27 TS.4:** One saved analysis reduces analyses left today by 1. A failed analysis does not. An unsaved success is released before a retry, so the retry is not a second charge. A signed-in click-through was not done.
 - **2026-10-27 TS.5:** A long paste scrolls inside the text area. New job clears a preserved “Analyzing the posting” screen and does not run analysis again. A signed-in click-through was not done.
 - **2026-10-27 TS.3:** The sidebar stays one viewport tall, so the usage line stays at the bottom of the screen while a long posting scrolls. A signed-in click-through was not done.
 - **2026-10-27 TS.2:** A board card shows the company, the title, and the next action, plus one line. A Soon or Past deadline wins; otherwise the line is the match score. Priority, submitted, and archived stay. A signed-in click-through was not done.
