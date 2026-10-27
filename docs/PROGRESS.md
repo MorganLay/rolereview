@@ -102,7 +102,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **TQ.9** State-based primary action
 - [x] **TQ.10** Dashboard with a job to do
 - [x] **TQ.11** Real preview and strict fit
-- [ ] **TQ.12** Save before export, identical outputs
+- [x] **TQ.12** Save before export, identical outputs
 - [ ] **TQ.13** Workspace navigation and recovery
 
 ## Phase S — Revisions from this week
@@ -118,6 +118,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-27 TQ.12:** Copy, PDF, and DOCX wait for a pending save. A failed save is not exported. Leaving a dirty editor warns. The template control updates the preview before the preference is saved. A parity test compares the copy lines with the DOCX text. A signed-in click-through was not done.
 - **2026-10-27 TQ.11:** Preview loads the same PDF as the download and does not set exportedAt. A 1-page target tightens compact spacing, then links on one line, then the template minimum font. If it is still over, Preview shows “Over by N lines” and up to three bullets to turn off. A signed-in click-through was not done.
 - **2026-10-27 TQ.10:** The returning dashboard is a summary strip and one dated action list. With the seed clock the top action is the interview in 30 hours, linked to that job’s Interviews tab. Getting started stays until onboarding is done. A signed-in click-through was not done.
 - **2026-10-27 TQ.9:** Each job has one next step from `nextAction`. Screening follows Applied. Accepted opens the offer only when one is saved. Rejected, Withdrawn, and No response have no button. The same action is on the header, the board card, and the company cell in the list. Documents shows a badge of ready resume and letter versions, hidden at zero. Preview & export opens that resume; a real PDF preview stays on TQ.11. A signed-in click-through was not done.
