@@ -103,7 +103,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **TQ.10** Dashboard with a job to do
 - [x] **TQ.11** Real preview and strict fit
 - [x] **TQ.12** Save before export, identical outputs
-- [ ] **TQ.13** Workspace navigation and recovery
+- [x] **TQ.13** Workspace navigation and recovery
 
 ## Phase S — Revisions from this week
 - [x] **TS.1** Turn the week's notes into tasks
@@ -122,6 +122,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-27 TQ.13:** Excluded resume items collapse per section. A jump bar reaches Summary, the entry sections, and Skills. Undo waits 8 seconds for a bullet, entry, skill, contact, interview, or job. Account delete is unchanged. A failed tailor or letter shows Retry and does not look finished. A signed-in click-through was not done.
 - **2026-10-27 TS.1:** Library density, Documents, version titles, one-page fit, and the template preview stay in the tasks that already shipped. Scraping a posting URL stays in 1.1. A match before tailoring is not a 1.0 feature. TS.2–TS.5 are the remaining notes.
 - **2026-10-27 TQ.12:** Copy, PDF, and DOCX wait for a pending save. A failed save is not exported. Leaving a dirty editor warns. The template control updates the preview before the preference is saved. A parity test compares the copy lines with the DOCX text. A signed-in click-through was not done.
 - **2026-10-27 TQ.11:** Preview loads the same PDF as the download and does not set exportedAt. A 1-page target tightens compact spacing, then links on one line, then the template minimum font. If it is still over, Preview shows “Over by N lines” and up to three bullets to turn off. A signed-in click-through was not done.
