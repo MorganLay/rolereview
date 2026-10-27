@@ -51,8 +51,10 @@ type ExportInput = {
   frozen: boolean;
   onSubmitted?: () => void;
   templates: ResumeTemplateAccess;
-  content: ResumeContent;
   snapshot: LibrarySnapshot;
+  /** Saves pending edits. False means the save failed and the edits are still local. */
+  beforeExport: () => Promise<boolean>;
+  readContent: () => ResumeContent;
 };
 
 export function useResumeExport(input: ExportInput) {
@@ -61,14 +63,23 @@ export function useResumeExport(input: ExportInput) {
   const [jobStatus, setJobStatus] = useState(input.jobStatus);
   const [resumeKey, setResumeKey] = useState(input.resumeId);
   const [templatePending, setTemplatePending] = useState(false);
+  const templateRef = useRef(input.templateId);
+  const templateSaveRef = useRef<Promise<void>>(Promise.resolve());
   const [submitPending, setSubmitPending] = useState(false);
   const [applyPending, setApplyPending] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
   const resumeRef = useRef(input.resumeId);
+  const seenResume = useRef(input.resumeId);
   useEffect(() => {
     resumeRef.current = input.resumeId;
   }, [input.resumeId]);
+  useEffect(() => {
+    if (seenResume.current === input.resumeId) return;
+    seenResume.current = input.resumeId;
+    templateRef.current = input.templateId;
+    templateSaveRef.current = Promise.resolve();
+  }, [input.resumeId, input.templateId]);
 
   if (resumeKey !== input.resumeId) {
     setResumeKey(input.resumeId);
@@ -83,9 +94,22 @@ export function useResumeExport(input: ExportInput) {
   }
 
   async function onTemplate(next: ResumeTemplateId) {
-    if (input.frozen || templatePending || next === templateId) return;
+    if (input.frozen || templatePending || next === templateRef.current) return;
+    const previous = templateRef.current;
     const resumeId = input.resumeId;
+    templateRef.current = next;
+    setTemplateId(next);
     setTemplatePending(true);
+    const pending = persistTemplate(resumeId, next, previous);
+    templateSaveRef.current = pending;
+    await pending;
+  }
+
+  async function persistTemplate(
+    resumeId: string,
+    next: ResumeTemplateId,
+    previous: ResumeTemplateId,
+  ) {
     let result: Awaited<ReturnType<typeof setResumeTemplate>>;
     try {
       result = await setResumeTemplate({
@@ -99,6 +123,10 @@ export function useResumeExport(input: ExportInput) {
     setTemplatePending(false);
     if (resumeRef.current !== resumeId) return;
     if (!result.ok) {
+      if (templateRef.current === next) {
+        templateRef.current = previous;
+        setTemplateId(previous);
+      }
       if (result.error.code === "PRO_REQUIRED") {
         openUpgradeModal({ kind: "feature", feature: "templates" });
       } else if (result.error.code === "CONFLICT") {
@@ -106,16 +134,26 @@ export function useResumeExport(input: ExportInput) {
       } else toast.error(copy.templateFailed);
       return;
     }
-    setTemplateId(result.data.templateId);
+    if (templateRef.current === next) {
+      templateRef.current = result.data.templateId;
+      setTemplateId(result.data.templateId);
+    }
   }
 
   async function onCopy() {
+    const ready = await input.beforeExport();
+    if (!ready) {
+      toast.error(copy.exportSaveFailed);
+      return;
+    }
     try {
       if (!navigator.clipboard?.writeText) {
         toast.error(copy.copyFailed);
         return;
       }
-      await navigator.clipboard.writeText(resumePlainText(input.content, input.snapshot));
+      await navigator.clipboard.writeText(
+        resumePlainText(input.readContent(), input.snapshot),
+      );
       toast.success(copy.copied);
     } catch {
       toast.error(copy.copyFailed);
@@ -140,7 +178,15 @@ export function useResumeExport(input: ExportInput) {
     const status = jobStatus;
     setExporting(true);
     try {
-      const response = await fetch(`/api/resumes/${resumeId}/${format}`);
+      await templateSaveRef.current;
+      const ready = await input.beforeExport();
+      if (resumeRef.current !== resumeId) return;
+      if (!ready) {
+        toast.error(copy.exportSaveFailed);
+        return;
+      }
+      const params = new URLSearchParams({ template: templateRef.current });
+      const response = await fetch(`/api/resumes/${resumeId}/${format}?${params}`);
       if (response.status === 403) {
         openUpgradeModal({ kind: "feature", feature: "docx" });
         return;

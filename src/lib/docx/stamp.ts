@@ -34,6 +34,12 @@ export function stampDocx(zip: Buffer, instant: Date): Buffer {
   return writeZip(entries, instant);
 }
 
+/** One part of a DOCX zip, or null when that part is absent. */
+export function readDocxPart(zip: Buffer, name: string): Buffer | null {
+  const entry = readZip(zip).find((item) => item.name === name);
+  return entry ? entry.data : null;
+}
+
 function readZip(zip: Buffer): ZipEntry[] {
   const eocd = findEocd(zip);
   const count = zip.readUInt16LE(eocd + 10);
