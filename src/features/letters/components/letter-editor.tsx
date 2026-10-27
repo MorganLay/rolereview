@@ -13,11 +13,12 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { strings } from "@/copy/strings";
-import { resumeTemplateLabel } from "@/features/tailor/template-label";
+import { useUnsavedChangesWarning } from "@/features/tailor/components/unsaved-changes";
 import {
   SubmittedVersionBanner,
   VersionNameField,
 } from "@/features/tailor/components/version-chrome";
+import { resumeTemplateLabel } from "@/features/tailor/template-label";
 import type { ResumeTemplateId } from "@/lib/pdf/template";
 import { cn } from "@/lib/utils";
 
@@ -51,9 +52,12 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
   const contentRef = useRef(workspace.content);
   const savedRef = useRef(workspace.content);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const persistRef = useRef<() => Promise<void>>(async () => {});
+  const persistRef = useRef<() => Promise<boolean>>(async () => true);
+  const flushRef = useRef<() => Promise<boolean>>(async () => true);
+  const chainRef = useRef<Promise<boolean> | null>(null);
   const inFlight = useRef(false);
   const queued = useRef(false);
+  const flushing = useRef(false);
   const serverDrift = useRef(false);
   const unmounted = useRef(false);
   const skipBlur = useRef(false);
@@ -70,24 +74,19 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
     },
     rating: workspace.rating,
     templates: workspace.templates,
-    content,
+    beforeExport: () => flushRef.current(),
+    readContent: () => contentRef.current,
   });
   const templateId = exportUi.barProps.templateId;
   const savedLabel = copy.saved(formatSavedTime(savedAt, workspace.timeZone));
 
-  async function persist() {
-    if (frozen) return;
-    if (inFlight.current) {
-      queued.current = true;
-      return;
-    }
-    if (!serverDrift.current && jsonEqual(contentRef.current, savedRef.current)) {
-      if (!unmounted.current) setPhase("saved");
-      return;
-    }
+  function dirty() {
+    return serverDrift.current || !jsonEqual(contentRef.current, savedRef.current);
+  }
 
-    inFlight.current = true;
+  async function saveOnce(): Promise<"saved" | "stale" | "failed"> {
     const payload = contentRef.current;
+    inFlight.current = true;
     if (!unmounted.current) setPhase("saving");
 
     let result: Awaited<ReturnType<typeof saveLetterContent>>;
@@ -102,27 +101,88 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
     }
     inFlight.current = false;
 
-    const newer = contentRef.current !== payload || queued.current;
-    queued.current = false;
-    if (newer) {
-      if (result.ok && !jsonEqual(payload, savedRef.current)) serverDrift.current = true;
-      if (unmounted.current) await persist();
-      else schedule();
-      return;
-    }
-    if (unmounted.current) return;
+    const stale = contentRef.current !== payload || queued.current;
     if (!result.ok) {
-      if (result.error.code === "CONFLICT") toast.error(copy.frozenSave);
-      setPhase("error");
-      return;
+      if (stale) return "stale";
+      if (!unmounted.current) {
+        if (result.error.code === "CONFLICT") toast.error(copy.frozenSave);
+        setPhase("error");
+      }
+      return "failed";
+    }
+
+    if (stale) {
+      if (!jsonEqual(payload, savedRef.current)) serverDrift.current = true;
+      return "stale";
     }
 
     serverDrift.current = false;
     contentRef.current = result.data.content;
     savedRef.current = result.data.content;
-    setContent(result.data.content);
-    setSavedAt(result.data.savedAt);
-    setPhase("saved");
+    if (!unmounted.current) {
+      setContent(result.data.content);
+      setSavedAt(result.data.savedAt);
+      setPhase("saved");
+    }
+    return "saved";
+  }
+
+  async function runUntilSettled(): Promise<boolean> {
+    while (true) {
+      queued.current = false;
+      if (frozen) return true;
+      if (!dirty()) {
+        if (!unmounted.current) setPhase("saved");
+        if (queued.current) continue;
+        return true;
+      }
+
+      const outcome = await saveOnce();
+      if (outcome === "failed") return false;
+      if (!dirty() && !queued.current) return true;
+      if (flushing.current || unmounted.current || queued.current) continue;
+      schedule();
+      if (flushing.current || unmounted.current || queued.current) {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+        continue;
+      }
+      return true;
+    }
+  }
+
+  function persist(): Promise<boolean> {
+    if (frozen) return Promise.resolve(true);
+    const current = chainRef.current;
+    if (current) {
+      queued.current = true;
+      return current.then((ok) => {
+        if (!ok) return false;
+        if (dirty() || queued.current) return persist();
+        return true;
+      });
+    }
+    const run = runUntilSettled().finally(() => {
+      if (chainRef.current === run) chainRef.current = null;
+    });
+    chainRef.current = run;
+    return run;
+  }
+
+  async function flushSave(): Promise<boolean> {
+    if (frozen) return true;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    flushing.current = true;
+    try {
+      return await persist();
+    } finally {
+      flushing.current = false;
+    }
   }
 
   function schedule() {
@@ -137,7 +197,10 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
 
   useEffect(() => {
     persistRef.current = persist;
+    flushRef.current = flushSave;
   });
+
+  useUnsavedChangesWarning(() => !frozen && dirty(), copy.unsavedLeave);
 
   useEffect(() => {
     return () => {
@@ -170,11 +233,7 @@ export function LetterEditor({ workspace }: { workspace: LetterWorkspaceData }) 
   }
 
   function retry() {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    void persist();
+    void flushSave();
   }
 
   function beginEdit(paragraph: LetterParagraph) {

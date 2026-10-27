@@ -38,7 +38,8 @@ type ExportInput = {
   onSubmitted?: () => void;
   rating: 1 | -1 | null;
   templates: ResumeTemplateAccess;
-  content: CoverLetterContent;
+  beforeExport: () => Promise<boolean>;
+  readContent: () => CoverLetterContent;
 };
 
 export function useLetterExport(input: ExportInput) {
@@ -47,13 +48,22 @@ export function useLetterExport(input: ExportInput) {
   const [rating, setRating] = useState(input.rating);
   const [letterKey, setLetterKey] = useState(input.letterId);
   const [templatePending, setTemplatePending] = useState(false);
+  const templateRef = useRef(input.templateId);
+  const templateSaveRef = useRef<Promise<void>>(Promise.resolve());
   const [submitPending, setSubmitPending] = useState(false);
   const [ratingPending, setRatingPending] = useState(false);
   const [exporting, setExporting] = useState(false);
   const letterRef = useRef(input.letterId);
+  const seenLetter = useRef(input.letterId);
   useEffect(() => {
     letterRef.current = input.letterId;
   }, [input.letterId]);
+  useEffect(() => {
+    if (seenLetter.current === input.letterId) return;
+    seenLetter.current = input.letterId;
+    templateRef.current = input.templateId;
+    templateSaveRef.current = Promise.resolve();
+  }, [input.letterId, input.templateId]);
 
   if (letterKey !== input.letterId) {
     setLetterKey(input.letterId);
@@ -67,9 +77,22 @@ export function useLetterExport(input: ExportInput) {
   }
 
   async function onTemplate(next: ResumeTemplateId) {
-    if (input.frozen || templatePending || next === templateId) return;
+    if (input.frozen || templatePending || next === templateRef.current) return;
+    const previous = templateRef.current;
     const letterId = input.letterId;
+    templateRef.current = next;
+    setTemplateId(next);
     setTemplatePending(true);
+    const pending = persistTemplate(letterId, next, previous);
+    templateSaveRef.current = pending;
+    await pending;
+  }
+
+  async function persistTemplate(
+    letterId: string,
+    next: ResumeTemplateId,
+    previous: ResumeTemplateId,
+  ) {
     let result: Awaited<ReturnType<typeof setLetterTemplate>>;
     try {
       result = await setLetterTemplate({
@@ -83,6 +106,10 @@ export function useLetterExport(input: ExportInput) {
     setTemplatePending(false);
     if (letterRef.current !== letterId) return;
     if (!result.ok) {
+      if (templateRef.current === next) {
+        templateRef.current = previous;
+        setTemplateId(previous);
+      }
       if (result.error.code === "PRO_REQUIRED") {
         openUpgradeModal({ kind: "feature", feature: "templates" });
       } else if (result.error.code === "CONFLICT") {
@@ -90,16 +117,24 @@ export function useLetterExport(input: ExportInput) {
       } else toast.error(copy.templateFailed);
       return;
     }
-    setTemplateId(result.data.templateId);
+    if (templateRef.current === next) {
+      templateRef.current = result.data.templateId;
+      setTemplateId(result.data.templateId);
+    }
   }
 
   async function onCopy() {
+    const ready = await input.beforeExport();
+    if (!ready) {
+      toast.error(copy.exportSaveFailed);
+      return;
+    }
     try {
       if (!navigator.clipboard?.writeText) {
         toast.error(copy.copyFailed);
         return;
       }
-      await navigator.clipboard.writeText(letterPlainText(input.content));
+      await navigator.clipboard.writeText(letterPlainText(input.readContent()));
       toast.success(copy.copied);
     } catch {
       toast.error(copy.copyFailed);
@@ -123,7 +158,15 @@ export function useLetterExport(input: ExportInput) {
     const letterId = input.letterId;
     setExporting(true);
     try {
-      const response = await fetch(`/api/letters/${letterId}/${format}`);
+      await templateSaveRef.current;
+      const ready = await input.beforeExport();
+      if (letterRef.current !== letterId) return;
+      if (!ready) {
+        toast.error(copy.exportSaveFailed);
+        return;
+      }
+      const params = new URLSearchParams({ template: templateRef.current });
+      const response = await fetch(`/api/letters/${letterId}/${format}?${params}`);
       if (response.status === 403) {
         openUpgradeModal({ kind: "feature", feature: "docx" });
         return;

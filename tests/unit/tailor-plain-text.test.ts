@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { resumePlainText } from "@/features/tailor/plainText";
+import { resumePdfLines, resumePdfModel } from "@/lib/pdf/model";
 
 import {
   contentBullet,
@@ -64,33 +65,32 @@ function sample() {
 }
 
 describe("resumePlainText", () => {
-  it("prints included sections in resume order with contact and dates", () => {
-    const text = resumePlainText(sample(), librarySnapshot());
+  it("prints the same lines as the PDF, in that order", () => {
+    const content = sample();
+    const snapshot = librarySnapshot();
+    const text = resumePlainText(content, snapshot);
 
+    expect(text).toBe(resumePdfLines(resumePdfModel(content, snapshot)).join("\n"));
     expect(text).toBe(
       [
         "Morgan Example",
         "Data & reporting analyst",
         `Ottawa, ON ${DOT} morgan@example.com ${DOT} 613-555-0100`,
         "Portfolio: https://example.com",
-        "",
         "Summary",
         "Analyst with reporting experience.",
-        "",
         "Experience",
         "Junior Program Officer",
-        `Canada Revenue Agency ${DOT} Ottawa, ON ${DOT} 2023-11 ${EN_DASH} Present`,
+        `Canada Revenue Agency ${DOT} Ottawa, ON ${DOT} Nov 2023 ${EN_DASH} Present`,
+        "https://example.com/role",
         "- Maintained 14 reports for a 20-person team.",
-        "",
         "Projects",
         "Booking bot",
-        `2025-03 ${EN_DASH} 2025-04`,
+        `Mar 2025 ${EN_DASH} Apr 2025`,
         "- Wrote a Python bot that booked rooms.",
-        "",
         "Education",
         "B.CS. Honours",
-        `Carleton University ${DOT} Ottawa, ON ${DOT} ${EN_DASH} 2023`,
-        "",
+        `Carleton University ${DOT} Ottawa, ON ${DOT} 2023`,
         "Skills",
         "Languages: Python, SQL",
         "IBM Cognos",
@@ -98,13 +98,13 @@ describe("resumePlainText", () => {
     );
   });
 
-  it("leaves out excluded text, the library summary, entry URLs, and branding", () => {
+  it("leaves out excluded text, the library summary, and branding", () => {
     const text = resumePlainText(sample(), librarySnapshot());
 
     expect(text).not.toContain("Left off.");
     expect(text).not.toContain("Shelved");
     expect(text).not.toContain("Library summary");
-    expect(text).not.toContain("https://example.com/role");
+    expect(text).toContain("https://example.com/role");
     expect(text).not.toContain("RoleRefine");
   });
 
@@ -215,7 +215,7 @@ describe("resumePlainText", () => {
 
     expect(text.indexOf("Intern")).toBeLessThan(text.indexOf("Junior Program Officer"));
     expect(text).toContain("Certifications\nAWS Cloud Practitioner\n2024");
-    expect(text).toContain(`Volunteer\nTutor\nExample School ${DOT} ${EN_DASH} 2021`);
+    expect(text).toContain(`Volunteer\nTutor\nExample School ${DOT} 2021`);
     expect(text).toContain("Other\nConference talk");
     expect(text).not.toContain("E9");
   });

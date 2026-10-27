@@ -1623,7 +1623,7 @@ export const strings = {
       detailsTab: "Details",
       exportTab: "Export",
       exportBody:
-        "PDF or DOCX downloads the last saved version. Copy text uses the letter on screen.",
+        "Copy text, PDF, and DOCX save your edits first, then use that same letter.",
       templateLook: (name: string) =>
         `${name} is how this letter is set, including the PDF.`,
       tabsLabel: "Cover letter sections",
@@ -2017,12 +2017,14 @@ export const strings = {
       saving: "Saving…",
       saved: (time: string) => (time ? `Saved ${time}` : "Saved"),
       saveFailed: "Save failed — retry",
+      exportSaveFailed: "Couldn’t save your edits, so this wasn’t exported.",
+      unsavedLeave: "You have unsaved changes. Leave this page anyway?",
       count: (length: number, max: number) => `${length} / ${max}`,
       resumeTab: "Resume",
       matchTab: "Match",
       exportTab: "Export",
       exportBody:
-        "PDF or DOCX downloads the last saved version. Copy text uses the resume on screen.",
+        "Copy text, PDF, and DOCX save your edits first, then use that same resume.",
       templateLabel: "Template",
       templateLook: (name: string) =>
         `${name} is how this resume is set, including the PDF.`,

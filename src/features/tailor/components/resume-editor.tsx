@@ -52,6 +52,7 @@ import { resumeTemplateLabel } from "../template-label";
 import { MatchPanel } from "./match-panel";
 import { ExportAppliedDialog, ResumeExportBar, useResumeExport } from "./resume-export-bar";
 import { ResumePreview } from "./resume-preview";
+import { useUnsavedChangesWarning } from "./unsaved-changes";
 import { SubmittedVersionBanner, VersionNameField } from "./version-chrome";
 
 const SAVE_DELAY_MS = 1500;
@@ -78,9 +79,12 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   const contentRef = useRef(workspace.content);
   const savedRef = useRef(workspace.content);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const persistRef = useRef<() => Promise<void>>(async () => {});
+  const persistRef = useRef<() => Promise<boolean>>(async () => true);
+  const flushRef = useRef<() => Promise<boolean>>(async () => true);
+  const chainRef = useRef<Promise<boolean> | null>(null);
   const inFlight = useRef(false);
   const queued = useRef(false);
+  const flushing = useRef(false);
   const serverDrift = useRef(false);
   const unmounted = useRef(false);
   const skipBlur = useRef(false);
@@ -102,8 +106,9 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
       router.refresh();
     },
     templates: workspace.templates,
-    content,
     snapshot: workspace.snapshot,
+    beforeExport: () => flushRef.current(),
+    readContent: () => contentRef.current,
   });
   const templateId = exportUi.barProps.templateId;
 
@@ -112,19 +117,13 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   );
   const skillNames = workspace.snapshot.skills.map((skill) => skill.name);
 
-  async function persist() {
-    if (frozen) return;
-    if (inFlight.current) {
-      queued.current = true;
-      return;
-    }
-    if (!serverDrift.current && jsonEqual(contentRef.current, savedRef.current)) {
-      if (!unmounted.current) setPhase("saved");
-      return;
-    }
+  function dirty() {
+    return serverDrift.current || !jsonEqual(contentRef.current, savedRef.current);
+  }
 
-    inFlight.current = true;
+  async function saveOnce(): Promise<"saved" | "stale" | "failed"> {
     const payload = contentRef.current;
+    inFlight.current = true;
     if (!unmounted.current) setPhase("saving");
 
     let result: Awaited<ReturnType<typeof saveResumeContent>>;
@@ -139,27 +138,88 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
     }
     inFlight.current = false;
 
-    const newer = contentRef.current !== payload || queued.current;
-    queued.current = false;
-    if (newer) {
-      if (result.ok && !jsonEqual(payload, savedRef.current)) serverDrift.current = true;
-      if (unmounted.current) await persist();
-      else schedule();
-      return;
-    }
-    if (unmounted.current) return;
+    const stale = contentRef.current !== payload || queued.current;
     if (!result.ok) {
-      if (result.error.code === "CONFLICT") toast.error(copy.frozenSave);
-      setPhase("error");
-      return;
+      if (stale) return "stale";
+      if (!unmounted.current) {
+        if (result.error.code === "CONFLICT") toast.error(copy.frozenSave);
+        setPhase("error");
+      }
+      return "failed";
+    }
+
+    if (stale) {
+      if (!jsonEqual(payload, savedRef.current)) serverDrift.current = true;
+      return "stale";
     }
 
     serverDrift.current = false;
     contentRef.current = result.data.content;
     savedRef.current = result.data.content;
-    setContent(result.data.content);
-    setSavedAt(result.data.savedAt);
-    setPhase("saved");
+    if (!unmounted.current) {
+      setContent(result.data.content);
+      setSavedAt(result.data.savedAt);
+      setPhase("saved");
+    }
+    return "saved";
+  }
+
+  async function runUntilSettled(): Promise<boolean> {
+    while (true) {
+      queued.current = false;
+      if (frozen) return true;
+      if (!dirty()) {
+        if (!unmounted.current) setPhase("saved");
+        if (queued.current) continue;
+        return true;
+      }
+
+      const outcome = await saveOnce();
+      if (outcome === "failed") return false;
+      if (!dirty() && !queued.current) return true;
+      if (flushing.current || unmounted.current || queued.current) continue;
+      schedule();
+      if (flushing.current || unmounted.current || queued.current) {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+        continue;
+      }
+      return true;
+    }
+  }
+
+  function persist(): Promise<boolean> {
+    if (frozen) return Promise.resolve(true);
+    const current = chainRef.current;
+    if (current) {
+      queued.current = true;
+      return current.then((ok) => {
+        if (!ok) return false;
+        if (dirty() || queued.current) return persist();
+        return true;
+      });
+    }
+    const run = runUntilSettled().finally(() => {
+      if (chainRef.current === run) chainRef.current = null;
+    });
+    chainRef.current = run;
+    return run;
+  }
+
+  async function flushSave(): Promise<boolean> {
+    if (frozen) return true;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    flushing.current = true;
+    try {
+      return await persist();
+    } finally {
+      flushing.current = false;
+    }
   }
 
   function schedule() {
@@ -174,7 +234,10 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
 
   useEffect(() => {
     persistRef.current = persist;
+    flushRef.current = flushSave;
   });
+
+  useUnsavedChangesWarning(() => !frozen && dirty(), copy.unsavedLeave);
 
   useEffect(() => {
     return () => {
@@ -237,11 +300,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
   }
 
   function retry() {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    void persist();
+    void flushSave();
   }
 
   function beginEdit(bullet: ContentBullet) {
