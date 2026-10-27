@@ -108,7 +108,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 ## Phase S — Revisions from this week
 - [x] **TS.1** Turn the week's notes into tasks
 - [x] **TS.2** Short board cards
-- [ ] **TS.3** Sidebar usage stays put
+- [x] **TS.3** Sidebar usage stays put
 - [ ] **TS.4** Analyses left drops by one
 - [ ] **TS.5** New job paste and a blank form
 - T13.4b waits until TS.2–TS.5 are ticked.
@@ -122,6 +122,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-27 TS.3:** The sidebar stays one viewport tall, so the usage line stays at the bottom of the screen while a long posting scrolls. A signed-in click-through was not done.
 - **2026-10-27 TS.2:** A board card shows the company, the title, and the next action, plus one line. A Soon or Past deadline wins; otherwise the line is the match score. Priority, submitted, and archived stay. A signed-in click-through was not done.
 - **2026-10-27 TQ.13:** Excluded resume items collapse per section. A jump bar reaches Summary, the entry sections, and Skills. Undo waits 8 seconds for a bullet, entry, skill, contact, interview, or job. Account delete is unchanged. A failed tailor or letter shows Retry and does not look finished. A signed-in click-through was not done.
 - **2026-10-27 TS.1:** Library density, Documents, version titles, one-page fit, and the template preview stay in the tasks that already shipped. Scraping a posting URL stays in 1.1. A match before tailoring is not a 1.0 feature. TS.2–TS.5 are the remaining notes.
