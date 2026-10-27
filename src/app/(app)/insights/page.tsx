@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 
 import { strings } from "@/copy/strings";
 import { can } from "@/features/billing/entitlements";
@@ -20,6 +21,7 @@ export default async function InsightsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  await connection();
   const user = await requireUser();
   const params = await searchParams;
   const data = await getInsights(user.id, parseInsightsRange(params.range));

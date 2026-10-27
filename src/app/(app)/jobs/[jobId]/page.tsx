@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
 import { strings } from "@/copy/strings";
 
@@ -36,6 +37,7 @@ export default async function JobDetailPage({
   params: Promise<{ jobId: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  await connection();
   const { jobId } = await params;
   const query = await searchParams;
   const user = await requireUser();
