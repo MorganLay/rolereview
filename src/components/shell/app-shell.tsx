@@ -34,12 +34,12 @@ export function AppShell({
 }: AppShellProps) {
   return (
     <FeedbackProvider>
-      <div className="flex min-h-full w-full min-w-0 max-w-full bg-paper text-ink">
-        <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 border-r border-line bg-surface md:flex md:flex-col">
+      <div className="flex min-h-full w-full min-w-0 max-w-full items-start bg-paper text-ink">
+        <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 self-start border-r border-line bg-surface md:flex md:flex-col">
           <SidebarNav usage={usage} />
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col self-stretch">
           <AppHeader userEmail={userEmail} reminders={reminders} usage={usage} />
           <main className="min-w-0 flex-1 px-4 py-5 md:px-6 md:py-6">
             {paymentFailed ? (

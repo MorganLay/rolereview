@@ -22,7 +22,7 @@ export function SidebarNav({ usage, onNavigate, className }: SidebarNavProps) {
   const pathname = usePathname();
 
   return (
-    <div className={cn("flex h-full flex-col", className)}>
+    <div className={cn("flex h-full min-h-0 flex-1 flex-col", className)}>
       <div className="px-4 py-5">
         <Link
           href="/dashboard"
