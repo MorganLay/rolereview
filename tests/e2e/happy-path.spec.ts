@@ -8,9 +8,14 @@ import { strings } from "@/copy/strings";
 import { createE2ESession } from "./helpers/auth";
 import { deleteE2EUser } from "./helpers/cleanup";
 import { happyPathReady } from "./helpers/env";
+import { pdfPlainText } from "./helpers/pdf-text";
 import { libraryToResumeText } from "./helpers/resume-text";
 
 const AI_TIMEOUT_MS = 120_000;
+/** Not in the library fixture. The edit must survive a leave and a PDF export. */
+const EDIT_TOKEN = "e2e-persist";
+/** The editor rejects a bullet longer than this. */
+const BULLET_MAX = 400;
 const copy = strings;
 
 test.describe("happy path", () => {
@@ -104,6 +109,15 @@ test.describe("happy path", () => {
     await expect(page).toHaveURL(/\/resumes\//, { timeout: 15_000 });
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
+    const resumePath = resumePathname(page.url());
+    await appendTokenToIncludedBullet(page, EDIT_TOKEN);
+    await openHref(page, page.getByRole("link", { name: copy.jobs.workspace.back, exact: true }));
+    await expect(page).toHaveURL(/\/jobs\/[0-9a-f-]+/i, { timeout: 15_000 });
+    await expect(page).not.toHaveURL(/\/resumes\//);
+    await page.goto(resumePath);
+    await expect(page).toHaveURL(/\/resumes\//, { timeout: 15_000 });
+    await expect(editedBullet(page, EDIT_TOKEN)).toBeVisible({ timeout: 15_000 });
+
     const pdfResponse = page.waitForResponse(
       (response) =>
         /\/api\/resumes\/[^/]+\/pdf(?:\?|$)/.test(response.url()) && response.ok(),
@@ -112,6 +126,7 @@ test.describe("happy path", () => {
     await page.getByRole("menuitem", { name: copy.jobs.workspace.exportPdf }).click();
     const pdf = await pdfResponse;
     expect(pdf.headers()["content-type"] ?? "").toContain("application/pdf");
+    await expectPdfContainsEdit(pdf);
     await expect(
       page.getByRole("heading", { name: copy.jobs.workspace.exportReadyTitle }),
     ).toBeVisible({ timeout: 30_000 });
@@ -135,6 +150,70 @@ test.describe("happy path", () => {
     ).toHaveCount(0);
   });
 });
+
+function editedBullet(page: Page, token: string) {
+  return page.getByRole("button", { name: new RegExp(`^Edit:.*${token}`) });
+}
+
+function resumePathname(url: string): string {
+  const parsed = new URL(url);
+  return `${parsed.pathname}${parsed.search}`;
+}
+
+/** One included bullet, so the token is on the resume that export draws. */
+async function appendTokenToIncludedBullet(page: Page, token: string) {
+  const articles = page.locator("article");
+  const count = await articles.count();
+  for (let index = 0; index < count; index += 1) {
+    const article = articles.nth(index);
+    const entrySwitch = article.getByRole("switch", { name: /^Include (?!bullet:)/ });
+    if ((await entrySwitch.count()) === 0) continue;
+    if (!(await entrySwitch.first().isChecked())) continue;
+
+    const bulletSwitches = article.getByRole("switch", { name: /^Include bullet: / });
+    const bulletCount = await bulletSwitches.count();
+    for (let bulletIndex = 0; bulletIndex < bulletCount; bulletIndex += 1) {
+      const bulletSwitch = bulletSwitches.nth(bulletIndex);
+      if (!(await bulletSwitch.isChecked())) continue;
+      const label = (await bulletSwitch.getAttribute("aria-label")) ?? "";
+      const text = label.slice("Include bullet: ".length).trim();
+      if (text.length === 0 || text.includes(token)) continue;
+      if (text.length + 1 + token.length > BULLET_MAX) continue;
+
+      const row = bulletSwitch.locator("xpath=ancestor::li[1]");
+      await row.getByRole("button").first().click();
+      const field = page.getByRole("textbox", { name: copy.library.bullets.label });
+      await expect(field).toBeVisible();
+      await field.fill(`${text} ${token}`);
+      const saveResponse = page.waitForResponse(
+        (response) =>
+          response.request().method() === "POST" &&
+          response.ok() &&
+          response.url().includes("/resumes/"),
+        { timeout: 20_000 },
+      );
+      await field.press("Enter");
+      await expect(field).toBeHidden();
+      await expect(editedBullet(page, token)).toBeVisible();
+      await saveResponse;
+      await expect(page.getByText(copy.jobs.workspace.saveFailed)).toHaveCount(0);
+      await expect(editedBullet(page, token)).toBeVisible();
+      return;
+    }
+  }
+  throw new Error("No included bullet had room for the edit.");
+}
+
+async function expectPdfContainsEdit(pdf: Awaited<ReturnType<Page["waitForResponse"]>>) {
+  const extracted = pdfPlainText(await pdf.body());
+  if (extracted === null) {
+    // Glyph ids without a ToUnicode map are not searchable here.
+    // tests/unit/export-parity.test.ts checks that copy, PDF lines, and DOCX match.
+    expect(pdf.ok()).toBeTruthy();
+    return;
+  }
+  expect(extracted).toContain(EDIT_TOKEN);
+}
 
 function resumeOpenLink(page: Page) {
   return page
