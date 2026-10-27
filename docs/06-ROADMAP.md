@@ -228,7 +228,21 @@ At ~10 h/week, 1.0 is roughly a 3–4 month project. The walking skeleton comes 
 **TS.1 Turn the week's notes into tasks.** Read this week's notes in `docs/Feedback.md`. Add one task to this phase, in `06-ROADMAP.md` and `docs/PROGRESS.md`, for each feature change or bug you still want, in the order you will do them. Each task keeps the usual shape: what changes, and how you will know it is done. Note items that TQ.9–TQ.13 already cover, and items that wait for 1.1, and do not add those as tasks.
 *Accept:* every remaining note from the week is either a task in Phase S or a one-line deferral; T13.4b is still unticked.
 
-Phase S tasks added by TS.1 are done in order. **T13.4b does not start until they are ticked.**
+Already covered, so not new tasks: library density, weakest-bullet examples, and the summary heading (TQ.8); Documents and the next step (TQ.9); version titles (TQ.5); a strict one-page fit (TQ.11); the template updating the preview (TQ.12). Filling fields from a posting URL is scraping and stays in 1.1. A match against the library before tailoring is not a 1.0 feature; the match report is produced by tailoring.
+
+**TS.2 Short board cards.** After analysis, a board card shows the company, the title, and the next action, plus at most one secondary line (the deadline when one is due, otherwise the match score). Priority, submitted, and archived stay. The long requirement list stays on the job, not on the card.
+*Accept:* a card with a summary, requirements, a deadline, and a match score does not render the summary or the requirements; the next action is still there.
+
+**TS.3 Sidebar usage stays put.** On a long page the sidebar is one viewport tall. The usage line stays at the bottom of that viewport, not at the bottom of the posting.
+*Accept:* a job page taller than the viewport keeps the usage line in view while the posting scrolls.
+
+**TS.4 Analyses left drops by one.** One successful job analysis reduces “analyses left today” by exactly 1. A failed analysis does not reduce it. Allowances in `plans.ts` stay as they are.
+*Accept:* a unit test counts two successful analyses as 2 used and one failure as no extra use.
+
+**TS.5 New job paste and a blank form.** Pasting a posting scrolls the text area so the end of the paste is visible. Every New job control opens an empty form, including when the last visit was still on “Analyzing the posting”.
+*Accept:* a paste longer than the field shows its last lines; opening New job from a job that just finished analysis shows the empty form, not the analyzing screen.
+
+TS.2–TS.5 touch different files and can be built together. **T13.4b does not start until they are ticked.**
 
 ### Production separation
 

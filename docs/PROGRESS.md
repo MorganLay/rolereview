@@ -106,8 +106,12 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [ ] **TQ.13** Workspace navigation and recovery
 
 ## Phase S — Revisions from this week
-- [ ] **TS.1** Turn the week's notes into tasks
-- Further **TS.*** tasks are added by TS.1. T13.4b waits until they are ticked.
+- [x] **TS.1** Turn the week's notes into tasks
+- [ ] **TS.2** Short board cards
+- [ ] **TS.3** Sidebar usage stays put
+- [ ] **TS.4** Analyses left drops by one
+- [ ] **TS.5** New job paste and a blank form
+- T13.4b waits until TS.2–TS.5 are ticked.
 
 ## Production and launch
 - [ ] **T13.4b** Separate production environment
@@ -118,6 +122,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-10-27 TS.1:** Library density, Documents, version titles, one-page fit, and the template preview stay in the tasks that already shipped. Scraping a posting URL stays in 1.1. A match before tailoring is not a 1.0 feature. TS.2–TS.5 are the remaining notes.
 - **2026-10-27 TQ.12:** Copy, PDF, and DOCX wait for a pending save. A failed save is not exported. Leaving a dirty editor warns. The template control updates the preview before the preference is saved. A parity test compares the copy lines with the DOCX text. A signed-in click-through was not done.
 - **2026-10-27 TQ.11:** Preview loads the same PDF as the download and does not set exportedAt. A 1-page target tightens compact spacing, then links on one line, then the template minimum font. If it is still over, Preview shows “Over by N lines” and up to three bullets to turn off. A signed-in click-through was not done.
 - **2026-10-27 TQ.10:** The returning dashboard is a summary strip and one dated action list. With the seed clock the top action is the interview in 30 hours, linked to that job’s Interviews tab. Getting started stays until onboarding is done. A signed-in click-through was not done.
