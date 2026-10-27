@@ -11,13 +11,8 @@ import { versionIsFrozen, versionTitle } from "@/features/tailor/version";
 import { resolveResumeTemplate } from "@/lib/pdf/template";
 
 import type { LetterWorkspaceData } from "./content";
-import {
-  CoverLetterContent,
-  CoverLetterOptions,
-  type LetterLength,
-  type LetterTone,
-} from "./schemas";
-import { displayedLetterStatus, type JobLetters } from "./status";
+import { CoverLetterContent, CoverLetterOptions } from "./schemas";
+import { displayedLetterStatus, letterRetry, type JobLetters } from "./status";
 
 export type { JobLetters };
 
@@ -61,14 +56,17 @@ export async function getJobLetters(
   const now = new Date();
   const timeZone = row?.user.timezone || "America/Toronto";
   const versions = (row?.coverLetters ?? []).map((letter) => {
-    const options = letterChoices(letter.options);
+    const retry = letterRetry(letter.options);
     return {
       id: letter.id,
       version: letter.version,
       status: displayedLetterStatus(letter.status, letter.updatedAt, now),
       createdLabel: formatJobInstant(letter.createdAt.toISOString(), timeZone),
-      tone: options.tone,
-      length: options.length,
+      tone: retry.tone,
+      length: retry.length,
+      recipientName: retry.recipientName,
+      whyCompany: retry.whyCompany,
+      resumeId: retry.resumeId,
       templateId: letter.templateId,
       rating: ratingValue(letter.rating),
       submitted: versionIsFrozen(letter.submittedAt),
@@ -96,12 +94,6 @@ export async function getJobLetters(
       }),
     })),
   };
-}
-
-function letterChoices(value: unknown): { tone: LetterTone; length: LetterLength } {
-  const parsed = CoverLetterOptions.safeParse(value ?? {});
-  if (!parsed.success) return { tone: "professional", length: "standard" };
-  return { tone: parsed.data.tone, length: parsed.data.length };
 }
 
 function ratingValue(value: number | null): 1 | -1 | null {

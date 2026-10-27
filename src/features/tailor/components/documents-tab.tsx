@@ -131,7 +131,7 @@ export function DocumentsTab({
         {copy.title}
       </h2>
       {showProgress ? (
-        <div aria-live="polite" className="flex flex-col gap-2">
+        <div aria-live="polite" aria-busy="true" role="status" className="flex flex-col gap-2">
           <p className="text-sm font-medium text-ink">{copy.tailoring}</p>
           <p className="text-sm text-slate">{copy.tailoringHint}</p>
           <ol className="grid gap-1">
@@ -178,7 +178,11 @@ export function DocumentsTab({
                     : version.rating
                 }
                 ratingPending={ratingId === version.id}
+                retryDisabled={showProgress}
                 onRate={onRate}
+                onRetry={() =>
+                  void onConfirm({ length: version.length, emphasis: version.emphasis })
+                }
               />
             </li>
           ))}
@@ -205,31 +209,56 @@ function VersionCard({
   version,
   rating,
   ratingPending,
+  retryDisabled,
   onRate,
+  onRetry,
 }: {
   jobId: string;
   version: ResumeVersion;
   rating: 1 | -1 | null;
   ratingPending: boolean;
+  retryDisabled: boolean;
   onRate: (resumeId: string, rating: 1 | -1) => void;
+  onRetry: () => void;
 }) {
+  if (version.status === "PENDING") {
+    return (
+      <p className="text-sm font-medium text-ink" role="status" aria-busy="true">
+        {copy.tailoring}
+      </p>
+    );
+  }
+
+  if (version.status === "FAILED") {
+    return (
+      <article
+        className="flex flex-col items-start gap-3 rounded-lg border border-line p-4"
+        role="status"
+      >
+        <h3 className="text-sm font-medium text-ink">{copy.failed}</h3>
+        <p className="text-sm text-slate">{version.title}</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={retryDisabled}
+          onClick={onRetry}
+        >
+          {copy.retry}
+        </Button>
+      </article>
+    );
+  }
+
   const template = resumeTemplateLabel(version.templateId);
 
   return (
-    <article
-      className={
-        version.status === "FAILED"
-          ? "flex flex-col gap-3 rounded-lg border border-line p-4"
-          : "relative flex flex-col gap-3 rounded-lg border border-line p-4 hover:border-pine"
-      }
-    >
-      {version.status === "FAILED" ? null : (
-        <Link
-          href={`/jobs/${jobId}/resumes/${version.id}`}
-          aria-label={copy.openVersion(version.title)}
-          className="absolute inset-0 rounded-lg focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-        />
-      )}
+    <article className="relative flex flex-col gap-3 rounded-lg border border-line p-4 hover:border-pine">
+      <Link
+        href={`/jobs/${jobId}/resumes/${version.id}`}
+        aria-label={copy.openVersion(version.title)}
+        className="absolute inset-0 rounded-lg focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      />
       <div className="pointer-events-none relative flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-medium text-ink">{version.title}</h3>
         {version.submitted ? (
@@ -239,11 +268,7 @@ function VersionCard({
         ) : null}
       </div>
       <p className="pointer-events-none text-sm text-slate">{version.createdLabel}</p>
-      {version.status === "FAILED" ? (
-        <p className="text-sm text-ink">{copy.failed}</p>
-      ) : (
-        <>
-          <p className="pointer-events-none text-sm text-ink">
+      <p className="pointer-events-none text-sm text-ink">
             {version.matchScore === null
               ? copy.matchScoreEmpty
               : copy.matchScore(version.matchScore)}
@@ -280,8 +305,6 @@ function VersionCard({
               {copy.notHelpful}
             </Button>
           </div>
-        </>
-      )}
     </article>
   );
 }

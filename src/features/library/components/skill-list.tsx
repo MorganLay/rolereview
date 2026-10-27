@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { strings } from "@/copy/strings";
 import { createSkillSchema, SKILL_LIMITS, zodFieldErrors } from "@/features/library/schemas";
+import { addHidden, removeHidden } from "@/lib/undo-delete";
+import { useUndoDelete } from "@/lib/use-undo-delete";
 
 import { createSkill, deleteSkill, reorderSkill, updateSkill } from "../actions";
 import {
@@ -36,6 +38,8 @@ export function SkillList({ skills }: SkillListProps) {
   const [nameError, setNameError] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
+  const { schedule } = useUndoDelete();
   const nameRef = useRef<HTMLInputElement>(null);
   const headingId = useId();
   const editorKey = editor?.mode === "edit" ? editor.id : (editor?.mode ?? "closed");
@@ -149,12 +153,29 @@ export function SkillList({ skills }: SkillListProps) {
     });
   }
 
+  function showSkill(id: string) {
+    setHidden((current) => removeHidden(current, id));
+  }
+
   function onDelete(id: string) {
-    if (pending || editor) return;
-    startTransition(async () => {
-      addOptimistic({ type: "delete", id });
-      const result = await deleteSkill({ id });
-      if (!result.ok) toast.error(copy.deleteFailed);
+    if (pending || editor || hidden.has(id)) return;
+    setHidden((current) => addHidden(current, id));
+    schedule({
+      id,
+      message: copy.deleted,
+      restore: () => showSkill(id),
+      commit: async () => {
+        try {
+          const result = await deleteSkill({ id });
+          if (!result.ok) {
+            toast.error(copy.deleteFailed);
+            showSkill(id);
+          }
+        } catch {
+          toast.error(copy.deleteFailed);
+          showSkill(id);
+        }
+      },
     });
   }
 
@@ -167,7 +188,8 @@ export function SkillList({ skills }: SkillListProps) {
     });
   }
 
-  const groups = groupSkills(optimisticSkills);
+  const visibleSkills = optimisticSkills.filter((skill) => !hidden.has(skill.id));
+  const groups = groupSkills(visibleSkills);
   const suggestions = categorySuggestions(skills);
   const busy = pending || editor !== null;
   const form = editor ? (
@@ -210,7 +232,7 @@ export function SkillList({ skills }: SkillListProps) {
 
       {editor?.mode === "add" ? form : null}
 
-      {optimisticSkills.length === 0 ? (
+      {visibleSkills.length === 0 ? (
         <p className="text-sm text-slate">{copy.noneYet}</p>
       ) : (
         <div className="grid gap-4">

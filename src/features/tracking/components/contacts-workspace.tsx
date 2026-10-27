@@ -35,6 +35,9 @@ import {
 } from "@/components/ui/table";
 import { strings } from "@/copy/strings";
 
+import { addHidden, removeHidden } from "@/lib/undo-delete";
+import { useUndoDelete } from "@/lib/use-undo-delete";
+
 import { deleteContact } from "../actions";
 import type { ContactListItem } from "../contacts";
 import { ContactDialog, type ContactDialogMode } from "./contact-dialog";
@@ -56,7 +59,39 @@ export function ContactsWorkspace({
   const [mode, setMode] = useState<ContactDialogMode | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<ContactListItem | null>(null);
-  const open = contacts.find((contact) => contact.id === openId) ?? null;
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
+  const { schedule } = useUndoDelete();
+  const visible = contacts.filter((contact) => !hidden.has(contact.id));
+  const open = visible.find((contact) => contact.id === openId) ?? null;
+
+  function showContact(id: string) {
+    setHidden((current) => removeHidden(current, id));
+  }
+
+  function holdDelete(contact: ContactListItem) {
+    setDeleting(null);
+    setOpenId((current) => (current === contact.id ? null : current));
+    setHidden((current) => addHidden(current, contact.id));
+    schedule({
+      id: contact.id,
+      message: copy.deleted,
+      restore: () => showContact(contact.id),
+      commit: async () => {
+        try {
+          const result = await deleteContact({ contactId: contact.id });
+          if (!result.ok) {
+            toast.error(result.error.code === "NOT_FOUND" ? copy.notFound : copy.deleteFailed);
+            showContact(contact.id);
+            return;
+          }
+          router.refresh();
+        } catch {
+          toast.error(copy.deleteFailed);
+          showContact(contact.id);
+        }
+      },
+    });
+  }
 
   function onSearch(event: FormEvent) {
     event.preventDefault();
@@ -88,12 +123,14 @@ export function ContactsWorkspace({
         </Button>
       </div>
 
-      {contacts.length === 0 ? (
-        <p className="text-sm text-slate">{total === 0 ? copy.empty : copy.emptySearch}</p>
+      {visible.length === 0 ? (
+        <p className="text-sm text-slate">
+          {total === 0 || !query.trim() ? copy.empty : copy.emptySearch}
+        </p>
       ) : (
         <>
         <ul className="flex flex-col gap-3 md:hidden" aria-label={copy.listLabel}>
-          {contacts.map((contact) => (
+          {visible.map((contact) => (
             <li
               key={contact.id}
               className="min-w-0 rounded-lg border border-line bg-surface p-4"
@@ -153,7 +190,7 @@ export function ContactsWorkspace({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {contacts.map((contact) => (
+            {visible.map((contact) => (
               <TableRow
                 key={contact.id}
                 className="cursor-pointer"
@@ -232,10 +269,7 @@ export function ContactsWorkspace({
         onOpenChange={(next) => {
           if (!next) setDeleting(null);
         }}
-        onDeleted={() => {
-          setOpenId(null);
-          setDeleting(null);
-        }}
+        onConfirm={holdDelete}
       />
     </div>
   );
@@ -379,51 +413,29 @@ function mailHref(email: string | null): string | null {
 function DeleteContactDialog({
   contact,
   onOpenChange,
-  onDeleted,
+  onConfirm,
 }: {
   contact: ContactListItem | null;
   onOpenChange: (open: boolean) => void;
-  onDeleted: () => void;
+  onConfirm: (contact: ContactListItem) => void;
 }) {
-  const router = useRouter();
-  const [pending, setPending] = useState(false);
-
-  async function onDelete(event: MouseEvent) {
+  function onDelete(event: MouseEvent) {
     event.preventDefault();
-    if (!contact || pending) return;
-    setPending(true);
-    try {
-      const result = await deleteContact({ contactId: contact.id });
-      if (!result.ok) {
-        toast.error(result.error.code === "NOT_FOUND" ? copy.notFound : copy.deleteFailed);
-        return;
-      }
-      toast.success(copy.deleted);
-      onDeleted();
-      router.refresh();
-    } catch {
-      toast.error(copy.deleteFailed);
-    } finally {
-      setPending(false);
-    }
+    if (!contact) return;
+    onConfirm(contact);
   }
 
   return (
-    <AlertDialog
-      open={contact !== null}
-      onOpenChange={(next) => {
-        if (!pending) onOpenChange(next);
-      }}
-    >
+    <AlertDialog open={contact !== null} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="font-sans">{copy.deleteTitle}</AlertDialogTitle>
           <AlertDialogDescription>{copy.deleteBody}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>{strings.common.cancel}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" disabled={pending} onClick={onDelete}>
-            {pending ? copy.deleting : strings.common.delete}
+          <AlertDialogCancel>{strings.common.cancel}</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={onDelete}>
+            {strings.common.delete}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
