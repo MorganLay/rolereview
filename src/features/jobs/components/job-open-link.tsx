@@ -26,9 +26,11 @@ export function JobOpenLink({
 function JobOpenLabel({ company }: { company: string }) {
   const { pending } = useLinkStatus();
   return (
-    <span aria-busy={pending}>
-      {company}
-      {pending ? <span className="ml-2 font-normal text-slate">{copy.opening}</span> : null}
+    <span className="flex min-w-0 flex-col" aria-busy={pending || undefined}>
+      <span className="break-words">{company}</span>
+      {pending ? (
+        <span className="font-normal text-sm text-slate">{copy.opening}</span>
+      ) : null}
     </span>
   );
 }
