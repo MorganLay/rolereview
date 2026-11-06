@@ -29,8 +29,8 @@ The waitlist form stays on `/waitlist`. `/` is the marketing homepage.
 
 **One primary action everywhere: "Tailor your first resume — free"** ("Start free" in tight spaces) → `/sign-in?next=/library/import`. Signed-in visitors see "Go to dashboard". Secondary action: "Try the live demo" (scrolls to the demo). Never more than two buttons in one block.
 
-### 0. Announcement bar (optional, dismissible)
-"Founding members get 40% off Pro for as long as they stay. 63 of 100 spots left →" (live count from Stripe coupon redemptions; remove when gone).
+### 0. Announcement bar
+Off. The founding discount is not a public offer (D-33). Do not show a live redemption count.
 
 ### 1. Header (sticky)
 Wordmark · How it works · Features · Pricing · Free tools ▾ (ATS Keyword Checker, Bullet Strength Checker) · Guides (1.1). Right: Sign in · **[Start free]**. Mobile: menu, CTA stays visible.
@@ -92,7 +92,7 @@ Copy: "Stronger bullets, tailored applications, and timely follow-ups all show u
 - **Later:** real aggregate stats from opted-in data with sample sizes, only if true.
 
 ### 11. Pricing preview
-Toggle **Monthly / 90-day (save 21%)**. Free and Pro cards with the 5 most important differences → "Compare all features" (`/pricing`). Guarantee line: "14-day money-back guarantee. Cancel in one click." Values come from `plans.ts`.
+Currency control, then toggle **Monthly / 90-day**. The save percent comes from the selected currency (18% in USD, 14% in CAD at the D-33 prices). The 90-day card shows the monthly equivalent, that the full amount is charged up front, and that cancelling stops the next renewal while access lasts through the 90 days. Free and Pro cards with the 5 most important differences → "Compare all features" (`/pricing`). Guarantee line: "14-day money-back guarantee. Cancel in one click." Values come from `plans.ts`.
 
 ### 12. FAQ (accordion + FAQPage structured data)
 1. Will RoleRefine make things up on my resume? → No; explain source refs and the guard.
@@ -123,7 +123,7 @@ Product (Features, Pricing, Demo, Changelog) · Free tools · Guides (1.1) · Co
 
 | Route | Purpose | Release |
 |---|---|---|
-| `/pricing` | Full comparison table from `plans.ts`, monthly/90-day toggle, founding offer, guarantee, billing FAQ, "Why we don't offer a weekly plan" | 1.0 |
+| `/pricing` | Full comparison table from `plans.ts`, currency control, monthly/90-day toggle, guarantee, billing FAQ (founding offer closed; currency explained), "Why we don't offer a weekly plan" | 1.0 |
 | `/demo` | The interactive demo as a shareable standalone page | 1.0 |
 | `/tools/ats-keyword-checker` | Free tool | 1.0 |
 | `/tools/bullet-strength` | Free tool | 1.0 |
@@ -151,14 +151,14 @@ Every page: unique title and meta description, OG image from the brand template,
 
 ## Pre-launch waitlist (live in the first two weeks of building)
 
-- Page: hero (same H1), a 20-second demo GIF, 3 benefit bullets, email form with the **founding-member promise** ("First 100 Pro members get 40% off for as long as they stay"), CASL checkbox (unticked): "Email me product updates and launch news. Unsubscribe anytime."
-- Stores `Lead { source: "waitlist", foundingOffer: true, utm*, marketingConsentAt, consentText }`.
+- Page: hero (same H1), a 20-second demo GIF, 3 benefit bullets, email form, CASL checkbox (unticked): "Email me product updates and launch news. Unsubscribe anytime." No founding-price promise.
+- Stores `Lead { source: "waitlist", foundingOffer: false, utm*, marketingConsentAt, consentText }`. A repeat signup does not change an older `foundingOffer` flag. That flag does not grant a discount.
 - Abuse control: Turnstile + 10 joins per IP-hash per day, shared with newsletter and “email me this report” (`FreeToolRun` tool `PUBLIC_LEAD`).
 - Thank-you state: share link with `?ref=waitlist-<shortid>`; "invite 3 friends for early beta access".
 
 ## SEO & content
 
-**Technical (1.0):** `sitemap.ts`, `robots.ts`, metadata everywhere, canonical URLs, JSON-LD (`SoftwareApplication` with offers on `/` and `/pricing`, `FAQPage`, `Article` on guides), static rendering for marketing routes.
+**Technical (1.0):** `sitemap.ts`, `robots.ts`, metadata everywhere, canonical URLs, JSON-LD (`SoftwareApplication` with USD and CAD offers on `/` and `/pricing`, `FAQPage`, `Article` on guides). `/` and `/pricing` read the currency cookie and country header, so those two routes are dynamic. Other marketing routes stay static where possible.
 
 **Content plan (1.1, ~2 guides/week for 8 weeks).** Each answers one search intent with a worked example and ends with a free tool or the demo:
 1. How to tailor your resume to a job description (with example)
@@ -181,7 +181,7 @@ Every page: unique title and meta description, OG image from the brand template,
 | Weeks 1–2 of build | Waitlist live. **Build in public**: weekly LinkedIn posts (progress clips, the "tailored, not invented" idea, lessons learned). LinkedIn fits a professional brand better than X or TikTok. |
 | During build | Helpful (not promotional) participation in r/resumes, r/jobs, r/cscareerquestions, r/careerguidance, r/canadajobs, r/PublicServiceCanada. **Read each subreddit's self-promotion rules first.** |
 | M3 (walking skeleton) | **Private beta**: 20–50 people from the waitlist, friends, Carleton alumni and career-centre contacts. Free Pro during the beta. Weekly feedback form; 15-minute calls with 5 users; ask for consented testimonials when someone lands an interview. |
-| 1.0 ready | **Launch week:** Product Hunt (Tue–Thu; gallery, maker comment, demo video), Show HN ("Show HN: A resume tailor that can't invent experience"), LinkedIn launch post, Reddit where allowed, waitlist email (founding offer, 7-day countdown). |
+| 1.0 ready | **Launch week:** Product Hunt (Tue–Thu; gallery, maker comment, demo video), Show HN ("Show HN: A resume tailor that can't invent experience"), LinkedIn launch post, Reddit where allowed, waitlist email at the public list price. |
 | Ongoing | Short demo videos (LinkedIn, YouTube Shorts): before/after tailoring, "generic AI vs RoleRefine". Outreach to college/university career centres and employment counsellors (free Pro for advisors to demo). |
 
 ## Lifecycle email (Resend; 1.1 unless noted)

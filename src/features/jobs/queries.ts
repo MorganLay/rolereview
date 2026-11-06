@@ -1,6 +1,6 @@
 import "server-only";
 
-import { quotaSnapshot } from "@/features/billing/quota";
+import { callsRemaining } from "@/features/billing/quota";
 import type {
   EmploymentType,
   JobSource,
@@ -247,13 +247,12 @@ function jobListWhere(userId: string, query: JobListQuery) {
   };
 }
 
-/** Analyses still available today for this user. */
+/** Analyses that can still run today: the monthly remainder, capped by the daily limit. */
 export async function analysesRemaining(
   userId: string,
   plan: Plan,
 ): Promise<number> {
-  const quota = await quotaSnapshot({ id: userId, plan }, "ANALYZE");
-  return quota.remaining;
+  return callsRemaining({ id: userId, plan }, "ANALYZE");
 }
 
 /** One owned job, with analysis JSON parsed. Missing or not owned → null. */

@@ -114,7 +114,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - T13.4b waits until TS.2–TS.5 are ticked.
 
 ## Production and launch
-- [ ] **T13.4b** Separate production environment
+- [~] **T13.4b** Separate production environment
 - [ ] **T13.5a** Private beta (5–10 people)
 - [ ] **TQ.14** Behaviour test pass
 - [ ] **TQ.15** Fix what testers hit
@@ -122,6 +122,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-11-05 D-33:** Pro is US$24 or CA$29 a month, and US$59 or CA$75 every 90 days. The founding discount is not offered to anyone. Checkout charges the list price. Job analyses are 30/200 a month, with a daily cap of 10/40. Stripe Prices at these four amounts still have to be created before checkout charges what the page shows. A signed-in purchase was not run.
+- **2026-11-02 D-32:** Pro is CA$19/month or CA$45 per 90 days. Founding prices are CA$11.40 and CA$27. The FAQ and JSON-LD say CAD. Stripe Prices still have to be created in CAD before a checkout charges the amount on the page. Superseded by D-33.
 - **2026-10-27 TS.4:** One saved analysis reduces analyses left today by 1. A failed analysis does not. An unsaved success is released before a retry, so the retry is not a second charge. A signed-in click-through was not done.
 - **2026-10-27 TS.5:** A long paste scrolls inside the text area. New job clears a preserved “Analyzing the posting” screen and does not run analysis again. A signed-in click-through was not done.
 - **2026-10-27 TS.3:** The sidebar stays one viewport tall, so the usage line stays at the bottom of the screen while a long posting scrolls. A signed-in click-through was not done.

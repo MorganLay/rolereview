@@ -6,6 +6,7 @@ import { AppShell } from "@/components/shell/app-shell";
 import { strings } from "@/copy/strings";
 import { TimezoneCapture } from "@/features/account/components/timezone-capture";
 import { allowanceCatalog, checkoutPrices } from "@/features/billing/catalog";
+import { requestPlanCurrency } from "@/features/billing/currency-request";
 import { presentTailorPill } from "@/features/billing/present";
 import { getCheckoutContext } from "@/features/billing/queries";
 import { quotaSnapshot } from "@/features/billing/quota";
@@ -36,12 +37,14 @@ async function AppShellWithUser({ children }: { children: React.ReactNode }) {
   await connection();
   const user = await requireUser();
   const catalog = allowanceCatalog();
-  const prices = checkoutPrices();
-  const [due, tailor, checkout] = await Promise.all([
+  const [due, tailor, checkout, requested] = await Promise.all([
     listDueReminders(user.id),
     quotaSnapshot(user, "TAILOR"),
     getCheckoutContext(user.id),
+    requestPlanCurrency(),
   ]);
+  const locked = checkout?.plan === "PRO" ? checkout.billingCurrency : null;
+  const prices = checkoutPrices(locked ?? requested);
 
   return (
     <AppShell

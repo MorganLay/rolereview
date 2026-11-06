@@ -26,6 +26,10 @@ vi.mock("@/lib/env", () => ({
 vi.mock("@/features/billing/plans", () => ({
   STRIPE_PRICE_PRO_MONTHLY: "price_month",
   STRIPE_PRICE_PRO_QUARTERLY: "price_quarter",
+  STRIPE_PRICE_PRO_MONTHLY_USD: "price_month_usd",
+  STRIPE_PRICE_PRO_QUARTERLY_USD: "price_quarter_usd",
+  STRIPE_PRICE_PRO_MONTHLY_CAD: "price_month_cad",
+  STRIPE_PRICE_PRO_QUARTERLY_CAD: "price_quarter_cad",
 }));
 
 vi.mock("@/lib/db", () => ({

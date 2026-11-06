@@ -81,15 +81,30 @@ Keeps the final pipeline stage for analytics while hiding the card.
 
 ## Pricing
 
-**D-07 — Pricing** · Accepted (defaults, revisit after 100 paying users)
+**D-07 — Pricing** · Accepted (defaults, revisit after 100 paying users). List prices and the public founding offer are superseded by D-33.
 - Free: unlimited tracking; 3 tailored resumes, 1 letter, 2 imports per month; Classic template.
-- Pro: **US$19/month** or **US$45 per 90 days**; 80 tailored resumes, 60 letters, 20 imports per month; all templates, DOCX, Insights insights.
+- Pro: **CA$19/month** or **CA$45 per 90 days** (D-32); 80 tailored resumes, 60 letters, 20 imports per month; all templates, DOCX, Insights insights.
 - **Founding members:** first 100 get 40% off for as long as they stay subscribed.
 - **14-day money-back guarantee**; one-click cancel; email heads-up before each 90-day renewal; no weekly plan.
 - Context: Teal+ $29/30 days or $79/90 days; Jobscan $49.95/month; Rezi $29/month; Kickresume $24/month; Huntr ~$40/month (reported Aug–Oct 2026). RoleRefine undercuts them while staying credible; the 90-day plan matches a typical search.
 - Unit economics: worst-case Pro AI cost ≈ $10/month, typical ≈ $1.50; break-even on fixed costs at ~3–4 subscribers.
 
-**D-16 — USD at launch** · Accepted. Revisit CAD / local currency in 1.2.
+**D-16 — USD at launch** · Superseded by D-32.
+
+**D-32 — Canadian dollar prices** · Accepted 2026-11-02. Display currency superseded by D-33.
+- The same price points, in CAD: CA$19/month or CA$45 per 90 days. Founding members stay 40% off (CA$11.40 / CA$27).
+- Display, FAQ, and JSON-LD use CAD. Anthropic cost estimates stay in USD.
+- Stripe Prices have to be CAD. A USD Price would charge US dollars while the page says CA$.
+
+**D-33 — Regional list prices** · Accepted 2026-11-05
+- One Pro tier. Two billing options. No Basic, Premium, annual, or lifetime plan at this stage.
+- Free is $0 in both currencies. Pro is **US$24/month** or **CA$29/month**, and **US$59** or **CA$75** every 90 days, charged up front. Monthly equivalents for comparison are US$19.67 and CA$25. That is 18% and 14% below three monthly payments. These are starting prices to test, not a claim that they are optimal.
+- The two prices are fixed for each market. They are not converted from each other when the exchange rate moves. Both buy the same allowances.
+- Canada starts on CAD. The United States and every other country, including a missing country, start on USD. A visible currency control can switch before checkout. The choice is stored and used for the prices, checkout, and the next visit. An active subscription renews on its Stripe Price. Cancelling stops the next renewal and Pro lasts until the paid period ends. CAD is not limited to Canadian billing addresses.
+- The founding discount is not offered. Checkout does not apply the founding coupon, including for a `Lead` that already has `foundingOffer`. A subscription that already has that coupon on it in Stripe keeps whatever Stripe is charging until that subscription changes.
+- Beta access, when needed, is a defined free period for selected testers. It is not a public price.
+- Job analyses are a monthly allowance plus a UTC-day abuse cap: Free 30 and 10, Pro 200 and 40. Bonus credits do not raise the daily cap.
+- Judge the price by contribution per visitor: first usable export, paid conversion, plan and currency choice, AI usage, refunds, and how long people stay paid. With early traffic, test one offer at a time.
 
 ## Open — default chosen, confirm or change
 
@@ -100,4 +115,4 @@ Keeps the final pipeline stage for analytics while hiding the card.
 | Q-4 | Google sign-in at launch | Yes | Needs a Google Cloud OAuth client. |
 | Q-5 | Supabase region | Canada if offered | Privacy story for Canadian users. |
 | Q-6 | Free trial of Pro? | No (generous Free tier + 14-day refund instead) | Revisit if conversion < 2%. |
-| Q-7 | Founding discount size | 40% forever, first 100 | Could be 50% for the first 25 beta users. |
+| Q-7 | Founding discount size | Not offered (D-33) | Checkout charges the list price. The coupon is not applied. |

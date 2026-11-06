@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { strings } from "@/copy/strings";
 
 import { checkoutPrices } from "@/features/billing/catalog";
+import { requestPlanCurrency } from "@/features/billing/currency-request";
 import { previewAllowed } from "@/features/billing/checkout-rules";
 import { SettingsScreen } from "@/features/billing/components/settings-screen";
 import { checkoutConfirmed, parseSettingsTab } from "@/features/billing/present";
@@ -30,17 +31,22 @@ export default async function SettingsPage({
   const user = await requireUser();
   const params = await searchParams;
   const tab = parseSettingsTab(params.tab);
-  const billing = tab === "plan" ? await getPlanBilling(user.id) : null;
+  const [billing, requested] = await Promise.all([
+    tab === "plan" ? getPlanBilling(user.id) : Promise.resolve(null),
+    requestPlanCurrency(),
+  ]);
   if (tab === "plan" && !billing) notFound();
   const preferences = tab === "preferences" ? await getPreferences(user.id) : null;
   if (tab === "preferences" && !preferences) notFound();
+  const locked = billing?.plan === "PRO" ? billing.billingCurrency : null;
 
   return (
     <SettingsScreen
       tab={tab}
       billing={billing}
       preferences={preferences}
-      prices={checkoutPrices()}
+      prices={checkoutPrices(locked ?? requested)}
+      currencyLocked={locked != null}
       upgraded={tab === "plan" && checkoutConfirmed(params.upgraded)}
       showTestPreview={previewAllowed(env.NODE_ENV, env.STRIPE_SECRET_KEY ?? null)}
     />

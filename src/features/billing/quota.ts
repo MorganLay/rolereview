@@ -3,14 +3,19 @@ import "server-only";
 import type { Plan } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
-import { PLANS, type MeteredKind } from "./plans";
+import { limitDailyCap, PLANS, type MeteredKind, type QuotaPeriod } from "./plans";
 
 /**
  * Quota from successful AiCall rows, plus bonus credits.
  * docs/04-DATA-MODEL.md → Quotas & bonus credits.
  */
 
-export type QuotaDecision = { allowed: boolean; useBonus: boolean };
+export type QuotaDecision = {
+  allowed: boolean;
+  useBonus: boolean;
+  /** Set when the UTC-day abuse cap blocked the call. Bonus credits do not lift it. */
+  limit?: "day";
+};
 
 export type BonusCreditCandidate = {
   id: string;
@@ -19,26 +24,42 @@ export type BonusCreditCandidate = {
   createdAt: Date;
 };
 
-/** UTC month, or UTC day for ANALYZE. `end` is exclusive. */
+/** UTC calendar day. `end` is exclusive. Used for the job-analysis abuse cap. */
+export function utcDayBounds(now: Date): { start: Date; end: Date } {
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
+/** UTC calendar month. `end` is exclusive. */
+export function utcMonthBounds(now: Date): { start: Date; end: Date } {
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  return { start, end };
+}
+
+/** Allowance window from `plans.ts`. `end` is exclusive. */
 export function periodBounds(
   kind: MeteredKind,
   now: Date,
 ): { start: Date; end: Date } {
-  const period = PLANS.FREE.limits[kind].period;
-  if (PLANS.PRO.limits[kind].period !== period) {
+  const period = PLANS.FREE.limits[kind].period as QuotaPeriod;
+  const proPeriod = PLANS.PRO.limits[kind].period as QuotaPeriod;
+  if (proPeriod !== period) {
     throw new Error(`Quota period mismatch for ${kind}.`);
   }
-  if (period === "day") {
-    const start = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-    );
-    const end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + 1);
-    return { start, end };
-  }
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-  return { start, end };
+  return period === "day" ? utcDayBounds(now) : utcMonthBounds(now);
+}
+
+/**
+ * True when today's successful calls have hit the abuse cap.
+ * Bonus credits do not raise it. A missing cap does not block.
+ */
+export function dailyCapBlocks(usedToday: number, cap: number | undefined): boolean {
+  if (cap == null || !Number.isFinite(cap) || cap <= 0) return false;
+  if (!Number.isFinite(usedToday) || usedToday < 0) return false;
+  return usedToday >= cap;
 }
 
 /** Under the allowance first. Bonus credits apply only after it is used up. */
@@ -137,7 +158,46 @@ export async function checkQuota(
   kind: MeteredKind,
   now: Date = new Date(),
 ): Promise<QuotaDecision> {
+  const cap = limitDailyCap(PLANS[user.plan].limits[kind]);
+  if (cap != null) {
+    const day = utcDayBounds(now);
+    const dayUsed = await db.aiCall.count({
+      where: {
+        userId: user.id,
+        kind,
+        success: true,
+        createdAt: { gte: day.start, lt: day.end },
+      },
+    });
+    if (dailyCapBlocks(dayUsed, cap)) {
+      return { allowed: false, useBonus: false, limit: "day" };
+    }
+  }
   return decideQuota(await loadQuotaCounts(user, kind, now));
+}
+
+/**
+ * Calls that can still succeed right now. The monthly remainder, and the
+ * daily abuse cap when the plan has one. Bonus credits raise the month only.
+ */
+export async function callsRemaining(
+  user: { id: string; plan: Plan },
+  kind: MeteredKind,
+  now: Date = new Date(),
+): Promise<number> {
+  const cap = limitDailyCap(PLANS[user.plan].limits[kind]);
+  const monthly = quotaRemaining(await loadQuotaCounts(user, kind, now));
+  if (cap == null) return monthly;
+  const day = utcDayBounds(now);
+  const dayUsed = await db.aiCall.count({
+    where: {
+      userId: user.id,
+      kind,
+      success: true,
+      createdAt: { gte: day.start, lt: day.end },
+    },
+  });
+  return Math.min(monthly, Math.max(0, cap - dayUsed));
 }
 
 /** Used, allowance, bonus, and how many calls are left. Same counts as `checkQuota`. */

@@ -14,11 +14,17 @@ import {
   planFromSubscriptionStatus,
   showsPaymentFailedBanner,
   stripeId,
+  checkoutCurrency,
   subscriptionPatch,
+  type PriceCatalog,
 } from "@/features/billing/webhook-map";
 
 const USER = "11111111-1111-4111-8111-111111111111";
-const PRICES = { monthly: "price_month", quarterly: "price_quarter" };
+const PRICES: PriceCatalog = {
+  monthlyIds: ["price_month"],
+  quarterlyIds: ["price_quarter"],
+  currencyByPriceId: { price_month: "USD", price_quarter: "CAD" },
+};
 
 describe("stripeId", () => {
   it("reads a string, an expanded object, and blanks", () => {
@@ -76,7 +82,13 @@ describe("billingIntervalFromPriceId", () => {
     expect(billingIntervalFromPriceId("price_quarter", PRICES)).toBe("QUARTER");
     expect(billingIntervalFromPriceId("price_other", PRICES)).toBeNull();
     expect(billingIntervalFromPriceId(null, PRICES)).toBeNull();
-    expect(billingIntervalFromPriceId("price_month", { monthly: null, quarterly: "price_quarter" })).toBeNull();
+    expect(
+      billingIntervalFromPriceId("price_month", {
+        monthlyIds: [],
+        quarterlyIds: ["price_quarter"],
+        currencyByPriceId: {},
+      }),
+    ).toBeNull();
   });
 });
 
@@ -129,6 +141,16 @@ describe("checkoutInterval", () => {
     expect(checkoutInterval({ interval: "year" })).toBeNull();
     expect(checkoutInterval({})).toBeNull();
     expect(checkoutInterval(null)).toBeNull();
+  });
+});
+
+describe("checkoutCurrency", () => {
+  it("reads USD or CAD from metadata", () => {
+    expect(checkoutCurrency({ currency: "USD" })).toBe("USD");
+    expect(checkoutCurrency({ currency: "CAD" })).toBe("CAD");
+    expect(checkoutCurrency({ currency: "EUR" })).toBeNull();
+    expect(checkoutCurrency({})).toBeNull();
+    expect(checkoutCurrency(null)).toBeNull();
   });
 });
 
@@ -201,6 +223,7 @@ describe("subscriptionPatch", () => {
       subscriptionStatus: "active",
       currentPeriodEnd: end,
       cancelAtPeriodEnd: false,
+      billingCurrency: "USD",
     });
   });
 
@@ -248,6 +271,7 @@ describe("subscriptionPatch", () => {
     expect(patch.plan).toBe("FREE");
     expect(patch.stripeCustomerId).toBeUndefined();
     expect(patch.billingInterval).toBeUndefined();
+    expect(patch.billingCurrency).toBeUndefined();
     expect(patch.currentPeriodEnd).toBeNull();
   });
 });

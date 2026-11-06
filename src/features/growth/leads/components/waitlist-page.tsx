@@ -33,9 +33,6 @@ export function WaitlistPage() {
           <p className="mt-4 text-lg text-slate">
             {strings.marketing.waitlist.body}
           </p>
-          <p className="mt-4 rounded-card border border-marigold-100 bg-marigold-100/60 px-4 py-3 text-sm text-ink">
-            {strings.marketing.waitlist.foundingOffer}
-          </p>
 
           <ul className="mt-8 space-y-4 text-left">
             {benefits.map((item) => (

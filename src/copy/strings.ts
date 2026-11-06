@@ -129,8 +129,8 @@ export const strings = {
         `No cover letters left this month. Free includes ${free} a month. Pro includes ${pro}.`,
       IMPORT: (free: number, pro: number) =>
         `No resume imports left this month. Free includes ${free} a month. Pro includes ${pro}.`,
-      ANALYZE: (free: number, pro: number) =>
-        `No job analyses left today. Free includes ${free} a day. Pro includes ${pro}.`,
+      ANALYZE: (free: number, pro: number, freeDay: number, proDay: number) =>
+        `No job analyses left. Free includes ${free} a month, up to ${freeDay} a day. Pro includes ${pro} a month, up to ${proDay} a day.`,
     },
     features: {
       templates: "Modern and Compact are part of Pro.",
@@ -164,7 +164,7 @@ export const strings = {
     paymentFailedAction: "Update your payment method",
     foundingPrice: (percent: number) =>
       `${percent}% off for as long as you stay subscribed.`,
-    promo: "You can enter a promotion code on the payment page.",
+    promo: "Stripe hosts the payment page.",
     manage: "Manage subscription",
     notNow: "Not now",
     opening: "Opening Stripe…",
@@ -177,7 +177,6 @@ export const strings = {
     onPro: "You’re on Pro.",
     testLegend: "Preview a price",
     testAccount: "This account",
-    testFounding: "Founding price",
     testFull: "Full price",
     testHint:
       "Test mode does not charge you. Open a checkout to see the total, then go back. You do not need another account. To try Manage subscription with a plan to switch, pay once with the test card 4242 4242 4242 4242, any future date, and any CVC.",
@@ -191,7 +190,21 @@ export const strings = {
     periods: {
       month: "This month",
       day: "Today",
+      monthWithDay: (cap: number) => `This month, up to ${cap} a day`,
     },
+    currencyLabel: "Currency",
+    currencyCad: "Canada, CA$",
+    currencyUsd: "United States, US$",
+    currencyFailed: "Couldn’t switch currency. Try again.",
+    billedIn: (name: string) => `Billed in ${name}. Renewals stay in that currency.`,
+    currencyNames: {
+      USD: "US dollars",
+      CAD: "Canadian dollars",
+    },
+    renewalCurrencyUnknown:
+      "Renewals stay in the currency this subscription already uses.",
+    renewalNote: (equivalent: string) =>
+      `${equivalent} a month on the 90-day plan, charged up front. That plan renews every 90 days until you cancel. Monthly renews each month. Cancelling stops the next renewal. You keep Pro until the period you’ve paid for ends.`,
     ofAllowance: (used: number, allowance: number) => `${used} of ${allowance}`,
     extra: (count: number) => (count === 1 ? "1 extra" : `${count} extra`),
     barAria: (label: string, period: string, count: string, extra: string | null) =>
@@ -359,6 +372,15 @@ export const strings = {
       pricingMonthly: "Monthly",
       pricingQuarterly: "90-day",
       pricingSave: (percent: number) => `save ${percent}%`,
+      pricingMonthlyCaption: "a month",
+      pricingQuarterlyCaption: "every 90 days",
+      pricingEquivalent: (amount: string) => `${amount} a month, billed every 90 days`,
+      pricingMonthlyRenewal:
+        "Renews every month until you cancel. Cancelling stops the next charge. You keep Pro until that month ends.",
+      pricingQuarterlyRenewal:
+        "Charged up front. Renews every 90 days until you cancel. Cancelling stops the next renewal. You keep Pro until those 90 days end.",
+      pricingMonthAndDay: (count: number, day: number) =>
+        `${count === 1 ? "1 a month" : `${count} a month`}, up to ${day} a day`,
       pricingFree: "Free",
       pricingPro: "Pro",
       pricingCompare: "Compare all features",
@@ -404,7 +426,7 @@ export const strings = {
         `Unlimited tracking, plus ${count} tailored resumes a month. Cover letters, extra tailoring, and Pro templates are on the paid plan.`,
       faq7Q: "Can I cancel anytime?",
       faq7A:
-        "Yes, in one click. We email you before a 90-day renewal. Pro has a 14-day money-back guarantee.",
+        "Yes. Cancelling stops the next renewal. You keep Pro until the period you’ve paid for ends. We email you before a 90-day renewal. Pro has a 14-day money-back guarantee.",
       faq8Q: "Does it work for Canadian government jobs?",
       faq8A:
         "Tailoring works on any written posting, including GC Jobs. Dedicated screening-question support is planned for a later release.",
@@ -431,9 +453,6 @@ export const strings = {
       featureColumn: "Feature",
       priceRow: "Price",
       tableCaption: "Free and Pro features",
-      foundingTitle: "Founding members",
-      foundingBody: (percent: number, monthly: string, quarterly: string) =>
-        `First 100 Pro members get ${percent}% off for as long as they stay. That’s ${monthly} a month, or ${quarterly} for 90 days.`,
       weeklyTitle: "Why we don’t offer a weekly plan",
       weeklyBody:
         "A job search lasts months, not a week. Weekly plans look cheap and then keep charging. RoleRefine is monthly, or 90 days at a lower rate. Cancel in one click.",
@@ -449,19 +468,19 @@ export const strings = {
         "Higher monthly limits, Modern and Compact templates, DOCX export, and What’s working on Insights. Bill monthly or every 90 days.",
       faqCancelQ: "Can I cancel anytime?",
       faqCancelA:
-        "Yes, in one click. We email you before a 90-day renewal. Pro has a 14-day money-back guarantee.",
+        "Yes. Cancelling stops the next renewal. You keep Pro until the period you’ve paid for ends. We email you before a 90-day renewal. Pro has a 14-day money-back guarantee.",
       faqGuaranteeQ: "How does the 14-day money-back guarantee work?",
       faqGuaranteeA:
         "If Pro isn’t right, ask within 14 days of the charge and we’ll refund it.",
       faqWeeklyQ: "Why don’t you offer a weekly plan?",
       faqWeeklyA:
         "Searches last months, not days. A weekly plan is a trap. Monthly and 90-day billing match a real search, and you can cancel in one click.",
-      faqFoundingQ: "What is the founding-member offer?",
-      faqFoundingA: (percent: number) =>
-        `The first 100 Pro members get ${percent}% off for as long as they stay subscribed.`,
-      faqCurrencyQ: "Do you charge in Canadian dollars?",
+      faqFoundingQ: "Is the founding-member discount still open?",
+      faqFoundingA:
+        "No. It is closed. Checkout charges the price on this page.",
+      faqCurrencyQ: "Which currency will I be charged in?",
       faqCurrencyA:
-        "Prices are in US dollars at launch. Canadian-dollar pricing is planned for a later release.",
+        "Prices are listed in US dollars and Canadian dollars. Visitors in Canada start on CA$, and visitors in the United States start on US$. Everyone else starts on US$. You can switch before you pay. Checkout, receipts, and renewals use the currency you chose. The two prices are set for each market. They do not follow the daily exchange rate. Both buy the same Pro plan.",
     },
     demo: {
       metaTitle: "Try a tailored resume",
@@ -557,12 +576,10 @@ export const strings = {
     waitlist: {
       metaTitle: "Join the waitlist",
       metaDescription:
-        "Be first to tailor resumes that stay honest. Founding members get 40% off Pro for as long as they stay.",
+        "Be first to tailor resumes that stay honest. Join the list and we’ll email you when RoleRefine opens.",
       eyebrow: "Opening soon",
       title: "Refine your resume for every role.",
       body: "Import your resume once. Paste any job posting. RoleRefine tailors your resume and cover letter using only your real experience — every line traced to you.",
-      foundingOffer:
-        "First 100 Pro members get 40% off for as long as they stay.",
       benefit1Title: "Honest tailoring",
       benefit1Body: "Every bullet cites your library. No invented metrics.",
       benefit2Title: "Whole search, one place",

@@ -48,10 +48,7 @@ export function faqItems(freeTailor: number): FaqItem[] {
   ];
 }
 
-export function billingFaqItems(input: {
-  freeTailor: number;
-  foundingPercent: number;
-}): FaqItem[] {
+export function billingFaqItems(input: { freeTailor: number }): FaqItem[] {
   return [
     {
       id: "billing-free",
@@ -77,7 +74,7 @@ export function billingFaqItems(input: {
     {
       id: "billing-founding",
       question: billing.faqFoundingQ,
-      answer: billing.faqFoundingA(input.foundingPercent),
+      answer: billing.faqFoundingA,
     },
     {
       id: "billing-currency",

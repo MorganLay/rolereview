@@ -13,7 +13,7 @@ import { createCheckoutSession, createPortalSession } from "../actions";
 const copy = strings.billing;
 
 type Interval = "MONTH" | "QUARTER";
-type PricePreview = "account" | "founding" | "full";
+type PricePreview = "account" | "full";
 type Pending = Interval | "portal" | null;
 
 export function CheckoutActions({
@@ -34,8 +34,7 @@ export function CheckoutActions({
   const router = useRouter();
   const [preview, setPreview] = useState<PricePreview>("account");
   const [pending, setPending] = useState<Pending>(null);
-  const founding =
-    preview === "founding" ? true : preview === "full" ? false : foundingEligible;
+  const founding = preview === "full" ? false : foundingEligible;
   const monthlyPrice = founding ? prices.foundingMonthly : prices.monthly;
   const quarterlyPrice = founding ? prices.foundingQuarterly : prices.quarterly;
   const showCheckout = plan === "FREE" || !hasCustomer || showTestPreview;
@@ -45,7 +44,7 @@ export function CheckoutActions({
     setPending(interval);
     const result = await createCheckoutSession({
       interval,
-      ...(showTestPreview && preview === "founding" ? { previewFounding: true } : {}),
+      currency: prices.currency,
       ...(showTestPreview && preview === "full" ? { previewFounding: false } : {}),
     });
     if (!result.ok) {
@@ -99,6 +98,7 @@ export function CheckoutActions({
           <p className="text-sm text-slate">
             {founding ? copy.foundingPrice(prices.foundingPercent) : copy.promo}
           </p>
+          <p className="text-sm text-slate">{copy.renewalNote(prices.quarterlyEquivalent)}</p>
         </>
       ) : null}
       {hasCustomer ? (
@@ -122,14 +122,6 @@ export function CheckoutActions({
             value="account"
             current={preview}
             label={copy.testAccount}
-            disabled={pending !== null}
-            onChange={setPreview}
-          />
-          <PriceChoice
-            name="billing-price-preview"
-            value="founding"
-            current={preview}
-            label={copy.testFounding}
             disabled={pending !== null}
             onChange={setPreview}
           />

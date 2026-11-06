@@ -3,17 +3,18 @@
 import { useState } from "react";
 
 import { strings } from "@/copy/strings";
+import { CurrencySwitch } from "@/features/billing/components/currency-switch";
 import { cn } from "@/lib/utils";
 import type { FaqItem } from "@/features/marketing/faq";
 import type {
   ComparisonRow,
-  FoundingOfferView,
   MarketingPricingView,
   PricingInterval,
 } from "@/features/marketing/present";
 
 import { CtaLink } from "./cta-link";
 import { HomeFaq } from "./home-faq";
+import { PlanPrice } from "./plan-price";
 import { PricingToggle } from "./pricing-toggle";
 
 const home = strings.marketing.home;
@@ -22,12 +23,10 @@ const copy = strings.marketing.pricing;
 export function PricingExperience({
   pricing,
   comparison,
-  founding,
   faqs,
 }: {
   pricing: MarketingPricingView;
   comparison: readonly ComparisonRow[];
-  founding: FoundingOfferView;
   faqs: readonly FaqItem[];
 }) {
   const [interval, setInterval] = useState<PricingInterval>("MONTH");
@@ -40,7 +39,11 @@ export function PricingExperience({
           {copy.title}
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-slate">{copy.body}</p>
-        <div className="mt-6">
+        <div className="mt-6 flex flex-col gap-4">
+          <CurrencySwitch currency={pricing.currency} />
+          <p className="text-sm text-slate">
+            {strings.billing.billedIn(strings.billing.currencyNames[pricing.currency])}
+          </p>
           <PricingToggle
             interval={interval}
             savePercent={pricing.savePercent}
@@ -50,26 +53,17 @@ export function PricingExperience({
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <PlanCard name={home.pricingFree} price={pricing.free} featured={false} />
           <PlanCard
-            name={home.pricingFree}
-            price={pricing.free}
-            featured={false}
+            name={home.pricingPro}
+            price={proPrice}
+            featured
+            interval={interval}
+            equivalent={pricing.quarterlyEquivalent}
           />
-          <PlanCard name={home.pricingPro} price={proPrice} featured />
         </div>
 
         <p className="mt-6 text-sm text-slate">{home.pricingGuarantee}</p>
-      </section>
-
-      <section className="border-t border-line bg-surface">
-        <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-          <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-            {copy.foundingTitle}
-          </h2>
-          <p className="mt-3 max-w-2xl text-base text-slate">
-            {copy.foundingBody(founding.percent, founding.monthly, founding.quarterly)}
-          </p>
-        </div>
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
@@ -154,10 +148,14 @@ function PlanCard({
   name,
   price,
   featured,
+  interval,
+  equivalent,
 }: {
   name: string;
   price: string;
   featured: boolean;
+  interval?: PricingInterval;
+  equivalent?: string;
 }) {
   return (
     <article
@@ -167,9 +165,11 @@ function PlanCard({
       )}
     >
       <h2 className="text-sm font-medium text-slate">{name}</h2>
-      <p className="mt-1 font-serif text-3xl font-semibold tabular-nums text-ink">
-        {price}
-      </p>
+      {interval && equivalent ? (
+        <PlanPrice amount={price} interval={interval} equivalent={equivalent} />
+      ) : (
+        <p className="mt-1 font-serif text-3xl font-semibold tabular-nums text-ink">{price}</p>
+      )}
       <p className="mt-1 text-sm text-slate">{home.pricingUnlimited}</p>
       <div className="mt-6">
         <CtaLink

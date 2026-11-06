@@ -4,8 +4,8 @@ import { allowanceCatalog, checkoutPrices } from "@/features/billing/catalog";
 import { FOUNDING_DISCOUNT_PERCENT, PLANS } from "@/features/billing/plans";
 import {
   checkoutConfirmed,
-  discountedUsd,
-  formatPlanUsd,
+  discountedPrice,
+  formatPlanPrice,
   parseSettingsTab,
   presentCheckoutPrices,
   presentPlanSummary,
@@ -19,10 +19,10 @@ import {
 } from "@/features/billing/present";
 
 const CATALOG: AllowanceCatalog = {
-  TAILOR: { free: 4, pro: 9, period: "month" },
-  COVER_LETTER: { free: 1, pro: 6, period: "month" },
-  IMPORT: { free: 2, pro: 8, period: "month" },
-  ANALYZE: { free: 5, pro: 7, period: "day" },
+  TAILOR: { free: 4, pro: 9, period: "month", dailyCapFree: null, dailyCapPro: null },
+  COVER_LETTER: { free: 1, pro: 6, period: "month", dailyCapFree: null, dailyCapPro: null },
+  IMPORT: { free: 2, pro: 8, period: "month", dailyCapFree: null, dailyCapPro: null },
+  ANALYZE: { free: 5, pro: 7, period: "month", dailyCapFree: 2, dailyCapPro: 4 },
 };
 
 function row(partial: Partial<UsageSnapshot> & Pick<UsageSnapshot, "meter">): UsageSnapshot {
@@ -31,6 +31,7 @@ function row(partial: Partial<UsageSnapshot> & Pick<UsageSnapshot, "meter">): Us
     allowance: 3,
     bonus: 0,
     period: "month",
+    dailyCap: null,
     ...partial,
   };
 }
@@ -73,6 +74,14 @@ describe("presentUsageRow", () => {
     expect(view.bonus).toBe("1 extra");
     expect(view.percent).toBe(100);
     expect(view.aria).toBe("Job analyses, Today: 10 of 10. 1 extra.");
+  });
+
+  it("shows the monthly allowance and the daily abuse cap together", () => {
+    const view = presentUsageRow(
+      row({ meter: "ANALYZE", used: 3, allowance: 30, period: "month", dailyCap: 10 }),
+    );
+    expect(view.period).toBe("This month, up to 10 a day");
+    expect(view.count).toBe("3 of 30");
   });
 
   it("lists several extra credits and caps the bar when used is over the allowance", () => {
@@ -205,7 +214,7 @@ describe("presentUpgrade", () => {
       "Free includes 2 a month. Pro includes 8.",
     );
     expect(presentUpgrade({ kind: "quota", meter: "ANALYZE" }, CATALOG).description).toContain(
-      "Free includes 5 a day. Pro includes 7.",
+      "Free includes 5 a month, up to 2 a day. Pro includes 7 a month, up to 4 a day.",
     );
   });
 
@@ -250,26 +259,39 @@ describe("allowanceCatalog", () => {
 });
 
 describe("checkout prices", () => {
-  it("formats whole dollars as US$ and keeps cents on the founding monthly price", () => {
-    expect(formatPlanUsd(19)).toBe("US$19");
-    expect(formatPlanUsd(11.4)).toBe("US$11.40");
-    expect(formatPlanUsd(Number.NaN)).toBeNull();
-    expect(discountedUsd(19, 40)).toBe(11.4);
-    expect(discountedUsd(45, 40)).toBe(27);
-    expect(discountedUsd(-1, 40)).toBeNull();
-    expect(discountedUsd(19, 101)).toBeNull();
-    expect(discountedUsd(19, Number.NaN)).toBeNull();
+  it("formats whole dollars with a market prefix and keeps cents", () => {
+    expect(formatPlanPrice(24, "USD")).toBe("US$24");
+    expect(formatPlanPrice(29, "CAD")).toBe("CA$29");
+    expect(formatPlanPrice(19.67, "USD")).toBe("US$19.67");
+    expect(formatPlanPrice(14.4, "USD")).toBe("US$14.40");
+    expect(formatPlanPrice(17.4, "CAD")).toBe("CA$17.40");
+    expect(formatPlanPrice(Number.NaN, "USD")).toBeNull();
+    expect(discountedPrice(24, 40)).toBe(14.4);
+    expect(discountedPrice(29, 40)).toBe(17.4);
+    expect(discountedPrice(59, 40)).toBe(35.4);
+    expect(discountedPrice(75, 40)).toBe(45);
+    expect(discountedPrice(-1, 40)).toBeNull();
+    expect(discountedPrice(24, 101)).toBeNull();
+    expect(discountedPrice(24, Number.NaN)).toBeNull();
   });
 
   it("builds both intervals from the plan prices", () => {
-    const prices = checkoutPrices();
-    expect(prices.foundingPercent).toBe(FOUNDING_DISCOUNT_PERCENT);
-    expect(prices.monthly).toBe(formatPlanUsd(PLANS.PRO.price.monthlyUsd));
-    expect(prices.quarterly).toBe(formatPlanUsd(PLANS.PRO.price.quarterlyUsd));
-    expect(prices).toEqual(
+    const usd = checkoutPrices("USD");
+    const cad = checkoutPrices("CAD");
+    expect(usd.foundingPercent).toBe(FOUNDING_DISCOUNT_PERCENT);
+    expect(usd.currency).toBe("USD");
+    expect(cad.currency).toBe("CAD");
+    expect(usd.monthly).toBe(formatPlanPrice(PLANS.PRO.price.monthly.USD, "USD"));
+    expect(usd.quarterly).toBe(formatPlanPrice(PLANS.PRO.price.quarterly.USD, "USD"));
+    expect(cad.monthly).toBe("CA$29");
+    expect(cad.quarterly).toBe("CA$75");
+    expect(usd.quarterlyEquivalent).toBe("US$19.67");
+    expect(cad.quarterlyEquivalent).toBe("CA$25");
+    expect(usd).toEqual(
       presentCheckoutPrices({
-        monthlyUsd: PLANS.PRO.price.monthlyUsd,
-        quarterlyUsd: PLANS.PRO.price.quarterlyUsd,
+        currency: "USD",
+        monthly: PLANS.PRO.price.monthly.USD,
+        quarterly: PLANS.PRO.price.quarterly.USD,
         foundingPercent: FOUNDING_DISCOUNT_PERCENT,
       }),
     );
@@ -277,7 +299,12 @@ describe("checkout prices", () => {
 
   it("rejects prices that cannot be discounted", () => {
     expect(
-      presentCheckoutPrices({ monthlyUsd: -1, quarterlyUsd: 45, foundingPercent: 40 }),
+      presentCheckoutPrices({
+        currency: "USD",
+        monthly: -1,
+        quarterly: 59,
+        foundingPercent: 40,
+      }),
     ).toBeNull();
   });
 

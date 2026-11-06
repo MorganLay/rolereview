@@ -1,9 +1,7 @@
 import { strings } from "@/copy/strings";
-import type { MarketingPlanInput } from "@/features/billing/catalog";
-import {
-  formatPlanUsd,
-  presentCheckoutPrices,
-} from "@/features/billing/present";
+import type { MarketingMeter, MarketingPlanInput } from "@/features/billing/catalog";
+import type { PlanCurrency } from "@/features/billing/currency";
+import { formatPlanPrice, monthlyEquivalent } from "@/features/billing/present";
 
 const copy = strings.marketing.home;
 const page = strings.marketing.pricing;
@@ -25,9 +23,11 @@ export type PricingRow = {
 };
 
 export type MarketingPricingView = {
+  currency: "USD" | "CAD";
   free: string;
   monthly: string;
   quarterly: string;
+  quarterlyEquivalent: string;
   savePercent: number | null;
   freeTailor: number;
   rows: PricingRow[];
@@ -37,23 +37,29 @@ export type MarketingPricingView = {
  * Percent cheaper than three monthly payments. Whole percent, or null when
  * the inputs cannot be compared.
  */
-export function quarterlySavePercent(
-  monthlyUsd: number,
-  quarterlyUsd: number,
-): number | null {
-  if (!Number.isFinite(monthlyUsd) || monthlyUsd <= 0) return null;
-  if (!Number.isFinite(quarterlyUsd) || quarterlyUsd < 0) return null;
-  const full = monthlyUsd * 3;
-  const saved = 1 - quarterlyUsd / full;
+export function quarterlySavePercent(monthly: number, quarterly: number): number | null {
+  if (!Number.isFinite(monthly) || monthly <= 0) return null;
+  if (!Number.isFinite(quarterly) || quarterly < 0) return null;
+  const full = monthly * 3;
+  const saved = 1 - quarterly / full;
   if (!Number.isFinite(saved) || saved <= 0) return 0;
   return Math.round(saved * 100);
 }
 
-function periodLabel(count: number, period: "month" | "day"): string {
+function periodLabel(count: number, period: "month" | "day", dailyCap?: number): string {
+  if (period === "month" && dailyCap != null && dailyCap > 0) {
+    return copy.pricingMonthAndDay(count, dailyCap);
+  }
   if (period === "day") {
     return count === 1 ? "1 a day" : `${count} a day`;
   }
   return copy.pricingPerMonth(count);
+}
+
+function meterText(meter: MarketingMeter, side: "free" | "pro"): string {
+  const cap = side === "free" ? meter.dailyCapFree : meter.dailyCapPro;
+  const count = side === "free" ? meter.free : meter.pro;
+  return periodLabel(count, meter.period, cap);
 }
 
 function templateNames(input: MarketingPlanInput): { free: string; pro: string } {
@@ -99,24 +105,27 @@ function entitlementRows(input: MarketingPlanInput): {
 export function presentMarketingPricing(
   input: MarketingPlanInput,
 ): MarketingPricingView | null {
-  const free = formatPlanUsd(input.freeMonthlyUsd);
-  const monthly = formatPlanUsd(input.monthlyUsd);
-  const quarterly = formatPlanUsd(input.quarterlyUsd);
-  if (!free || !monthly || !quarterly) return null;
+  const free = formatPlanPrice(input.freeAmount, input.currency);
+  const monthly = formatPlanPrice(input.monthly, input.currency);
+  const quarterly = formatPlanPrice(input.quarterly, input.currency);
+  const equivalent = monthlyEquivalent(input.quarterly);
+  const quarterlyEquivalent =
+    equivalent == null ? null : formatPlanPrice(equivalent, input.currency);
+  if (!free || !monthly || !quarterly || !quarterlyEquivalent) return null;
 
   const extras = entitlementRows(input);
   const rows: PricingRow[] = [
     {
       id: "tailor",
       label: copy.pricingRowTailor,
-      free: periodLabel(input.tailor.free, input.tailor.period),
-      pro: periodLabel(input.tailor.pro, input.tailor.period),
+      free: meterText(input.tailor, "free"),
+      pro: meterText(input.tailor, "pro"),
     },
     {
       id: "letter",
       label: copy.pricingRowLetter,
-      free: periodLabel(input.letter.free, input.letter.period),
-      pro: periodLabel(input.letter.pro, input.letter.period),
+      free: meterText(input.letter, "free"),
+      pro: meterText(input.letter, "pro"),
     },
     extras.templates,
     extras.docx,
@@ -124,10 +133,12 @@ export function presentMarketingPricing(
   ];
 
   return {
+    currency: input.currency,
     free,
     monthly,
     quarterly,
-    savePercent: quarterlySavePercent(input.monthlyUsd, input.quarterlyUsd),
+    quarterlyEquivalent,
+    savePercent: quarterlySavePercent(input.monthly, input.quarterly),
     freeTailor: input.tailor.free,
     rows,
   };
@@ -151,12 +162,6 @@ export type ComparisonRow = {
   pro: string;
 };
 
-export type FoundingOfferView = {
-  percent: number;
-  monthly: string;
-  quarterly: string;
-};
-
 /**
  * Full /pricing table. 1.0 meters and entitlements from `plans.ts`.
  * Prep kits, bullet coach, and target profiles wait for 1.1.
@@ -169,26 +174,26 @@ export function presentPricingComparison(
     {
       id: "tailor",
       label: copy.pricingRowTailor,
-      free: periodLabel(input.tailor.free, input.tailor.period),
-      pro: periodLabel(input.tailor.pro, input.tailor.period),
+      free: meterText(input.tailor, "free"),
+      pro: meterText(input.tailor, "pro"),
     },
     {
       id: "letter",
       label: copy.pricingRowLetter,
-      free: periodLabel(input.letter.free, input.letter.period),
-      pro: periodLabel(input.letter.pro, input.letter.period),
+      free: meterText(input.letter, "free"),
+      pro: meterText(input.letter, "pro"),
     },
     {
       id: "import",
       label: copy.pricingRowImport,
-      free: periodLabel(input.resumeImport.free, input.resumeImport.period),
-      pro: periodLabel(input.resumeImport.pro, input.resumeImport.period),
+      free: meterText(input.resumeImport, "free"),
+      pro: meterText(input.resumeImport, "pro"),
     },
     {
       id: "analyze",
       label: copy.pricingRowAnalyze,
-      free: periodLabel(input.jobAnalysis.free, input.jobAnalysis.period),
-      pro: periodLabel(input.jobAnalysis.pro, input.jobAnalysis.period),
+      free: meterText(input.jobAnalysis, "free"),
+      pro: meterText(input.jobAnalysis, "pro"),
     },
     {
       id: "tracking",
@@ -208,29 +213,12 @@ export function presentPricingComparison(
   ];
 }
 
-export function presentFoundingOffer(
-  input: MarketingPlanInput,
-): FoundingOfferView | null {
-  const prices = presentCheckoutPrices({
-    monthlyUsd: input.monthlyUsd,
-    quarterlyUsd: input.quarterlyUsd,
-    foundingPercent: input.foundingPercent,
-  });
-  if (!prices) return null;
-  return {
-    percent: prices.foundingPercent,
-    monthly: prices.foundingMonthly,
-    quarterly: prices.foundingQuarterly,
-  };
-}
-
 export function softwareApplicationJsonLd(input: {
   name: string;
   description: string;
   url: string;
-  freeUsd: number;
-  monthlyUsd: number;
-  quarterlyUsd: number;
+  usd: MarketingPlanInput;
+  cad: MarketingPlanInput;
 }) {
   return {
     "@context": "https://schema.org",
@@ -241,18 +229,21 @@ export function softwareApplicationJsonLd(input: {
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     offers: [
-      schemaOffer(page.offerFree, input.freeUsd),
-      schemaOffer(page.offerMonthly, input.monthlyUsd),
-      schemaOffer(page.offerQuarterly, input.quarterlyUsd),
+      schemaOffer(page.offerFree, input.usd.freeAmount, "USD"),
+      schemaOffer(page.offerFree, input.cad.freeAmount, "CAD"),
+      schemaOffer(page.offerMonthly, input.usd.monthly, "USD"),
+      schemaOffer(page.offerMonthly, input.cad.monthly, "CAD"),
+      schemaOffer(page.offerQuarterly, input.usd.quarterly, "USD"),
+      schemaOffer(page.offerQuarterly, input.cad.quarterly, "CAD"),
     ],
   };
 }
 
-function schemaOffer(name: string, price: number) {
+function schemaOffer(name: string, price: number, currency: PlanCurrency) {
   return {
     "@type": "Offer" as const,
     name,
     price: String(price),
-    priceCurrency: "USD",
+    priceCurrency: currency,
   };
 }

@@ -1,6 +1,7 @@
 import "server-only";
 
-import { FOUNDING_DISCOUNT_PERCENT, PLANS } from "./plans";
+import type { PlanCurrency } from "./currency";
+import { FOUNDING_DISCOUNT_PERCENT, limitDailyCap, PLANS, proAmount } from "./plans";
 import {
   presentCheckoutPrices,
   USAGE_METERS,
@@ -13,12 +14,15 @@ export type MarketingMeter = {
   free: number;
   pro: number;
   period: QuotaPeriod;
+  dailyCapFree?: number;
+  dailyCapPro?: number;
 };
 
 export type MarketingPlanInput = {
-  freeMonthlyUsd: number;
-  monthlyUsd: number;
-  quarterlyUsd: number;
+  currency: PlanCurrency;
+  freeAmount: number;
+  monthly: number;
+  quarterly: number;
   foundingPercent: number;
   tailor: MarketingMeter;
   letter: MarketingMeter;
@@ -43,16 +47,19 @@ export function allowanceCatalog(): AllowanceCatalog {
       free: free.allowance,
       pro: pro.allowance,
       period: free.period,
+      dailyCapFree: limitDailyCap(free) ?? null,
+      dailyCapPro: limitDailyCap(pro) ?? null,
     };
   }
   return catalog;
 }
 
-/** Formatted Pro prices, including the founding discount. Numbers come from `plans.ts`. */
-export function checkoutPrices(): CheckoutPrices {
+/** Formatted Pro prices for one currency, including the founding discount. Numbers come from `plans.ts`. */
+export function checkoutPrices(currency: PlanCurrency): CheckoutPrices {
   const prices = presentCheckoutPrices({
-    monthlyUsd: PLANS.PRO.price.monthlyUsd,
-    quarterlyUsd: PLANS.PRO.price.quarterlyUsd,
+    currency,
+    monthly: proAmount("MONTH", currency),
+    quarterly: proAmount("QUARTER", currency),
     foundingPercent: FOUNDING_DISCOUNT_PERCENT,
   });
   if (!prices) throw new Error("Pro prices could not be formatted.");
@@ -67,15 +74,23 @@ function marketingMeter(
   if (free.period !== pro.period) {
     throw new Error(`Quota period mismatch for ${kind}.`);
   }
-  return { free: free.allowance, pro: pro.allowance, period: free.period };
+  return {
+    free: free.allowance,
+    pro: pro.allowance,
+    period: free.period,
+    ...(limitDailyCap(free) != null || limitDailyCap(pro) != null
+      ? { dailyCapFree: limitDailyCap(free) ?? 0, dailyCapPro: limitDailyCap(pro) ?? 0 }
+      : {}),
+  };
 }
 
 /** Homepage and /pricing. Numbers and entitlements come from `plans.ts`. */
-export function marketingPlanInput(): MarketingPlanInput {
+export function marketingPlanInput(currency: PlanCurrency): MarketingPlanInput {
   return {
-    freeMonthlyUsd: PLANS.FREE.price.monthlyUsd,
-    monthlyUsd: PLANS.PRO.price.monthlyUsd,
-    quarterlyUsd: PLANS.PRO.price.quarterlyUsd,
+    currency,
+    freeAmount: PLANS.FREE.price.monthly[currency],
+    monthly: proAmount("MONTH", currency),
+    quarterly: proAmount("QUARTER", currency),
     foundingPercent: FOUNDING_DISCOUNT_PERCENT,
     tailor: marketingMeter("TAILOR"),
     letter: marketingMeter("COVER_LETTER"),

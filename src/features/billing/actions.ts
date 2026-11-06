@@ -3,25 +3,17 @@
 import { revalidatePath } from "next/cache";
 import Stripe from "stripe";
 
+import { rememberPlanCurrency } from "./currency-request";
+
 import { requireUserForAction } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { fail, ok, type ActionResult } from "@/lib/result";
 import { getStripe } from "@/lib/stripe";
 
-import {
-  previewAllowed,
-  resolveFoundingApplication,
-  subscriptionBlocksCheckout,
-} from "./checkout-rules";
-import { decideFounding } from "./founding-status";
-import {
-  STRIPE_PRICE_PRO_MONTHLY,
-  STRIPE_PRICE_PRO_QUARTERLY,
-} from "./plans";
-import { checkoutSessionSchema, portalSessionSchema } from "./schemas";
-
-type Interval = "MONTH" | "QUARTER";
+import { subscriptionBlocksCheckout } from "./checkout-rules";
+import { stripePriceId } from "./plans";
+import { checkoutSessionSchema, planCurrencySchema, portalSessionSchema } from "./schemas";
 
 function stripeCode(error: unknown): string {
   if (error instanceof Stripe.errors.StripeError) return error.code ?? error.type;
@@ -33,8 +25,15 @@ function appUrl(path: string): string {
   return `${base}${path}`;
 }
 
-function priceIdFor(interval: Interval): string | null {
-  return interval === "MONTH" ? STRIPE_PRICE_PRO_MONTHLY : STRIPE_PRICE_PRO_QUARTERLY;
+/** Save the currency used on pricing, checkout, and Settings. */
+export async function setPlanCurrency(
+  input: unknown,
+): Promise<ActionResult<{ currency: "USD" | "CAD" }>> {
+  const parsed = planCurrencySchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION");
+  await rememberPlanCurrency(parsed.data.currency);
+  revalidatePath("/", "layout");
+  return ok({ currency: parsed.data.currency });
 }
 
 async function ensureStripeCustomer(
@@ -84,7 +83,7 @@ export async function createCheckoutSession(
     return fail("VALIDATION", parsed.error.flatten().fieldErrors);
   }
 
-  const priceId = priceIdFor(parsed.data.interval);
+  const priceId = stripePriceId(parsed.data.interval, parsed.data.currency);
   const stripe = getStripe();
   if (!stripe || !priceId) return fail("INTERNAL");
 
@@ -99,19 +98,6 @@ export async function createCheckoutSession(
   });
   if (!row) return fail("NOT_FOUND");
 
-  const decision = await decideFounding(row.email);
-  const preview = previewAllowed(env.NODE_ENV, env.STRIPE_SECRET_KEY ?? null)
-    ? parsed.data.previewFounding
-    : undefined;
-  if (decision === "blocked" && preview !== false) return fail("INTERNAL");
-
-  const applyFounding = resolveFoundingApplication({
-    eligible: decision === "apply",
-    preview,
-  });
-  const couponId = env.STRIPE_COUPON_FOUNDING;
-  if (applyFounding && !couponId) return fail("INTERNAL");
-
   try {
     const customerId = await ensureStripeCustomer(stripe, row);
     revalidatePath("/settings");
@@ -124,20 +110,36 @@ export async function createCheckoutSession(
       return fail("CONFLICT");
     }
 
+    await rememberPlanCurrency(parsed.data.currency);
     const session = await stripe.checkout.sessions.create({
+      ui_mode: "hosted_page",
       mode: "subscription",
       customer: customerId,
       client_reference_id: row.id,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: appUrl("/settings?upgraded=1"),
       cancel_url: appUrl("/settings?tab=plan"),
-      metadata: { userId: row.id, interval: parsed.data.interval },
-      subscription_data: {
-        metadata: { userId: row.id, interval: parsed.data.interval },
+      billing_address_collection: "auto",
+      phone_number_collection: { enabled: false },
+      automatic_tax: { enabled: true },
+      allow_promotion_codes: false,
+      payment_method_collection: "always",
+      submit_type: "auto",
+      integration_identifier: "hosted_web_0001",
+      origin_context: "web",
+      customer_update: { address: "auto" },
+      metadata: {
+        userId: row.id,
+        interval: parsed.data.interval,
+        currency: parsed.data.currency,
       },
-      ...(applyFounding && couponId
-        ? { discounts: [{ coupon: couponId }] }
-        : { allow_promotion_codes: true }),
+      subscription_data: {
+        metadata: {
+          userId: row.id,
+          interval: parsed.data.interval,
+          currency: parsed.data.currency,
+        },
+      },
     });
 
     if (!session.url) return fail("INTERNAL");

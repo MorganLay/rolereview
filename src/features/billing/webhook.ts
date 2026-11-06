@@ -10,9 +10,14 @@ import { env } from "@/lib/env";
 
 import {
   STRIPE_PRICE_PRO_MONTHLY,
+  STRIPE_PRICE_PRO_MONTHLY_CAD,
+  STRIPE_PRICE_PRO_MONTHLY_USD,
   STRIPE_PRICE_PRO_QUARTERLY,
+  STRIPE_PRICE_PRO_QUARTERLY_CAD,
+  STRIPE_PRICE_PRO_QUARTERLY_USD,
 } from "./plans";
 import {
+  checkoutCurrency,
   checkoutInterval,
   checkoutLinkPatch,
   checkoutUserId,
@@ -30,7 +35,11 @@ type WebhookTx = Prisma.TransactionClient;
 
 type AppliedEvent = {
   touched: boolean;
-  checkout?: { userId: string; interval: "MONTH" | "QUARTER" };
+  checkout?: {
+    userId: string;
+    interval: "MONTH" | "QUARTER";
+    currency?: "USD" | "CAD";
+  };
 };
 
 export type WebhookResult = {
@@ -38,10 +47,39 @@ export type WebhookResult = {
   body: { received?: true; error?: string };
 };
 
+function listed(ids: Array<string | null>): string[] {
+  const out: string[] = [];
+  for (const id of ids) {
+    if (id && !out.includes(id)) out.push(id);
+  }
+  return out;
+}
+
+function currencyEntry(
+  id: string | null,
+  currency: "USD" | "CAD",
+): Record<string, "USD" | "CAD"> {
+  return id ? { [id]: currency } : {};
+}
+
 function priceCatalog(): PriceCatalog {
   return {
-    monthly: STRIPE_PRICE_PRO_MONTHLY,
-    quarterly: STRIPE_PRICE_PRO_QUARTERLY,
+    monthlyIds: listed([
+      STRIPE_PRICE_PRO_MONTHLY_USD,
+      STRIPE_PRICE_PRO_MONTHLY_CAD,
+      STRIPE_PRICE_PRO_MONTHLY,
+    ]),
+    quarterlyIds: listed([
+      STRIPE_PRICE_PRO_QUARTERLY_USD,
+      STRIPE_PRICE_PRO_QUARTERLY_CAD,
+      STRIPE_PRICE_PRO_QUARTERLY,
+    ]),
+    currencyByPriceId: {
+      ...currencyEntry(STRIPE_PRICE_PRO_MONTHLY_USD, "USD"),
+      ...currencyEntry(STRIPE_PRICE_PRO_MONTHLY_CAD, "CAD"),
+      ...currencyEntry(STRIPE_PRICE_PRO_QUARTERLY_USD, "USD"),
+      ...currencyEntry(STRIPE_PRICE_PRO_QUARTERLY_CAD, "CAD"),
+    },
   };
 }
 
@@ -110,6 +148,7 @@ export async function handleStripeWebhook(
   if (applied.checkout) {
     await captureServerEvent(applied.checkout.userId, "checkout_completed", {
       interval: applied.checkout.interval,
+      ...(applied.checkout.currency ? { currency: applied.checkout.currency } : {}),
     });
   }
 
@@ -171,9 +210,12 @@ async function applyCheckout(
 
   await tx.user.updateMany({ where: { id: user.id }, data: patch });
   const interval = checkoutInterval(session.metadata);
+  const currency = checkoutCurrency(session.metadata);
   return {
     touched: true,
-    ...(interval ? { checkout: { userId: user.id, interval } } : {}),
+    ...(interval
+      ? { checkout: { userId: user.id, interval, ...(currency ? { currency } : {}) } }
+      : {}),
   };
 }
 

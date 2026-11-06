@@ -237,6 +237,7 @@ model User {
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean          @default(false)
   foundingMember       Boolean          @default(false)
+  billingCurrency      String? /// USD or CAD, from the Stripe Price. Renewals stay on that Price.
 
   // Growth & attribution
   referralCode   String  @unique /// Short code for invite links (generated on creation)

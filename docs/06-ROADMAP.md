@@ -295,6 +295,6 @@ Applying without tailoring never counts toward anything, on purpose.
 - **Chrome extension** (Manifest V3): capture the visible posting text + URL → `createJob` via an authenticated endpoint.
 - **Canadian federal mode:** detect GC Jobs postings; screening-question answers per essential qualification, drawn from library evidence (same guard approach); guide + `/for/canadian-public-service` upgrade.
 - **Offer comparison** view (Pro).
-- **Annual plan, student discount, CAD prices.**
+- **Annual plan, student discount.** Launch prices are US$24 / CA$29 monthly and US$59 / CA$75 per 90 days (D-33).
 - **Shareable hunt summary card** (`next/og`), opt-in.
 - Candidate: French UI.

@@ -7,6 +7,7 @@ import type { BillingInterval, Plan } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
 import { allowanceCatalog } from "./catalog";
+import { isPlanCurrency, type PlanCurrency } from "./currency";
 import { decideFounding } from "./founding-status";
 import { USAGE_METERS, type UsageSnapshot } from "./present";
 import { quotaSnapshot } from "./quota";
@@ -20,6 +21,7 @@ export type PlanBilling = {
   foundingMember: boolean;
   foundingEligible: boolean;
   hasCustomer: boolean;
+  billingCurrency: PlanCurrency | null;
   timeZone: string;
   usage: UsageSnapshot[];
 };
@@ -29,6 +31,7 @@ export type CheckoutContext = {
   foundingEligible: boolean;
   hasCustomer: boolean;
   paymentFailed: boolean;
+  billingCurrency: PlanCurrency | null;
 };
 
 /**
@@ -40,19 +43,20 @@ export const getCheckoutContext = cache(async (userId: string): Promise<Checkout
   const user = await db.user.findFirst({
     where: { id: userId },
     select: {
-      email: true,
       plan: true,
       stripeCustomerId: true,
       subscriptionStatus: true,
+      billingCurrency: true,
     },
   });
   if (!user) return null;
-  const decision = await decideFounding(user.email);
+  const decision = await decideFounding();
   return {
     plan: user.plan,
     foundingEligible: decision === "apply",
     hasCustomer: user.stripeCustomerId !== null,
     paymentFailed: showsPaymentFailedBanner(user.subscriptionStatus),
+    billingCurrency: isPlanCurrency(user.billingCurrency) ? user.billingCurrency : null,
   };
 });
 
@@ -71,6 +75,7 @@ export async function getPlanBilling(userId: string): Promise<PlanBilling | null
         currentPeriodEnd: true,
         cancelAtPeriodEnd: true,
         foundingMember: true,
+        billingCurrency: true,
         timezone: true,
       },
     }),
@@ -82,12 +87,14 @@ export async function getPlanBilling(userId: string): Promise<PlanBilling | null
   const usage = await Promise.all(
     USAGE_METERS.map(async (meter) => {
       const snapshot = await quotaSnapshot({ id: userId, plan: user.plan }, meter);
+      const caps = catalog[meter];
       const row: UsageSnapshot = {
         meter,
         used: snapshot.used,
         allowance: snapshot.allowance,
         bonus: snapshot.bonus,
-        period: catalog[meter].period,
+        period: caps.period,
+        dailyCap: user.plan === "PRO" ? caps.dailyCapPro : caps.dailyCapFree,
       };
       return row;
     }),
@@ -101,6 +108,7 @@ export async function getPlanBilling(userId: string): Promise<PlanBilling | null
     foundingMember: user.foundingMember,
     foundingEligible: checkout.foundingEligible,
     hasCustomer: checkout.hasCustomer,
+    billingCurrency: isPlanCurrency(user.billingCurrency) ? user.billingCurrency : null,
     timeZone: user.timezone,
     usage,
   };

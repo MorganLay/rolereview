@@ -74,7 +74,7 @@ export async function joinWaitlist(
     create: {
       email,
       source: "waitlist",
-      foundingOffer: true,
+      foundingOffer: false,
       marketingConsentAt: now,
       consentText,
       utmSource: attribution?.utmSource ?? null,
@@ -83,7 +83,6 @@ export async function joinWaitlist(
       referrer: attribution?.referrer ?? attribution?.ref ?? null,
     },
     update: {
-      foundingOffer: true,
       marketingConsentAt: now,
       consentText,
       // Keep original UTM on duplicate; refresh consent for re-submits.

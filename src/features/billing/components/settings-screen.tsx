@@ -10,6 +10,7 @@ import type { AccountPreferences } from "@/features/account/preferences";
 
 import type { PlanBilling } from "../queries";
 import { CheckoutActions } from "./checkout-actions";
+import { CurrencySwitch } from "./currency-switch";
 import { PlanUpgradeButton } from "./plan-upgrade-button";
 import {
   SETTINGS_TABS,
@@ -30,6 +31,7 @@ export function SettingsScreen({
   prices,
   upgraded,
   showTestPreview,
+  currencyLocked,
 }: {
   tab: SettingsTab;
   billing: PlanBilling | null;
@@ -37,6 +39,7 @@ export function SettingsScreen({
   prices: CheckoutPrices;
   upgraded: boolean;
   showTestPreview: boolean;
+  currencyLocked: boolean;
 }) {
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-6">
@@ -66,6 +69,7 @@ export function SettingsScreen({
           prices={prices}
           upgraded={upgraded}
           showTestPreview={showTestPreview}
+          currencyLocked={currencyLocked}
         />
       ) : tab === "preferences" && preferences ? (
         <PreferencesForm preferences={preferences} />
@@ -83,11 +87,13 @@ function PlanPanel({
   prices,
   upgraded,
   showTestPreview,
+  currencyLocked,
 }: {
   billing: PlanBilling;
   prices: CheckoutPrices;
   upgraded: boolean;
   showTestPreview: boolean;
+  currencyLocked: boolean;
 }) {
   const summary = presentPlanSummary({
     plan: billing.plan,
@@ -123,6 +129,18 @@ function PlanPanel({
         {summary.renewal ? (
           <p className="text-sm tabular-nums text-slate">{summary.renewal}</p>
         ) : null}
+        {currencyLocked ? (
+          <p className="text-sm text-slate">
+            {copy.billedIn(copy.currencyNames[prices.currency])}
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <CurrencySwitch currency={prices.currency} />
+            <p className="text-sm text-slate">
+              {copy.billedIn(copy.currencyNames[prices.currency])}
+            </p>
+          </div>
+        )}
         {billing.plan === "FREE" ? (
           <div>
             <PlanUpgradeButton />

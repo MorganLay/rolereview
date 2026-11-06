@@ -123,19 +123,19 @@ Inside 1.0 the **walking skeleton** (library → job → tailored resume → PDF
 | # | Feature | Release | Plan |
 |---|---|---|---|
 | G1 | Magic link + Google sign-in | 1.0 | — |
-| G2 | Free and Pro: monthly and 90-day billing, founding-member coupon, Stripe Checkout + Customer Portal | 1.0 | — |
+| G2 | Free and Pro: monthly and 90-day billing, Stripe Checkout + Customer Portal. The founding coupon is not applied (D-33) | 1.0 | — |
 | G3 | Usage meter + upgrade prompts at limits | 1.0 | — |
 | G4 | Settings: profile, timezone, notifications, marketing consent, data export (JSON), delete account | 1.0 | — |
 | G5 | In-app feedback (bug/idea/praise) + opt-in testimonial request after an offer | 1.0 | — |
 | G6 | **Invite a friend**: both get +5 tailored resumes; the inviter gets a free month when the friend upgrades | 1.1 | — |
 | G7 | Admin dashboard (signups, activation, conversion, AI cost, MRR) | 1.1 | — |
-| G8 | Annual plan, student discount, CAD pricing | 1.2 | — |
+| G8 | Annual plan, student discount | 1.2 | Launch prices are US$24 / CA$29 monthly and US$59 / CA$75 per 90 days (D-33) |
 
 ### H. Marketing site (details in `09-MARKETING.md`)
 
 | # | Feature | Release |
 |---|---|---|
-| H1 | **Pre-launch waitlist page** with founding-member offer (live within the first 2 weeks of building) | 1.0 (early) |
+| H1 | **Pre-launch waitlist page** (live within the first 2 weeks of building). It does not promise a founding discount (D-33) | 1.0 (early) |
 | H2 | Homepage with an **interactive demo** (no sign-up, no AI cost) and one clear call to action | 1.0 |
 | H3 | Pricing page (monthly/90-day toggle, comparison table, FAQ, guarantee) | 1.0 |
 | H4 | **Free tools**: ATS Keyword Checker (AI, rate-limited, captcha) and Bullet Strength Checker (deterministic) | 1.0 |
@@ -188,7 +188,7 @@ Tone: plain, specific, encouraging. See `10-BRAND.md` → Voice.
 ### Principles
 1. **Tracking is free forever.** The board, timeline, interviews, contacts, reminders, and basic Insights cost almost nothing to run and bring people back. AI actions and pro outputs are what people pay for.
 2. **Priced for a job search, not forever.** Searches last 1–4 months. Offer monthly and a cheaper 90-day plan, one-click cancel, a reminder email before each 90-day renewal, and a "Congratulations on the offer!" cancel flow that asks for a testimonial.
-3. **Undercut the big names, honestly.** No weekly-plan traps, no trials that silently convert at a higher price.
+3. **One paid tier, priced for a short search.** No weekly-plan traps, no trials that silently convert at a higher price, and no public discount as the default offer. US and Canadian prices are chosen for each market. They are not a live exchange rate.
 
 ### Competitor anchors (as reported Aug–Oct 2026; re-check before launch)
 
@@ -200,16 +200,17 @@ Tone: plain, specific, encouraging. See `10-BRAND.md` → Voice.
 | Kickresume | $24 / month regular |
 | Huntr Pro | ~$40 / month |
 
-### Plans (defaults; see D-07)
+### Plans (see D-33)
 
 | | **Free** | **Pro** |
 |---|---|---|
-| Price | $0 | **US$19 / month** or **US$45 / 90 days** (= $15/mo) |
-| Founding members (first 100) | — | **40% off for as long as they stay subscribed** |
+| Price, United States | $0 | **US$24 / month** or **US$59 / 90 days** (US$19.67/mo, charged up front, 18% less than three monthly payments) |
+| Price, Canada | $0 | **CA$29 / month** or **CA$75 / 90 days** (CA$25/mo, charged up front, 14% less than three monthly payments) |
+| Founding discount | — | Not offered. Checkout charges the list price |
 | Tailored resumes / month | 3 | 80 (fair use) |
 | Cover letters / month | 1 | 60 |
 | Resume imports / month | 2 | 20 |
-| Job analyses / day | 10 | 60 |
+| Job analyses | 30 a month, up to 10 a day | 200 a month, up to 40 a day |
 | Interview prep kits / month (1.1) | 1 | 30 |
 | Bullet coach / month (1.1) | 10 | 300 |
 | PDF templates | Classic | Classic, Modern, Compact |
@@ -220,13 +221,15 @@ Tone: plain, specific, encouraging. See `10-BRAND.md` → Voice.
 | Guarantee | — | 14-day money-back |
 
 - All limits live in `src/features/billing/plans.ts`. A failed AI call never uses up an allowance.
-- **Bonus credits** (referrals, promos, support) top up limits after the monthly allowance runs out.
-- USD at launch; CAD in 1.2.
+- **Bonus credits** (referrals, promos, support) top up limits after the monthly allowance runs out. They do not raise a daily abuse cap.
+- Both currencies buy the same Pro plan. Canada starts on CA$. The United States and everywhere else start on US$. A visitor can switch before paying. Checkout, receipts, and renewals stay in the currency of the Stripe Price. Cancelling stops the next renewal. Access lasts until the paid period ends.
+- The four current Stripe Prices have to be created at these amounts. A legacy Price still maps an existing subscription. It is not offered at checkout.
+- Selected testers can be given a defined free period. That is not a public price.
 
 ### Unit economics (estimates; verify with `AiCall` after the first 100 users)
 - AI cost ≈ tailored resume $0.06 · cover letter $0.04 · import $0.05 · prep kit $0.05 · job analysis <$0.01 · bullet coach <$0.005.
-- Worst-case Pro user ≈ $10/month AI cost; typical ≈ $1.50.
-- Fixed costs ≈ Vercel Pro $20 + Supabase Pro $25 + domain ≈ **$50/month → break-even at ~3–4 Pro subscribers.**
+- Worst-case Pro user ≈ US$10/month AI cost; typical ≈ US$1.50. That is still well under US$24 or CA$29, before fees, support, and acquisition.
+- Fixed costs ≈ Vercel Pro $20 + Supabase Pro $25 + domain ≈ **US$50/month**. AI cost stays in US dollars because that is how the model is billed.
 
 ---
 

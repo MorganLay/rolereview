@@ -5,7 +5,7 @@ import {
   type MarketingPlanInput,
 } from "@/features/billing/catalog";
 import { PLANS } from "@/features/billing/plans";
-import { formatPlanUsd } from "@/features/billing/present";
+import { formatPlanPrice } from "@/features/billing/present";
 import { DASHBOARD_HREF, SIGN_IN_HREF, primaryCta } from "@/features/marketing/cta";
 import {
   billingFaqItems,
@@ -13,7 +13,6 @@ import {
   faqJsonLd,
 } from "@/features/marketing/faq";
 import {
-  presentFoundingOffer,
   presentMarketingPricing,
   presentPricingComparison,
   quarterlySavePercent,
@@ -21,14 +20,15 @@ import {
 } from "@/features/marketing/present";
 
 const SAMPLE: MarketingPlanInput = {
-  freeMonthlyUsd: 0,
-  monthlyUsd: 19,
-  quarterlyUsd: 45,
+  currency: "CAD",
+  freeAmount: 0,
+  monthly: 29,
+  quarterly: 75,
   foundingPercent: 40,
   tailor: { free: 3, pro: 80, period: "month" },
   letter: { free: 1, pro: 60, period: "month" },
   resumeImport: { free: 2, pro: 20, period: "month" },
-  jobAnalysis: { free: 10, pro: 60, period: "day" },
+  jobAnalysis: { free: 30, pro: 200, period: "month", dailyCapFree: 10, dailyCapPro: 40 },
   modernTemplate: true,
   compactTemplate: true,
   docx: true,
@@ -42,6 +42,8 @@ describe("quarterlySavePercent", () => {
     quarterly: number;
     percent: number | null;
   }> = [
+    { name: "24 monthly vs 59 quarterly is 18%", monthly: 24, quarterly: 59, percent: 18 },
+    { name: "29 monthly vs 75 quarterly is 14%", monthly: 29, quarterly: 75, percent: 14 },
     { name: "19 monthly vs 45 quarterly is 21%", monthly: 19, quarterly: 45, percent: 21 },
     { name: "same as three months is 0%", monthly: 19, quarterly: 57, percent: 0 },
     { name: "more expensive quarterly is 0%", monthly: 19, quarterly: 80, percent: 0 },
@@ -60,10 +62,12 @@ describe("presentMarketingPricing", () => {
   it("formats prices, the quarterly save, and five plan differences", () => {
     const view = presentMarketingPricing(SAMPLE);
     expect(view).not.toBeNull();
-    expect(view?.free).toBe("US$0");
-    expect(view?.monthly).toBe("US$19");
-    expect(view?.quarterly).toBe("US$45");
-    expect(view?.savePercent).toBe(21);
+    expect(view?.currency).toBe("CAD");
+    expect(view?.free).toBe("CA$0");
+    expect(view?.monthly).toBe("CA$29");
+    expect(view?.quarterly).toBe("CA$75");
+    expect(view?.quarterlyEquivalent).toBe("CA$25");
+    expect(view?.savePercent).toBe(14);
     expect(view?.freeTailor).toBe(3);
     expect(view?.rows.map((row) => row.id)).toEqual([
       "tailor",
@@ -96,13 +100,15 @@ describe("presentMarketingPricing", () => {
   });
 
   it("returns null when a price cannot be formatted", () => {
-    expect(presentMarketingPricing({ ...SAMPLE, monthlyUsd: Number.NaN })).toBeNull();
+    expect(presentMarketingPricing({ ...SAMPLE, monthly: Number.NaN })).toBeNull();
   });
 
   it("reads live numbers from plans.ts", () => {
-    const view = presentMarketingPricing(marketingPlanInput());
-    expect(view?.monthly).toBe(formatPlanUsd(PLANS.PRO.price.monthlyUsd));
-    expect(view?.quarterly).toBe(formatPlanUsd(PLANS.PRO.price.quarterlyUsd));
+    const view = presentMarketingPricing(marketingPlanInput("USD"));
+    expect(view?.monthly).toBe(formatPlanPrice(PLANS.PRO.price.monthly.USD, "USD"));
+    expect(view?.quarterly).toBe(formatPlanPrice(PLANS.PRO.price.quarterly.USD, "USD"));
+    expect(view?.quarterlyEquivalent).toBe("US$19.67");
+    expect(view?.savePercent).toBe(18);
     expect(view?.freeTailor).toBe(PLANS.FREE.limits.TAILOR.allowance);
     expect(view?.rows).toHaveLength(5);
   });
@@ -154,14 +160,14 @@ describe("presentPricingComparison", () => {
       pro: "20 a month",
     });
     expect(rows.find((row) => row.id === "analyze")).toMatchObject({
-      free: "10 a day",
-      pro: "60 a day",
+      free: "30 a month, up to 10 a day",
+      pro: "200 a month, up to 40 a day",
     });
     expect(rows.find((row) => row.id === "guarantee")?.pro).toBe("14-day refund");
   });
 
   it("reads live numbers from plans.ts", () => {
-    const rows = presentPricingComparison(marketingPlanInput());
+    const rows = presentPricingComparison(marketingPlanInput("CAD"));
     expect(rows.find((row) => row.id === "tailor")?.free).toBe(
       `${PLANS.FREE.limits.TAILOR.allowance} a month`,
     );
@@ -169,31 +175,17 @@ describe("presentPricingComparison", () => {
       `${PLANS.PRO.limits.IMPORT.allowance} a month`,
     );
     expect(rows.find((row) => row.id === "analyze")?.free).toBe(
-      `${PLANS.FREE.limits.ANALYZE.allowance} a day`,
+      "30 a month, up to 10 a day",
     );
   });
 });
 
-describe("presentFoundingOffer", () => {
-  it("formats the founding prices from the percent off Pro", () => {
-    const offer = presentFoundingOffer(SAMPLE);
-    expect(offer).toEqual({
-      percent: 40,
-      monthly: "US$11.40",
-      quarterly: "US$27",
-    });
-  });
-
-  it("returns null when the percent cannot be applied", () => {
-    expect(presentFoundingOffer({ ...SAMPLE, foundingPercent: -1 })).toBeNull();
-  });
-});
-
 describe("billingFaqItems", () => {
-  it("includes the weekly-plan answer and founding percent", () => {
-    const items = billingFaqItems({ freeTailor: 3, foundingPercent: 40 });
+  it("includes the weekly-plan answer and says the founding offer is closed", () => {
+    const items = billingFaqItems({ freeTailor: 3 });
     expect(items.map((item) => item.id)).toContain("billing-weekly");
-    expect(items.find((item) => item.id === "billing-founding")?.answer).toContain("40%");
+    expect(items.find((item) => item.id === "billing-founding")?.answer).toContain("closed");
+    expect(items.find((item) => item.id === "billing-currency")?.answer).toContain("Canadian");
     expect(items.find((item) => item.id === "billing-free")?.answer).toContain(
       "3 tailored resumes",
     );
@@ -203,19 +195,22 @@ describe("billingFaqItems", () => {
 
 describe("softwareApplicationJsonLd", () => {
   it("lists Free and both Pro intervals from the plan prices", () => {
+    const usd = { ...SAMPLE, currency: "USD" as const, monthly: 24, quarterly: 59 };
     const json = softwareApplicationJsonLd({
       name: "RoleRefine",
       description: "Tailor your resume to every job, using only your real experience.",
       url: "https://www.rolerefine.ca/pricing",
-      freeUsd: SAMPLE.freeMonthlyUsd,
-      monthlyUsd: SAMPLE.monthlyUsd,
-      quarterlyUsd: SAMPLE.quarterlyUsd,
+      usd,
+      cad: SAMPLE,
     });
     expect(json["@type"]).toBe("SoftwareApplication");
     expect(json.offers).toEqual([
       { "@type": "Offer", name: "Free", price: "0", priceCurrency: "USD" },
-      { "@type": "Offer", name: "Pro monthly", price: "19", priceCurrency: "USD" },
-      { "@type": "Offer", name: "Pro 90-day", price: "45", priceCurrency: "USD" },
+      { "@type": "Offer", name: "Free", price: "0", priceCurrency: "CAD" },
+      { "@type": "Offer", name: "Pro monthly", price: "24", priceCurrency: "USD" },
+      { "@type": "Offer", name: "Pro monthly", price: "29", priceCurrency: "CAD" },
+      { "@type": "Offer", name: "Pro 90-day", price: "59", priceCurrency: "USD" },
+      { "@type": "Offer", name: "Pro 90-day", price: "75", priceCurrency: "CAD" },
     ]);
   });
 });

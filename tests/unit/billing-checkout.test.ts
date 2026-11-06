@@ -8,6 +8,7 @@ import {
   subscriptionBlocksCheckout,
   type CouponRedemptions,
 } from "@/features/billing/checkout-rules";
+import { decideFounding } from "@/features/billing/founding-status";
 
 function coupon(partial: Partial<CouponRedemptions>): CouponRedemptions {
   return {
@@ -57,8 +58,14 @@ describe("couponCanBeRedeemed", () => {
   });
 });
 
+describe("decideFounding", () => {
+  it("does not offer the discount", async () => {
+    await expect(decideFounding()).resolves.toBe("skip");
+  });
+});
+
 describe("foundingDiscountApplies", () => {
-  it("requires both the promised email and an open coupon", () => {
+  it("is true only when both flags are true", () => {
     expect(foundingDiscountApplies({ foundingOffer: true, couponOpen: true })).toBe(true);
     expect(foundingDiscountApplies({ foundingOffer: true, couponOpen: false })).toBe(false);
     expect(foundingDiscountApplies({ foundingOffer: false, couponOpen: true })).toBe(false);

@@ -12,8 +12,10 @@ export const VERCEL_PRODUCTION_REQUIRED = [
   "ANTHROPIC_API_KEY",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
-  "STRIPE_PRICE_PRO_MONTHLY",
-  "STRIPE_PRICE_PRO_QUARTERLY",
+  "STRIPE_PRICE_PRO_MONTHLY_USD",
+  "STRIPE_PRICE_PRO_QUARTERLY_USD",
+  "STRIPE_PRICE_PRO_MONTHLY_CAD",
+  "STRIPE_PRICE_PRO_QUARTERLY_CAD",
   "STRIPE_COUPON_FOUNDING",
   "RESEND_API_KEY",
   "EMAIL_FROM",
@@ -45,11 +47,13 @@ export function stripeSecretIssues(
   secretKey: string | undefined,
 ): string[] {
   if (!secretKey) return [];
-  if (vercelEnv === "production" && !secretKey.startsWith("sk_live_")) {
-    return ["STRIPE_SECRET_KEY must start with sk_live_ on Vercel Production"];
+  const live = secretKey.startsWith("sk_live_") || secretKey.startsWith("rk_live_");
+  const test = secretKey.startsWith("sk_test_") || secretKey.startsWith("rk_test_");
+  if (vercelEnv === "production" && !live) {
+    return ["STRIPE_SECRET_KEY must be a live key (sk_live_ or rk_live_) on Vercel Production"];
   }
-  if (vercelEnv === "preview" && !secretKey.startsWith("sk_test_")) {
-    return ["STRIPE_SECRET_KEY must start with sk_test_ on Vercel Preview"];
+  if (vercelEnv === "preview" && !test) {
+    return ["STRIPE_SECRET_KEY must be a test key (sk_test_ or rk_test_) on Vercel Preview"];
   }
   return [];
 }

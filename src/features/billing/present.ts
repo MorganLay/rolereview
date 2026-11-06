@@ -5,6 +5,8 @@
 
 import { strings } from "@/copy/strings";
 
+import type { PlanCurrency } from "./currency";
+
 const copy = strings.billing;
 const upgrade = strings.upgrade;
 const pill = strings.shell;
@@ -19,6 +21,8 @@ export type MeterAllowance = {
   free: number;
   pro: number;
   period: QuotaPeriod;
+  dailyCapFree: number | null;
+  dailyCapPro: number | null;
 };
 
 export type AllowanceCatalog = Record<UsageMeter, MeterAllowance>;
@@ -29,6 +33,8 @@ export type UsageSnapshot = {
   allowance: number;
   bonus: number;
   period: QuotaPeriod;
+  /** UTC-day abuse ceiling for this plan. Null when the meter has none. */
+  dailyCap: number | null;
 };
 
 export type UsageRowView = {
@@ -90,54 +96,82 @@ export function checkoutConfirmed(value: string | string[] | undefined): boolean
 }
 
 export type CheckoutPrices = {
+  currency: PlanCurrency;
   monthly: string;
   quarterly: string;
+  /** Monthly equivalent of the 90-day price, for comparison. The 90-day amount is charged up front. */
+  quarterlyEquivalent: string;
   foundingMonthly: string;
   foundingQuarterly: string;
   foundingPercent: number;
 };
 
-/** Whole dollars stay without cents. Anything else shows two decimals, prefixed US. */
-export function formatPlanUsd(dollars: number): string | null {
+/** Whole dollars stay without cents. USD is prefixed US$, CAD is prefixed CA$. Amounts live in `plans.ts`. */
+export function formatPlanPrice(dollars: number, currency: PlanCurrency): string | null {
   if (!Number.isFinite(dollars)) return null;
   const cents = Math.round(dollars * 100);
   const hasCents = cents % 100 !== 0;
-  const formatted = new Intl.NumberFormat("en-US", {
+  const formatted = new Intl.NumberFormat(currency === "CAD" ? "en-CA" : "en-US", {
     style: "currency",
-    currency: "USD",
+    currency,
+    currencyDisplay: "narrowSymbol",
     minimumFractionDigits: hasCents ? 2 : 0,
     maximumFractionDigits: 2,
   }).format(cents / 100);
-  return `US${formatted}`;
+  if (currency === "CAD") {
+    return formatted.startsWith("CA$") ? formatted : `CA${formatted}`;
+  }
+  if (formatted.startsWith("US$")) return formatted;
+  if (formatted.startsWith("$")) return `US${formatted}`;
+  return `US$${formatted}`;
 }
 
-/** Price after a percent-off coupon, in dollars. Null when the inputs are unusable. */
-export function discountedUsd(usd: number, percentOff: number): number | null {
-  if (!Number.isFinite(usd) || usd < 0) return null;
+/** One third of the 90-day price, rounded to cents. Null when the amount is unusable. */
+export function monthlyEquivalent(quarterly: number): number | null {
+  if (!Number.isFinite(quarterly) || quarterly < 0) return null;
+  return Math.round((quarterly / 3) * 100) / 100;
+}
+
+/** Price after a percent-off coupon. Null when the inputs are unusable. */
+export function discountedPrice(amount: number, percentOff: number): number | null {
+  if (!Number.isFinite(amount) || amount < 0) return null;
   if (!Number.isFinite(percentOff) || percentOff < 0 || percentOff > 100) return null;
-  const cents = Math.round(usd * 100);
+  const cents = Math.round(amount * 100);
   const discounted = Math.round((cents * (100 - percentOff)) / 100);
   return discounted / 100;
 }
 
 export function presentCheckoutPrices(input: {
-  monthlyUsd: number;
-  quarterlyUsd: number;
+  currency: PlanCurrency;
+  monthly: number;
+  quarterly: number;
   foundingPercent: number;
 }): CheckoutPrices | null {
-  const foundingMonthlyUsd = discountedUsd(input.monthlyUsd, input.foundingPercent);
-  const foundingQuarterlyUsd = discountedUsd(input.quarterlyUsd, input.foundingPercent);
-  if (foundingMonthlyUsd == null || foundingQuarterlyUsd == null) return null;
-  const monthly = formatPlanUsd(input.monthlyUsd);
-  const quarterly = formatPlanUsd(input.quarterlyUsd);
-  const foundingMonthly = formatPlanUsd(foundingMonthlyUsd);
-  const foundingQuarterly = formatPlanUsd(foundingQuarterlyUsd);
-  if (!monthly || !quarterly || !foundingMonthly || !foundingQuarterly) return null;
+  const foundingMonthly = discountedPrice(input.monthly, input.foundingPercent);
+  const foundingQuarterly = discountedPrice(input.quarterly, input.foundingPercent);
+  const equivalent = monthlyEquivalent(input.quarterly);
+  if (foundingMonthly == null || foundingQuarterly == null || equivalent == null) return null;
+  const monthly = formatPlanPrice(input.monthly, input.currency);
+  const quarterly = formatPlanPrice(input.quarterly, input.currency);
+  const quarterlyEquivalent = formatPlanPrice(equivalent, input.currency);
+  const foundingMonthlyLabel = formatPlanPrice(foundingMonthly, input.currency);
+  const foundingQuarterlyLabel = formatPlanPrice(foundingQuarterly, input.currency);
+  if (
+    !monthly ||
+    !quarterly ||
+    !quarterlyEquivalent ||
+    !foundingMonthlyLabel ||
+    !foundingQuarterlyLabel
+  ) {
+    return null;
+  }
   return {
+    currency: input.currency,
     monthly,
     quarterly,
-    foundingMonthly,
-    foundingQuarterly,
+    quarterlyEquivalent,
+    foundingMonthly: foundingMonthlyLabel,
+    foundingQuarterly: foundingQuarterlyLabel,
     foundingPercent: input.foundingPercent,
   };
 }
@@ -168,7 +202,10 @@ export function presentUsageRow(row: UsageSnapshot): UsageRowView {
   const allowance = count(row.allowance);
   const bonus = extraLabel(row.bonus);
   const label = copy.meters[row.meter];
-  const period = copy.periods[row.period];
+  const period =
+    row.dailyCap != null && row.dailyCap > 0
+      ? copy.periods.monthWithDay(row.dailyCap)
+      : copy.periods[row.period];
   const countLabel = copy.ofAllowance(used, allowance);
   return {
     meter: row.meter,
@@ -254,5 +291,13 @@ export function presentUpgrade(
 
 function quotaDetail(meter: UsageMeter, catalog: AllowanceCatalog): string {
   const limits = catalog[meter];
+  if (meter === "ANALYZE") {
+    return upgrade.quota.ANALYZE(
+      count(limits.free),
+      count(limits.pro),
+      count(limits.dailyCapFree ?? 0),
+      count(limits.dailyCapPro ?? 0),
+    );
+  }
   return upgrade.quota[meter](count(limits.free), count(limits.pro));
 }

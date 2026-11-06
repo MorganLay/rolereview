@@ -14,9 +14,12 @@ vi.mock("@/lib/db", () => ({
 
 import { PLANS } from "@/features/billing/plans";
 import {
+  callsRemaining,
   checkQuota,
+  dailyCapBlocks,
   decideQuota,
   periodBounds,
+  utcDayBounds,
   quotaRemaining,
   selectBonusCredit,
   type BonusCreditCandidate,
@@ -58,21 +61,23 @@ describe("decideQuota", () => {
   });
 });
 
-describe("periodBounds", () => {
-  it("uses the UTC day for ANALYZE, including the Tokyo date line", () => {
-    const bounds = periodBounds("ANALYZE", new Date("2026-05-31T23:30:00.000Z"));
+describe("utcDayBounds", () => {
+  it("uses the UTC day, including a late hour that is the next calendar day in Tokyo", () => {
+    const bounds = utcDayBounds(new Date("2026-05-31T23:30:00.000Z"));
     expect(bounds.start.toISOString()).toBe("2026-05-31T00:00:00.000Z");
     expect(bounds.end.toISOString()).toBe("2026-06-01T00:00:00.000Z");
   });
 
-  it("rolls the ANALYZE day at UTC midnight", () => {
-    const before = periodBounds("ANALYZE", new Date("2026-10-19T23:59:59.999Z"));
-    const after = periodBounds("ANALYZE", new Date("2026-10-20T00:00:00.000Z"));
+  it("rolls at UTC midnight", () => {
+    const before = utcDayBounds(new Date("2026-10-19T23:59:59.999Z"));
+    const after = utcDayBounds(new Date("2026-10-20T00:00:00.000Z"));
     expect(before.end.toISOString()).toBe("2026-10-20T00:00:00.000Z");
     expect(after.start.toISOString()).toBe("2026-10-20T00:00:00.000Z");
   });
+});
 
-  it("uses the UTC calendar month for other kinds", () => {
+describe("periodBounds", () => {
+  it("uses the UTC calendar month for job analyses and the other kinds", () => {
     const february = periodBounds("TAILOR", new Date("2026-02-28T23:59:59.999Z"));
     expect(february.start.toISOString()).toBe("2026-02-01T00:00:00.000Z");
     expect(february.end.toISOString()).toBe("2026-03-01T00:00:00.000Z");
@@ -83,12 +88,23 @@ describe("periodBounds", () => {
   });
 
   it("keeps 29 February inside February", () => {
-    const day = periodBounds("ANALYZE", new Date("2024-02-29T12:00:00.000Z"));
+    const day = utcDayBounds(new Date("2024-02-29T12:00:00.000Z"));
     expect(day.start.toISOString()).toBe("2024-02-29T00:00:00.000Z");
     expect(day.end.toISOString()).toBe("2024-03-01T00:00:00.000Z");
-    const month = periodBounds("COVER_LETTER", new Date("2024-02-29T12:00:00.000Z"));
+    const month = periodBounds("ANALYZE", new Date("2024-02-29T12:00:00.000Z"));
     expect(month.start.toISOString()).toBe("2024-02-01T00:00:00.000Z");
     expect(month.end.toISOString()).toBe("2024-03-01T00:00:00.000Z");
+  });
+});
+
+describe("dailyCapBlocks", () => {
+  it("blocks at the cap and ignores a missing cap", () => {
+    expect(dailyCapBlocks(10, 10)).toBe(true);
+    expect(dailyCapBlocks(11, 10)).toBe(true);
+    expect(dailyCapBlocks(9, 10)).toBe(false);
+    expect(dailyCapBlocks(10, undefined)).toBe(false);
+    expect(dailyCapBlocks(1, 0)).toBe(false);
+    expect(dailyCapBlocks(Number.NaN, 10)).toBe(false);
   });
 });
 
@@ -100,21 +116,23 @@ describe("plan limits", () => {
     expect(PLANS.PRO.limits.COVER_LETTER.allowance).toBe(60);
     expect(PLANS.FREE.limits.IMPORT.allowance).toBe(2);
     expect(PLANS.PRO.limits.IMPORT.allowance).toBe(20);
-    expect(PLANS.FREE.limits.ANALYZE.allowance).toBe(10);
-    expect(PLANS.PRO.limits.ANALYZE.allowance).toBe(60);
+    expect(PLANS.FREE.limits.ANALYZE.allowance).toBe(30);
+    expect(PLANS.FREE.limits.ANALYZE.dailyCap).toBe(10);
+    expect(PLANS.PRO.limits.ANALYZE.allowance).toBe(200);
+    expect(PLANS.PRO.limits.ANALYZE.dailyCap).toBe(40);
     expect(PLANS.FREE.limits.PREP_KIT.allowance).toBe(1);
     expect(PLANS.PRO.limits.PREP_KIT.allowance).toBe(30);
     expect(PLANS.FREE.limits.BULLET_COACH.allowance).toBe(10);
     expect(PLANS.PRO.limits.BULLET_COACH.allowance).toBe(300);
-    expect(PLANS.PRO.price.monthlyUsd).toBe(19);
-    expect(PLANS.PRO.price.quarterlyUsd).toBe(45);
+    expect(PLANS.PRO.price.monthly).toEqual({ USD: 24, CAD: 29 });
+    expect(PLANS.PRO.price.quarterly).toEqual({ USD: 59, CAD: 75 });
 
     for (const kind of Object.keys(PLANS.FREE.limits) as Array<
       keyof typeof PLANS.FREE.limits
     >) {
       expect(PLANS.FREE.limits[kind].period).toBe(PLANS.PRO.limits[kind].period);
     }
-    expect(PLANS.FREE.limits.ANALYZE.period).toBe("day");
+    expect(PLANS.FREE.limits.ANALYZE.period).toBe("month");
     expect(PLANS.FREE.limits.TAILOR.period).toBe("month");
   });
 });
@@ -209,19 +227,37 @@ describe("checkQuota", () => {
     aggregate.mockResolvedValue({ _sum: { remaining: 0 } });
   });
 
-  it("counts successful plan uses inside the UTC day for ANALYZE", async () => {
+  it("blocks a job analysis at the daily cap before the monthly allowance", async () => {
     count.mockResolvedValue(10);
     const decision = await checkQuota({ id: "user-1", plan: "FREE" }, "ANALYZE", NOW);
-    expect(decision).toEqual({ allowed: false, useBonus: false });
+    expect(decision).toEqual({ allowed: false, useBonus: false, limit: "day" });
     expect(count).toHaveBeenCalledWith({
+      where: {
+        userId: "user-1",
+        kind: "ANALYZE",
+        success: true,
+        createdAt: {
+          gte: new Date("2026-10-19T00:00:00.000Z"),
+          lt: new Date("2026-10-20T00:00:00.000Z"),
+        },
+      },
+    });
+    expect(aggregate).not.toHaveBeenCalled();
+  });
+
+  it("counts job analyses against the UTC month when the day is under the cap", async () => {
+    count.mockResolvedValueOnce(2).mockResolvedValueOnce(30);
+    const decision = await checkQuota({ id: "user-1", plan: "FREE" }, "ANALYZE", NOW);
+    expect(decision).toEqual({ allowed: false, useBonus: false });
+    expect(count).toHaveBeenNthCalledWith(2, {
       where: {
         userId: "user-1",
         kind: "ANALYZE",
         success: true,
         usedBonusCredit: false,
         createdAt: {
-          gte: new Date("2026-10-19T00:00:00.000Z"),
-          lt: new Date("2026-10-20T00:00:00.000Z"),
+          gte: new Date("2026-10-01T00:00:00.000Z"),
+          lt: new Date("2026-11-01T00:00:00.000Z"),
         },
       },
     });
@@ -249,6 +285,16 @@ describe("checkQuota", () => {
       },
       _sum: { remaining: true },
     });
+  });
+
+  it("shows the tighter of the monthly remainder and the daily cap", async () => {
+    count.mockResolvedValueOnce(28).mockResolvedValueOnce(1);
+    const tightMonth = await callsRemaining({ id: "user-1", plan: "FREE" }, "ANALYZE", NOW);
+    expect(tightMonth).toBe(2);
+
+    count.mockResolvedValueOnce(0).mockResolvedValueOnce(3);
+    const tightDay = await callsRemaining({ id: "user-1", plan: "FREE" }, "ANALYZE", NOW);
+    expect(tightDay).toBe(7);
   });
 
   it("treats a missing bonus sum as zero", async () => {

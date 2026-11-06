@@ -236,6 +236,6 @@ describe("analysis quota", () => {
     expect(credits[0]?.remaining).toBe(1);
     expect(await usedToday()).toBe(0);
     const snapshot = await quotaSnapshot({ id: "user-1", plan: "FREE" }, "ANALYZE", NOW);
-    expect(snapshot.remaining).toBe(11);
+    expect(snapshot.remaining).toBe(31);
   });
 });

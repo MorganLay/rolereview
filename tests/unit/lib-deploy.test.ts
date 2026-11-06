@@ -37,13 +37,21 @@ describe("stripeSecretIssues", () => {
 
   it("requires a live key on Production and a test key on Preview", () => {
     expect(stripeSecretIssues("production", "sk_test_abc")).toEqual([
-      "STRIPE_SECRET_KEY must start with sk_live_ on Vercel Production",
+      "STRIPE_SECRET_KEY must be a live key (sk_live_ or rk_live_) on Vercel Production",
+    ]);
+    expect(stripeSecretIssues("production", "rk_test_abc")).toEqual([
+      "STRIPE_SECRET_KEY must be a live key (sk_live_ or rk_live_) on Vercel Production",
     ]);
     expect(stripeSecretIssues("production", "sk_live_abc")).toEqual([]);
+    expect(stripeSecretIssues("production", "rk_live_abc")).toEqual([]);
     expect(stripeSecretIssues("preview", "sk_live_abc")).toEqual([
-      "STRIPE_SECRET_KEY must start with sk_test_ on Vercel Preview",
+      "STRIPE_SECRET_KEY must be a test key (sk_test_ or rk_test_) on Vercel Preview",
+    ]);
+    expect(stripeSecretIssues("preview", "rk_live_abc")).toEqual([
+      "STRIPE_SECRET_KEY must be a test key (sk_test_ or rk_test_) on Vercel Preview",
     ]);
     expect(stripeSecretIssues("preview", "sk_test_abc")).toEqual([]);
+    expect(stripeSecretIssues("preview", "rk_test_abc")).toEqual([]);
     expect(stripeSecretIssues("development", "sk_live_abc")).toEqual([]);
     expect(stripeSecretIssues(undefined, "sk_test_abc")).toEqual([]);
   });
@@ -55,8 +63,10 @@ describe("vercelProductionIssues", () => {
     ANTHROPIC_API_KEY: "sk-ant",
     STRIPE_SECRET_KEY: "sk_live_x",
     STRIPE_WEBHOOK_SECRET: "whsec_x",
-    STRIPE_PRICE_PRO_MONTHLY: "price_m",
-    STRIPE_PRICE_PRO_QUARTERLY: "price_q",
+    STRIPE_PRICE_PRO_MONTHLY_USD: "price_m_usd",
+    STRIPE_PRICE_PRO_QUARTERLY_USD: "price_q_usd",
+    STRIPE_PRICE_PRO_MONTHLY_CAD: "price_m_cad",
+    STRIPE_PRICE_PRO_QUARTERLY_CAD: "price_q_cad",
     STRIPE_COUPON_FOUNDING: "founding",
     RESEND_API_KEY: "re_x",
     EMAIL_FROM: "RoleRefine <hello@mail.rolerefine.ca>",
@@ -88,7 +98,7 @@ describe("vercelProductionIssues", () => {
     expect(issues).toContain("SUPABASE_SECRET_KEY is required on Vercel Production");
     expect(issues).toContain("STRIPE_SECRET_KEY is required on Vercel Production");
     expect(issues).toContain("RESEND_API_KEY is required on Vercel Production");
-    expect(issues).toHaveLength(14);
+    expect(issues).toHaveLength(16);
   });
 
   it("passes a complete Production set", () => {
@@ -137,7 +147,7 @@ describe("deployEnvIssues", () => {
         seedUserId: "seed",
       }),
     ).toEqual([
-      "STRIPE_SECRET_KEY must start with sk_live_ on Vercel Production",
+      "STRIPE_SECRET_KEY must be a live key (sk_live_ or rk_live_) on Vercel Production",
       "SEED_USER_ID must be unset on Vercel Production",
     ]);
   });

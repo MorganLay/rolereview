@@ -32,8 +32,8 @@ export function couponCanBeRedeemed(coupon: CouponRedemptions): boolean {
 }
 
 /**
- * The discount applies only to an email that was promised it, and only while
- * the coupon itself can still be redeemed.
+ * Both flags would be required before a founding coupon could apply. Checkout
+ * does not use this. The discount is not offered.
  */
 export function foundingDiscountApplies(input: {
   foundingOffer: boolean;
@@ -51,8 +51,8 @@ export function previewAllowed(nodeEnv: string, secretKey: string | null): boole
 }
 
 /**
- * `preview` undefined keeps the real decision. True or false is a test-mode
- * override and must already have passed `previewAllowed`.
+ * `preview` undefined keeps `eligible`. True or false overrides it. Checkout
+ * does not call this. The founding coupon is not applied.
  */
 export function resolveFoundingApplication(input: {
   eligible: boolean;

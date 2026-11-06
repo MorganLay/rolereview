@@ -3,6 +3,8 @@
  * docs/03-ARCHITECTURE.md → Payments.
  */
 
+import type { PlanCurrency } from "./currency";
+
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -12,8 +14,10 @@ const PAYMENT_FAILED_STATUSES = new Set(["past_due", "unpaid"]);
 export type StripeRef = string | { id: string };
 
 export type PriceCatalog = {
-  monthly: string | null;
-  quarterly: string | null;
+  monthlyIds: readonly string[];
+  quarterlyIds: readonly string[];
+  /** Current Prices only. Legacy ids map to an interval and do not set a currency. */
+  currencyByPriceId: Readonly<Record<string, PlanCurrency>>;
 };
 
 export type CheckoutLinkPatch = {
@@ -30,6 +34,7 @@ export type SubscriptionPatch = {
   subscriptionStatus: string;
   currentPeriodEnd: Date | null;
   cancelAtPeriodEnd: boolean;
+  billingCurrency?: PlanCurrency;
 };
 
 /** Stripe objects are either an id string or an expanded `{ id }`. */
@@ -61,9 +66,17 @@ export function billingIntervalFromPriceId(
   catalog: PriceCatalog,
 ): "MONTH" | "QUARTER" | null {
   if (!priceId) return null;
-  if (catalog.monthly && priceId === catalog.monthly) return "MONTH";
-  if (catalog.quarterly && priceId === catalog.quarterly) return "QUARTER";
+  if (catalog.monthlyIds.includes(priceId)) return "MONTH";
+  if (catalog.quarterlyIds.includes(priceId)) return "QUARTER";
   return null;
+}
+
+export function billingCurrencyFromPriceId(
+  priceId: string | null,
+  catalog: PriceCatalog,
+): PlanCurrency | null {
+  if (!priceId) return null;
+  return catalog.currencyByPriceId[priceId] ?? null;
 }
 
 export function periodEndFromUnix(seconds: number | null | undefined): Date | null {
@@ -109,6 +122,13 @@ export function checkoutInterval(
   return value === "MONTH" || value === "QUARTER" ? value : null;
 }
 
+export function checkoutCurrency(
+  metadata: Record<string, string> | null | undefined,
+): PlanCurrency | null {
+  const value = metadata?.currency;
+  return value === "USD" || value === "CAD" ? value : null;
+}
+
 export function checkoutLinkPatch(input: {
   customerId: string | null;
   subscriptionId: string | null;
@@ -140,6 +160,7 @@ export function subscriptionPatch(input: {
   prices: PriceCatalog;
 }): SubscriptionPatch {
   const interval = billingIntervalFromPriceId(input.priceId, input.prices);
+  const billingCurrency = billingCurrencyFromPriceId(input.priceId, input.prices);
   const customerId =
     input.customerId &&
     (!input.existingCustomerId || input.existingCustomerId === input.customerId)
@@ -148,6 +169,7 @@ export function subscriptionPatch(input: {
   return {
     plan: planFromSubscriptionStatus(input.status),
     ...(interval ? { billingInterval: interval } : {}),
+    ...(billingCurrency ? { billingCurrency } : {}),
     ...(customerId ? { stripeCustomerId: customerId } : {}),
     stripeSubscriptionId: input.subscriptionId,
     subscriptionStatus: input.status,

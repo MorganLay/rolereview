@@ -376,18 +376,21 @@ export const PrepKitContent = z.object({ schemaVersion: z.literal(1), questions:
 ## Quotas & bonus credits (`features/billing/quota.ts`)
 
 ```
-period(kind) = UTC calendar month, except ANALYZE = UTC day
+period(kind) = UTC calendar month
 used         = count(AiCall where userId, kind, success = true, usedBonusCredit = false, createdAt in period)
 allowance    = PLANS[user.plan].limits[kind]
 bonus        = sum(BonusCredit.remaining where userId, kind, (expiresAt null or > now))
+dailyCap     = optional abuse ceiling. ANALYZE counts every successful call in the UTC day, including calls that used a bonus credit. Bonus credits do not raise it.
 
-canUse  = used < allowance  OR  bonus > 0
+canUse  = under the daily cap, and (used < allowance  OR  bonus > 0)
 on success:
   if used < allowance → AiCall(usedBonusCredit = false)
   else → decrement the oldest-expiring BonusCredit with remaining > 0 (same transaction), AiCall(usedBonusCredit = true)
 ```
 
 Soonest `expiresAt` first. `expiresAt` null (no expiry) is last. The same expiry uses the oldest `createdAt`. `expiresAt` equal to now is already expired. If that credit is gone when the row is written, the successful `AiCall` is still stored with `usedBonusCredit` true so it does not also count against the plan allowance.
+
+`User.billingCurrency` is `USD` or `CAD`, copied from the current Stripe Price. A legacy Price does not set it. Checkout does not use a legacy Price.
 
 ## Analytics definitions (Insights; computed by queries, nothing stored)
 

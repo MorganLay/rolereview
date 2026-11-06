@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 
 import { strings } from "@/copy/strings";
 import { marketingPlanInput } from "@/features/billing/catalog";
+import { requestPlanCurrency } from "@/features/billing/currency-request";
 import { PricingExperience } from "@/features/marketing/components/pricing-page";
 import { billingFaqItems, faqJsonLd } from "@/features/marketing/faq";
 import {
-  presentFoundingOffer,
   presentMarketingPricing,
   presentPricingComparison,
   softwareApplicationJsonLd,
@@ -15,8 +16,13 @@ import { env } from "@/lib/env";
 
 const copy = strings.marketing.pricing;
 
-export function generateMetadata(): Metadata {
-  const pricing = presentMarketingPricing(marketingPlanInput());
+/** Prices follow the visitor's currency, so this route waits for that choice. */
+export const instant = false;
+
+export async function generateMetadata(): Promise<Metadata> {
+  await connection();
+  const currency = await requestPlanCurrency();
+  const pricing = presentMarketingPricing(marketingPlanInput(currency));
   return marketingMetadata({
     title: copy.metaTitle,
     description: pricing
@@ -26,26 +32,23 @@ export function generateMetadata(): Metadata {
   });
 }
 
-export default function PricingPage() {
-  const input = marketingPlanInput();
+export default async function PricingPage() {
+  await connection();
+  const currency = await requestPlanCurrency();
+  const input = marketingPlanInput(currency);
   const pricing = presentMarketingPricing(input);
-  const founding = presentFoundingOffer(input);
-  if (!pricing || !founding) {
+  if (!pricing) {
     throw new Error("Pricing could not be formatted from plans.");
   }
 
   const comparison = presentPricingComparison(input);
-  const faqs = billingFaqItems({
-    freeTailor: input.tailor.free,
-    foundingPercent: input.foundingPercent,
-  });
+  const faqs = billingFaqItems({ freeTailor: input.tailor.free });
   const appJsonLd = softwareApplicationJsonLd({
     name: strings.brand.name,
     description: strings.brand.shortDescriptor,
     url: `${env.NEXT_PUBLIC_APP_URL}/pricing`,
-    freeUsd: input.freeMonthlyUsd,
-    monthlyUsd: input.monthlyUsd,
-    quarterlyUsd: input.quarterlyUsd,
+    usd: marketingPlanInput("USD"),
+    cad: marketingPlanInput("CAD"),
   });
 
   return (
@@ -58,12 +61,7 @@ export default function PricingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }}
       />
-      <PricingExperience
-        pricing={pricing}
-        comparison={comparison}
-        founding={founding}
-        faqs={faqs}
-      />
+      <PricingExperience pricing={pricing} comparison={comparison} faqs={faqs} />
     </>
   );
 }
