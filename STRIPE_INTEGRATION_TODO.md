@@ -11,7 +11,7 @@ Hosted Checkout is already wired. The session is created in [src/features/billin
 | mode | `subscription` | Leave it. Pro is a recurring plan. |
 | success_url | `/settings?upgraded=1` on the app URL | Leave it. |
 | cancel_url | `/settings?tab=plan` on the app URL | Leave it. |
-| line_items[].price | The USD or CAD Price id from `plans.ts` | Put the four live Price ids in Vercel Production: `STRIPE_PRICE_PRO_MONTHLY_USD` (US$24/month), `STRIPE_PRICE_PRO_QUARTERLY_USD` (US$59 every 90 days), `STRIPE_PRICE_PRO_MONTHLY_CAD` (CA$29/month), `STRIPE_PRICE_PRO_QUARTERLY_CAD` (CA$75 every 90 days). |
+| line_items[].price | The USD or CAD Price id from `plans.ts` | A Stripe Price can include both currencies. Put the monthly `price_...` id in both `STRIPE_PRICE_PRO_MONTHLY_USD` and `STRIPE_PRICE_PRO_MONTHLY_CAD`. Put the 90-day id in both `STRIPE_PRICE_PRO_QUARTERLY_USD` and `STRIPE_PRICE_PRO_QUARTERLY_CAD`. The amounts on that price must be US$24 / CA$29 monthly and US$59 / CA$75 every 90 days. |
 
 ## Configured parameters
 

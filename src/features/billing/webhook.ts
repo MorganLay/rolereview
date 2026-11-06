@@ -235,6 +235,7 @@ async function applySubscription(
     priceId: firstItemPriceId(items),
     periodEnd: firstItemPeriodEnd(items),
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    chargedCurrency: subscription.currency,
     prices: priceCatalog(),
   });
 

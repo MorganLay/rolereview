@@ -157,10 +157,16 @@ export function subscriptionPatch(input: {
   priceId: string | null;
   periodEnd: Date | null;
   cancelAtPeriodEnd: boolean;
+  /** Currency Stripe actually charged. One Price can carry both USD and CAD. */
+  chargedCurrency?: string | null;
   prices: PriceCatalog;
 }): SubscriptionPatch {
   const interval = billingIntervalFromPriceId(input.priceId, input.prices);
-  const billingCurrency = billingCurrencyFromPriceId(input.priceId, input.prices);
+  const charged = input.chargedCurrency?.toUpperCase();
+  const billingCurrency =
+    charged === "USD" || charged === "CAD"
+      ? charged
+      : billingCurrencyFromPriceId(input.priceId, input.prices);
   const customerId =
     input.customerId &&
     (!input.existingCustomerId || input.existingCustomerId === input.customerId)

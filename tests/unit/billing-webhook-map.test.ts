@@ -257,6 +257,22 @@ describe("subscriptionPatch", () => {
     expect(canceled.subscriptionStatus).toBe("canceled");
   });
 
+  it("uses the currency Stripe charged when one price has two currencies", () => {
+    const patch = subscriptionPatch({
+      status: "active",
+      subscriptionId: "sub_1",
+      customerId: "cus_1",
+      existingCustomerId: null,
+      priceId: "price_month",
+      periodEnd: new Date("2026-11-15T00:00:00.000Z"),
+      cancelAtPeriodEnd: false,
+      chargedCurrency: "cad",
+      prices: PRICES,
+    });
+    expect(patch.billingCurrency).toBe("CAD");
+    expect(patch.billingInterval).toBe("MONTH");
+  });
+
   it("omits a mismatched customer and an unknown price", () => {
     const patch = subscriptionPatch({
       status: "past_due",

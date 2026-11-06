@@ -117,6 +117,7 @@ export async function createCheckoutSession(
       customer: customerId,
       client_reference_id: row.id,
       line_items: [{ price: priceId, quantity: 1 }],
+      currency: parsed.data.currency.toLowerCase(),
       success_url: appUrl("/settings?upgraded=1"),
       cancel_url: appUrl("/settings?tab=plan"),
       billing_address_collection: "auto",
