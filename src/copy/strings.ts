@@ -1174,7 +1174,8 @@ export const strings = {
       },
     },
     import: {
-      welcome: "Start your library from a resume. Nothing is saved until you review it.",
+      welcome:
+        "Start your library from a resume. Nothing is saved until you save it to your library.",
       importsLeft: (count: number) => {
         if (count === 0) return "No imports left this month.";
         if (count === 1) return "1 import left this month.";
@@ -1198,6 +1199,20 @@ export const strings = {
       reviewTitle: "Review your resume",
       reviewLead:
         "Check the details we extracted before saving them to your experience library.",
+      confirmTitle: "Your resume has been read.",
+      confirmLead: "We extracted the following for your experience library.",
+      confirmCounts: "What we extracted",
+      confirmNote:
+        "You can correct this in your library later. Tailored resumes use the library.",
+      confirmEmpty:
+        "No entries or skills were found. Saving keeps the profile details we could read.",
+      confirmLongTitle: "Shorten these before saving",
+      confirmLongHint:
+        "Each bullet needs text, at most 400 characters. Shorten it here, or leave it out.",
+      confirmBullet: (title: string) => `Bullet from “${title}”`,
+      confirmBulletUntitled: "Bullet",
+      reviewFirst: "Review and edit first",
+      leaveOut: "Leave out",
       warningsTitle: "Check these before you save",
       longBullet: "Over 400 characters. Shorten it or leave it unchecked.",
       include: "Include",

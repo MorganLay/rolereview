@@ -4,6 +4,10 @@ Notes from using the live site. Add new ones under **Open**. One note per entry.
 
 ## Open
 
+**Screen:** Import, after a resume is read, when the library is empty.
+**What I did:** Asked for a reminder to add a lot of different tests that also test a person’s input. If enough validations fail, I think it should probably go to the manual editing anyway.
+**What felt wrong:** The confirmation tests only count sections and flag a blank bullet or one over 400 characters. They do not run a person’s upload or paste through the screen. One problem stays on the confirmation to shorten or leave out, and several problems would still sit there. I want a wide set of tests around what a person actually submits. Once enough checks fail, the full review should open instead. When this becomes a task, decide how many failures, and which kinds, send them to the review. One isolated bullet can stay on the confirmation. A mix of dates, titles, and bullets should open the review.
+
 **Screen:** Jobs, across the search. No screen for this exists yet.
 **What I did:** Asked whether the plan includes reading Gmail, or whatever email is linked, for updates on the jobs and updating those jobs, like a full assistant.
 **What felt wrong:** Nothing in 1.0, 1.1, or 1.2 reads an inbox. Email in 1.1 is mail RoleRefine sends (reminders, a weekly summary, a renewal heads-up, an offer note, a quota-reached note). The timeline can record an email I log myself. I want a linked mailbox, Gmail first, watched for recruiter and employer mail, matched to a job, and the job updated from it. When this becomes a task, decide whether a detected update is applied or shown for confirmation first. Status only moves through the pipeline, and a wrong match should not move a job on its own. This is inbound tracking. Auto-apply stays out of scope.

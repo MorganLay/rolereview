@@ -20,6 +20,8 @@ import {
   IMPORT_LIMITS,
   PDF_MIME,
 } from "../schemas";
+import { bulletsBlockingQuickSave } from "../confirm";
+import { ImportConfirm } from "./import-confirm";
 import {
   ReviewForm,
   type ReviewDraft,
@@ -37,7 +39,7 @@ type ImportFlowProps = {
 };
 
 type Source = "file" | "text";
-type Step = "upload" | "reading" | "review";
+type Step = "upload" | "reading" | "confirm" | "review";
 type Banner = "ai" | "nothing" | null;
 
 export function ImportFlow({
@@ -125,7 +127,7 @@ export function ImportFlow({
         return;
       }
       setDraft(draftFromExtracted(result.data));
-      setStep("review");
+      setStep(libraryHasContent ? "review" : "confirm");
     } catch {
       setStep("upload");
       setBanner("ai");
@@ -176,6 +178,7 @@ export function ImportFlow({
         }
         if (result.error.fields) {
           setFields(result.error.fields);
+          setStep("review");
           return false;
         }
         setFormError(copy.saveFailed);
@@ -193,7 +196,20 @@ export function ImportFlow({
     }
   }
 
-  const reviewing = step === "review";
+  const headingTitle =
+    step === "review"
+      ? copy.reviewTitle
+      : step === "confirm"
+        ? copy.confirmTitle
+        : strings.pages.libraryImport.title;
+  const headingLead =
+    step === "review"
+      ? copy.reviewLead
+      : step === "confirm"
+        ? copy.confirmLead
+        : onboarding
+          ? copy.welcome
+          : strings.pages.libraryImport.body;
   const heading = (
     <div>
       <h1
@@ -202,17 +218,21 @@ export function ImportFlow({
         aria-describedby="import-lead"
         className="scroll-mt-16 font-serif text-2xl font-semibold tracking-tight text-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:text-3xl"
       >
-        {reviewing ? copy.reviewTitle : strings.pages.libraryImport.title}
+        {headingTitle}
       </h1>
       <p id="import-lead" className="mt-2 max-w-xl text-sm text-slate">
-        {reviewing
-          ? copy.reviewLead
-          : onboarding
-            ? copy.welcome
-            : strings.pages.libraryImport.body}
+        {headingLead}
       </p>
     </div>
   );
+
+  function discard() {
+    if (pending) return;
+    setStep("upload");
+    setFields({});
+    setFormError(null);
+    setDraft(null);
+  }
 
   if (step === "reading") {
     return (
@@ -260,6 +280,32 @@ export function ImportFlow({
     );
   }
 
+  if (step === "confirm" && draft) {
+    return (
+      <div className="flex flex-col gap-6">
+        {heading}
+        <ImportConfirm
+          draft={draft}
+          setDraft={updateDraft}
+          email={email}
+          pending={pending}
+          formError={formError}
+          onSave={() => {
+            if (bulletsBlockingQuickSave(draft).length > 0) return;
+            void save();
+          }}
+          onReview={() => {
+            if (pending) return;
+            setFields({});
+            setFormError(null);
+            setStep("review");
+          }}
+          onStartOver={discard}
+        />
+      </div>
+    );
+  }
+
   if (step === "review" && draft) {
     return (
       <div className="flex flex-col gap-6">
@@ -272,13 +318,7 @@ export function ImportFlow({
           fields={fields}
           formError={formError}
           pending={pending}
-          onBack={() => {
-            if (pending) return;
-            setStep("upload");
-            setFields({});
-            setFormError(null);
-            setDraft(null);
-          }}
+          onBack={discard}
           onSave={save}
         />
       </div>

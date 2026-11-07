@@ -39,7 +39,7 @@ Signed in — protected by src/proxy.ts AND requireUser() in the (app) layout
 ## Flow A — first-time user (activation)
 
 1. Homepage CTA → `/sign-in?next=/library/import` → magic link (Supabase admin generates it, Resend sends it, five per email per hour) or Google → `/auth/callback` (session only) → first app load `requireUser()` creates the User (stores `signupSource`, `utm*`, `signupReferrer` from the first-touch cookie; `timezone` from the browser via `setTimezone`).
-2. Lands on `/library/import` with: "Start your library from a resume. Nothing is saved until you review it."
+2. Lands on `/library/import` with: "Start your library from a resume. Nothing is saved until you save it to your library."
 3. After saving the import → `/dashboard` shows the **Getting started** checklist (4 steps, computed from data):
    1. Build your library (≥ 1 entry)
    2. Accept a job (≥ 1 job)
@@ -82,10 +82,11 @@ Archived jobs stay out of the summary, the list, continue working, recent activi
 - Optimistic updates with rollback + toast on failure.
 
 ### `/library/import`
-Client state machine `upload → reading → review`:
+Client state machine `upload → reading → confirm → review` when the library has no entries and no skills. When it already has entries or skills: `upload → reading → review`.
 1. **Upload:** one workspace. "Upload a file" or "Paste text". Imports left this month sit beside those controls. The drop zone takes a PDF or DOCX up to 5 MB. A chosen file shows its name and can be removed before reading. **Read resume** stays quiet until a file is chosen, or the pasted text is long enough.
 2. **Reading:** an indeterminate panel. The heading stays **Import your resume**. The panel says **Reading your resume**, that roles, projects, education, and skills are being organized, and that this usually takes 10–30 seconds. It does not show a percentage or step through milestones. The indicator is pine green and stays still when reduced motion is on.
-3. **Review:** the heading becomes **Review your resume**, with **Check the details we extracted before saving them to your experience library.** Extracted profile, entries, bullets, and skills stay editable, each with a checkbox (default on). Warnings from extraction stay at the top. Skills are one compact list: include, name, and category. Wider screens align those in columns; a narrow screen stacks each skill. The category menu lists categories already on this resume, then the usual category names, and includes a field for a category of your own. A typed category is kept. Choosing one does not rewrite the other skills. Long bullets flagged. If the library isn't empty: **Append** (default) or **Replace everything** (confirm).
+3. **Confirm** (empty library only): the heading becomes **Your resume has been read.**, with **We extracted the following for your experience library.** Counts are the sections that have included entries, in library order, then skills. A section with nothing is left out. Warnings stay visible. One line says they can correct the library later, and that tailored resumes use the library. A bullet with no text, or over 400 characters, is shown here to shorten or leave out. **Save to library** waits until each of those is shortened or left out. **Review and edit first** opens the review. **Save to library** → `commitImport` → `/library` (or `/dashboard` during onboarding) with a summary toast.
+4. **Review:** the heading becomes **Review your resume**, with **Check the details we extracted before saving them to your experience library.** Extracted profile, entries, bullets, and skills stay editable, each with a checkbox (default on). Warnings from extraction stay at the top. Skills are one compact list: include, name, and category. Wider screens align those in columns; a narrow screen stacks each skill. The category menu lists categories already on this resume, then the usual category names, and includes a field for a category of your own. A typed category is kept. Choosing one does not rewrite the other skills. Long bullets flagged. If the library isn't empty: **Append** (default) or **Replace everything** (confirm). A library that already has entries or skills opens here after reading, and skips the confirmation.
    "Save to library" → `commitImport` → `/library` (or `/dashboard` during onboarding) with a summary toast.
 - Errors: bad file → inline; AI failure → retry or paste text (no charge); quota → upgrade modal; nothing found → message.
 
