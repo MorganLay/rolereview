@@ -108,7 +108,7 @@ Toolbar: view toggle **Board | List**, search (company/title), filters (source, 
 **Filters hide every job:** "No jobs match these filters."
 
 ### `/jobs/new`
-- Posting text (required, 200–30,000 chars), URL (optional), deadline (optional), source (select, optional), priority (stars, optional). Pasting a long posting scrolls the text area itself so the end of the paste is visible. That scroll is instant. It does not move the page. Reduced motion still applies to page motion.
+- The posting is the main field (required, 200–30,000 chars). The character count sits at the lower right of that field. Posting URL, deadline, source, and priority are optional details under it. The URL is saved for reference and is not imported. Deadline and source sit side by side when the page is wide enough, and stack on a narrow screen. Priority stays five stars. Pasting a long posting scrolls the text area itself so the end of the paste is visible. That scroll is instant. It does not move the page. Reduced motion still applies to page motion.
 - The analyses-left count is read from the server on each visit. Every New job control opens a blank form: the posting is empty, and the page is not left on “Analyzing the posting”. That includes a job that just finished analyzing, the back-forward cache, and the app router cache. Opening the form does not run analysis again.
 - Submit → `createJob` (saved PENDING → analysis → fields pre-filled from analysis) → `/jobs/[id]`. Analysis typically 3–8 s; on failure the job is saved FAILED with Retry.
 

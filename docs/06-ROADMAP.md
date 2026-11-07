@@ -244,6 +244,8 @@ Already covered, so not new tasks: library density, weakest-bullet examples, and
 
 TS.2–TS.5 touch different files and can be built together. **T13.4b does not start until they are ticked.**
 
+Still to look at, logged in `docs/Feedback.md` and not a task yet: Plan & billing copy. The renewal explanation is one dense paragraph under the price buttons, and the usage notes (“2 extra”, “Up to 40 a day”) sit tight against the bars.
+
 ### Production separation
 
 **T13.4b Separate production environment.** After Phase S. The rest of T13.4: `rolerefine-prod` Supabase (Canada region), Vercel Pro, per-environment `DATABASE_URL`/Stripe keys, live Stripe + webhook, Resend domain, PostHog prod, Supabase auth URLs, a real mailing address for email (CASL), then a real purchase and refund. Until then, `www.rolerefine.ca` stays on the current shared database and test Stripe keys.

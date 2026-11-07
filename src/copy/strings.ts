@@ -928,7 +928,7 @@ export const strings = {
     },
     jobsNew: {
       title: "New job",
-      body: "Paste a posting to analyze requirements and start tracking.",
+      body: "Paste a job posting to analyze its requirements and start tracking.",
     },
     jobDetail: {
       title: "Job",
@@ -1436,8 +1436,11 @@ export const strings = {
     postingPlaceholder: "Paste the job posting here.",
     postingCount: (count: number) =>
       `${count.toLocaleString("en-CA")} characters`,
+    detailsHeading: "Job details",
+    detailsBody: "Optional information to help organize and track this application.",
     urlLabel: "Posting URL",
     urlHint: "Optional. We store the link and don’t open it.",
+    urlSaved: "Saved for reference. The link isn’t imported automatically.",
     deadlineLabel: "Deadline",
     deadlineHint: "Optional. A reminder is set for 3 days before.",
     sourceLabel: "Where you found it",

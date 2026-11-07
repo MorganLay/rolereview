@@ -200,12 +200,16 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
 
   if (reading) {
     return (
-      <section aria-labelledby={`${formId}-reading`} className="flex flex-col gap-3">
+      <section
+        aria-labelledby={`${formId}-reading`}
+        aria-busy="true"
+        className="rounded-card border border-line bg-surface p-4 sm:p-5"
+      >
         <h2 id={`${formId}-reading`} className="text-base font-medium text-ink">
           {copy.reading}
         </h2>
-        <p className="text-sm text-slate">{copy.readingHint}</p>
-        <ol aria-live="polite" className="grid gap-1">
+        <p className="mt-1 text-sm text-slate">{copy.readingHint}</p>
+        <ol aria-live="polite" className="mt-4 grid gap-1">
           {copy.stages.map((line, index) => (
             <li
               key={line}
@@ -226,135 +230,228 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
   const deadlineError = fieldMessage(fields, "deadline");
   const sourceError = fieldMessage(fields, "source");
   const priorityError = fieldMessage(fields, "priority");
+  const lengthMessage =
+    count > JOB_LIMITS.postingMax
+      ? copy.errors.postingLong
+      : count > 0 && count < JOB_LIMITS.postingMin
+        ? copy.errors.postingShort
+        : null;
+  const postingReady =
+    count >= JOB_LIMITS.postingMin && count <= JOB_LIMITS.postingMax;
+  const postingDescribedBy = [
+    `${formId}-posting-hint`,
+    `${formId}-posting-count`,
+    lengthMessage ? `${formId}-posting-length` : null,
+  ]
+    .filter((id) => id !== null)
+    .join(" ");
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <p className="text-sm text-slate">{copy.analysesLeft(analysesLeft)}</p>
-
-      <div className="grid gap-2">
-        <Label htmlFor={`${formId}-posting`}>{copy.postingLabel}</Label>
-        <Textarea
-          ref={postingRef}
-          id={`${formId}-posting`}
-          value={posting}
-          onChange={(event) => onPostingChange(event)}
-          placeholder={copy.postingPlaceholder}
-          rows={12}
-          className="field-sizing-fixed max-h-80 overflow-y-auto"
-          required
-          aria-invalid={Boolean(postingError)}
-          aria-describedby={`${formId}-posting-hint`}
-        />
-        <p
-          id={`${formId}-posting-hint`}
-          className={
-            count > JOB_LIMITS.postingMax
-              ? "text-xs text-destructive"
-              : "text-xs text-slate"
-          }
-        >
-          {copy.postingHint} {copy.postingCount(count)}
-        </p>
-        {postingError ? <FieldAlert message={postingError} /> : null}
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor={`${formId}-url`}>{copy.urlLabel}</Label>
-        <Input
-          id={`${formId}-url`}
-          type="text"
-          inputMode="url"
-          autoComplete="off"
-          value={url}
-          onChange={(event) => setUrl(event.target.value)}
-          aria-invalid={Boolean(urlError)}
-          aria-describedby={`${formId}-url-hint`}
-        />
-        <p id={`${formId}-url-hint`} className="text-xs text-slate">
-          {copy.urlHint}
-        </p>
-        {urlError ? <FieldAlert message={urlError} /> : null}
-      </div>
-
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="grid gap-2">
-          <Label htmlFor={`${formId}-deadline`}>{copy.deadlineLabel}</Label>
-          <Input
-            id={`${formId}-deadline`}
-            type="date"
-            value={deadline}
-            onChange={(event) => setDeadline(event.target.value)}
-            aria-invalid={Boolean(deadlineError)}
-            aria-describedby={`${formId}-deadline-hint`}
+    <form
+      onSubmit={onSubmit}
+      className="overflow-hidden rounded-card border border-line bg-surface"
+    >
+      <div className="flex flex-col gap-2 p-4 sm:p-5">
+        <div className="flex items-baseline justify-between gap-3">
+          <Label htmlFor={`${formId}-posting`}>{copy.postingLabel}</Label>
+          <p className="text-right text-xs text-slate">{copy.analysesLeft(analysesLeft)}</p>
+        </div>
+        <div className="relative">
+          <Textarea
+            ref={postingRef}
+            id={`${formId}-posting`}
+            value={posting}
+            onChange={(event) => onPostingChange(event)}
+            placeholder={copy.postingPlaceholder}
+            rows={8}
+            className="field-sizing-fixed max-h-56 min-h-44 resize-none overflow-y-auto pb-8 sm:max-h-72 sm:min-h-52 lg:max-h-80 lg:min-h-64"
+            required
+            aria-invalid={Boolean(postingError) || count > JOB_LIMITS.postingMax}
+            aria-describedby={postingDescribedBy}
           />
-          <p id={`${formId}-deadline-hint`} className="text-xs text-slate">
-            {copy.deadlineHint}
+          <p
+            id={`${formId}-posting-count`}
+            className={cn(
+              "pointer-events-none absolute right-2.5 bottom-2 bg-surface px-1 text-xs tabular-nums",
+              count > JOB_LIMITS.postingMax ? "text-destructive" : "text-slate",
+            )}
+          >
+            {copy.postingCount(count)}
           </p>
-          {deadlineError ? <FieldAlert message={deadlineError} /> : null}
         </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor={`${formId}-source`}>{copy.sourceLabel}</Label>
-          <Select value={source} onValueChange={setSource}>
-            <SelectTrigger
-              id={`${formId}-source`}
-              className="w-full"
-              aria-invalid={Boolean(sourceError)}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NONE}>{copy.sourceNone}</SelectItem>
-              {JOB_SOURCES.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {copy.sources[value]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {sourceError ? <FieldAlert message={sourceError} /> : null}
-        </div>
+        <p id={`${formId}-posting-hint`} className="text-xs text-slate">
+          {copy.postingHint}
+        </p>
+        {lengthMessage ? (
+          <p
+            id={`${formId}-posting-length`}
+            className={
+              count > JOB_LIMITS.postingMax
+                ? "text-sm text-destructive"
+                : "text-sm text-slate"
+            }
+          >
+            {lengthMessage}
+          </p>
+        ) : null}
+        {postingError && postingError !== lengthMessage ? (
+          <FieldAlert message={postingError} />
+        ) : null}
       </div>
 
-      <fieldset className="grid min-w-0 gap-2 border-0 p-0">
-        <legend className="text-sm font-medium text-ink">{copy.priorityLabel}</legend>
-        <p className="text-xs text-slate">{copy.priorityHint}</p>
-        <div className="flex flex-wrap items-center gap-1">
-          {[1, 2, 3, 4, 5].map((n) => {
-            const selected = priority !== null && n <= priority;
-            return (
-              <button
-                key={n}
-                type="button"
-                className="rounded-md p-1 text-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                aria-pressed={priority === n}
-                aria-label={
-                  priority === n ? copy.priorityClear : copy.prioritySet(n)
-                }
-                onClick={() => setPriority((current) => (current === n ? null : n))}
-              >
-                <Star
-                  aria-hidden
-                  className={cn(
-                    "size-5",
-                    selected ? "fill-marigold text-ink" : "text-slate",
-                  )}
-                />
-              </button>
-            );
-          })}
-          <span className="ml-2 text-sm text-slate">
-            {priority === null ? copy.priorityNone : copy.priorityValue(priority)}
-          </span>
+      <div className="flex flex-col gap-5 border-t border-line p-4 sm:p-5">
+        <div>
+          <h2 className="text-base font-medium text-ink">{copy.detailsHeading}</h2>
+          <p className="mt-1 text-sm text-slate">{copy.detailsBody}</p>
         </div>
-        {priorityError ? <FieldAlert message={priorityError} /> : null}
-      </fieldset>
 
-      <div>
-        <Button type="submit">{strings.actions.addJob}</Button>
+        <div className="grid gap-1.5">
+          <Label htmlFor={`${formId}-url`}>{copy.urlLabel}</Label>
+          <Input
+            id={`${formId}-url`}
+            type="text"
+            inputMode="url"
+            autoComplete="off"
+            value={url}
+            onChange={(event) => setUrl(event.target.value)}
+            className="h-11 min-h-11"
+            aria-invalid={Boolean(urlError)}
+            aria-describedby={`${formId}-url-hint`}
+          />
+          <p id={`${formId}-url-hint`} className="text-xs text-slate">
+            {copy.urlSaved}
+          </p>
+          {urlError ? <FieldAlert message={urlError} /> : null}
+        </div>
+
+        <div className="grid items-start gap-5 lg:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Label htmlFor={`${formId}-deadline`}>{copy.deadlineLabel}</Label>
+            <Input
+              id={`${formId}-deadline`}
+              type="date"
+              value={deadline}
+              onChange={(event) => setDeadline(event.target.value)}
+              className="h-11 min-h-11"
+              aria-invalid={Boolean(deadlineError)}
+              aria-describedby={`${formId}-deadline-hint`}
+            />
+            <p id={`${formId}-deadline-hint`} className="text-xs text-slate">
+              {copy.deadlineHint}
+            </p>
+            {deadlineError ? <FieldAlert message={deadlineError} /> : null}
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label htmlFor={`${formId}-source`}>{copy.sourceLabel}</Label>
+            <Select value={source} onValueChange={setSource}>
+              <SelectTrigger
+                id={`${formId}-source`}
+                className="h-11 min-h-11 w-full"
+                aria-invalid={Boolean(sourceError)}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>{copy.sourceNone}</SelectItem>
+                {JOB_SOURCES.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {copy.sources[value]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {sourceError ? <FieldAlert message={sourceError} /> : null}
+          </div>
+        </div>
+
+        <PriorityField
+          formId={formId}
+          priority={priority}
+          error={priorityError}
+          onChange={setPriority}
+        />
+      </div>
+
+      <div className="border-t border-line px-4 py-4 sm:px-5">
+        <Button
+          type="submit"
+          className="min-h-11 w-full px-5 sm:w-auto"
+          disabled={!postingReady}
+        >
+          {strings.actions.addJob}
+        </Button>
       </div>
     </form>
   );
+}
+
+function PriorityField({
+  formId,
+  priority,
+  error,
+  onChange,
+}: {
+  formId: string;
+  priority: number | null;
+  error?: string;
+  onChange: (next: number | null) => void;
+}) {
+  const [preview, setPreview] = useState<number | null>(null);
+  const shown = preview ?? priority;
+
+  return (
+    <fieldset className="grid min-w-0 gap-1.5 border-0 p-0">
+      <legend className="text-sm font-medium text-ink">{copy.priorityLabel}</legend>
+      <p id={`${formId}-priority-hint`} className="text-xs text-slate">
+        {copy.priorityHint}
+      </p>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+        <div
+          className="flex"
+          onPointerLeave={(event) => {
+            if (event.pointerType !== "mouse") return;
+            setPreview(null);
+          }}
+        >
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              aria-pressed={priority === n}
+              aria-describedby={`${formId}-priority-hint`}
+              aria-label={priority === n ? copy.priorityClear : copy.prioritySet(n)}
+              onClick={() => {
+                setPreview(null);
+                onChange(priority === n ? null : n);
+              }}
+              onPointerEnter={(event) => {
+                if (event.pointerType !== "mouse") return;
+                setPreview(n);
+              }}
+            >
+              <Star aria-hidden className={cn("size-5", starClass(n, shown, priority))} />
+            </button>
+          ))}
+        </div>
+        <p className="text-sm text-slate">
+          {priority === null ? copy.priorityNone : copy.priorityValue(priority)}
+        </p>
+      </div>
+      {error ? <FieldAlert message={error} /> : null}
+    </fieldset>
+  );
+}
+
+/** Saved stars stay filled. A mouse hover previews a different value without changing it. */
+function starClass(n: number, shown: number | null, priority: number | null): string {
+  const inShown = shown !== null && n <= shown;
+  const inSaved = priority !== null && n <= priority;
+  if (inShown && inSaved) return "fill-marigold text-ink";
+  if (inShown) return "fill-marigold/40 text-ink";
+  if (inSaved) return "text-marigold-700";
+  return "text-slate";
 }
 
 function fieldMessage(fields: FieldErrors, key: string): string | undefined {
