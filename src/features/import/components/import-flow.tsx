@@ -281,14 +281,20 @@ export function ImportFlow({
       >
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <TabsList className="h-auto min-h-11 w-full sm:w-fit">
-            <TabsTrigger value="file" className="min-h-11 flex-1 px-3 sm:flex-none">
+            <TabsTrigger
+              value="file"
+              className="min-h-11 flex-1 px-3 focus-visible:border-transparent focus-visible:outline-none data-active:border-line data-active:bg-surface data-active:text-ink data-active:shadow-sm sm:flex-none"
+            >
               {copy.uploadTab}
             </TabsTrigger>
-            <TabsTrigger value="text" className="min-h-11 flex-1 px-3 sm:flex-none">
+            <TabsTrigger
+              value="text"
+              className="min-h-11 flex-1 px-3 focus-visible:border-transparent focus-visible:outline-none data-active:border-line data-active:bg-surface data-active:text-ink data-active:shadow-sm sm:flex-none"
+            >
               {copy.pasteTab}
             </TabsTrigger>
           </TabsList>
-          <p className="text-xs text-slate tabular-nums sm:shrink-0">{copy.importsLeft(importsLeft)}</p>
+          <p className="text-sm text-slate tabular-nums sm:shrink-0">{copy.importsLeft(importsLeft)}</p>
         </div>
         <TabsContent value="file" className="pt-4">
           <div
@@ -298,7 +304,7 @@ export function ImportFlow({
             )}
           >
             <label
-              className="flex min-h-44 cursor-pointer flex-col items-center justify-center gap-2 px-4 py-8 text-center sm:min-h-52"
+              className="flex min-h-36 cursor-pointer flex-col items-center justify-center gap-1.5 px-4 py-6 text-center sm:min-h-44 sm:py-7"
               onDragOver={(event) => {
                 event.preventDefault();
                 setDragging(true);
