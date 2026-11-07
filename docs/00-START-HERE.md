@@ -52,7 +52,7 @@ You don't paste task text into Cursor. Three project commands (in `.cursor/comma
 1. **New Agent chat** (one task per chat; long chats drift).
 2. Type **`/next-task`** → read its plan → do any by-hand steps it lists → reply **"go"** (or push back first).
 3. When it says it's done: **`/review`** → ask it to fix anything High/Medium.
-4. Check the acceptance criteria yourself (click through the app, run the commands).
+4. Check the acceptance criteria yourself (click through the app, run the commands). For a signed-in screen, follow `11-MANUAL-TESTING.md`.
 5. **`/finish-task`** → confirm → run the git commands it gives you.
 6. Close the chat. Repeat.
 

@@ -68,7 +68,7 @@ rolerefine/
 │   │   │   ├── jobs/  jobs/new/  jobs/[jobId]/
 │   │   │   ├── jobs/[jobId]/resumes/[resumeId]/  jobs/[jobId]/letters/[letterId]/
 │   │   │   ├── jobs/[jobId]/prep/[prepKitId]/        # 1.1
-│   │   │   ├── contacts/  insights/  milestones/  settings/  admin/
+│   │   │   ├── contacts/  insights/  milestones/  settings/  admin/  dev/
 │   │   ├── api/
 │   │   │   ├── stripe/webhook/route.ts
 │   │   │   ├── tailored resumes/[resumeId]/{pdf,docx}/route.ts
@@ -92,6 +92,7 @@ rolerefine/
 │   │   ├── growth/      referrals, leads, feedback, testimonials
 │   │   ├── account/     actions (export, delete, preferences)
 │   │   ├── dashboard/   queries, components/
+│   │   ├── dev/         local snapshots for SEED_USER_ID (access, actions)
 │   │   ├── admin/       queries, components/   (1.1)
 │   │   └── marketing/   demo/ (fixtures + demo-mode components), tools/ (keyword-checker, bullet-strength), components/
 │   ├── lib/
@@ -243,7 +244,7 @@ All cron handlers require `Authorization: Bearer ${CRON_SECRET}` and are idempot
 | `IP_HASH_SALT` | `lib/iphash.ts` | Random 32+ chars; a different salt on Production |
 | `CRON_SECRET` | cron routes | 1.1 |
 | `NEXT_PUBLIC_APP_URL` | redirects, emails, OG | `https://www.rolerefine.ca` on Production |
-| `SEED_USER_ID` | `prisma/seed.ts` | Dev only; must be unset on Production |
+| `SEED_USER_ID` | `prisma/seed.ts`, `scripts/dev-scenario.ts`, `scripts/dev-login.ts`, `/dev` | Dev only; must be unset on Production |
 | `VERCEL_ENV` | `lib/deploy.ts`, `lib/env.ts` | Set by Vercel (`production` / `preview` / `development`). Do not set in `.env` |
 
 `src/lib/env.ts` validates these with Zod (1.1-only ones optional until used). On Vercel Production it refuses a test Stripe key, a seed user id, and an http app URL. `vercelProductionIssues()` lists the secrets Production should have; they stay optional at boot so a missing live key does not take down marketing pages.
@@ -284,6 +285,7 @@ All cron handlers require `Authorization: Bearer ${CRON_SECRET}` and are idempot
   "test": "vitest run", "test:watch": "vitest", "e2e": "playwright test",
   "db:migrate": "prisma migrate dev", "db:deploy": "prisma migrate deploy",
   "db:studio": "prisma studio", "db:generate": "prisma generate", "db:seed": "prisma db seed",
+  "dev:login": "tsx scripts/dev-login.ts", "dev:scenario": "tsx scripts/dev-scenario.ts",
   "evals": "tsx --conditions=react-server evals/run.ts", "email:dev": "email dev --dir src/lib/email/templates",
   "postinstall": "prisma generate"
 }

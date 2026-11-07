@@ -10,3 +10,4 @@ alwaysApply: false
 - Never call the real Anthropic, Stripe or Resend APIs in unit tests — mock them.
 - E2E (Playwright): happy path only; run manually/nightly.
 - Fixtures are fake people only. Never commit a real resume.
+- Signed-in UI checks use the seed account, not a new login per screen. Follow `docs/11-MANUAL-TESTING.md`. Loading a snapshot replaces that account’s library and jobs.

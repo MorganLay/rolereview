@@ -14,6 +14,7 @@ const PROTECTED_PREFIXES = [
   "/milestones",
   "/settings",
   "/admin",
+  "/dev",
 ] as const;
 
 function isProtectedPath(pathname: string): boolean {

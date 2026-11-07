@@ -32,11 +32,38 @@ type ResumeBundle = {
 };
 
 export async function replaceHunt(prisma: PrismaClient, userId: string) {
+  return withPoolerRetry(() => writeHunt(prisma, userId));
+}
+
+/** Removes jobs, contacts, and reminders. Library rows stay. */
+export async function clearHunt(prisma: PrismaClient, userId: string) {
+  return withPoolerRetry(() =>
+    prisma.$transaction(async (tx) => removeHuntRows(tx, userId), {
+      maxWait: 10_000,
+      timeout: 20_000,
+    }),
+  );
+}
+
+/**
+ * One Saved job with a ready analysis, for the job and ready-resume snapshots.
+ * The caller clears the hunt first. `resume` adds one READY resume with no export.
+ */
+export async function seedProgressJob(
+  prisma: PrismaClient,
+  userId: string,
+  options: { resume: boolean },
+) {
+  return withPoolerRetry(() => writeProgressJob(prisma, userId, options));
+}
+
+/** One retry: the pooler sometimes fails to open an interactive transaction (P2028). */
+async function withPoolerRetry<T>(run: () => Promise<T>): Promise<T> {
   try {
-    return await writeHunt(prisma, userId);
+    return await run();
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2028") {
-      return writeHunt(prisma, userId);
+      return run();
     }
     throw error;
   }
@@ -65,13 +92,7 @@ async function writeHunt(prisma: PrismaClient, userId: string) {
       const clock = seedClock(now, timeZone);
       const bundle = await resumeBundle(tx, userId, owner, now.toISOString());
 
-      await tx.job.updateMany({
-        where: { userId },
-        data: { submittedResumeId: null, submittedCoverLetterId: null },
-      });
-      await tx.job.deleteMany({ where: { userId } });
-      await tx.contact.deleteMany({ where: { userId } });
-      await tx.reminder.deleteMany({ where: { userId } });
+      await removeHuntRows(tx, userId);
 
       const mina = await tx.contact.create({
         data: {
@@ -153,6 +174,87 @@ async function writeHunt(prisma: PrismaClient, userId: string) {
       return { jobs: 8, contacts: 4, reminders: 5, interviews: 3, resumes: 2 };
     },
     { maxWait: 10_000, timeout: 30_000 },
+  );
+}
+
+async function removeHuntRows(tx: Tx, userId: string) {
+  await tx.job.updateMany({
+    where: { userId },
+    data: { submittedResumeId: null, submittedCoverLetterId: null },
+  });
+  await tx.job.deleteMany({ where: { userId } });
+  await tx.contact.deleteMany({ where: { userId } });
+  await tx.reminder.deleteMany({ where: { userId } });
+}
+
+async function writeProgressJob(
+  prisma: PrismaClient,
+  userId: string,
+  options: { resume: boolean },
+) {
+  return prisma.$transaction(
+    async (tx) => {
+      const owner = await tx.user.findFirst({
+        where: { id: userId },
+        select: {
+          email: true,
+          fullName: true,
+          headline: true,
+          phone: true,
+          location: true,
+          summary: true,
+          links: true,
+          timezone: true,
+        },
+      });
+      if (!owner) throw new Error("Seed user is missing.");
+
+      const now = new Date();
+      const timeZone = owner.timezone || "America/Toronto";
+      const clock = seedClock(now, timeZone);
+      const job = await tx.job.create({
+        data: {
+          ...baseJob(
+            userId,
+            "Lakeshore Civic",
+            "Product Designer",
+            "lakeshore-civic",
+            clock.updated.saved,
+          ),
+          source: "COMPANY_SITE",
+          workMode: "HYBRID",
+          status: "SAVED",
+          priority: 3,
+          deadline: clock.deadline,
+          events: { create: [created(userId, clock.updated.saved)] },
+          reminders: {
+            create: {
+              userId,
+              kind: "DEADLINE",
+              title: deadlineReminderTitle("Lakeshore Civic"),
+              dueAt: clock.dueToday,
+              autoCreated: true,
+            },
+          },
+        },
+      });
+
+      if (!options.resume) return;
+
+      const bundle = await resumeBundle(tx, userId, owner, now.toISOString());
+      await tx.tailoredResume.create({
+        data: resumeData(userId, job.id, bundle, 82, null),
+      });
+      await tx.jobEvent.create({
+        data: {
+          userId,
+          jobId: job.id,
+          type: "RESUME_TAILORED",
+          occurredAt: now,
+        },
+      });
+    },
+    { maxWait: 10_000, timeout: 20_000 },
   );
 }
 

@@ -7,6 +7,7 @@ You are helping build **RoleRefine**, a professional job-search workspace. Users
 | Need | Doc |
 |---|---|
 | **Where to start / how to run a task** | `docs/00-START-HERE.md`, `docs/08-CURSOR-WORKFLOW.md` |
+| **Manual testing** | `docs/11-MANUAL-TESTING.md` |
 | **Which task is current** | `docs/PROGRESS.md` (update it via `/finish-task`) |
 | Scope, non-goals, vocabulary, pricing | `docs/01-PRODUCT.md` |
 | Screens and behaviour | `docs/02-USER-FLOWS.md` |
@@ -57,7 +58,10 @@ src/app/api          webhook, downloads, cron      src/copy/strings.ts   UI stri
 ```
 npm run dev          npm run lint        npm run typecheck     npm run test
 npm run e2e          npm run evals       npm run db:migrate    npm run db:studio
+npm run dev:login    npm run dev:scenario -- job
 ```
+
+Signed-in UI checks use those two commands and `/dev`. The five snapshots and the warning that Load replaces the seed account’s library and jobs are in `docs/08-CURSOR-WORKFLOW.md` → Looking at a screen.
 
 Before saying a task is done: `npm run lint && npm run typecheck && npm run test` must pass, and the task's acceptance criteria in `docs/06-ROADMAP.md` must be met.
 

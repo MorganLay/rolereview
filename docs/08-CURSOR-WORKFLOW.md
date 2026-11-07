@@ -9,6 +9,10 @@
 3. Use the strongest model available for planning and for Phase 6 (tailoring) tasks; a faster model is fine for UI polish.
 4. Turn on "ask before running terminal commands" until you trust the flow.
 
+## Looking at a screen
+
+Walk it yourself with `docs/11-MANUAL-TESTING.md`. That is the sign-in, the five snapshots, and what to check on each. Load replaces the seed account’s library and jobs.
+
 ## Slash commands (the easy way)
 
 Use `/next-task`, `/review`, and `/finish-task` (defined in `.cursor/commands/`, progress in `docs/PROGRESS.md`). They wrap the loop and template below, so you rarely need to type the prompt yourself. See `00-START-HERE.md` → Part D.

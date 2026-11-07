@@ -122,6 +122,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-11-06 Dev snapshots:** `/dev` and `npm run dev:scenario` load `new`, `library`, `job`, `ready`, or `returning` onto `SEED_USER_ID`. `npm run dev:login` prints a magic link and does not send email. `npm run db:seed` is unchanged. How to walk them by hand is in `11-MANUAL-TESTING.md`. `/dev` was opened signed in on 2026-11-07. No snapshot was loaded. The local database was missing `User.billingCurrency`; `npm run db:deploy` applied `20261105063000_billing_currency`.
 - **2026-11-05 D-33:** Pro is US$24 or CA$29 a month, and US$59 or CA$75 every 90 days. The founding discount is not offered to anyone. Checkout charges the list price. Job analyses are 30/200 a month, with a daily cap of 10/40. Stripe Prices at these four amounts still have to be created before checkout charges what the page shows. A signed-in purchase was not run.
 - **2026-11-02 D-32:** Pro is CA$19/month or CA$45 per 90 days. Founding prices are CA$11.40 and CA$27. The FAQ and JSON-LD say CAD. Stripe Prices still have to be created in CAD before a checkout charges the amount on the page. Superseded by D-33.
 - **2026-10-27 TS.4:** One saved analysis reduces analyses left today by 1. A failed analysis does not. An unsaved success is released before a retry, so the retry is not a second charge. A signed-in click-through was not done.

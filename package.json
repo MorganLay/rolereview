@@ -18,6 +18,8 @@
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "db:seed": "prisma db seed",
+    "dev:login": "tsx scripts/dev-login.ts",
+    "dev:scenario": "tsx scripts/dev-scenario.ts",
     "evals": "tsx --conditions=react-server evals/run.ts",
     "demo:fixtures": "tsx --conditions=react-server evals/demo-fixtures.ts",
     "email:dev": "email dev --dir src/lib/email/templates",

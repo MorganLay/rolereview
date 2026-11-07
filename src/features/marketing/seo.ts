@@ -30,6 +30,7 @@ export const ROBOTS_DISALLOW = [
   "/auth/",
   "/sign-in",
   "/styleguide",
+  "/dev",
 ] as const;
 
 export type SitemapChangeFrequency = "weekly" | "monthly";

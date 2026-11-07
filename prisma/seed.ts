@@ -11,6 +11,7 @@ import { Prisma, PrismaClient } from "../src/generated/prisma/client";
 
 import { replaceHunt } from "./hunt-seed";
 import { SEED_LIBRARY } from "./library-seed";
+import { replaceLibrary } from "./library-write";
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -79,82 +80,3 @@ async function main() {
 }
 
 void main();
-
-/** One retry: the pooler sometimes fails to open an interactive transaction (P2028). */
-async function replaceLibrary(prisma: PrismaClient, userId: string) {
-  try {
-    return await writeLibrary(prisma, userId);
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2028"
-    ) {
-      return writeLibrary(prisma, userId);
-    }
-    throw error;
-  }
-}
-
-async function writeLibrary(prisma: PrismaClient, userId: string) {
-  return prisma.$transaction(
-    async (tx) => {
-      const removedEntries = await tx.entry.deleteMany({ where: { userId } });
-      const removedSkills = await tx.skill.deleteMany({ where: { userId } });
-
-      await tx.user.update({
-        where: { id: userId },
-        data: {
-          fullName: SEED_LIBRARY.profile.fullName,
-          headline: SEED_LIBRARY.profile.headline,
-          phone: SEED_LIBRARY.profile.phone,
-          location: SEED_LIBRARY.profile.location,
-          summary: SEED_LIBRARY.profile.summary,
-          links: [...SEED_LIBRARY.profile.links],
-        },
-      });
-
-      const sortByKind = new Map<string, number>();
-      for (const entry of SEED_LIBRARY.entries) {
-        const sortOrder = sortByKind.get(entry.kind) ?? 0;
-        sortByKind.set(entry.kind, sortOrder + 1);
-        await tx.entry.create({
-          data: {
-            userId,
-            kind: entry.kind,
-            title: entry.title,
-            organization: entry.organization,
-            location: entry.location,
-            startDate: entry.startDate,
-            endDate: entry.isCurrent ? null : entry.endDate,
-            isCurrent: entry.isCurrent,
-            url: entry.url,
-            sortOrder,
-            bullets: {
-              create: entry.bullets.map((bullet, index) => ({
-                userId,
-                text: bullet.text,
-                tags: [],
-                sortOrder: index,
-              })),
-            },
-          },
-        });
-      }
-
-      for (const [index, skill] of SEED_LIBRARY.skills.entries()) {
-        await tx.skill.create({
-          data: {
-            userId,
-            name: skill.name,
-            nameKey: skill.name.trim().toLowerCase(),
-            category: skill.category,
-            sortOrder: index,
-          },
-        });
-      }
-
-      return [removedEntries.count, removedSkills.count] as const;
-    },
-    { maxWait: 10_000, timeout: 20_000 },
-  );
-}
