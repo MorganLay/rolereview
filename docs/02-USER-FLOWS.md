@@ -84,8 +84,8 @@ Archived jobs stay out of the summary, the list, continue working, recent activi
 ### `/library/import`
 Client state machine `upload → reading → review`:
 1. **Upload:** one workspace. "Upload a file" or "Paste text". Imports left this month sit beside those controls. The drop zone takes a PDF or DOCX up to 5 MB. A chosen file shows its name and can be removed before reading. **Read resume** stays quiet until a file is chosen, or the pasted text is long enough.
-2. **Reading:** staged progress copy, 10–30 s.
-3. **Review:** extracted profile, entries, bullets, and skills, all editable, each with a checkbox (default on). Warnings from extraction shown at the top. Long bullets flagged. If the library isn't empty: **Append** (default) or **Replace everything** (confirm).
+2. **Reading:** an indeterminate panel. The heading stays **Import your resume**. The panel says **Reading your resume**, that roles, projects, education, and skills are being organized, and that this usually takes 10–30 seconds. It does not show a percentage or step through milestones. The indicator is pine green and stays still when reduced motion is on.
+3. **Review:** the heading becomes **Review your resume**, with **Check the details we extracted before saving them to your experience library.** Extracted profile, entries, bullets, and skills stay editable, each with a checkbox (default on). Warnings from extraction stay at the top. Skills are one compact list: include, name, and category. Wider screens align those in columns; a narrow screen stacks each skill. The category control offers categories already on this resume, then the usual category names, and still accepts a typed category. Choosing one does not rewrite the other skills. Long bullets flagged. If the library isn't empty: **Append** (default) or **Replace everything** (confirm).
    "Save to library" → `commitImport` → `/library` (or `/dashboard` during onboarding) with a summary toast.
 - Errors: bad file → inline; AI failure → retry or paste text (no charge); quota → upgrade modal; nothing found → message.
 
@@ -186,7 +186,7 @@ Signups per day (with source), activation funnel, Free→Pro conversion, MRR (fr
 | Quota exceeded / Pro-only | `QUOTA_EXCEEDED` / `PRO_REQUIRED` → Upgrade modal naming the limit. A quota also names the Free and Pro allowances. Monthly and 90-day Checkout are in the modal. |
 | AI failure | `AI_FAILED` → toast with retry; no charge |
 | Concurrent generation | `CONFLICT` → "Already tailoring this job…" |
-| Slow AI | Staged progress copy; pollable PENDING state survives refresh |
+| Slow AI | Staged progress copy, except resume import, which shows an indeterminate panel; pollable PENDING state survives refresh |
 | Unexpected | Toast "Something went wrong." for action failures. Uncaught render errors use branded `error.tsx` / `global-error.tsx` (“Try again”). Server logs ids, codes, and `digest` only. |
 
 ## Accessibility & quality baseline

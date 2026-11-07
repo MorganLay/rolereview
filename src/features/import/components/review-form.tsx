@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
+import { TriangleAlert } from "lucide-react";
 
 import {
   AlertDialog,
@@ -24,16 +25,15 @@ import {
   ENTRY_KINDS,
   ENTRY_LIMITS,
   PROFILE_LIMITS,
-  SKILL_LIMITS,
 } from "@/features/library/schemas";
 import type { FieldErrors } from "@/lib/result";
+
+import { SkillReview } from "./skill-review";
 
 const copy = strings.library.import;
 const profileCopy = strings.library.profile;
 const entryCopy = strings.library.entries;
 const bulletCopy = strings.library.bullets;
-const skillCopy = strings.library.skills;
-
 export type ReviewLink = { key: string; label: string; url: string };
 export type ReviewBullet = { key: string; included: boolean; text: string };
 export type ReviewEntry = {
@@ -164,15 +164,21 @@ export function ReviewForm({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
       {draft.warnings.length > 0 ? (
-        <section className="rounded-lg bg-marigold-100 px-4 py-3" aria-labelledby={`${formId}-warnings`}>
-          <h2 id={`${formId}-warnings`} className="text-sm font-medium text-ink">
-            {copy.warningsTitle}
-          </h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">
-            {draft.warnings.map((warning, index) => (
-              <li key={`${index}-${warning}`}>{warning}</li>
-            ))}
-          </ul>
+        <section
+          className="flex gap-3 rounded-lg bg-marigold-100 px-4 py-3"
+          aria-labelledby={`${formId}-warnings`}
+        >
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-marigold-700" aria-hidden />
+          <div className="min-w-0">
+            <h2 id={`${formId}-warnings`} className="text-sm font-medium text-ink">
+              {copy.warningsTitle}
+            </h2>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">
+              {draft.warnings.map((warning, index) => (
+                <li key={`${index}-${warning}`}>{warning}</li>
+              ))}
+            </ul>
+          </div>
         </section>
       ) : null}
 
@@ -498,62 +504,19 @@ export function ReviewForm({
         ))}
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby={`${formId}-skills`}>
-        <h2 id={`${formId}-skills`} className="text-base font-medium text-ink">
-          {skillCopy.title}
-        </h2>
-        {draft.skills.length === 0 ? <p className="text-sm text-slate">{copy.noSkills}</p> : null}
-        <ul className="grid gap-3">
-          {draft.skills.map((skill, index) => (
-            <li key={skill.key} className="grid gap-3 rounded-lg border border-line p-4 sm:grid-cols-[auto_1fr_1fr] sm:items-end">
-              <IncludeBox
-                id={`${formId}-skill-${index}-include`}
-                checked={skill.included}
-                label={`${copy.include} ${skill.name || skillCopy.name}`}
-                onChange={(included) =>
-                  setDraft((current) => ({
-                    ...current,
-                    skills: current.skills.map((item) =>
-                      item.key === skill.key ? { ...item, included } : item,
-                    ),
-                  }))
-                }
-              />
-              <TextField
-                id={`${formId}-skill-${index}-name`}
-                label={skillCopy.name}
-                value={skill.name}
-                maxLength={SKILL_LIMITS.name}
-                error={fieldMessage(fields, `skills.${index}.name`)}
-                onChange={(name) =>
-                  setDraft((current) => ({
-                    ...current,
-                    skills: current.skills.map((item) =>
-                      item.key === skill.key ? { ...item, name } : item,
-                    ),
-                  }))
-                }
-              />
-              <TextField
-                id={`${formId}-skill-${index}-category`}
-                label={skillCopy.category}
-                hint={skillCopy.categoryHint}
-                value={skill.category}
-                maxLength={SKILL_LIMITS.category}
-                error={fieldMessage(fields, `skills.${index}.category`)}
-                onChange={(category) =>
-                  setDraft((current) => ({
-                    ...current,
-                    skills: current.skills.map((item) =>
-                      item.key === skill.key ? { ...item, category } : item,
-                    ),
-                  }))
-                }
-              />
-            </li>
-          ))}
-        </ul>
-      </section>
+      <SkillReview
+        formId={formId}
+        skills={draft.skills}
+        fields={fields}
+        onChange={(key, patch) =>
+          setDraft((current) => ({
+            ...current,
+            skills: current.skills.map((item) =>
+              item.key === key ? { ...item, ...patch } : item,
+            ),
+          }))
+        }
+      />
 
       {libraryHasContent ? (
         <fieldset className="grid gap-2">

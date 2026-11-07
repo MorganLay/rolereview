@@ -25,18 +25,9 @@ export default async function LibraryImportPage() {
   if (!page) notFound();
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-6">
-      <div>
-        <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">
-          {strings.pages.libraryImport.title}
-        </h1>
-        <p className="mt-2 max-w-xl text-sm text-slate">
-          {page.onboarding
-            ? strings.library.import.welcome
-            : strings.pages.libraryImport.body}
-        </p>
-      </div>
+    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col">
       <ImportFlow
+        onboarding={page.onboarding}
         libraryHasContent={page.libraryHasContent}
         importsLeft={page.importsLeft}
         email={page.email}

@@ -30,6 +30,7 @@ const errors = copy.errors;
 const warnings = copy.warnings;
 
 type ImportFlowProps = {
+  onboarding: boolean;
   libraryHasContent: boolean;
   importsLeft: number;
   email: string;
@@ -40,6 +41,7 @@ type Step = "upload" | "reading" | "review";
 type Banner = "ai" | "nothing" | null;
 
 export function ImportFlow({
+  onboarding,
   libraryHasContent,
   importsLeft: importsLeftProp,
   email,
@@ -54,18 +56,21 @@ export function ImportFlow({
   const [formError, setFormError] = useState<string | null>(null);
   const [banner, setBanner] = useState<Banner>(null);
   const [draft, setDraft] = useState<ReviewDraft | null>(null);
-  const [stage, setStage] = useState(0);
   const [pending, setPending] = useState(false);
   const [importsLeft, setImportsLeft] = useState(importsLeftProp);
   const busy = useRef(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const readingRef = useRef<HTMLHeadingElement>(null);
+  const sawStep = useRef(false);
 
   useEffect(() => {
-    if (step !== "reading") return;
-    const id = window.setInterval(() => {
-      setStage((current) => (current + 1) % copy.stages.length);
-    }, 8000);
-    return () => window.clearInterval(id);
+    if (!sawStep.current) {
+      sawStep.current = true;
+      return;
+    }
+    const target = step === "reading" ? readingRef.current : titleRef.current;
+    target?.focus();
   }, [step]);
 
   function updateDraft(next: ReviewDraft | ((current: ReviewDraft) => ReviewDraft)) {
@@ -95,7 +100,6 @@ export function ImportFlow({
     setFields({});
     setBanner(null);
     setFormError(null);
-    setStage(0);
     setStep("reading");
     setPending(true);
     try {
@@ -189,47 +193,95 @@ export function ImportFlow({
     }
   }
 
+  const reviewing = step === "review";
+  const heading = (
+    <div>
+      <h1
+        ref={titleRef}
+        tabIndex={-1}
+        aria-describedby="import-lead"
+        className="scroll-mt-16 font-serif text-2xl font-semibold tracking-tight text-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:text-3xl"
+      >
+        {reviewing ? copy.reviewTitle : strings.pages.libraryImport.title}
+      </h1>
+      <p id="import-lead" className="mt-2 max-w-xl text-sm text-slate">
+        {reviewing
+          ? copy.reviewLead
+          : onboarding
+            ? copy.welcome
+            : strings.pages.libraryImport.body}
+      </p>
+    </div>
+  );
+
   if (step === "reading") {
     return (
-      <section aria-labelledby="import-reading" className="flex flex-col gap-3">
-        <h2 id="import-reading" className="text-base font-medium text-ink">
-          {copy.reading}
-        </h2>
-        <p className="text-sm text-slate">{copy.readingHint}</p>
-        <ol aria-live="polite" className="grid gap-1">
-          {copy.stages.map((line, index) => (
-            <li
-              key={line}
-              className={index === stage ? "text-sm text-ink" : "text-sm text-slate"}
-              aria-current={index === stage ? "step" : undefined}
+      <div className="flex flex-col gap-6">
+        {heading}
+        <section
+          aria-labelledby="import-reading"
+          aria-busy="true"
+          className="rounded-card border border-line bg-surface p-4 sm:p-5"
+        >
+          <div className="flex items-start gap-3">
+            <span
+              className="relative mt-0.5 flex size-9 shrink-0 items-center justify-center"
+              aria-hidden
             >
-              {line}
-            </li>
-          ))}
-        </ol>
-      </section>
+              <span className="absolute inset-0 rounded-full border-2 border-pine-50 dark:border-pine/30" />
+              <span className="import-read-arc absolute inset-0 rounded-full border-2 border-transparent border-t-pine dark:border-t-pine-300" />
+            </span>
+            <div className="min-w-0">
+              <h2
+                ref={readingRef}
+                id="import-reading"
+                tabIndex={-1}
+                className="text-base font-medium text-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                {copy.reading}
+              </h2>
+              <p className="mt-1 text-sm text-slate" role="status">
+                {copy.readingBody} {copy.readingHint}
+              </p>
+            </div>
+          </div>
+          <div
+            className="mt-4 h-1 overflow-hidden rounded-full bg-pine-50 dark:bg-pine/25"
+            role="progressbar"
+            aria-label={copy.reading}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuetext={copy.reading}
+          >
+            <div className="import-read-bar h-full w-1/3 rounded-full bg-pine dark:bg-pine-300" />
+          </div>
+        </section>
+      </div>
     );
   }
 
   if (step === "review" && draft) {
     return (
-      <ReviewForm
-        draft={draft}
-        setDraft={updateDraft}
-        email={email}
-        libraryHasContent={libraryHasContent}
-        fields={fields}
-        formError={formError}
-        pending={pending}
-        onBack={() => {
-          if (pending) return;
-          setStep("upload");
-          setFields({});
-          setFormError(null);
-          setDraft(null);
-        }}
-        onSave={save}
-      />
+      <div className="flex flex-col gap-6">
+        {heading}
+        <ReviewForm
+          draft={draft}
+          setDraft={updateDraft}
+          email={email}
+          libraryHasContent={libraryHasContent}
+          fields={fields}
+          formError={formError}
+          pending={pending}
+          onBack={() => {
+            if (pending) return;
+            setStep("upload");
+            setFields({});
+            setFormError(null);
+            setDraft(null);
+          }}
+          onSave={save}
+        />
+      </div>
     );
   }
 
@@ -245,10 +297,12 @@ export function ImportFlow({
   const ready = source === "text" ? textHint === null && trimmed.length > 0 : fileReady(file);
 
   return (
-    <form
-      onSubmit={onUpload}
-      className="rounded-card border border-line bg-surface p-4 sm:p-5"
-    >
+    <div className="flex flex-col gap-6">
+      {heading}
+      <form
+        onSubmit={onUpload}
+        className="rounded-card border border-line bg-surface p-4 sm:p-5"
+      >
       {banner === "nothing" ? (
         <p className="mb-4 text-sm text-ink" role="alert">
           {warnings.nothing}
@@ -386,7 +440,8 @@ export function ImportFlow({
           {copy.read}
         </Button>
       </div>
-    </form>
+      </form>
+    </div>
   );
 }
 

@@ -1197,12 +1197,12 @@ export const strings = {
       pastePlaceholder: "Paste the text of your resume.",
       read: "Read resume",
       reading: "Reading your resume",
+      readingBody:
+        "Roles, projects, education, and skills are being organized from this resume.",
       readingHint: "This usually takes 10–30 seconds.",
-      stages: [
-        "Reading your resume.",
-        "Picking out roles, projects, and education.",
-        "Listing skills.",
-      ],
+      reviewTitle: "Review your resume",
+      reviewLead:
+        "Check the details we extracted before saving them to your experience library.",
       warningsTitle: "Check these before you save",
       longBullet: "Over 400 characters. Shorten it or leave it unchecked.",
       include: "Include",
@@ -1215,6 +1215,10 @@ export const strings = {
       noEntries: "No entries were found.",
       entriesTitle: "Entries",
       noSkills: "No skills were found.",
+      skillsReview:
+        "Choose what to keep, and review the names and categories before saving. A category is optional. Pick one or type your own. A matching category keeps its current spelling.",
+      showCategories: "Show categories",
+      categoryList: "Categories",
       dateHint: "Year, or year and month, such as 2019 or 2019-06.",
       modeLabel: "How to save",
       append: "Append",

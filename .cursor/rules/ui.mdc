@@ -9,7 +9,7 @@ alwaysApply: false
 - All UI text comes from `src/copy/strings.ts` and follows the voice in docs/10-BRAND.md: plain, specific, encouraging. No hype, no emojis in UI copy.
 - Colours, fonts and radii come from the Tailwind theme tokens in docs/10-BRAND.md. No ad-hoc hex values. Serif (Source Serif 4) only for page titles, marketing headlines and resume previews; everything else Inter.
 - Exported documents (PDF, DOCX, plain text) are neutral: no RoleRefine branding, watermark or decoration.
-- Every async action shows pending state; AI waits over 3s show staged progress copy, not a bare spinner.
+- Every async action shows pending state. AI waits over 3s show staged progress copy, not a bare spinner. Resume import does not report progress, so its reading panel is indeterminate: a title, a short explanation, and a green indicator. It does not invent a percentage or milestones.
 - Every list has an empty state; every form shows inline Zod field errors.
 - Status is never colour-only: pair colour with an icon and text (✓ met, ◐ partial, ✗ missing).
 - Keyboard accessible, visible focus, labels on all inputs, `prefers-reduced-motion` respected.

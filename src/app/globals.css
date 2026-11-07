@@ -169,6 +169,32 @@
     }
   }
 
+  /* Import reading has no real progress. The classes below are applied only when motion is allowed. */
+  @keyframes import-read-slide {
+    0% {
+      transform: translateX(-110%);
+    }
+    100% {
+      transform: translateX(280%);
+    }
+  }
+
+  @keyframes import-read-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .import-read-bar {
+      animation: import-read-slide 1.6s ease-in-out infinite;
+    }
+
+    .import-read-arc {
+      animation: import-read-spin 0.9s linear infinite;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
