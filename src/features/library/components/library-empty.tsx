@@ -43,13 +43,13 @@ export function LibraryEmpty({
         <p className="text-sm text-slate">{copy.body}</p>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 sm:flex-row">
-        <Button asChild className="w-full sm:w-auto">
+        <Button asChild className="h-11 w-full px-4 sm:w-auto">
           <Link href="/library/import">{strings.library.importResume}</Link>
         </Button>
         <Button
           type="button"
           variant="outline"
-          className="w-full sm:w-auto"
+          className="h-11 w-full px-4 sm:w-auto"
           onClick={() => setManual(true)}
         >
           {copy.addManually}

@@ -849,8 +849,7 @@ export const strings = {
       success: "You’re set up. This page now shows what needs you today.",
       gettingStarted: "Getting started",
       setupTitle: "Set up your job search.",
-      setupBody:
-        "Start with your experience library. It gives RoleRefine the real details it needs to tailor your resumes and cover letters.",
+      setupBody: "Tailored resumes use only your real experience.",
       stepDone: "Done",
       stepCurrent: "Current",
       steps: {
@@ -859,18 +858,12 @@ export const strings = {
         tailor: "Tailor your resume",
         export: "Export it",
       },
-      stepDetails: {
-        library: "Add your work history, skills, and key experience.",
-        job: "Paste a job posting and keep it in one place.",
-        tailor: "Create a resume and cover letter for the job.",
-        export: "Download a PDF.",
+      stepPurpose: {
+        library: "Add the work you have actually done.",
+        job: "Paste one posting to tailor for.",
+        tailor: "Write the resume from your library.",
+        export: "Download it when it is ready to send.",
       },
-      trustLabel: "From your experience",
-      trust: [
-        { title: "Only your experience", body: "No invented details." },
-        { title: "Tailored for each job", body: "Resumes and cover letters." },
-        { title: "Apply with confidence", body: "Grounded, source-backed content." },
-      ],
       summary: "Summary",
       summaryActive: "Active",
       summaryInterviews: "Interviews",
@@ -993,7 +986,7 @@ export const strings = {
     importResume: "Import resume",
     empty: {
       title: "Your library is empty",
-      body: "Import a resume, or add roles, projects, and skills yourself.",
+      body: "Import a resume, or add roles yourself. What you save here is the only source for a tailored resume.",
       addManually: "Add manually",
     },
     profile: {
@@ -1181,7 +1174,7 @@ export const strings = {
       },
     },
     import: {
-      welcome: "Use an existing resume to start building your experience library.",
+      welcome: "Start your library from a resume. Nothing is saved until you review it.",
       importsLeft: (count: number) => {
         if (count === 0) return "No imports left this month.";
         if (count === 1) return "1 import left this month.";
@@ -1580,7 +1573,7 @@ export const strings = {
       empty: "No tailored resumes yet.",
       dialogTitle: "Tailor resume",
       dialogBody:
-        "Choose a length. Emphasis is optional. The resume uses only your library.",
+        "Choose a length. Emphasis is optional. Every line comes from your library.",
       lengthLabel: "Length",
       length1: "1 page",
       length2: "2 pages",

@@ -43,11 +43,10 @@ Work down the list. After each Load, use the links on `/dev` (Dashboard, Library
 Empty library, no jobs. Getting started is on the first step.
 
 - Dashboard still says **Dashboard** and **What needs you today.**
-- Under that, a card: **Getting started**, **Set up your job search.**, the library sentence, and a **Build your library** button.
-- The steps are **Build your library** (current), **Add a job**, **Tailor your resume**, and **Export it**. None of them say **To do.**
-- Under the card: **Only your experience**, **Tailored for each job**, and **Apply with confidence**.
+- Under that, a card: **Getting started**, **Set up your job search.**, **Tailored resumes use only your real experience.**, and a **Build your library** button. That button is the only strong action.
+- The steps are **Build your library** (says **Current**, with one purpose line), **Add a job**, **Tailor your resume**, and **Export it**. Upcoming steps are the name only. None of them say **To do.**
 - **Build your library** opens Library, which says **Your library is empty**, with **Import a resume** and **Add manually**.
-- Import says **Import your resume** and **Use an existing resume to start building your experience library.** **Read resume** stays quiet until a file or enough text is there.
+- Import says **Import your resume** and **Start your library from a resume. Nothing is saved until you review it.** **Read resume** stays quiet until a file or enough text is there.
 - Jobs says **No jobs yet. Paste a job posting to accept your first job.**
 
 This is the pass for the first-run screens. Notice whether the next action is obvious, and whether the header **New job** button pulls you past the library.
@@ -56,7 +55,7 @@ This is the pass for the first-run screens. Notice whether the next action is ob
 
 The sample library is in. No jobs. Step 1 is done. The next step is a job.
 
-- Dashboard: **Build your library** says **Done.** The button says **Add a job.** That step is the current one.
+- Dashboard: **Build your library** says **Done.** The button says **Add a job.** That step says **Current.**
 - Library shows the sample roles, projects, degree, and skills. The empty card is gone.
 - Jobs is still the empty board.
 
@@ -64,7 +63,7 @@ The sample library is in. No jobs. Step 1 is done. The next step is a job.
 
 Midpoint. Library, plus one saved job and no resume.
 
-- Dashboard: library and job say **Done.** The button says **Tailor your resume.**
+- Dashboard: library and job say **Done.** The button says **Tailor your resume.** That step says **Current.**
 - The board has one card: **Lakeshore Civic**, **Product Designer**.
 - Open it. Status is Saved. The main button is **Tailor resume**.
 - Documents has no finished resume.
@@ -75,7 +74,7 @@ Do not tailor unless you mean to. A real tailor spends a model call. This snapsh
 
 The same job, with one tailored resume that has not been exported.
 
-- Dashboard: the first three steps say **Done.** The button says **Export it.**
+- Dashboard: the first three steps say **Done.** The button says **Export it.** That step says **Current.**
 - The job’s main button is **Review resume**. It opens that resume.
 - Opening it does not count as an export. Exporting does, and it can finish setup. Leave export alone if you still want this snapshot.
 

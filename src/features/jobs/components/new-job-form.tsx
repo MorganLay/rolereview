@@ -11,7 +11,7 @@ import {
   type FormEvent,
 } from "react";
 import { useRouter } from "next/navigation";
-import { Star } from "lucide-react";
+import { CheckIcon, Star } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -121,7 +121,7 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
   useEffect(() => {
     if (!reading) return;
     const id = window.setInterval(() => {
-      setStage((current) => (current + 1) % copy.stages.length);
+      setStage((current) => Math.min(current + 1, copy.stages.length - 1));
     }, 2500);
     return () => window.clearInterval(id);
   }, [reading]);
@@ -205,20 +205,53 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
         aria-busy="true"
         className="rounded-card border border-line bg-surface p-4 sm:p-5"
       >
-        <h2 id={`${formId}-reading`} className="text-base font-medium text-ink">
-          {copy.reading}
-        </h2>
-        <p className="mt-1 text-sm text-slate">{copy.readingHint}</p>
-        <ol aria-live="polite" className="mt-4 grid gap-1">
-          {copy.stages.map((line, index) => (
-            <li
-              key={line}
-              className={index === stage ? "text-sm text-ink" : "text-sm text-slate"}
-              aria-current={index === stage ? "step" : undefined}
-            >
-              {line}
-            </li>
-          ))}
+        <div className="flex items-start gap-3">
+          <span
+            className="relative mt-0.5 flex size-9 shrink-0 items-center justify-center"
+            aria-hidden
+          >
+            <span className="absolute inset-0 rounded-full border-2 border-pine-50 dark:border-pine/30" />
+            <span className="import-read-arc absolute inset-0 rounded-full border-2 border-transparent border-t-pine dark:border-t-pine-300" />
+          </span>
+          <div className="min-w-0">
+            <h2 id={`${formId}-reading`} className="text-base font-medium text-ink">
+              {copy.reading}
+            </h2>
+            <p className="mt-1 text-sm text-slate">{copy.readingHint}</p>
+          </div>
+        </div>
+        <div
+          className="mt-4 h-1 overflow-hidden rounded-full bg-pine-50 dark:bg-pine/25"
+          role="progressbar"
+          aria-label={copy.reading}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuetext={copy.stages[stage] ?? copy.reading}
+        >
+          <div className="import-read-bar h-full w-1/3 rounded-full bg-pine dark:bg-pine-300" />
+        </div>
+        <ol className="mt-4 grid gap-1.5">
+          {copy.stages.map((line, index) => {
+            const state = index < stage ? "done" : index === stage ? "current" : "upcoming";
+            return (
+              <li
+                key={line}
+                aria-current={state === "current" ? "step" : undefined}
+                aria-live={state === "current" ? "polite" : undefined}
+                className="flex min-h-8 items-center gap-2.5"
+              >
+                <ReadingMark state={state} />
+                <span
+                  className={cn(
+                    "text-sm",
+                    state === "current" ? "font-medium text-ink" : "text-slate",
+                  )}
+                >
+                  {line}
+                </span>
+              </li>
+            );
+          })}
         </ol>
       </section>
     );
@@ -456,6 +489,25 @@ function starClass(n: number, shown: number | null, priority: number | null): st
 
 function fieldMessage(fields: FieldErrors, key: string): string | undefined {
   return fields[key]?.[0];
+}
+
+function ReadingMark({ state }: { state: "done" | "current" | "upcoming" }) {
+  return (
+    <span className="inline-flex size-5 shrink-0 items-center justify-center" aria-hidden>
+      {state === "done" ? (
+        <span className="inline-flex size-5 items-center justify-center rounded-full bg-pine-50 text-pine dark:bg-pine/20 dark:text-pine-300">
+          <CheckIcon className="size-3" />
+        </span>
+      ) : (
+        <span
+          className={cn(
+            "size-2.5 rounded-full",
+            state === "current" ? "bg-pine" : "border border-line bg-surface",
+          )}
+        />
+      )}
+    </span>
+  );
 }
 
 function FieldAlert({ message }: { message: string }) {

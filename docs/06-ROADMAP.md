@@ -244,7 +244,7 @@ Already covered, so not new tasks: library density, weakest-bullet examples, and
 
 TS.2–TS.5 touch different files and can be built together. **T13.4b does not start until they are ticked.**
 
-Still to look at, logged in `docs/Feedback.md` and not a task yet: Plan & billing copy. The renewal explanation is one dense paragraph under the price buttons, and the usage notes (“2 extra”, “Up to 40 a day”) sit tight against the bars.
+Still to look at, logged in `docs/Feedback.md` and not a task yet: Plan & billing copy. The renewal explanation is one dense paragraph under the price buttons, and the usage notes (“2 extra”, “Up to 40 a day”) sit tight against the bars. Also a default deadline on New job: 7 days from today, reminder still 3 days before, and a Preferences control for that default (days ahead, or none). The date on one job stays editable. Decide then whether that filled date is the posting’s close date, because Soon, Past, and the dashboard treat it that way. Also read a linked inbox, Gmail first, match recruiter and employer mail to a job, and update that job. Decide then whether a detected update is applied or confirmed first. Auto-apply stays out of scope.
 
 ### Production separation
 

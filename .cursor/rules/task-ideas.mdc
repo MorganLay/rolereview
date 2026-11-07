@@ -1,0 +1,41 @@
+---
+description: Log a feature idea on the review list without turning it into a roadmap task
+alwaysApply: true
+---
+
+# Log a task idea
+
+Use this when the user wants an idea kept for later: "add it to the list", "remember this", "if it isn't a feature, note it", or they leave the choice between the roadmap and the review list. If they explicitly ask for a roadmap task with acceptance criteria, follow `docs/06-ROADMAP.md` instead.
+
+1. Check `docs/` and the code. If the behaviour already exists, say so and do not add a duplicate note.
+2. Leave the task list unchanged. Do not invent a task id, and do not start the work.
+3. Do not edit product behaviour docs (`02`, `04`, `05`). Behaviour has not changed.
+4. Record the idea in the three places below, in the same change. Newest note first.
+
+## `docs/Feedback.md`
+
+Add one entry under `## Open`, before the older notes:
+
+```
+**Screen:** New job, Deadline.
+**What I did:** Started a job from a posting that had no date. The deadline field was empty.
+**What felt wrong:** With no date, nothing reminds me to apply. I want the field to start as 7 days from today, still editable on this job. Settings → Preferences should hold that default. When this becomes a task, decide whether a filled default is the posting's close date, because Soon, Past, and the dashboard treat it that way.
+```
+
+Use the user's words for what they did and what felt wrong. Include the default you recommend and any decision the later task must make.
+
+## `docs/06-ROADMAP.md`
+
+Extend the paragraph that starts `Still to look at, logged in docs/Feedback.md and not a task yet`. One or two sentences. Do not add a heading, a task id, or acceptance criteria.
+
+## `docs/PROGRESS.md`
+
+Under `## Notes`, add a dated bullet. Use today's date. End with `Not a task yet.`
+
+```
+- **2026-11-07 Default apply-by date:** New job leaves Deadline empty, so no reminder is created. A 7-day default is logged in `docs/Feedback.md`. Not a task yet.
+```
+
+## Screenshots
+
+If they attach a shot of the live app, copy it to `%USERPROFILE%\Pictures\RoleRefine\` with a dated name. Do not put it in the repo. The browser bar can show personal bookmarks.

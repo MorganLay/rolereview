@@ -122,6 +122,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-11-07 Inbox updates:** Nothing reads Gmail or another linked mailbox, and nothing updates a job from employer mail. That assistant is logged in `docs/Feedback.md`. Not a task yet.
+- **2026-11-07 Default apply-by date:** New job leaves Deadline empty, so no reminder is created. A 7-day default, with the reminder still 3 days before, and a Preferences control for that default, is logged in `docs/Feedback.md`. Not a task yet.
 - **2026-11-07 Plan & billing copy:** On a Pro account the renewal explanation is one dense paragraph under the price buttons, and the usage notes sit tight against the bars. Logged in `docs/Feedback.md`. Not a task yet.
 - **2026-11-06 Dev snapshots:** `/dev` and `npm run dev:scenario` load `new`, `library`, `job`, `ready`, or `returning` onto `SEED_USER_ID`. `npm run dev:login` prints a magic link and does not send email. `npm run db:seed` is unchanged. How to walk them by hand is in `11-MANUAL-TESTING.md`. `/dev` was opened signed in on 2026-11-07. No snapshot was loaded. The local database was missing `User.billingCurrency`; `npm run db:deploy` applied `20261105063000_billing_currency`.
 - **2026-11-05 D-33:** Pro is US$24 or CA$29 a month, and US$59 or CA$75 every 90 days. The founding discount is not offered to anyone. Checkout charges the list price. Job analyses are 30/200 a month, with a daily cap of 10/40. Stripe Prices at these four amounts still have to be created before checkout charges what the page shows. A signed-in purchase was not run.
