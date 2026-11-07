@@ -35,7 +35,7 @@ export default async function DashboardPage() {
       className={
         returning
           ? "mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-8"
-          : "mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-8"
+          : "mx-auto flex w-full min-w-0 max-w-5xl flex-col gap-6"
       }
     >
       <div>

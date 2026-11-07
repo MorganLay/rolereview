@@ -27,6 +27,7 @@ Signed in — protected by src/proxy.ts AND requireUser() in the (app) layout
   /milestones [1.1]                          Momentum streak + milestones
   /settings                                    Tabs: Profile · Preferences · Plan & billing · Invite [1.1] · Data
   /admin [1.1]                                 Admin only (role = ADMIN)
+  /dev                                         Local only. Seed account loads a progress snapshot. Everyone else gets 404.
 ```
 
 ## App shell
@@ -55,7 +56,7 @@ Dashboard ("what needs me today?") → complete a reminder or log a follow-up �
 ## Screen specs
 
 ### `/dashboard` — Dashboard
-- **New user:** First job line checklist (above) + a short "How RoleRefine works" card. Shown while `onboardingCompletedAt` is empty. When all four steps are true, that visit sets `onboardingCompletedAt` and shows the success line once.
+- **New user:** A setup card while `onboardingCompletedAt` is empty. The heading is "Set up your job search." The button opens the first unfinished step. The four steps show done, current, and not started. Under the card: "Only your experience", "Tailored for each job", and "Apply with confidence". When all four steps are true, that visit sets `onboardingCompletedAt` and shows the success line once.
 - **Returning user:**
   1. **Summary** of jobs that are not archived. Active is every job that is not Accepted, Rejected, Withdrawn, or No response. Interviews is status Interviewing. Offers is status Offer. Urgent counts dated rows in the list below that are due today or overdue: a deadline whose calendar date is today or earlier, an offer whose respond-by is today or earlier, an interview that starts within 48 hours from now, or a follow-up reminder whose due time is before the next local midnight. Undated rows are not urgent.
   2. **Needs you:** one list. The earliest dated item is first, so an overdue date comes before an upcoming one and a sooner date comes before a later one. The same instant uses this order: deadline, offer respond-by, interview, follow-up, document. Undated items come after every dated item, and a follow-up comes before a document. Each row says what it is, why it matters, and links to a specific next step.

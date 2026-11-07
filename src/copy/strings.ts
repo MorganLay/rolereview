@@ -846,21 +846,28 @@ export const strings = {
       interviewsEmpty: "No interviews in the next 48 hours.",
       success: "You’re set up. This page now shows what needs you today.",
       gettingStarted: "Getting started",
-      gettingStartedBody: "Four steps. Then this page shows what needs you today.",
+      setupTitle: "Set up your job search.",
+      setupBody:
+        "Start with your experience library. It gives RoleRefine the real details it needs to tailor your resumes and cover letters.",
       stepDone: "Done",
-      stepToDo: "To do",
+      stepCurrent: "Current",
       steps: {
         library: "Build your library",
         job: "Add a job",
         tailor: "Tailor your resume",
         export: "Export it",
       },
-      howTitle: "How RoleRefine works",
-      howSteps: [
-        "Keep your real experience in the library.",
-        "Paste a posting and track it on the board.",
-        "Tailor a resume from that library, then export it.",
-        "Move the job as you apply, interview, and decide.",
+      stepDetails: {
+        library: "Add your work history, skills, and key experience.",
+        job: "Paste a job posting and keep it in one place.",
+        tailor: "Create a resume and cover letter for the job.",
+        export: "Download a PDF.",
+      },
+      trustLabel: "From your experience",
+      trust: [
+        { title: "Only your experience", body: "No invented details." },
+        { title: "Tailored for each job", body: "Resumes and cover letters." },
+        { title: "Apply with confidence", body: "Grounded, source-backed content." },
       ],
       summary: "Summary",
       summaryActive: "Active",
@@ -948,6 +955,36 @@ export const strings = {
     settings: {
       title: "Settings",
       body: "Profile, preferences, plan & billing, and data controls.",
+    },
+    dev: {
+      title: "Dev snapshots",
+      body: "Load a point in the search onto this account. Local development only. Your email stays.",
+      load: "Load",
+      loaded: (title: string) => `Loaded ${title}.`,
+      failed: "Couldn’t load that snapshot. Try again.",
+      open: "Open",
+      scenarios: {
+        new: {
+          title: "New",
+          body: "No library and no jobs. Getting started is on the first step.",
+        },
+        library: {
+          title: "Library",
+          body: "Library only. The next step is to add a job.",
+        },
+        job: {
+          title: "Job",
+          body: "Library and one saved job, with no resume yet.",
+        },
+        ready: {
+          title: "Ready resume",
+          body: "A tailored resume that has not been exported.",
+        },
+        returning: {
+          title: "Returning",
+          body: "The full search. The dashboard shows what needs you today.",
+        },
+      },
     },
   },
   library: {
