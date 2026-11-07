@@ -40,11 +40,19 @@ export type UsageSnapshot = {
 export type UsageRowView = {
   meter: UsageMeter;
   label: string;
+  /** Full period, including a daily cap, for the bar’s accessible name. */
   period: string;
+  /** Extra detail the month heading does not already say. Null for a plain monthly meter. */
+  note: string | null;
   count: string;
   bonus: string | null;
   percent: number;
   aria: string;
+};
+
+export type CheckoutNotice = {
+  tone: "pending" | "active";
+  message: string;
 };
 
 export type TailorPillView = {
@@ -93,6 +101,21 @@ export function settingsHref(tab: SettingsTab): string {
 export function checkoutConfirmed(value: string | string[] | undefined): boolean {
   const raw = Array.isArray(value) ? value[0] : value;
   return raw === "1";
+}
+
+/**
+ * The checkout return is not proof of the plan. Pro comes from the webhook.
+ * Pending copy stays only while the account is still Free.
+ */
+export function presentCheckoutNotice(input: {
+  returned: boolean;
+  plan: "FREE" | "PRO";
+}): CheckoutNotice | null {
+  if (!input.returned) return null;
+  if (input.plan === "PRO") {
+    return { tone: "active", message: copy.confirmedActive };
+  }
+  return { tone: "pending", message: copy.confirmed };
 }
 
 export type CheckoutPrices = {
@@ -206,16 +229,25 @@ export function presentUsageRow(row: UsageSnapshot): UsageRowView {
     row.dailyCap != null && row.dailyCap > 0
       ? copy.periods.monthWithDay(row.dailyCap)
       : copy.periods[row.period];
+  const note = usageNote(row);
   const countLabel = copy.ofAllowance(used, allowance);
   return {
     meter: row.meter,
     label,
     period,
+    note,
     count: countLabel,
     bonus,
     percent: usagePercent(used, allowance),
     aria: copy.barAria(label, period, countLabel, bonus),
   };
+}
+
+/** The usage heading already says “This month”, so a plain monthly meter has no extra line. */
+function usageNote(row: UsageSnapshot): string | null {
+  if (row.dailyCap != null && row.dailyCap > 0) return copy.periods.dailyCap(row.dailyCap);
+  if (row.period === "day") return copy.periods.day;
+  return null;
 }
 
 export function presentTailorPill(input: {

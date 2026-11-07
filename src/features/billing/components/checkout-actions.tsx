@@ -23,6 +23,7 @@ export function CheckoutActions({
   plan,
   showTestPreview = false,
   fill = false,
+  showPlanLine = true,
 }: {
   prices: CheckoutPrices;
   foundingEligible: boolean;
@@ -30,6 +31,8 @@ export function CheckoutActions({
   plan: "FREE" | "PRO";
   showTestPreview?: boolean;
   fill?: boolean;
+  /** The settings summary already names the plan, so it does not repeat it. */
+  showPlanLine?: boolean;
 }) {
   const router = useRouter();
   const [preview, setPreview] = useState<PricePreview>("account");
@@ -69,7 +72,7 @@ export function CheckoutActions({
 
   return (
     <div className="flex flex-col gap-3" aria-busy={pending !== null}>
-      {plan === "PRO" ? <p className="text-sm text-ink">{copy.onPro}</p> : null}
+      {showPlanLine && plan === "PRO" ? <p className="text-sm text-ink">{copy.onPro}</p> : null}
       {showCheckout ? (
         <>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">

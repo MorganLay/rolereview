@@ -7,6 +7,7 @@ import {
   discountedPrice,
   formatPlanPrice,
   parseSettingsTab,
+  presentCheckoutNotice,
   presentCheckoutPrices,
   presentPlanSummary,
   presentTailorPill,
@@ -60,6 +61,7 @@ describe("presentUsageRow", () => {
     const view = presentUsageRow(row({ meter: "TAILOR", used: 2, allowance: 3, bonus: 0 }));
     expect(view.label).toBe("Tailored resumes");
     expect(view.period).toBe("This month");
+    expect(view.note).toBeNull();
     expect(view.count).toBe("2 of 3");
     expect(view.bonus).toBeNull();
     expect(view.percent).toBe(67);
@@ -71,6 +73,7 @@ describe("presentUsageRow", () => {
       row({ meter: "ANALYZE", used: 10, allowance: 10, bonus: 1, period: "day" }),
     );
     expect(view.period).toBe("Today");
+    expect(view.note).toBe("Today");
     expect(view.bonus).toBe("1 extra");
     expect(view.percent).toBe(100);
     expect(view.aria).toBe("Job analyses, Today: 10 of 10. 1 extra.");
@@ -81,6 +84,7 @@ describe("presentUsageRow", () => {
       row({ meter: "ANALYZE", used: 3, allowance: 30, period: "month", dailyCap: 10 }),
     );
     expect(view.period).toBe("This month, up to 10 a day");
+    expect(view.note).toBe("Up to 10 a day");
     expect(view.count).toBe("3 of 30");
   });
 
@@ -313,5 +317,26 @@ describe("checkout prices", () => {
     expect(checkoutConfirmed(["1", "0"])).toBe(true);
     expect(checkoutConfirmed("true")).toBe(false);
     expect(checkoutConfirmed(undefined)).toBe(false);
+  });
+});
+
+describe("presentCheckoutNotice", () => {
+  it("stays quiet when this visit is not a checkout return", () => {
+    expect(presentCheckoutNotice({ returned: false, plan: "PRO" })).toBeNull();
+    expect(presentCheckoutNotice({ returned: false, plan: "FREE" })).toBeNull();
+  });
+
+  it("waits on Stripe while the plan is still Free", () => {
+    expect(presentCheckoutNotice({ returned: true, plan: "FREE" })).toEqual({
+      tone: "pending",
+      message: "Payment received. Your plan updates when Stripe confirms it.",
+    });
+  });
+
+  it("says Pro is active once the webhook has set the plan", () => {
+    expect(presentCheckoutNotice({ returned: true, plan: "PRO" })).toEqual({
+      tone: "active",
+      message: "Payment received. Pro is active.",
+    });
   });
 });

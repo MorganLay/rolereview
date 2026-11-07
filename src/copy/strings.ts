@@ -160,6 +160,7 @@ export const strings = {
     founding: "Founding member",
     upgrade: "Upgrade",
     confirmed: "Payment received. Your plan updates when Stripe confirms it.",
+    confirmedActive: "Payment received. Pro is active.",
     paymentFailed: "Your last payment did not go through.",
     paymentFailedAction: "Update your payment method",
     foundingPrice: (percent: number) =>
@@ -191,6 +192,7 @@ export const strings = {
       month: "This month",
       day: "Today",
       monthWithDay: (cap: number) => `This month, up to ${cap} a day`,
+      dailyCap: (cap: number) => `Up to ${cap} a day`,
     },
     currencyLabel: "Currency",
     currencyCad: "Canada, CA$",
