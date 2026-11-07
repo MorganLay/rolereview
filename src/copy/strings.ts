@@ -1216,9 +1216,11 @@ export const strings = {
       entriesTitle: "Entries",
       noSkills: "No skills were found.",
       skillsReview:
-        "Choose what to keep, and review the names and categories before saving. A category is optional. Pick one or type your own. A matching category keeps its current spelling.",
+        "Choose what to keep, and review the names and categories before saving. A category is optional. Pick one from the list, or type your own. A matching category keeps its current spelling.",
       showCategories: "Show categories",
       categoryList: "Categories",
+      customCategory: "Or type your own",
+      customCategoryPlaceholder: "Campaigns",
       dateHint: "Year, or year and month, such as 2019 or 2019-06.",
       modeLabel: "How to save",
       append: "Append",

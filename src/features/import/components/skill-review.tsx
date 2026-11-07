@@ -162,11 +162,17 @@ function CategoryField({
   const anchorRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const openedValue = useRef(value);
+  const customDraftRef = useRef("");
+  const skipCustom = useRef(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [browsing, setBrowsing] = useState(false);
+  const [customDraft, setCustomDraft] = useState("");
   const [panelWidth, setPanelWidth] = useState<number>();
   const safeActive = options.length === 0 ? 0 : Math.min(active, options.length - 1);
   const errorId = `${id}-error`;
+  const customId = `${id}-custom`;
 
   useEffect(() => {
     if (!open) return;
@@ -187,15 +193,58 @@ function CategoryField({
   }
 
   function openList() {
-    if (options.length === 0) return;
-    const exact = options.indexOf(value.trim());
+    openedValue.current = value;
+    skipCustom.current = false;
+    const trimmed = value.trim();
+    const known = options.some((option) => option.toLowerCase() === trimmed.toLowerCase());
+    const initial = known ? "" : value;
+    customDraftRef.current = initial;
+    setCustomDraft(initial);
+    setBrowsing(false);
+    const exact = options.indexOf(trimmed);
     setActive(exact >= 0 ? exact : 0);
     measure();
     setOpen(true);
   }
 
+  function finishList(next: boolean) {
+    if (!next && open && !skipCustom.current) {
+      const draft = customDraftRef.current.trim();
+      if (draft.length > 0) onChange(draft);
+    }
+    if (!next) skipCustom.current = false;
+    setOpen(next);
+  }
+
   function choose(option: string) {
+    skipCustom.current = true;
+    customDraftRef.current = "";
     onChange(option);
+    setCustomDraft("");
+    setBrowsing(false);
+    setOpen(false);
+  }
+
+  function commitCustom() {
+    const next = customDraftRef.current.trim();
+    if (next.length === 0) {
+      skipCustom.current = true;
+      setOpen(false);
+      return;
+    }
+    choose(next);
+  }
+
+  function cancelList() {
+    skipCustom.current = true;
+    const restored = openedValue.current;
+    const trimmed = restored.trim();
+    const known = options.some((option) => option.toLowerCase() === trimmed.toLowerCase());
+    const initial = known ? "" : restored;
+    customDraftRef.current = initial;
+    setCustomDraft(initial);
+    onChange(restored);
+    setBrowsing(false);
     setOpen(false);
   }
 
@@ -206,6 +255,8 @@ function CategoryField({
         openList();
         return;
       }
+      if (options.length === 0) return;
+      setBrowsing(true);
       setActive((current) => Math.min(options.length - 1, current + 1));
       return;
     }
@@ -215,37 +266,57 @@ function CategoryField({
         openList();
         return;
       }
+      if (options.length === 0) return;
+      setBrowsing(true);
       setActive((current) => Math.max(0, current - 1));
       return;
     }
     if (event.key === "Home" && open) {
       event.preventDefault();
+      if (options.length === 0) return;
+      setBrowsing(true);
       setActive(0);
       return;
     }
     if (event.key === "End" && open) {
       event.preventDefault();
+      if (options.length === 0) return;
+      setBrowsing(true);
       setActive(Math.max(0, options.length - 1));
       return;
     }
     if (event.key === "Enter" && open) {
       event.preventDefault();
-      const option = options[safeActive];
-      if (option) choose(option);
+      if (browsing) {
+        const option = options[safeActive];
+        if (option) choose(option);
+        else setOpen(false);
+        return;
+      }
+      const next = value.trim();
+      if (next.length === 0) {
+        setOpen(false);
+        return;
+      }
+      onChange(next);
+      skipCustom.current = true;
+      customDraftRef.current = next;
+      setCustomDraft(next);
+      setOpen(false);
       return;
     }
     if (event.key === "Escape" && open) {
       event.preventDefault();
       event.stopPropagation();
-      setOpen(false);
+      cancelList();
       return;
     }
-    if (event.key === "Tab") setOpen(false);
+    if (event.key === "Tab") finishList(false);
   }
 
   return (
     <div className="min-w-0">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={finishList}>
         <PopoverAnchor asChild>
           <div ref={anchorRef} className="relative min-w-0">
             <Input
@@ -261,10 +332,17 @@ function CategoryField({
               aria-expanded={open}
               aria-controls={listId}
               aria-haspopup="listbox"
-              aria-activedescendant={open ? `${listId}-${safeActive}` : undefined}
+              aria-activedescendant={
+                open && options.length > 0 ? `${listId}-${safeActive}` : undefined
+              }
               aria-invalid={Boolean(error)}
               aria-describedby={error ? errorId : undefined}
-              onChange={(event) => onChange(event.target.value)}
+              onChange={(event) => {
+                setBrowsing(false);
+                customDraftRef.current = event.target.value;
+                setCustomDraft(event.target.value);
+                onChange(event.target.value);
+              }}
               onKeyDown={onKeyDown}
               className="h-11 pr-10 sm:h-8"
             />
@@ -279,14 +357,14 @@ function CategoryField({
                 event.preventDefault();
                 event.stopPropagation();
               }}
-            onClick={() => {
-              inputRef.current?.focus();
-              if (open) {
-                setOpen(false);
-                return;
-              }
-              openList();
-            }}
+              onClick={() => {
+                inputRef.current?.focus();
+                if (open) {
+                  finishList(false);
+                  return;
+                }
+                openList();
+              }}
             >
               <ChevronDown
                 className={cn(
@@ -339,6 +417,36 @@ function CategoryField({
             );
           })}
         </ul>
+        <div className="mt-1 border-t border-line px-1 pt-2 pb-1">
+          <Label htmlFor={customId} className="px-1 text-xs font-medium text-slate">
+            {copy.customCategory}
+          </Label>
+          <Input
+            id={customId}
+            value={customDraft}
+            maxLength={SKILL_LIMITS.category}
+            placeholder={copy.customCategoryPlaceholder}
+            spellCheck={false}
+            autoComplete="off"
+            onChange={(event) => {
+              setBrowsing(false);
+              customDraftRef.current = event.target.value;
+              setCustomDraft(event.target.value);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                commitCustom();
+              } else if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                cancelList();
+              }
+            }}
+            className="mt-1 h-11 sm:h-8"
+          />
+        </div>
       </PopoverContent>
       </Popover>
       {error ? (
