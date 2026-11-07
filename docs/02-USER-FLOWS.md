@@ -39,7 +39,7 @@ Signed in — protected by src/proxy.ts AND requireUser() in the (app) layout
 ## Flow A — first-time user (activation)
 
 1. Homepage CTA → `/sign-in?next=/library/import` → magic link (Supabase admin generates it, Resend sends it, five per email per hour) or Google → `/auth/callback` (session only) → first app load `requireUser()` creates the User (stores `signupSource`, `utm*`, `signupReferrer` from the first-touch cookie; `timezone` from the browser via `setTimezone`).
-2. Lands on `/library/import` with a one-line welcome: "Let's start by building your experience library."
+2. Lands on `/library/import` with a one-line welcome: "Use an existing resume to start building your experience library."
 3. After saving the import → `/dashboard` shows the **Getting started** checklist (4 steps, computed from data):
    1. Build your library (≥ 1 entry)
    2. Accept a job (≥ 1 job)
@@ -83,7 +83,7 @@ Archived jobs stay out of the summary, the list, continue working, recent activi
 
 ### `/library/import`
 Client state machine `upload → reading → review`:
-1. **Upload:** drop zone (PDF/DOCX ≤ 5 MB) or "Paste text" tab. Shows imports left this month.
+1. **Upload:** one workspace. "Upload a file" or "Paste text". Imports left this month sit beside those controls. The drop zone takes a PDF or DOCX up to 5 MB. A chosen file shows its name and can be removed before reading. **Read resume** stays quiet until a file is chosen, or the pasted text is long enough.
 2. **Reading:** staged progress copy, 10–30 s.
 3. **Review:** extracted profile, entries, bullets, and skills, all editable, each with a checkbox (default on). Warnings from extraction shown at the top. Long bullets flagged. If the library isn't empty: **Append** (default) or **Replace everything** (confirm).
    "Save to library" → `commitImport` → `/library` (or `/dashboard` during onboarding) with a summary toast.

@@ -913,8 +913,8 @@ export const strings = {
       body: "Roles, projects, bullets, and skills. Each bullet shows how strong it is.",
     },
     libraryImport: {
-      title: "Import resume",
-      body: "Upload or paste a resume to seed your library.",
+      title: "Import your resume",
+      body: "Use an existing resume to start building your experience library.",
     },
     libraryTargets: {
       title: "Target profiles",
@@ -1179,7 +1179,7 @@ export const strings = {
       },
     },
     import: {
-      welcome: "Let’s start by building your experience library.",
+      welcome: "Use an existing resume to start building your experience library.",
       importsLeft: (count: number) => {
         if (count === 0) return "No imports left this month.";
         if (count === 1) return "1 import left this month.";
@@ -1187,9 +1187,11 @@ export const strings = {
       },
       uploadTab: "Upload a file",
       pasteTab: "Paste text",
-      dropTitle: "Drop a PDF or Word document",
-      dropHint: "PDF or DOCX, up to 5 MB.",
+      dropTitle: "Drop your resume here",
+      dropHint: "PDF or DOCX · Maximum 5 MB",
       chooseFile: "Choose a file",
+      chooseDifferent: "Choose a different file",
+      removeFile: "Remove",
       fileChosen: (name: string) => `Selected: ${name}`,
       pasteLabel: "Resume text",
       pastePlaceholder: "Paste the text of your resume.",

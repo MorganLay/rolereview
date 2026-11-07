@@ -47,7 +47,7 @@ Empty library, no jobs. Getting started is on the first step.
 - The steps are **Build your library** (current), **Add a job**, **Tailor your resume**, and **Export it**. None of them say **To do.**
 - Under the card: **Only your experience**, **Tailored for each job**, and **Apply with confidence**.
 - **Build your library** opens Library, which says **Your library is empty**, with **Import a resume** and **Add manually**.
-- Import says **Let’s start by building your experience library.**
+- Import says **Import your resume** and **Use an existing resume to start building your experience library.** **Read resume** stays quiet until a file or enough text is there.
 - Jobs says **No jobs yet. Paste a job posting to accept your first job.**
 
 This is the pass for the first-run screens. Notice whether the next action is obvious, and whether the header **New job** button pulls you past the library.

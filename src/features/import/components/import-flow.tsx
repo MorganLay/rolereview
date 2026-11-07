@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { FileUp } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ export function ImportFlow({
   const [pending, setPending] = useState(false);
   const [importsLeft, setImportsLeft] = useState(importsLeftProp);
   const busy = useRef(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (step !== "reading") return;
@@ -132,6 +134,25 @@ export function ImportFlow({
   function onUpload(event: FormEvent) {
     event.preventDefault();
     void readResume();
+  }
+
+  function selectFile(next: File | null) {
+    setFile(next);
+    if (!next || next.size === 0) {
+      setFields((current) => ({ ...current, file: undefined }));
+      return;
+    }
+    if (next.size > IMPORT_LIMITS.fileBytes) {
+      setFields((current) => ({ ...current, file: [errors.fileSize] }));
+      return;
+    }
+    setFields((current) => ({ ...current, file: undefined }));
+  }
+
+  function clearFile() {
+    setFile(null);
+    setFields((current) => ({ ...current, file: undefined }));
+    if (fileInput.current) fileInput.current.value = "";
   }
 
   async function save(): Promise<boolean> {
@@ -212,24 +233,38 @@ export function ImportFlow({
     );
   }
 
+  const trimmed = text.trim();
+  const textHint =
+    trimmed.length === 0
+      ? null
+      : trimmed.length < IMPORT_LIMITS.textMin
+        ? errors.textShort
+        : trimmed.length > IMPORT_LIMITS.textMax
+          ? errors.textLong
+          : null;
+  const ready = source === "text" ? textHint === null && trimmed.length > 0 : fileReady(file);
+
   return (
-    <form onSubmit={onUpload} className="flex flex-col gap-4">
-      <p className="text-sm text-slate tabular-nums">{copy.importsLeft(importsLeft)}</p>
+    <form
+      onSubmit={onUpload}
+      className="rounded-card border border-line bg-surface p-4 sm:p-5"
+    >
       {banner === "nothing" ? (
-        <p className="text-sm text-ink" role="alert">
+        <p className="mb-4 text-sm text-ink" role="alert">
           {warnings.nothing}
         </p>
       ) : null}
       {banner === "ai" ? (
-        <div className="grid gap-3" role="alert">
+        <div className="mb-4 grid gap-3" role="alert">
           <p className="text-sm text-ink">{copy.aiFailed}</p>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button type="button" onClick={() => void readResume()}>
+            <Button type="button" className="min-h-11" onClick={() => void readResume()}>
               {copy.retry}
             </Button>
             <Button
               type="button"
               variant="outline"
+              className="min-h-11"
               onClick={() => {
                 setSource("text");
                 setBanner(null);
@@ -244,79 +279,113 @@ export function ImportFlow({
         value={source}
         onValueChange={(value) => setSource(value === "text" ? "text" : "file")}
       >
-        <TabsList>
-          <TabsTrigger value="file">{copy.uploadTab}</TabsTrigger>
-          <TabsTrigger value="text">{copy.pasteTab}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="file" className="pt-3">
-          <label
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <TabsList className="h-auto min-h-11 w-full sm:w-fit">
+            <TabsTrigger value="file" className="min-h-11 flex-1 px-3 sm:flex-none">
+              {copy.uploadTab}
+            </TabsTrigger>
+            <TabsTrigger value="text" className="min-h-11 flex-1 px-3 sm:flex-none">
+              {copy.pasteTab}
+            </TabsTrigger>
+          </TabsList>
+          <p className="text-xs text-slate tabular-nums sm:shrink-0">{copy.importsLeft(importsLeft)}</p>
+        </div>
+        <TabsContent value="file" className="pt-4">
+          <div
             className={cn(
-              "flex cursor-pointer flex-col items-start gap-1 rounded-lg border border-dashed border-line px-4 py-8",
+              "rounded-card border border-dashed border-line bg-paper focus-within:border-pine focus-within:ring-3 focus-within:ring-ring/50",
               dragging && "border-pine bg-pine-50",
             )}
-            onDragOver={(event) => {
-              event.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(event) => {
-              event.preventDefault();
-              setDragging(false);
-              const next = event.dataTransfer.files[0];
-              if (next) {
-                setFile(next);
-                setFields({});
-              }
-            }}
           >
-            <span className="text-sm font-medium text-ink">{copy.dropTitle}</span>
-            <span className="text-sm text-slate">{copy.dropHint}</span>
-            <span className="mt-2 text-sm text-pine">{copy.chooseFile}</span>
-            {file ? (
-              <span className="text-sm break-all text-ink">{copy.fileChosen(file.name)}</span>
-            ) : null}
-            <input
-              type="file"
-              accept={`${PDF_MIME},${DOCX_MIME},.pdf,.docx`}
-              className="sr-only"
-              onChange={(event) => {
-                const next = event.target.files?.[0] ?? null;
-                setFile(next);
-                setFields({});
+            <label
+              className="flex min-h-44 cursor-pointer flex-col items-center justify-center gap-2 px-4 py-8 text-center sm:min-h-52"
+              onDragOver={(event) => {
+                event.preventDefault();
+                setDragging(true);
               }}
-            />
-          </label>
+              onDragLeave={() => setDragging(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setDragging(false);
+                const next = event.dataTransfer.files[0];
+                if (next) selectFile(next);
+              }}
+            >
+              <FileUp className="size-5 text-pine" aria-hidden />
+              <span className="max-w-full text-sm font-medium break-all text-ink">
+                {file ? file.name : copy.dropTitle}
+              </span>
+              <span className="text-sm text-slate">{copy.dropHint}</span>
+              <span className="mt-2 inline-flex min-h-9 items-center rounded-button border border-line bg-surface px-3 text-sm font-medium text-pine">
+                {file ? copy.chooseDifferent : copy.chooseFile}
+              </span>
+              <input
+                ref={fileInput}
+                type="file"
+                accept={`${PDF_MIME},${DOCX_MIME},.pdf,.docx`}
+                className="sr-only"
+                aria-label={file ? copy.fileChosen(file.name) : copy.chooseFile}
+                onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
+              />
+            </label>
+            {file ? (
+              <div className="flex justify-center border-t border-line px-4 py-2">
+                <Button type="button" variant="ghost" className="min-h-11" onClick={clearFile}>
+                  {copy.removeFile}
+                </Button>
+              </div>
+            ) : null}
+          </div>
           {fields.file?.[0] ? (
             <p className="mt-2 text-sm text-destructive" role="alert">
               {fields.file[0]}
             </p>
           ) : null}
         </TabsContent>
-        <TabsContent value="text" className="pt-3">
+        <TabsContent value="text" className="pt-4">
           <div className="grid gap-1.5">
             <Label htmlFor="import-paste">{copy.pasteLabel}</Label>
             <Textarea
               id="import-paste"
               value={text}
               placeholder={copy.pastePlaceholder}
-              onChange={(event) => setText(event.target.value)}
+              onChange={(event) => {
+                setText(event.target.value);
+                setFields((current) => ({ ...current, text: undefined }));
+              }}
               aria-invalid={Boolean(fields.text?.[0])}
-              aria-describedby={fields.text?.[0] ? "import-paste-error" : undefined}
+              aria-describedby={
+                fields.text?.[0] || textHint ? "import-paste-error" : undefined
+              }
               className="min-h-40"
             />
-            {fields.text?.[0] ? (
-              <p id="import-paste-error" className="text-sm text-destructive" role="alert">
-                {fields.text[0]}
+            {fields.text?.[0] || textHint ? (
+              <p id="import-paste-error" className="text-sm text-slate" role="status">
+                {fields.text?.[0] ?? textHint}
               </p>
             ) : null}
           </div>
         </TabsContent>
       </Tabs>
-      <Button type="submit" disabled={pending} className="self-start">
-        {copy.read}
-      </Button>
+      <div className="mt-4 flex">
+        <Button
+          type="submit"
+          disabled={!ready || pending}
+          className={cn(
+            "min-h-11 w-full sm:ml-auto sm:w-auto",
+            !ready &&
+              "border border-line bg-muted text-slate hover:bg-muted disabled:opacity-100",
+          )}
+        >
+          {copy.read}
+        </Button>
+      </div>
     </form>
   );
+}
+
+function fileReady(file: File | null): boolean {
+  return file !== null && file.size > 0 && file.size <= IMPORT_LIMITS.fileBytes;
 }
 
 function buildRequest(
