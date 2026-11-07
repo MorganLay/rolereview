@@ -77,6 +77,7 @@ export async function getDashboard(userId: string): Promise<DashboardData> {
             exportedAt: true,
             submittedAt: true,
             updatedAt: true,
+            createdAt: true,
           },
         },
       },
@@ -132,7 +133,14 @@ export async function getDashboard(userId: string): Promise<DashboardData> {
         ];
       }),
     ),
-    week: thisWeek(jobs, now, timeZone),
+    week: thisWeek(
+      jobs,
+      now,
+      timeZone,
+      rows.flatMap((row) =>
+        row.archivedAt ? [] : row.tailoredResumes.map((resume) => resume.createdAt),
+      ),
+    ),
   };
 }
 
@@ -157,6 +165,7 @@ type JobRow = {
     exportedAt: Date | null;
     submittedAt: Date | null;
     updatedAt: Date;
+    createdAt: Date;
   }[];
 };
 

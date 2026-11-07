@@ -1,6 +1,8 @@
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
 import { strings } from "@/copy/strings";
+import { showDashboardSummary, showThisWeek } from "@/features/dashboard/metrics";
 import type { DashboardData } from "@/features/dashboard/queries";
 import {
   type ActionReason,
@@ -18,25 +20,68 @@ import {
 const copy = strings.pages.dashboard;
 const interviews = strings.jobs.interviews;
 const timeline = strings.jobs.timeline;
-const empty = copy.tailoredEmpty;
 
 const KIND_LABELS: Record<InterviewKind, string> = interviews.kinds;
 
 export function HomeSections({ home }: { home: DashboardData }) {
+  const showSummary = showDashboardSummary({
+    active: home.summary.active,
+    interviews: home.summary.interviews,
+    offers: home.summary.offers,
+    urgent: home.summary.urgent,
+    applications: home.week.applications,
+    responses: home.week.responses,
+  });
   return (
     <div className="flex min-w-0 flex-col gap-8">
-      <Summary home={home} />
+      <CurrentWork home={home} />
+      {showSummary ? <Summary home={home} /> : null}
       <div className="grid min-w-0 grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <div className="flex min-w-0 flex-col gap-8">
-          <ContinueWorking home={home} />
-          <ActionList home={home} />
-        </div>
+        <ActionList home={home} />
         <div className="flex min-w-0 flex-col gap-8">
           <RecentActivity home={home} />
-          <ThisWeek home={home} />
+          {showThisWeek(home.week) ? <ThisWeek home={home} /> : null}
         </div>
       </div>
     </div>
+  );
+}
+
+export function CurrentWork({ home }: { home: DashboardData }) {
+  const work = home.continueWork;
+  if (!work) {
+    if (home.actions.length > 0) return null;
+    return <p className="text-sm text-slate">{copy.startEmpty}</p>;
+  }
+  const status = strings.jobs.detail.statuses[work.jobStatus];
+  return (
+    <section
+      aria-labelledby="continue-heading"
+      className="rounded-card border border-line bg-surface px-4 py-4 sm:px-5 sm:py-5"
+    >
+      <p className="text-xs font-medium tracking-wide text-pine uppercase">
+        {copy.continueTitle}
+      </p>
+      <h2
+        id="continue-heading"
+        className="mt-2 font-serif text-xl font-semibold tracking-tight text-balance text-ink sm:text-2xl"
+      >
+        {continueLabel(work)}
+      </h2>
+      <p className="mt-1 text-sm break-words text-ink">
+        {work.company} · {work.title}
+      </p>
+      <p className="mt-2 text-sm text-slate">
+        {status}
+        {work.source === "resume" ? ` · ${copy.continueEdited(formatEventWhen(work.updatedAt, home.timeZone, false))}` : ""}
+      </p>
+      {work.source === "resume" ? (
+        <p className="mt-1 max-w-xl text-sm text-slate">{copy.continueReady}</p>
+      ) : null}
+      <Button asChild className="mt-4 h-11 w-full px-4 sm:w-auto">
+        <Link href={work.href}>{work.source === "resume" ? copy.continueReview : continueLabel(work)}</Link>
+      </Button>
+    </section>
   );
 }
 
@@ -61,41 +106,18 @@ function Summary({ home }: { home: DashboardData }) {
   );
 }
 
-function ContinueWorking({ home }: { home: DashboardData }) {
-  const work = home.continueWork;
-  return (
-    <section aria-labelledby="continue-heading" className="flex min-w-0 flex-col gap-2">
-      <h2 id="continue-heading" className="text-base font-medium text-ink">
-        {copy.continueTitle}
-      </h2>
-      {work ? (
-        <Link
-          href={work.href}
-          className="flex min-w-0 flex-col gap-0.5 rounded-lg border border-line px-3 py-3 focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          <span className="text-sm font-medium break-words text-ink">{continueLabel(work)}</span>
-          <span className="text-sm break-words text-slate">
-            {work.company} · {work.title}
-          </span>
-        </Link>
-      ) : (
-        <p className="text-sm text-slate">{copy.continueEmpty}</p>
-      )}
-    </section>
-  );
-}
-
 function ActionList({ home }: { home: DashboardData }) {
+  const actions = home.actions.filter(
+    (action) => !(action.kind === "document" && home.continueWork?.href === action.href),
+  );
+  if (actions.length === 0) return null;
   return (
     <section aria-labelledby="actions-heading" className="flex min-w-0 flex-col gap-2">
       <h2 id="actions-heading" className="text-base font-medium text-ink">
         {copy.actions}
       </h2>
-      {home.actions.length === 0 ? (
-        <p className="text-sm text-slate">{copy.actionsEmpty}</p>
-      ) : (
-        <ul aria-label={copy.actions} className="flex min-w-0 flex-col">
-          {home.actions.map((action) => (
+      <ul aria-label={copy.actions} className="flex min-w-0 flex-col">
+          {actions.map((action) => (
             <li key={action.id} className="min-w-0 border-b border-line py-3 last:border-b-0">
               <Link
                 href={action.href}
@@ -112,7 +134,6 @@ function ActionList({ home }: { home: DashboardData }) {
             </li>
           ))}
         </ul>
-      )}
     </section>
   );
 }
@@ -154,10 +175,9 @@ function RecentActivity({ home }: { home: DashboardData }) {
 }
 
 function ThisWeek({ home }: { home: DashboardData }) {
-  const tailored = home.week.tailoredPercent === null ? empty : `${home.week.tailoredPercent}%`;
   const figures = [
     { label: copy.applications, value: String(home.week.applications) },
-    { label: copy.tailored, value: tailored },
+    { label: copy.tailored, value: String(home.week.tailored) },
     { label: copy.responses, value: String(home.week.responses) },
   ];
   return (

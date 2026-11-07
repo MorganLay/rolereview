@@ -85,8 +85,8 @@ describe("requirementState", () => {
       keywords: ["Python", "SQL"],
     });
 
-    expect(onResume.state).toBe("in_resume");
-    expect(onResume.state).not.toBe("no_evidence");
+    expect(onResume.state).toBe("needs_review");
+    expect(onResume.state).not.toBe("in_resume");
     expect(excluded).toEqual({
       state: "in_library",
       includeRefs: ["E2.B1", "S1"],
@@ -100,6 +100,18 @@ describe("requirementState", () => {
       content: pythonResume({ bulletIncluded: false, skillIncluded: true }),
       snapshot: librarySnapshot(),
       keywords: [],
+    });
+
+    expect(placement.state).toBe("needs_review");
+  });
+
+  it("calls included evidence In this resume only when the verdict is met", () => {
+    const placement = requirementState({
+      requirement: python,
+      verdict: verdict("met", ["E2.B1"], "The project uses Python."),
+      content: pythonResume({ bulletIncluded: true }),
+      snapshot: librarySnapshot(),
+      keywords: ["Python"],
     });
 
     expect(placement.state).toBe("in_resume");
@@ -157,7 +169,7 @@ describe("requirementState", () => {
       keywords: [],
     });
 
-    expect(placement.state).toBe("in_resume");
+    expect(placement.state).toBe("needs_review");
   });
 
   it("moves an excluded evidence ref to the library", () => {
@@ -185,7 +197,7 @@ describe("requirementState", () => {
       keywords: [],
     });
 
-    expect(placement.state).toBe("in_resume");
+    expect(placement.state).toBe("needs_review");
   });
 
   it("does not treat Java as JavaScript", () => {
@@ -212,6 +224,25 @@ describe("requirementState", () => {
       }),
       snapshot: librarySnapshot(),
       keywords: ["Kubernetes"],
+    });
+
+    expect(placement.state).toBe("needs_review");
+  });
+
+  it("treats Excel and Microsoft Excel as the same term when the verdict is met", () => {
+    const placement = requirementState({
+      requirement: {
+        id: "r-excel",
+        text: "Microsoft Excel",
+        kind: "skill",
+        importance: "must",
+      },
+      verdict: verdict("met", [], "Spreadsheet work is in the summary."),
+      content: resumeContent({
+        summary: { text: "Built reports in Excel for finance", included: true },
+      }),
+      snapshot: librarySnapshot(),
+      keywords: ["Microsoft Excel"],
     });
 
     expect(placement.state).toBe("in_resume");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -19,7 +19,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Check, GripVertical, Star } from "lucide-react";
+import { Check, GripVertical, MoreHorizontal, Star } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +45,7 @@ import { cn } from "@/lib/utils";
 import { moveJob } from "../actions";
 import { boardInsertIndex, dragInsertIndex, planColumnMove } from "../board-order";
 import type { BoardCardDisplay } from "../format";
-import { boardCardSecondaryLine } from "./board-card-line";
+import { boardCardMatchText, boardCardSecondaryLine } from "./board-card-line";
 import { JobNextActionLink } from "./job-next-action";
 import { JobOpenLink } from "./job-open-link";
 import {
@@ -105,6 +105,8 @@ export function JobsBoard({
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
   const activeCard = activeId ? cards.find((card) => card.id === activeId) : undefined;
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const edges = useHorizontalEdges(scrollerRef, stages.length + cards.length);
 
   function onDragStart(event: DragStartEvent) {
     if (!drag) return;
@@ -237,12 +239,12 @@ export function JobsBoard({
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4" aria-busy={pending}>
+    <div className="flex min-w-0 flex-col gap-3" aria-busy={pending}>
       <p className="sr-only" aria-live="polite">
         {pending ? copy.moving : ""}
       </p>
       {lockedStage ? null : (
-        <div className="grid gap-2 md:hidden">
+        <div className="grid shrink-0 gap-2 md:hidden">
           <Label htmlFor={stageId}>{copy.stageLabel}</Label>
           <Select
             value={stage}
@@ -275,38 +277,55 @@ export function JobsBoard({
         onDragEnd={onDragEnd}
         onDragCancel={() => setActiveId(null)}
       >
-        <div
-          className={cn(
-            "flex w-full min-w-0 max-w-full gap-3 pb-3",
-            singlePhone
-              ? "max-md:overflow-x-hidden md:overflow-x-auto"
-              : "touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain",
-          )}
-        >
-          {stages.map((value) => (
-            <BoardColumn
-              key={value}
-              stage={value}
-              cards={cards}
-              drag={drag}
-              pending={pending}
-              selected={lockedStage !== null || showAll || stage === value}
-              spread={showAll}
-              solo={lockedStage !== null}
-              reduceMotion={reduceMotion}
-              onMove={moveToTop}
-              onClose={(card) =>
-                setCloseMove({
-                  jobId: card.id,
-                  status: isClosedJobStatus(card.status) ? card.status : null,
-                })
-              }
+        <div className="relative">
+          <div
+            ref={scrollerRef}
+            className={cn(
+              "flex w-full min-w-0 max-w-full items-stretch gap-3 pb-3",
+              "[scrollbar-width:thin] [scrollbar-color:var(--color-line)_transparent]",
+              "[&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent",
+              "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-line",
+              singlePhone
+                ? "max-md:overflow-x-hidden md:overflow-x-auto"
+                : "touch-pan-x overflow-x-auto overscroll-x-contain",
+            )}
+          >
+            {stages.map((value) => (
+              <BoardColumn
+                key={value}
+                stage={value}
+                cards={cards}
+                drag={drag}
+                pending={pending}
+                selected={lockedStage !== null || showAll || stage === value}
+                spread={showAll}
+                reduceMotion={reduceMotion}
+                onMove={moveToTop}
+                onClose={(card) =>
+                  setCloseMove({
+                    jobId: card.id,
+                    status: isClosedJobStatus(card.status) ? card.status : null,
+                  })
+                }
+              />
+            ))}
+          </div>
+          {edges.left ? (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-paper to-transparent"
             />
-          ))}
+          ) : null}
+          {edges.right ? (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-paper to-transparent"
+            />
+          ) : null}
         </div>
         <DragOverlay dropAnimation={reduceMotion ? null : undefined}>
           {activeCard ? (
-            <div aria-hidden className="w-72">
+            <div aria-hidden className="w-[20rem]">
               <CardBody card={activeCard} drag={false} pending />
             </div>
           ) : null}
@@ -335,7 +354,6 @@ function BoardColumn({
   pending,
   selected,
   spread,
-  solo,
   reduceMotion,
   onMove,
   onClose,
@@ -346,7 +364,6 @@ function BoardColumn({
   pending: boolean;
   selected: boolean;
   spread: boolean;
-  solo: boolean;
   reduceMotion: boolean;
   onMove: (card: BoardCardDisplay, status: JobStatusValue) => void;
   onClose: (card: BoardCardDisplay) => void;
@@ -365,20 +382,29 @@ function BoardColumn({
     <section
       aria-labelledby={headingId}
       className={cn(
-        "min-w-0 flex-col gap-2 md:flex",
-        spread ? "w-72 shrink-0 md:w-72" : "w-full max-w-full md:w-72 md:shrink-0",
-        solo && "md:max-w-xl",
+        "min-h-64 w-full max-w-full flex-col overflow-hidden rounded-card border border-line",
+        "bg-[color-mix(in_srgb,var(--color-line)_42%,var(--color-paper))]",
+        "md:flex md:min-h-[30rem] md:w-[20rem] md:min-w-[20rem] md:shrink-0",
+        spread ? "w-[20rem] min-w-[20rem] shrink-0" : "w-full",
         selected ? "flex" : "max-md:hidden",
-        isOver && drag && "rounded-lg bg-muted/50",
       )}
     >
-      <div className="flex items-baseline justify-between gap-2 px-0.5">
-        <h2 id={headingId} className="text-sm font-medium text-ink">
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+        <h2 id={headingId} className="text-sm font-semibold text-ink">
           {stageName(stage)}
         </h2>
-        <span className="text-xs text-slate">{copy.jobCount(columnCards.length)}</span>
+        <span className="text-sm text-slate tabular-nums">
+          <span aria-hidden>{columnCards.length}</span>
+          <span className="sr-only">{copy.jobCount(columnCards.length)}</span>
+        </span>
       </div>
-      <div ref={setNodeRef} className="flex min-h-16 flex-col gap-3">
+      <div
+        ref={setNodeRef}
+        className={cn(
+          "flex flex-1 flex-col gap-2.5 p-2.5",
+          isOver && drag && "bg-pine-50/70",
+        )}
+      >
         {stage === "CLOSED" ? (
           CLOSED_JOB_STATUSES.map((status) => (
             <ClosedGroup
@@ -403,7 +429,7 @@ function BoardColumn({
           />
         )}
         {columnCards.length === 0 ? (
-          <p className="px-0.5 text-sm text-slate">{copy.emptyColumn}</p>
+          <p className="px-2 pt-3 text-sm text-slate">{copy.emptyColumn}</p>
         ) : null}
       </div>
     </section>
@@ -537,44 +563,38 @@ function CardBody({
   onClose?: (card: BoardCardDisplay) => void;
 }) {
   const secondary = boardCardSecondaryLine(card.deadlineNote);
-  const showMeta = card.priority !== null || card.submitted || card.archived;
+  const showFlags = card.submitted || card.archived;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-3">
+    <div className="rounded-lg border border-line bg-surface px-3.5 py-3">
       <div className="flex items-start gap-2">
         {drag ? (
-          <GripVertical className="mt-0.5 size-4 shrink-0 text-slate" aria-hidden />
+          <GripVertical className="mt-1 size-4 shrink-0 text-slate" aria-hidden />
         ) : null}
         <div className="min-w-0 flex-1">
           <JobOpenLink
             href={`/jobs/${card.id}`}
             company={card.company}
-            className="block font-medium break-words text-ink underline-offset-4 hover:underline"
+            label={card.title}
+            textClassName="line-clamp-2"
+            className="block text-[15px] leading-snug font-semibold text-ink hover:text-pine"
           />
-          <p className="break-words text-sm text-slate">{card.title}</p>
+          <p className="mt-0.5 text-sm text-slate">{card.company}</p>
         </div>
+        <PriorityStars priority={card.priority} />
         {onMove && onClose ? (
           <div onPointerDown={(event) => event.stopPropagation()} className="shrink-0">
             <MoveMenu card={card} pending={pending} onMove={onMove} onClose={onClose} />
           </div>
         ) : null}
       </div>
-      {showMeta ? (
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <PriorityStars priority={card.priority} />
-          {card.submitted ? (
-            <span className="inline-flex items-center gap-1 text-xs text-ink">
-              <Check className="size-3.5" aria-hidden />
-              {copy.submitted}
-            </span>
-          ) : null}
-          {card.archived ? <Badge variant="outline">{detail.archived}</Badge> : null}
-        </div>
+      {card.placeLabel ? (
+        <p className="mt-2 text-sm text-slate">{card.placeLabel}</p>
       ) : null}
       {secondary.kind === "deadline" ? (
         <p
           className={cn(
-            "mt-2 text-xs",
+            "mt-2 text-sm",
             secondary.note === "past" ? "text-destructive" : "text-slate",
           )}
         >
@@ -583,10 +603,19 @@ function CardBody({
           {secondary.note === "past" ? ` ${copy.past}` : null}
         </p>
       ) : (
-        <p className="mt-2 text-xs text-slate">
-          {copy.matchScore} {card.matchLabel}
-        </p>
+        <p className="mt-2 text-sm text-slate">{boardCardMatchText(card.matchLabel)}</p>
       )}
+      {showFlags ? (
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          {card.submitted ? (
+            <span className="inline-flex items-center gap-1 text-sm text-ink">
+              <Check className="size-3.5" aria-hidden />
+              {copy.submitted}
+            </span>
+          ) : null}
+          {card.archived ? <Badge variant="outline">{detail.archived}</Badge> : null}
+        </div>
+      ) : null}
       <JobNextActionLink
         input={{
           jobId: card.id,
@@ -596,8 +625,9 @@ function CardBody({
           hasOffer: card.hasOffer,
         }}
         size="sm"
+        variant="link"
         stopPointer
-        className="h-auto w-full whitespace-normal"
+        className="h-auto w-fit justify-start px-0 text-left text-sm whitespace-normal"
       />
     </div>
   );
@@ -619,12 +649,12 @@ function MoveMenu({
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
-          variant="outline"
-          size="sm"
+          variant="ghost"
+          size="icon-sm"
           disabled={pending}
           aria-label={copy.moveToFor(card.company)}
         >
-          {copy.moveTo}
+          <MoreHorizontal aria-hidden />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -649,10 +679,17 @@ function MoveMenu({
 function PriorityStars({ priority }: { priority: number | null }) {
   if (priority === null) return null;
   return (
-    <span className="inline-flex items-center gap-1 text-sm text-ink">
-      <Star aria-hidden className="size-3.5 fill-marigold text-ink" />
-      <span aria-hidden>{priority}</span>
-      <span className="sr-only">{strings.jobs.priorityValue(priority)}</span>
+    <span
+      className="mt-0.5 inline-flex shrink-0 items-center gap-px"
+      aria-label={strings.jobs.priorityValue(priority)}
+    >
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          aria-hidden
+          className={cn("size-3", n <= priority ? "fill-marigold text-ink" : "text-slate")}
+        />
+      ))}
     </span>
   );
 }
@@ -721,6 +758,7 @@ function boardCardsKey(cards: readonly BoardCardDisplay[]): string {
         card.boardOrder,
         card.company,
         card.title,
+        card.placeLabel ?? "",
         card.priority ?? "",
         card.matchLabel,
         card.submitted ? "1" : "0",
@@ -732,6 +770,37 @@ function boardCardsKey(cards: readonly BoardCardDisplay[]): string {
       ].join("\u001f"),
     )
     .join("\u001e");
+}
+
+function useHorizontalEdges(
+  ref: RefObject<HTMLDivElement | null>,
+  watch: number,
+): { left: boolean; right: boolean } {
+  const [edges, setEdges] = useState({ left: false, right: false });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      const next = {
+        left: el.scrollLeft > 8,
+        right: max - el.scrollLeft > 8,
+      };
+      setEdges((current) =>
+        current.left === next.left && current.right === next.right ? current : next,
+      );
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    for (const child of el.children) observer.observe(child);
+    return () => {
+      el.removeEventListener("scroll", update);
+      observer.disconnect();
+    };
+  }, [ref, watch]);
+  return edges;
 }
 
 function useMedia(query: string): boolean {

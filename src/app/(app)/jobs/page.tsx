@@ -55,30 +55,36 @@ export default async function JobsPage({
   const listEmpty = query.view === "list" && rows.length === 0;
   const boardEmpty = query.view === "board" && cards.length === 0;
 
+  const board = query.view === "board";
+
   return (
     <div
       className={
-        query.view === "board"
-          ? "flex w-full min-w-0 flex-col gap-6"
+        board
+          ? "flex w-full min-w-0 flex-col gap-4"
           : "mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6"
       }
     >
-      <div>
+      <div className="shrink-0">
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">
           {strings.pages.jobs.title}
         </h1>
         <p className="mt-2 max-w-xl text-sm text-slate">{strings.pages.jobs.body}</p>
       </div>
-      <JobsToolbar query={query} />
-      {listed.total === 0 ? (
-        <JobsEmpty />
-      ) : listEmpty || boardEmpty ? (
-        <JobsFiltered query={query} />
-      ) : query.view === "list" ? (
-        <JobsTable key={jobListHref(query)} query={query} rows={rows} />
-      ) : (
-        <JobsBoard key={jobListHref(query)} cards={cards} stage={query.stage} />
-      )}
+      <div className="shrink-0">
+        <JobsToolbar query={query} />
+      </div>
+      <div>
+        {listed.total === 0 ? (
+          <JobsEmpty />
+        ) : listEmpty || boardEmpty ? (
+          <JobsFiltered query={query} />
+        ) : query.view === "list" ? (
+          <JobsTable key={jobListHref(query)} query={query} rows={rows} />
+        ) : (
+          <JobsBoard key={jobListHref(query)} cards={cards} stage={query.stage} />
+        )}
+      </div>
     </div>
   );
 }

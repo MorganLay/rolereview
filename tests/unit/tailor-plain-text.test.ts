@@ -93,7 +93,7 @@ describe("resumePlainText", () => {
         `Carleton University ${DOT} Ottawa, ON ${DOT} 2023`,
         "Skills",
         "Languages: Python, SQL",
-        "IBM Cognos",
+        "Data and Analytics: IBM Cognos",
       ].join("\n"),
     );
   });

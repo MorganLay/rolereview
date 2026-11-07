@@ -122,6 +122,9 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-11-07 Library variants:** Completeness names the whole profile check when only the headline is empty. Bullet advice is the strength checks, including a number and an action verb. Approved headlines, summaries, and bullet variants, chosen per job with a reason, are logged in `docs/Feedback.md`. Not a task yet.
+- **2026-11-07 Jobs board density:** Columns are 320px, about 480px tall when empty, and grow with their cards. The card title is the role, the place line drops a street, and a score reads "Match N of 100". Checked signed in. Move to… → Closed opened the close dialog and was cancelled, so the job stayed Saved. A cross-column drop was not completed.
+- **2026-11-07 Jobs board layout:** Columns are equal surfaces with a sticky header and a full-height drop area. Cards lead with the title, then the company, and the next step is a text link. Search updates as you type. Filters open from one control, and active filters are chips. New job stays beside Board and List. The header keeps the reminders bell and the account menu. Checked signed in on the board, the list, and a 375px width.
 - **2026-11-07 Import confirmation tests:** The confirmation tests count sections and flag a blank or over-long bullet. A wider set that runs a person’s input, and opening the full review when enough checks fail, is logged in `docs/Feedback.md`. Not a task yet.
 - **2026-11-07 Inbox updates:** Nothing reads Gmail or another linked mailbox, and nothing updates a job from employer mail. That assistant is logged in `docs/Feedback.md`. Not a task yet.
 - **2026-11-07 Default apply-by date:** New job leaves Deadline empty, so no reminder is created. A 7-day default, with the reminder still 3 days before, and a Preferences control for that default, is logged in `docs/Feedback.md`. Not a task yet.

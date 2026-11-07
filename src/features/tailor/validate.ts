@@ -1,13 +1,20 @@
 /**
  * Fabrication guard for a tailored resume.
  * docs/05-AI.md → The fabrication guard.
- * Pure: G1–G12 clean the model output before anything is saved.
+ * Pure: G1–G15 clean the model output before anything is saved.
  */
 
 import type { LibrarySnapshot } from "@/features/library/schemas";
 import type { JobAnalysis } from "@/features/jobs/schemas";
 import { hasUnsupportedNumber } from "@/lib/ai/numbers";
 
+import {
+  citedExperienceYears,
+  evidenceText,
+  isRedundantBullet,
+  requirementOverstated,
+  unsupportedClaim,
+} from "./grounding";
 import { NOT_ASSESSED_NOTE, RESUME_LIMITS } from "./schemas";
 import type {
   GuardRequirementMatch,
@@ -38,6 +45,9 @@ export const GUARD_CODES = [
   "G10",
   "G11",
   "G12",
+  "G13",
+  "G14",
+  "G15",
 ] as const;
 
 export type GuardCode = (typeof GUARD_CODES)[number];
@@ -62,7 +72,10 @@ export function validateTailorOutput(
   analysis: JobAnalysis,
 ): GuardResult {
   const issues: GuardIssue[] = [];
-  const entries = cleanEntries(output.entries, snapshot, issues);
+  const entries = dropRedundant(
+    cleanEntries(output.entries, snapshot, issues),
+    issues,
+  );
   const skills = cleanSkills(output.skills, snapshot, issues);
   const requirementMatches = cleanMatches(
     output.requirementMatches,
@@ -196,6 +209,27 @@ function cleanEntries(
   return { entries: cleaned, reverts };
 }
 
+function dropRedundant(
+  cleaned: { entries: ValidatedTailorOutput["entries"]; reverts: number },
+  issues: GuardIssue[],
+): { entries: ValidatedTailorOutput["entries"]; reverts: number } {
+  const keptText: string[] = [];
+  const entries = cleaned.entries.map((entry) => {
+    const bullets: ValidatedBullet[] = [];
+    for (const bullet of entry.bullets) {
+      if (keptText.some((earlier) => isRedundantBullet(earlier, bullet.text))) {
+        const ref = bullet.sourceRefs[0];
+        if (ref) issues.push({ code: "G14", ref });
+        continue;
+      }
+      keptText.push(bullet.text);
+      bullets.push(bullet);
+    }
+    return { ref: entry.ref, bullets };
+  });
+  return { entries, reverts: cleaned.reverts };
+}
+
 function cleanBullets(
   bullets: readonly TailorBullet[],
   snapshotEntry: SnapshotEntry,
@@ -245,6 +279,17 @@ function cleanBullets(
       reverted = true;
       reverts += 1;
       issues.push({ code: "G5", ref: first.ref });
+    } else {
+      const claim = unsupportedClaim(
+        text,
+        sources.map((source) => source.text),
+      );
+      if (claim !== null) {
+        text = first.text;
+        reverted = true;
+        reverts += 1;
+        issues.push({ code: "G13", ref: first.ref });
+      }
     }
 
     kept.push({
@@ -299,7 +344,10 @@ function cleanMatches(
       continue;
     }
     seen.add(match.requirementId);
-    cleaned.push(cleanEvidence(match, snapshot, issues));
+    const requirement =
+      analysis.requirements.find((item) => item.id === match.requirementId)?.text ??
+      null;
+    cleaned.push(cleanEvidence(match, requirement, snapshot, issues));
   }
 
   for (const requirement of analysis.requirements) {
@@ -318,6 +366,7 @@ function cleanMatches(
 
 function cleanEvidence(
   match: RequirementMatch,
+  requirement: string | null,
   snapshot: LibrarySnapshot,
   issues: GuardIssue[],
 ): RequirementMatch {
@@ -338,11 +387,24 @@ function cleanEvidence(
     issues.push({ code: "G10", ref: match.requirementId });
   }
 
+  const verdict = unsupported ? "missing" : match.verdict;
+  const overstated =
+    verdict === "met" &&
+    requirement !== null &&
+    requirementOverstated({
+      requirement,
+      evidence: evidenceText(evidenceRefs, snapshot),
+      yearsAvailable: citedExperienceYears(evidenceRefs, snapshot),
+    });
+  if (overstated) issues.push({ code: "G15", ref: match.requirementId });
+
   return {
     requirementId: match.requirementId,
-    verdict: unsupported ? "missing" : match.verdict,
+    verdict: overstated ? "partial" : verdict,
     evidenceRefs,
-    note: match.note,
+    note: overstated
+      ? "Related experience is on file. It does not show this requirement in full."
+      : match.note,
   };
 }
 

@@ -217,6 +217,9 @@ export function contentBullet(
     sourceRefs: [],
     reverted: false,
     edited: false,
+    originalText: null,
+    suggestion: null,
+    suggestionNote: null,
     ...overrides,
   };
 }

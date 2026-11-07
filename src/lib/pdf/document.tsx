@@ -4,7 +4,7 @@
  * to the template minimum. docs/03-ARCHITECTURE.md → ATS rules.
  */
 
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Link, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 import type { ResumePdfModel } from "./model";
 import type { ResumeTemplateId } from "./template";
@@ -42,19 +42,19 @@ const CLASSIC: Record<PdfDensity, Metrics> = {
     padY: 36,
     padX: 46,
     fontSize: 10,
-    lineHeight: 1.28,
+    lineHeight: 1.32,
     nameSize: 16,
     headlineSize: 10.5,
     contactSize: 9,
     contactGap: 3,
     linkGap: 1,
     ruleGap: 6,
-    sectionGap: 8,
+    sectionGap: 11,
     headingSize: 11,
-    headingGap: 2,
-    entryGap: 4,
+    headingGap: 3,
+    entryGap: 7,
     metaSize: 9,
-    bulletGap: 1,
+    bulletGap: 2,
   },
   grouped: {
     padY: 36,
@@ -381,13 +381,32 @@ function buildStyles(variant: ResumeTemplateId, metrics: Metrics): VariantStyle 
             borderBottomWidth: 0.75,
             borderBottomColor: PINE,
           }
-        : {}),
+        : variant === "classic"
+          ? {
+              paddingBottom: 1,
+              borderBottomWidth: 0.4,
+              borderBottomColor: "#000000",
+            }
+          : {}),
     },
     entry: { marginTop: metrics.entryGap },
-    title: { fontWeight: 600 },
+    entryHead: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      gap: 12,
+    },
+    title: { fontWeight: 600, flexGrow: 1, flexShrink: 1 },
+    dates: { fontSize: metrics.metaSize, textAlign: "right" },
     meta: { fontSize: metrics.metaSize, marginTop: 1 },
     url: { fontSize: metrics.metaSize, marginTop: 1 },
-    bullet: { marginTop: metrics.bulletGap },
+    bulletRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      marginTop: metrics.bulletGap,
+    },
+    bulletMark: { width: 12 },
+    bulletText: { flexGrow: 1, flexShrink: 1 },
     skill: { marginTop: metrics.bulletGap },
   });
 }
@@ -440,18 +459,35 @@ export function ResumeDocument({
         ) : null}
         {model.sections.map((section) => (
           <View key={section.heading} style={styles.section}>
-            <Text style={styles.sectionHeading} minPresenceAhead={16}>
+            <Text style={styles.sectionHeading} minPresenceAhead={28}>
               {section.heading}
             </Text>
             {section.entries.map((entry, index) => (
               <View key={`${section.heading}-${index}`} style={styles.entry}>
-                {entry.title ? <Text style={styles.title}>{entry.title}</Text> : null}
-                {entry.meta ? <Text style={styles.meta}>{entry.meta}</Text> : null}
-                {entry.url ? <Text style={styles.url}>{entry.url}</Text> : null}
+                <View style={styles.entryHead} minPresenceAhead={18}>
+                  {entry.title ? (
+                    entry.url ? (
+                      <Link src={entry.url} style={styles.title}>
+                        {entry.title}
+                      </Link>
+                    ) : (
+                      <Text style={styles.title}>{entry.title}</Text>
+                    )
+                  ) : null}
+                  {entry.dates ? <Text style={styles.dates}>{entry.dates}</Text> : null}
+                </View>
+                {entry.detail ? <Text style={styles.meta}>{entry.detail}</Text> : null}
+                {!entry.detail && !entry.dates && entry.meta ? (
+                  <Text style={styles.meta}>{entry.meta}</Text>
+                ) : null}
+                {!entry.title && entry.url ? (
+                  <Text style={styles.url}>{entry.url}</Text>
+                ) : null}
                 {entry.bullets.map((bullet, bulletIndex) => (
-                  <Text key={bulletIndex} style={styles.bullet}>
-                    {`- ${bullet}`}
-                  </Text>
+                  <View key={bulletIndex} style={styles.bulletRow}>
+                    <Text style={styles.bulletMark}>{"\u2022"}</Text>
+                    <Text style={styles.bulletText}>{bullet}</Text>
+                  </View>
                 ))}
               </View>
             ))}

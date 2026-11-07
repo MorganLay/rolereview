@@ -107,7 +107,17 @@ describe("thisWeek", () => {
     expect(thisWeek(jobs, NOW, ZONE)).toEqual({
       applications: 3,
       tailoredPercent: 67,
+      tailored: 0,
       responses: 1,
+    });
+  });
+
+  it("counts a resume tailored this week even when nothing was sent", () => {
+    expect(thisWeek([], NOW, ZONE, [inWeek, lastWeek])).toEqual({
+      applications: 0,
+      tailoredPercent: null,
+      tailored: 1,
+      responses: 0,
     });
   });
 
@@ -115,6 +125,7 @@ describe("thisWeek", () => {
     expect(thisWeek([], NOW, ZONE)).toEqual({
       applications: 0,
       tailoredPercent: null,
+      tailored: 0,
       responses: 0,
     });
     expect(thisWeek([weekJob({ appliedAt: inWeek })], NOW, ZONE).tailoredPercent).toBe(0);

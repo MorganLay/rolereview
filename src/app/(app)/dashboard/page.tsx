@@ -3,7 +3,7 @@ import { connection } from "next/server";
 
 import { strings } from "@/copy/strings";
 import { GettingStarted } from "@/features/dashboard/components/getting-started";
-import { HomeSections } from "@/features/dashboard/components/home-sections";
+import { CurrentWork, HomeSections } from "@/features/dashboard/components/home-sections";
 import { onboardingComplete } from "@/features/dashboard/metrics";
 import { completeOnboarding } from "@/features/dashboard/onboarding";
 import { getDashboard } from "@/features/dashboard/queries";
@@ -49,7 +49,14 @@ export default async function DashboardPage() {
           {strings.pages.dashboard.success}
         </p>
       ) : null}
-      {returning ? <HomeSections home={home} /> : <GettingStarted steps={home.steps} />}
+      {returning ? (
+        <HomeSections home={home} />
+      ) : (
+        <div className="flex min-w-0 flex-col gap-6">
+          {home.continueWork?.source === "resume" ? <CurrentWork home={home} /> : null}
+          <GettingStarted steps={home.steps} />
+        </div>
+      )}
     </div>
   );
 }

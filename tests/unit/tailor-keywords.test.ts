@@ -153,6 +153,15 @@ describe("keywordCoverageFromText", () => {
     expect(result.missing).toEqual(["Java"]);
   });
 
+  it("treats Excel and Microsoft Excel as the same keyword", () => {
+    const result = keywordCoverageFromText(
+      "Reconciled files in Excel and loaded them to Postgres",
+      ["Microsoft Excel", "PostgreSQL", "Spark"],
+    );
+    expect(result.covered).toEqual(["Microsoft Excel", "PostgreSQL"]);
+    expect(result.missing).toEqual(["Spark"]);
+  });
+
   it("returns zero coverage when the paste is blank", () => {
     expect(keywordCoverageFromText("   ", ["SQL"])).toEqual({
       covered: [],

@@ -324,6 +324,22 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
     void flushSave();
   }
 
+  function setBulletText(entryRef: string, bulletId: string, text: string) {
+    updateContent((currentContent) => ({
+      ...currentContent,
+      entries: currentContent.entries.map((entry) =>
+        entry.ref === entryRef
+          ? {
+              ...entry,
+              bullets: entry.bullets.map((bullet) =>
+                bullet.id === bulletId ? { ...bullet, text } : bullet,
+              ),
+            }
+          : entry,
+      ),
+    }));
+  }
+
   function beginEdit(bullet: ContentBullet) {
     if (frozen || editingId) return;
     skipBlur.current = false;
@@ -516,6 +532,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         onEditKeyDown={(event, bulletId) => onEditKeyDown(event, entry.ref, bulletId)}
         onEditBlur={(bulletId) => onEditBlur(entry.ref, bulletId)}
         onMove={(bulletId, direction) => moveBullet(entry.ref, bulletId, direction)}
+        onRewrite={(bulletId, text) => setBulletText(entry.ref, bulletId, text)}
       />
     );
   }
@@ -905,6 +922,7 @@ function EntryBlock({
   onEditKeyDown,
   onEditBlur,
   onMove,
+  onRewrite,
 }: {
   entry: ContentEntry;
   facts: SnapshotEntry;
@@ -923,6 +941,7 @@ function EntryBlock({
   onEditKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>, bulletId: string) => void;
   onEditBlur: (bulletId: string) => void;
   onMove: (bulletId: string, direction: Direction) => void;
+  onRewrite: (bulletId: string, text: string) => void;
 }) {
   const title = facts.title.trim() || copy.untitled;
   const place = [facts.organization, facts.location]
@@ -992,6 +1011,7 @@ function EntryBlock({
               onEditKeyDown={(event) => onEditKeyDown(event, bullet.id)}
               onEditBlur={() => onEditBlur(bullet.id)}
               onMove={(direction) => onMove(bullet.id, direction)}
+              onRewrite={(text) => onRewrite(bullet.id, text)}
             />
           ))}
         </ul>
@@ -1020,6 +1040,7 @@ function BulletRow({
   onEditKeyDown,
   onEditBlur,
   onMove,
+  onRewrite,
 }: {
   bullet: ContentBullet;
   facts: SnapshotEntry;
@@ -1040,6 +1061,7 @@ function BulletRow({
   onEditKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onEditBlur: () => void;
   onMove: (direction: Direction) => void;
+  onRewrite: (text: string) => void;
 }) {
   const fieldId = useId();
   const sources = bullet.sourceRefs
@@ -1127,7 +1149,72 @@ function BulletRow({
           {copy.restored}
         </p>
       )}
+      {editing ? null : (
+        <RewriteCompare bullet={bullet} sources={sources} readOnly={readOnly} onRewrite={onRewrite} />
+      )}
     </li>
+  );
+}
+
+function RewriteCompare({
+  bullet,
+  sources,
+  readOnly,
+  onRewrite,
+}: {
+  bullet: ContentBullet;
+  sources: readonly { ref: string; text: string }[];
+  readOnly: boolean;
+  onRewrite: (text: string) => void;
+}) {
+  const original = (bullet.originalText ?? sources[0]?.text ?? "").trim();
+  const current = bullet.text.trim();
+  const suggestion = (
+    bullet.suggestion ??
+    (!bullet.edited && !bullet.reverted && current !== original ? current : "")
+  ).trim();
+  if (original.length === 0 || suggestion.length === 0 || suggestion === original) return null;
+  const showingOriginal = current === original;
+  const note = bullet.suggestionNote?.trim() || copy.rewriteNote;
+
+  return (
+    <details className="max-w-prose text-xs text-slate">
+      <summary className="cursor-pointer text-pine focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
+        {showingOriginal ? copy.rewriteKept : copy.rewriteShow}
+      </summary>
+      <p className="mt-1 whitespace-pre-wrap">
+        <span className="font-medium text-ink">{copy.rewriteOriginal}. </span>
+        {original}
+      </p>
+      {showingOriginal ? (
+        <p className="mt-1 whitespace-pre-wrap">
+          <span className="font-medium text-ink">{copy.rewriteSuggestion}. </span>
+          {suggestion}
+        </p>
+      ) : null}
+      <p className="mt-1">{note}</p>
+      {readOnly ? null : (
+        <div className="mt-1">
+          {showingOriginal ? (
+            <button
+              type="button"
+              className="text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              onClick={() => onRewrite(suggestion)}
+            >
+              {copy.rewriteUse}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              onClick={() => onRewrite(original)}
+            >
+              {copy.rewriteKeep}
+            </button>
+          )}
+        </div>
+      )}
+    </details>
   );
 }
 

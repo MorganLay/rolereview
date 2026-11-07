@@ -289,7 +289,7 @@ describe("seedClock", () => {
         NOW,
         ZONE,
       ),
-    ).toEqual({ applications: 1, tailoredPercent: 100, responses: 1 });
+    ).toEqual({ applications: 1, tailoredPercent: 100, tailored: 0, responses: 1 });
   });
 
   it("puts two reminders on today, and the interview inside 48 hours", () => {

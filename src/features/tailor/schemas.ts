@@ -105,6 +105,12 @@ export const ContentBullet = z.object({
   sourceRefs: z.array(z.string()),
   reverted: z.boolean().default(false),
   edited: z.boolean().default(false),
+  /** Library wording for the first cited bullet. Null on resumes saved before this field. */
+  originalText: z.string().max(RESUME_LIMITS.bullet).nullable().default(null),
+  /** Grounded tailored wording, kept after the user restores the original. */
+  suggestion: z.string().max(RESUME_LIMITS.bullet).nullable().default(null),
+  /** Why the suggestion differs from the library bullet. */
+  suggestionNote: z.string().max(RESUME_LIMITS.note).nullable().default(null),
 });
 
 export const ContentEntry = z.object({

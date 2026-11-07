@@ -109,7 +109,7 @@ describe("resumePdfModel", () => {
       "- Completed a compilers course.",
       "Skills",
       "Languages: Python, SQL",
-      "IBM Cognos",
+      "Data and Analytics: IBM Cognos",
     ]);
   });
 

@@ -6,6 +6,7 @@
 
 import type { LibrarySnapshot } from "@/features/library/schemas";
 
+import { equivalentForms } from "./equivalence";
 import type { ResumeContent } from "./schemas";
 
 export type KeywordCoverage = {
@@ -82,6 +83,14 @@ export function normalizeMatchText(value: string): string {
  * `+`, `#`, and `.` stay part of the word, so Java does not match JavaScript.
  */
 export function termAppears(haystack: string, needle: string): boolean {
+  if (needleAppears(haystack, needle)) return true;
+  for (const form of equivalentForms(needle)) {
+    if (needleAppears(haystack, form)) return true;
+  }
+  return false;
+}
+
+function needleAppears(haystack: string, needle: string): boolean {
   if (needle.length === 0) return false;
   const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const pattern = new RegExp(

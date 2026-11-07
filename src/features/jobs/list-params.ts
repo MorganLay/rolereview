@@ -115,7 +115,7 @@ export function toggledSort(
   return { sort, dir: defaultDir(sort) };
 }
 
-/** Filters behind the phone Filters button. Search and the stage stay outside it. */
+/** Filters inside the Filters control. Search and the stage stay outside that count. */
 export function activeJobFilterCount(query: JobListQuery): number {
   return [
     query.source !== null,

@@ -1,12 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { earlierBoardCue, presentBoardCard, type BoardCardRecord } from "@/features/jobs/format";
+import {
+  boardCardTitle,
+  boardLocationSummary,
+  boardPlaceLabel,
+  earlierBoardCue,
+  presentBoardCard,
+  type BoardCardRecord,
+} from "@/features/jobs/format";
 
 function card(partial: Partial<BoardCardRecord> = {}): BoardCardRecord {
   return {
     id: "job-1",
     company: "Acme",
     title: "Analyst",
+    location: null,
+    workMode: "UNKNOWN",
     status: "SAVED",
     priority: null,
     matchScore: null,
@@ -84,5 +93,44 @@ describe("presentBoardCard", () => {
       "2026-05-02",
     );
     expect(shown.deadlineNote).toBeNull();
+    expect(shown.placeLabel).toBeNull();
+  });
+});
+
+describe("boardPlaceLabel", () => {
+  it("joins a known work mode and a short place", () => {
+    expect(boardPlaceLabel("REMOTE", "Canada")).toBe("Remote · Canada");
+    expect(boardPlaceLabel("HYBRID", "  Toronto, ON  ")).toBe("Hybrid · Toronto, ON");
+  });
+
+  it("keeps a city and country, and leaves the street off", () => {
+    expect(boardLocationSummary("Virtual, 80 Aberdeen Street, Ottawa, Ontario, Canada")).toBe(
+      "Ottawa, Canada",
+    );
+    expect(
+      boardPlaceLabel("REMOTE", "Virtual, 80 Aberdeen Street, Ottawa, Ontario, Canada"),
+    ).toBe("Remote · Ottawa, Canada");
+    expect(boardLocationSummary("80 King Street")).toBeNull();
+    expect(boardLocationSummary("St. John's, NL")).toBe("St. John's, NL");
+  });
+
+  it("drops an unknown mode and a blank location", () => {
+    expect(boardPlaceLabel("UNKNOWN", "Ottawa")).toBe("Ottawa");
+    expect(boardPlaceLabel("ONSITE", "   ")).toBe("On-site");
+    expect(boardPlaceLabel("UNKNOWN", null)).toBeNull();
+    expect(boardPlaceLabel(null, "")).toBeNull();
+  });
+});
+
+describe("boardCardTitle", () => {
+  it("drops a trailing note that only restates place, mode, or timezone", () => {
+    expect(boardCardTitle("Data Engineer (Canada, EST, Remote)")).toBe("Data Engineer");
+    expect(boardCardTitle("Analyst (Remote)")).toBe("Analyst");
+  });
+
+  it("keeps a specialty or a seniority", () => {
+    expect(boardCardTitle("Product Designer (Platform)")).toBe("Product Designer (Platform)");
+    expect(boardCardTitle("Engineer (Senior, Remote)")).toBe("Engineer (Senior, Remote)");
+    expect(boardCardTitle("Data Engineer")).toBe("Data Engineer");
   });
 });

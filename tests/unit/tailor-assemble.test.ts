@@ -61,6 +61,9 @@ describe("assembleResumeContent", () => {
         sourceRefs: ["E1.B2"],
         reverted: true,
         edited: false,
+        originalText: "Cut prep time from 2 days to 3 hours.",
+        suggestion: null,
+        suggestionNote: null,
       },
       {
         id: "id-2",
@@ -69,6 +72,9 @@ describe("assembleResumeContent", () => {
         sourceRefs: ["E1.B1"],
         reverted: false,
         edited: false,
+        originalText: "Built and maintained 14 reports for a 20-person team.",
+        suggestion: null,
+        suggestionNote: null,
       },
     ]);
     expect(content.entries[1]?.bullets[0]).toMatchObject({

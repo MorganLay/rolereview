@@ -624,6 +624,118 @@ describe("validateTailorOutput", () => {
     expect(result.reverts).toBe(1);
     expect(result.output.summary).toBe("");
   });
+
+  it("G13 keeps an Excel rewrite that does not add tools", () => {
+    const source =
+      "Merge and transform data across multiple sources in Excel using key-based joins; investigate and resolve discrepancies to ensure integrity and consistency of reporting outputs.";
+    const snapshot = withBulletText("E1.B1", source);
+    const output = tailorOutput();
+    const bullet = output.entries[0]?.bullets[0];
+    if (!bullet) throw new Error("missing bullet");
+    bullet.text =
+      "Consolidated and transformed multi-source datasets using Excel and key-based joins, identifying and resolving data discrepancies to improve data quality and reporting reliability.";
+
+    const result = guard(output, snapshot);
+
+    expect(result.output.entries[0]?.bullets[0]?.text).toBe(bullet.text);
+    expect(result.output.entries[0]?.bullets[0]?.reverted).toBe(false);
+    expect(result.issues.some((issue) => issue.code === "G13")).toBe(false);
+  });
+
+  it("G13 reverts a rewrite that turns Excel joins into production ETL", () => {
+    const snapshot = withBulletText(
+      "E1.B1",
+      "Merge and transform data across multiple sources in Excel using key-based joins.",
+    );
+    const output = tailorOutput();
+    const bullet = output.entries[0]?.bullets[0];
+    if (!bullet) throw new Error("missing bullet");
+    bullet.text = "Built production ETL pipelines in Spark for the reporting team.";
+
+    const result = guard(output, snapshot);
+
+    expect(result.output.entries[0]?.bullets[0]?.reverted).toBe(true);
+    expect(result.output.entries[0]?.bullets[0]?.text).toContain("Excel");
+    expect(result.issues).toContainEqual({ code: "G13", ref: "E1.B1" });
+  });
+
+  it("G13 allows PostgreSQL when the source says Postgres", () => {
+    const snapshot = withBulletText("E1.B1", "Queried Postgres for the weekly workbook.");
+    const output = tailorOutput();
+    const bullet = output.entries[0]?.bullets[0];
+    if (!bullet) throw new Error("missing bullet");
+    bullet.text = "Queried PostgreSQL for the weekly workbook.";
+
+    const result = guard(output, snapshot);
+
+    expect(result.output.entries[0]?.bullets[0]?.reverted).toBe(false);
+    expect(result.output.entries[0]?.bullets[0]?.text).toContain("PostgreSQL");
+  });
+
+  it("G14 drops a later bullet that repeats an earlier one", () => {
+    const line = "Maintained 14 reports for a 20-person team.";
+    const snapshot = withBulletText("E1.B1", line);
+    const second = snapshot.entries
+      .flatMap((entry) => entry.bullets)
+      .find((bullet) => bullet.ref === "E1.B2");
+    if (!second) throw new Error("missing second bullet");
+    second.text = line;
+    const output = tailorOutput();
+    const entry = output.entries[0];
+    if (!entry) throw new Error("missing entry");
+    const first = entry.bullets[0];
+    if (!first) throw new Error("missing first bullet");
+    first.text = line;
+    entry.bullets[1] = {
+      sourceRefs: ["E1.B2"],
+      text: line,
+    };
+
+    const result = guard(output, snapshot);
+
+    expect(result.output.entries[0]?.bullets.map((bullet) => bullet.sourceRefs[0])).toEqual([
+      "E1.B1",
+    ]);
+    expect(result.issues).toContainEqual({ code: "G14", ref: "E1.B2" });
+  });
+
+  it("G15 marks five years of production ETL as partial when the evidence is Excel", () => {
+    const source =
+      "Merge and transform data across multiple sources in Excel using key-based joins.";
+    const snapshot = withBulletText("E1.B1", source);
+    const output = tailorOutput();
+    const bullet = output.entries[0]?.bullets[0];
+    if (!bullet) throw new Error("missing bullet");
+    bullet.text = source;
+    output.requirementMatches[0] = {
+      requirementId: "r1",
+      verdict: "met",
+      evidenceRefs: ["E1.B1"],
+      note: "The model treated the spreadsheet work as the whole requirement.",
+    };
+
+    const result = guard(output, snapshot, [
+      {
+        id: "r1",
+        text: "5+ years of production ETL experience",
+        kind: "skill",
+        importance: "must",
+      },
+      baseRequirements[1] ?? {
+        id: "r2",
+        text: "AWS certification",
+        kind: "certification",
+        importance: "nice",
+      },
+    ]);
+
+    expect(result.output.requirementMatches[0]).toMatchObject({
+      verdict: "partial",
+      evidenceRefs: ["E1.B1"],
+    });
+    expect(result.issues).toContainEqual({ code: "G15", ref: "r1" });
+    expect(result.reverts).toBe(0);
+  });
 });
 
 function birchlaneSnapshot() {

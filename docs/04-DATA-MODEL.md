@@ -304,6 +304,9 @@ export const LibrarySnapshot = z.object({
 export const ContentBullet = z.object({
   id: z.string(), text: z.string().max(400), included: z.boolean(),
   sourceRefs: z.array(z.string()), reverted: z.boolean().default(false), edited: z.boolean().default(false),
+  originalText: z.string().max(400).nullable().default(null),
+  suggestion: z.string().max(400).nullable().default(null),
+  suggestionNote: z.string().max(200).nullable().default(null),
 });
 export const ContentEntry = z.object({
   ref: z.string(),             // title/org/dates come from librarySnapshot — never stored here (D-14)

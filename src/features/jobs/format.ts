@@ -3,7 +3,7 @@ import { strings } from "@/copy/strings";
 import { deadlineUrgency } from "./dates";
 import type { JobListRecord } from "./list-params";
 import type { LatestReadyResume } from "./next-action";
-import type { JobStatusValue } from "./schemas";
+import { WORK_MODES, type JobStatusValue } from "./schemas";
 
 const copy = strings.jobs.result;
 const board = strings.jobs.board;
@@ -28,6 +28,73 @@ export function formatSalaryLabel(job: {
         ? copy.salaryPerYear
         : null;
   return [job.salaryCurrency, amount, period].filter(Boolean).join(" ");
+}
+
+const ARRANGEMENT =
+  /^(?:remote|hybrid|on-?site|onsite|in-?office|virtual|wfh|work from home)$/i;
+const STREET_SUFFIX =
+  /(?:street|avenue|road|drive|boulevard|lane|way|court|crescent|place|terrace|circle|blvd|ave|rd|dr|ln|ct|cres|pl|ter|cir|st)\.?$/i;
+const TIMEZONE =
+  /^(?:utc|gmt|[ecmpa]t|et|ct|mt|pt|est|edt|cst|cdt|mst|mdt|pst|pdt|ast|adt|nst|ndt|akst|akdt|hst)(?:\s*[+-]\s*\d{1,2}(?::\d{2})?)?$/i;
+const SENIORITY =
+  /^(?:senior|junior|staff|lead|principal|intern|internship|entry|mid|associate|contract|full-time|part-time|temporary)$/i;
+
+/**
+ * City and country, or the two place parts already stored.
+ * A street and words like "Virtual" are left off the card.
+ */
+export function boardLocationSummary(location: string | null): string | null {
+  const raw = location?.trim() ?? "";
+  if (!raw) return null;
+  const kept = raw
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0 && !ARRANGEMENT.test(part) && !isStreetPart(part));
+  if (kept.length === 0) return null;
+  if (kept.length <= 2) return kept.join(", ");
+  return `${kept[0]}, ${kept[kept.length - 1]}`;
+}
+
+/** Work mode, then a short place. Unknown mode is left out. */
+export function boardPlaceLabel(
+  workMode: (typeof WORK_MODES)[number] | null,
+  location: string | null,
+): string | null {
+  const mode =
+    workMode === "ONSITE" || workMode === "HYBRID" || workMode === "REMOTE"
+      ? copy.workModes[workMode]
+      : null;
+  const place = boardLocationSummary(location);
+  const parts = [mode, place].filter((part): part is string => part !== null);
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+/**
+ * The role, without a trailing note that only restates place, work mode, or timezone.
+ * A specialty or seniority in parentheses stays.
+ */
+export function boardCardTitle(title: string): string {
+  const match = title.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  if (!match) return title;
+  const base = match[1].trim();
+  if (!base) return title;
+  const tokens = match[2]
+    .split(/[,/]/)
+    .map((token) => token.trim())
+    .filter((token) => token.length > 0);
+  if (!tokens.some((token) => ARRANGEMENT.test(token) || TIMEZONE.test(token))) return title;
+  const rest = tokens.filter((token) => !ARRANGEMENT.test(token) && !TIMEZONE.test(token));
+  const placeOnly = rest.every((token) => isPlaceToken(token) && !SENIORITY.test(token));
+  return placeOnly ? base : title;
+}
+
+function isPlaceToken(token: string): boolean {
+  return /^[\p{L}][\p{L}\s.'-]{0,40}$/u.test(token);
+}
+
+/** A numbered line or a part that ends in a street suffix. "St. John's" stays. */
+function isStreetPart(part: string): boolean {
+  return /\d/.test(part) || STREET_SUFFIX.test(part.trim());
 }
 
 function formatAmount(value: number): string {
@@ -64,6 +131,8 @@ export type BoardCardRecord = {
   id: string;
   company: string;
   title: string;
+  location: string | null;
+  workMode: (typeof WORK_MODES)[number];
   status: JobStatusValue;
   priority: number | null;
   matchScore: number | null;
@@ -82,6 +151,7 @@ export type BoardCardDisplay = {
   id: string;
   company: string;
   title: string;
+  placeLabel: string | null;
   status: JobStatusValue;
   priority: number | null;
   matchLabel: string;
@@ -107,7 +177,8 @@ export function presentBoardCard(
   return {
     id: card.id,
     company: card.company,
-    title: card.title,
+    title: boardCardTitle(card.title),
+    placeLabel: boardPlaceLabel(card.workMode, card.location),
     status: card.status,
     priority: card.priority,
     matchLabel: card.matchScore === null ? board.emptyValue : String(card.matchScore),

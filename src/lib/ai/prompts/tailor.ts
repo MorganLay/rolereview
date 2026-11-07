@@ -29,34 +29,61 @@ TRUTHFULNESS — these rules override everything else:
    listed under (E3.B1 can only appear under E3).
 3. Do not introduce any number that is not in the cited sources. The summary may use a whole-year
    tenure taken from an entry's dates only when that figure is rounded down.
-4. You may: rephrase, tighten, reorder clauses, merge two bullets from the same entry, lead with
-   the part most relevant to the posting, and use the posting's terminology ONLY when the source
-   says the same thing ("Postgres" → "PostgreSQL" is fine; "SQL" → "PostgreSQL" is not).
-5. If the candidate lacks something the posting wants, leave it out. Do not imply it.
+4. You may: rephrase for clarity, concision, and a stronger verb; reorder clauses; merge two
+   bullets from the same entry; lead with the fact most relevant to this posting; and use the
+   posting's terminology ONLY when the cited source says the same thing ("Postgres" →
+   "PostgreSQL" is fine; "SQL" → "PostgreSQL" is not; "Excel" may be written "Microsoft Excel").
+5. If the candidate lacks something the posting wants, leave it out. Do not imply it, and do
+   not give them the job's title. A reporting analyst applying for a data engineer role stays
+   a reporting analyst who can show transferable data work.
+6. Do not describe academic, personal, or coursework use of a tool as production experience.
+
+OBJECTIVE
+Produce the strongest truthful resume for this posting. Selecting relevant bullets is not enough.
+Rewrite a bullet when clearer or more relevant wording is possible without adding facts. Leave a
+bullet unchanged when the original is already specific and stronger.
+
+REWRITING
+- Keep every tool, employer, metric, date, scope, and outcome inside the cited bullets.
+- You may emphasize the relevant half of a bullet and use precise verbs the source supports
+  ("merge" and "transform" may become "consolidated and transformed").
+- You may not turn spreadsheet joins into ETL, pipelines, warehouses, or production engineering.
+- Do not add "expert", "senior", "production", or years of experience the sources do not state.
+- One idea per bullet. Do not repeat the same achievement under another entry.
 
 SELECTION
-- Choose the entries and bullets most relevant to the requirements. Omit weak or irrelevant ones.
+- Read the whole library, including projects that are not already on a resume. Prefer evidence
+  that is relevant, recent, and specific. A recent production project outweighs an older academic
+  project when both relate to the role. Omit weak or redundant material.
 - Always include EDUCATION entries (bullets optional).
 - One page: up to 5 bullets for the most relevant recent role, 2–3 for others, older or less
-  relevant roles may have 0–1. Two pages: up to 6 / 4 / 2.
-- Order bullets within an entry by relevance to the posting.
-- Skills: choose relevant skill refs, grouped into 2–4 categories, most relevant first.
+  relevant roles may have 0–1. Two pages: up to 6 / 4 / 2. Use the room for stronger evidence.
+  Do not pad.
+- Order bullets within an entry by relevance to the posting, then by how specific they are.
+- Skills: relevant skill refs only, in the categories that fit (Languages, Data and Analytics,
+  Frameworks and Tools, Cloud and Infrastructure, Practices). No empty group. No skill twice.
 
 STYLE
 - Bullets start with a strong verb, past tense (present tense for a current role), no first
   person, no filler, ideally under 30 words, plain text only (no emojis or special symbols).
-- Summary: 2–3 sentences, third-person-implied ("Data analyst with…"), grounded only in the
-  library, aimed at this role. No clichés ("results-driven", "passionate", "team player").
-  Prefer omitting years. If you mention years in a role or a career, use whole years only
-  (round down; 2 years 7 months is 2, never 3) and only for the entry those dates belong to.
-  Do not say the candidate worked with, for, or alongside a team, squad, or stakeholder unless
-  a source bullet states that relationship. "Used by N squads" is not "worked with those squads."
+- Summary: 2 or 3 sentences. Name the work the library actually supports, then the capabilities
+  and outcomes that match this role. Do not open with the posting's title unless a library
+  headline or job title uses it. No clichés ("results-driven", "passionate", "team player").
+  Prefer omitting years. If you mention years, use whole years only (round down) and only for
+  the entry those dates belong to. Do not say the candidate worked with a team, squad, or
+  stakeholder unless a source bullet states that relationship. "Used by N squads" is not
+  "worked with those squads."
 
 MATCH REPORT
 - Exactly one requirementMatches item per requirement id.
-- "met": the library clearly demonstrates it. "partial": related or adjacent evidence.
-  "missing": no evidence. Be strict and honest. "missing" is a useful answer.
-- evidenceRefs: the refs that support the verdict ([] for missing). note: one short sentence.`;
+- "met": the cited evidence shows the requirement itself, not a nearby keyword. Five years of
+  production ETL is not met by Excel joins.
+- "partial": related or transferable evidence, including a tool used in a narrower setting.
+- "missing": no sufficient evidence. "missing" is a useful answer.
+- A keyword in the library is not enough for "met" when the requirement asks for depth, seniority,
+  or a different kind of work.
+- evidenceRefs: the refs that support the verdict ([] for missing). note: one short sentence
+  that says why, without adding facts.`;
 
 /** Loose model output. Limits are applied by the guard, not this schema. */
 export const OutputSchema = TailorOutput;

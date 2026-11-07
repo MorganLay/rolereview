@@ -35,6 +35,8 @@ export type ThisWeek = {
   applications: number;
   /** Null when no applications were sent this week. */
   tailoredPercent: number | null;
+  /** READY resumes created this week. Matches the Resume tailored activity. */
+  tailored: number;
   responses: number;
 };
 
@@ -96,30 +98,66 @@ export function pipelineCounts(jobs: readonly PipelineJob[]): Record<BoardStage,
 
 /**
  * Applications sent (`appliedAt`), the share of those with a submitted resume,
- * and responses (`firstResponseAt`). Zero applications leave the share empty.
+ * READY resumes created this week, and responses (`firstResponseAt`).
+ * Zero applications leave the share empty. The resume count is separate:
+ * tailoring a resume does not require sending the application.
  */
-export function thisWeek(jobs: readonly WeekJob[], now: Date, timeZone: string): ThisWeek {
+export function thisWeek(
+  jobs: readonly WeekJob[],
+  now: Date,
+  timeZone: string,
+  resumeCreatedAt: readonly Date[] = [],
+): ThisWeek {
   const bounds = weekBounds(now, timeZone);
   let applications = 0;
-  let tailored = 0;
+  let submitted = 0;
   let responses = 0;
 
   for (const job of jobs) {
     if (job.archived) continue;
     if (job.appliedAt && inWeek(job.appliedAt, bounds)) {
       applications += 1;
-      if (job.submittedResumeId) tailored += 1;
+      if (job.submittedResumeId) submitted += 1;
     }
     if (job.firstResponseAt && inWeek(job.firstResponseAt, bounds)) {
       responses += 1;
     }
   }
 
+  let tailored = 0;
+  for (const createdAt of resumeCreatedAt) {
+    if (inWeek(createdAt, bounds)) tailored += 1;
+  }
+
   return {
     applications,
-    tailoredPercent: applications === 0 ? null : Math.round((tailored / applications) * 100),
+    tailoredPercent: applications === 0 ? null : Math.round((submitted / applications) * 100),
+    tailored,
     responses,
   };
+}
+
+/** Zero pipeline tiles stay hidden until the search has something to report. */
+export function showDashboardSummary(input: {
+  active: number;
+  interviews: number;
+  offers: number;
+  urgent: number;
+  applications: number;
+  responses: number;
+}): boolean {
+  return (
+    input.active >= 2 ||
+    input.interviews > 0 ||
+    input.offers > 0 ||
+    input.urgent > 0 ||
+    input.applications > 0 ||
+    input.responses > 0
+  );
+}
+
+export function showThisWeek(week: ThisWeek): boolean {
+  return week.applications > 0 || week.tailored > 0 || week.responses > 0;
 }
 
 /** Newest `updatedAt` first. The same instant uses the lower id. Archived jobs are left out. */

@@ -1,7 +1,10 @@
 /**
  * Live requirement states for the match panel.
  * docs/05-AI.md → Requirement states.
- * The stored verdict is an input. The state follows the resume on screen.
+ * The stored verdict is an input. A keyword on the page does not by itself
+ * count as meeting the requirement. "met" plus included evidence is
+ * In this resume. Partial, or a keyword without a met verdict, stays
+ * Needs review. Excluded evidence can still be included from the library.
  */
 
 import type { Requirement } from "@/features/jobs/schemas";
@@ -69,10 +72,11 @@ export function requirementState(input: {
     }
   }
 
-  if (inResume) return { state: "in_resume", includeRefs: [] };
+  const verdict = effectiveVerdict(input.verdict);
+  if (inResume && verdict === "met") return { state: "in_resume", includeRefs: [] };
+  if (inResume) return { state: "needs_review", includeRefs: [] };
   if (includeRefs.length > 0) return { state: "in_library", includeRefs };
 
-  const verdict = effectiveVerdict(input.verdict);
   if (verdict === "unassessed" || verdict === "partial") {
     return { state: "needs_review", includeRefs: [] };
   }

@@ -6,8 +6,10 @@
 
 import { nanoid } from "nanoid";
 
+import { strings } from "@/copy/strings";
 import { ENTRY_KINDS, type LibrarySnapshot } from "@/features/library/schemas";
 
+import { sameWording } from "./grounding";
 import { RESUME_LIMITS, ResumeContent } from "./schemas";
 import type {
   ContentBullet,
@@ -80,21 +82,17 @@ function selectedEntry(selected: Selected, createId: () => string): ContentEntry
   const chosen = new Set<string>();
   const bullets: ContentBullet[] = [];
 
+  const sourceText = new Map(
+    selected.snapshot.bullets.map((bullet) => [bullet.ref, bullet.text]),
+  );
   for (const bullet of selected.validated.bullets) {
     for (const ref of bullet.sourceRefs) chosen.add(ref);
-    bullets.push(contentBullet(bullet, createId));
+    bullets.push(contentBullet(bullet, sourceText, createId));
   }
 
   for (const original of selected.snapshot.bullets) {
     if (chosen.has(original.ref)) continue;
-    bullets.push({
-      id: createId(),
-      text: clip(original.text, RESUME_LIMITS.bullet),
-      included: false,
-      sourceRefs: [original.ref],
-      reverted: false,
-      edited: false,
-    });
+    bullets.push(libraryBullet(original.text, [original.ref], false, createId));
   }
 
   return {
@@ -107,16 +105,51 @@ function selectedEntry(selected: Selected, createId: () => string): ContentEntry
 
 function contentBullet(
   bullet: ValidatedBullet,
+  sourceText: ReadonlyMap<string, string>,
   createId: () => string,
 ): ContentBullet {
+  const text = clip(bullet.text, RESUME_LIMITS.bullet);
+  const first = bullet.sourceRefs[0];
+  const original = first ? sourceText.get(first) ?? text : text;
+  const originalText = clip(original, RESUME_LIMITS.bullet);
+  const changed = !bullet.reverted && !sameWording(text, originalText);
   return {
     id: createId(),
-    text: clip(bullet.text, RESUME_LIMITS.bullet),
+    text,
     included: true,
     sourceRefs: bullet.sourceRefs,
     reverted: bullet.reverted,
     edited: false,
+    originalText,
+    suggestion: changed ? text : null,
+    suggestionNote: changed ? rewriteNote(bullet.sourceRefs.length) : null,
   };
+}
+
+function libraryBullet(
+  text: string,
+  sourceRefs: string[],
+  included: boolean,
+  createId: () => string,
+): ContentBullet {
+  const originalText = clip(text, RESUME_LIMITS.bullet);
+  return {
+    id: createId(),
+    text: originalText,
+    included,
+    sourceRefs,
+    reverted: false,
+    edited: false,
+    originalText,
+    suggestion: null,
+    suggestionNote: null,
+  };
+}
+
+function rewriteNote(sources: number): string {
+  return sources > 1
+    ? strings.jobs.workspace.rewriteMerged
+    : strings.jobs.workspace.rewriteNote;
 }
 
 function unselectedEntry(
@@ -127,14 +160,9 @@ function unselectedEntry(
     ref: snapshotEntry.ref,
     kind: snapshotEntry.kind,
     included: false,
-    bullets: snapshotEntry.bullets.map((bullet) => ({
-      id: createId(),
-      text: clip(bullet.text, RESUME_LIMITS.bullet),
-      included: false,
-      sourceRefs: [bullet.ref],
-      reverted: false,
-      edited: false,
-    })),
+    bullets: snapshotEntry.bullets.map((bullet) =>
+      libraryBullet(bullet.text, [bullet.ref], false, createId),
+    ),
   };
 }
 

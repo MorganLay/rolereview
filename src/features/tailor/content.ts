@@ -8,6 +8,7 @@ import type { Requirement } from "@/features/jobs/schemas";
 import { ENTRY_KINDS, type LibrarySnapshot } from "@/features/library/schemas";
 import type { ResumeTemplateId } from "@/lib/pdf/template";
 
+import { sameWording } from "./grounding";
 import {
   RESUME_LIMITS,
   type ContentBullet,
@@ -239,6 +240,9 @@ function buildEntry(
       sourceRefs: [...sourceRefs],
       reverted,
       edited: text !== baseline,
+      originalText: stored.originalText ?? original,
+      suggestion: stored.suggestion,
+      suggestionNote: stored.suggestionNote,
     });
   }
 
@@ -250,6 +254,65 @@ function buildEntry(
       included: incomingEntry.included,
       bullets,
     },
+  };
+}
+
+/**
+ * A new tailor is a new version. Wording the user edited on the previous
+ * version is copied onto the same source bullets. Include switches follow
+ * the new tailor. The new suggestion stays available beside that wording.
+ */
+export function preserveUserEdits(
+  next: ResumeContent,
+  previous: ResumeContent | null,
+  previousAi: ValidatedTailorOutput | null,
+): ResumeContent {
+  if (!previous) return next;
+  const edited = new Map<string, ContentBullet>();
+  for (const entry of previous.entries) {
+    for (const bullet of entry.bullets) {
+      if (!bullet.edited) continue;
+      edited.set(`${entry.ref}\0${sourceKey(bullet.sourceRefs)}`, bullet);
+    }
+  }
+
+  const entries = next.entries.map((entry) => ({
+    ...entry,
+    bullets: entry.bullets.map((bullet) => {
+      const kept = edited.get(`${entry.ref}\0${sourceKey(bullet.sourceRefs)}`);
+      if (!kept) return bullet;
+      const text = clipLine(kept.text);
+      const original = bullet.originalText ?? kept.originalText;
+      return {
+        ...bullet,
+        text,
+        edited: !sameWording(text, bullet.text),
+        reverted: original !== null && sameWording(text, original),
+      };
+    }),
+  }));
+
+  return {
+    ...next,
+    summary: preservedSummary(next.summary, previous, previousAi),
+    entries,
+  };
+}
+
+function preservedSummary(
+  next: ResumeContent["summary"],
+  previous: ResumeContent,
+  previousAi: ValidatedTailorOutput | null,
+): ResumeContent["summary"] {
+  if (!previousAi) return next;
+  const saved = previous.summary.text.trim();
+  const generated = clipLine(previousAi.summary, RESUME_LIMITS.summary);
+  const textEdited = saved !== generated;
+  const excluded = previous.summary.included === false;
+  if (!textEdited && !excluded) return next;
+  return {
+    text: textEdited ? clipLine(saved, RESUME_LIMITS.summary) : next.text,
+    included: excluded ? false : next.included,
   };
 }
 
@@ -310,11 +373,9 @@ function categoryKey(category: string | null): string {
   return category === null ? "\0" : category;
 }
 
-function clipLine(text: string): string {
+function clipLine(text: string, max: number = RESUME_LIMITS.bullet): string {
   const trimmed = text.trim();
-  return trimmed.length > RESUME_LIMITS.bullet
-    ? trimmed.slice(0, RESUME_LIMITS.bullet)
-    : trimmed;
+  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 }
 
 function formatClock(date: Date, timeZone: string): string | null {

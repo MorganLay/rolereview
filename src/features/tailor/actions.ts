@@ -20,7 +20,7 @@ import { db } from "@/lib/db";
 import { fail, ok, type ActionResult } from "@/lib/result";
 
 import { assembleResumeContent } from "./assemble";
-import { applyResumeEdit } from "./content";
+import { applyResumeEdit, preserveUserEdits } from "./content";
 import { TAILOR_STALE_MS } from "./status";
 import { scoreMatch } from "./score";
 import {
@@ -135,7 +135,28 @@ export async function tailorResume(
       analysis.data,
     );
     logGuard(user.id, resumeId, guard.reverts, guard.issues);
-    const content = assembleResumeContent(guard.output, serialized.snapshot);
+    const assembled = assembleResumeContent(guard.output, serialized.snapshot);
+    const previous = await db.tailoredResume.findFirst({
+      where: {
+        userId: user.id,
+        jobId: job.id,
+        status: "READY",
+        NOT: { id: resumeId },
+      },
+      orderBy: { version: "desc" },
+      select: { content: true, aiOutput: true },
+    });
+    const previousContent = previous
+      ? ResumeContent.safeParse(previous.content)
+      : null;
+    const previousAi = previous
+      ? ValidatedTailorOutput.safeParse(previous.aiOutput)
+      : null;
+    const content = preserveUserEdits(
+      assembled,
+      previousContent?.success ? previousContent.data : null,
+      previousAi?.success ? previousAi.data : null,
+    );
     const report = scoreMatch(analysis.data, guard.output.requirementMatches);
     const saved = await db.$transaction(async (tx) => {
       const updated = await tx.tailoredResume.updateMany({

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { assembleResumeContent } from "@/features/tailor/assemble";
-import { applyResumeEdit, formatSavedTime, resumeSkills } from "@/features/tailor/content";
+import {
+  applyResumeEdit,
+  formatSavedTime,
+  preserveUserEdits,
+  resumeSkills,
+} from "@/features/tailor/content";
 import type { ResumeContent } from "@/features/tailor/schemas";
 import { validateTailorOutput } from "@/features/tailor/validate";
 
@@ -265,6 +270,9 @@ describe("applyResumeEdit", () => {
       sourceRefs: ["E1.B1"],
       reverted: false,
       edited: false,
+      originalText: null,
+      suggestion: null,
+      suggestionNote: null,
     });
     expect(applyResumeEdit(added)).toMatchObject({ ok: false, issue: "bullets" });
 
@@ -366,6 +374,38 @@ describe("applyResumeEdit", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.content.entries.find((entry) => entry.ref === "E2")?.kind).toBe("PROJECT");
+  });
+});
+
+describe("preserveUserEdits", () => {
+  it("keeps edited wording and still offers the new suggestion", () => {
+    const snapshot = librarySnapshot();
+    const previousAi = validateTailorOutput(tailorOutput(), snapshot, jobAnalysis()).output;
+    const previous = assembleResumeContent(previousAi, snapshot, ids());
+    const edited = previous.entries[0]?.bullets[0];
+    if (!edited) throw new Error("missing bullet");
+    edited.text = "Kept the weekly reports current for the team.";
+    edited.edited = true;
+
+    const nextAi = validateTailorOutput(tailorOutput(), snapshot, jobAnalysis()).output;
+    const fresh = nextAi.entries[0]?.bullets[0];
+    if (!fresh) throw new Error("missing fresh bullet");
+    fresh.text = "Maintained 14 reports for the processing team.";
+    const next = assembleResumeContent(nextAi, snapshot, ids());
+    const kept = preserveUserEdits(next, previous, previousAi);
+    const bullet = kept.entries[0]?.bullets[0];
+
+    expect(bullet?.text).toBe("Kept the weekly reports current for the team.");
+    expect(bullet?.edited).toBe(true);
+    expect(bullet?.suggestion).toBe("Maintained 14 reports for the processing team.");
+  });
+
+  it("leaves a new tailor alone when the previous version was not edited", () => {
+    const snapshot = librarySnapshot();
+    const ai = validateTailorOutput(tailorOutput(), snapshot, jobAnalysis()).output;
+    const previous = assembleResumeContent(ai, snapshot, ids());
+    const next = assembleResumeContent(ai, snapshot, ids());
+    expect(preserveUserEdits(next, previous, ai)).toEqual(next);
   });
 });
 

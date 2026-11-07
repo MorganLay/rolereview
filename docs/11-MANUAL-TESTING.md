@@ -49,7 +49,7 @@ Empty library, no jobs. Getting started is on the first step.
 - Import says **Import your resume** and **Start your library from a resume. Nothing is saved until you save it to your library.** **Read resume** stays quiet until a file or enough text is there. After a resume is read, an empty library shows **Your resume has been read.** with the section counts, **Save to library**, and **Review and edit first**.
 - Jobs says **No jobs yet. Paste a job posting to accept your first job.**
 
-This is the pass for the first-run screens. Notice whether the next action is obvious, and whether the header **New job** button pulls you past the library.
+This is the pass for the first-run screens. Notice whether the next action is obvious. **New job** is not in the header, so the first screen does not offer a job before the library.
 
 ### Library
 
@@ -64,7 +64,7 @@ The sample library is in. No jobs. Step 1 is done. The next step is a job.
 Midpoint. Library, plus one saved job and no resume.
 
 - Dashboard: library and job say **Done.** The button says **Tailor your resume.** That step says **Current.**
-- The board has one card: **Lakeshore Civic**, **Product Designer**.
+- The board has one card: **Product Designer**, then **Lakeshore Civic**. Priority is three filled stars of five. The link is **Tailor resume**.
 - Open it. Status is Saved. The main button is **Tailor resume**.
 - Documents has no finished resume.
 
@@ -92,7 +92,7 @@ The full sample search. Eight jobs, interviews, contacts, reminders, an offer, a
 After the desktop pass, narrow the window to about 375 pixels wide and repeat the screen you care about.
 
 - The sidebar becomes the menu button. Dashboard, Library, Jobs, Contacts, Insights, and Settings are in that menu.
-- **New job** stays in the header.
+- **New job** is on the Jobs page, beside Board and List. The header keeps the reminders bell and the account menu.
 - The page does not scroll sideways. Text stays inside the screen.
 
 ## Public pages

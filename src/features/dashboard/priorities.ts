@@ -146,6 +146,7 @@ export type ContinueWork = {
   href: string;
   updatedAt: Date;
   nextKind: NextActionKind | null;
+  jobStatus: JobStatusValue;
 };
 
 export type ActivityEvent = {
@@ -255,6 +256,7 @@ export function continueWorking(jobs: readonly HomeJob[]): ContinueWork | null {
         href,
         updatedAt: resume.updatedAt,
         nextKind: null,
+        jobStatus: job.status,
       });
     }
     const next = jobNext(job);
@@ -268,6 +270,7 @@ export function continueWorking(jobs: readonly HomeJob[]): ContinueWork | null {
       href: next.href,
       updatedAt: job.updatedAt,
       nextKind: next.kind,
+      jobStatus: job.status,
     });
   }
   candidates.sort(compareContinue);
@@ -484,9 +487,7 @@ function documentAction(job: HomeJob): DashboardAction | null {
   if (!latest) return null;
   const resume = job.resumes.find((item) => item.id === latest.id);
   if (!resume) return null;
-  const savedUnexported = job.status === "SAVED" && !latest.exported;
-  const inProgress = job.status !== "SAVED" && !resume.submitted;
-  if (!savedUnexported && !inProgress) return null;
+  if (resume.submitted) return null;
   const href = specific(resumeWorkspaceHref(job.id, latest.id));
   if (!href) return null;
   return row(job, {

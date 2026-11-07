@@ -7,6 +7,7 @@
 import { strings } from "@/copy/strings";
 import { formatResumeDateRange } from "@/features/library/dates";
 import { ENTRY_KINDS, type LibrarySnapshot } from "@/features/library/schemas";
+import { groupedSkillLines } from "@/features/tailor/skill-groups";
 import type { ContentEntry, ResumeContent } from "@/features/tailor/schemas";
 
 const SEPARATOR = " \u00b7 ";
@@ -24,7 +25,11 @@ type SnapshotEntry = LibrarySnapshot["entries"][number];
 
 export type ResumePdfEntry = {
   title: string | null;
+  /** Organization, location, and dates, for plain text. */
   meta: string | null;
+  /** Organization and location, without the date. */
+  detail?: string | null;
+  dates?: string | null;
   url: string | null;
   bullets: string[];
 };
@@ -102,11 +107,12 @@ function entryBlock(
 ): ResumePdfEntry | null {
   if (!snapshotEntry) return null;
   const title = clean(snapshotEntry.title);
-  const metaParts = [
+  const dates = dateLabel(snapshotEntry);
+  const detailParts = [
     clean(snapshotEntry.organization),
     clean(snapshotEntry.location),
-    dateLabel(snapshotEntry),
   ].filter((part) => part !== null);
+  const metaParts = [...detailParts, dates].filter((part) => part !== null);
   const bullets = entry.bullets
     .filter((bullet) => bullet.included)
     .map((bullet) => bullet.text.replace(/\s+/g, " ").trim())
@@ -116,6 +122,8 @@ function entryBlock(
   return {
     title,
     meta: metaParts.length > 0 ? metaParts.join(SEPARATOR) : null,
+    detail: detailParts.length > 0 ? detailParts.join(SEPARATOR) : null,
+    dates,
     url,
     bullets,
   };
@@ -131,14 +139,7 @@ function dateLabel(entry: SnapshotEntry): string | null {
 }
 
 function skillLines(content: ResumeContent): string[] {
-  const lines: string[] = [];
-  for (const group of content.skills) {
-    const names = group.names.map((name) => name.trim()).filter((name) => name.length > 0);
-    if (names.length === 0) continue;
-    const category = group.category?.trim() ?? "";
-    lines.push(category.length > 0 ? `${category}: ${names.join(", ")}` : names.join(", "));
-  }
-  return lines;
+  return groupedSkillLines(content.skills);
 }
 
 function linkLine(link: LibrarySnapshot["profile"]["links"][number]): string | null {
