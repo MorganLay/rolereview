@@ -248,7 +248,7 @@ Still to look at, logged in `docs/Feedback.md` and not a task yet: Plan & billin
 
 ### Production separation
 
-**T13.4b Separate production environment.** After Phase S. The rest of T13.4: `rolerefine-prod` Supabase (Canada region), Vercel Pro, per-environment `DATABASE_URL`/Stripe keys, live Stripe + webhook, Resend domain, PostHog prod, Supabase auth URLs, a real mailing address for email (CASL), then a real purchase and refund. Until then, `www.rolerefine.ca` stays on the current shared database and test Stripe keys.
+**T13.4b Separate production environment.** After Phase S. The rest of T13.4: `rolerefine-prod` Supabase (Canada region), Vercel Pro, per-environment `DATABASE_URL`/Stripe keys, live Stripe + webhook, Resend domain, PostHog prod, Supabase auth URLs, a real mailing address for email (CASL), then a real purchase and refund. Done 2026-11-08: `www.rolerefine.ca` uses `rolerefine-prod` and live Stripe. `MAILING_ADDRESS` stays unset until there is a PO box.
 *Accept:* Production, Preview and Development use different databases and Stripe keys (`vercelProductionIssues()` reports none); a live purchase upgrades and a refund works.
 
 **T13.5a Private beta (5–10 people).** Invite a small group after Phase S and T13.4b. Free Pro. Ask each to import their real resume, tailor for 2 real postings, export, and track them, **without coaching**. Write down where they hesitate in `docs/Feedback.md`.

@@ -114,7 +114,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - T13.4b waits until TS.2–TS.5 are ticked.
 
 ## Production and launch
-- [~] **T13.4b** Separate production environment
+- [x] **T13.4b** Separate production environment
 - [ ] **T13.5a** Private beta (5–10 people)
 - [ ] **TQ.14** Behaviour test pass
 - [ ] **TQ.15** Fix what testers hit
@@ -122,6 +122,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-11-08 T13.4b:** Production uses `rolerefine-prod` in Canada on Vercel Pro, with live Stripe. A CA$32.77 charge upgraded the account to Pro; the refund and an immediate cancel returned it to Free. PostHog project 672487 is on Vercel Production. The local `.env` PostHog key stays the placeholder. `MAILING_ADDRESS` stays unset until a PO box. No new founding coupon. Deploy `fa8bea1` fixed the board-title type error that had failed the build.
 - **2026-11-07 Library variants:** Completeness names the whole profile check when only the headline is empty. Bullet advice is the strength checks, including a number and an action verb. Approved headlines, summaries, and bullet variants, chosen per job with a reason, are logged in `docs/Feedback.md`. Not a task yet.
 - **2026-11-07 Jobs board density:** Columns are 320px, about 480px tall when empty, and grow with their cards. The card title is the role, the place line drops a street, and a score reads "Match N of 100". Checked signed in. Move to… → Closed opened the close dialog and was cancelled, so the job stayed Saved. A cross-column drop was not completed.
 - **2026-11-07 Jobs board layout:** Columns are equal surfaces with a sticky header and a full-height drop area. Cards lead with the title, then the company, and the next step is a text link. Search updates as you type. Filters open from one control, and active filters are chips. New job stays beside Board and List. The header keeps the reminders bell and the account menu. Checked signed in on the board, the list, and a 375px width.
