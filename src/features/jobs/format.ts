@@ -75,10 +75,10 @@ export function boardPlaceLabel(
  */
 export function boardCardTitle(title: string): string {
   const match = title.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
-  if (!match) return title;
-  const base = match[1].trim();
-  if (!base) return title;
-  const tokens = match[2]
+  const base = match?.[1]?.trim() ?? "";
+  const note = match?.[2];
+  if (!base || note === undefined) return title;
+  const tokens = note
     .split(/[,/]/)
     .map((token) => token.trim())
     .filter((token) => token.length > 0);
