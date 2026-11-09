@@ -39,6 +39,7 @@ import {
 } from "../analyses-left";
 import { subscribeNewJobVisit } from "./new-job-link";
 import { JOB_LIMITS, JOB_SOURCES } from "../schemas";
+import { sourceFromPostingUrl } from "../source-from-url";
 
 const copy = strings.jobs;
 const NONE = "NONE";
@@ -346,7 +347,17 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
             inputMode="url"
             autoComplete="off"
             value={url}
-            onChange={(event) => setUrl(event.target.value)}
+            onChange={(event) => {
+              const next = event.target.value;
+              setUrl(next);
+              const detected = sourceFromPostingUrl(next);
+              if (!detected) return;
+              setSource((current) =>
+                current === NONE || current === "LINKEDIN" || current === "INDEED"
+                  ? detected
+                  : current,
+              );
+            }}
             className="h-11 min-h-11"
             aria-invalid={Boolean(urlError)}
             aria-describedby={`${formId}-url-hint`}
