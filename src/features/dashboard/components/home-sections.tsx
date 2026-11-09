@@ -135,7 +135,7 @@ function LibraryEmpty({ paired }: { paired: boolean }) {
   );
 }
 
-function Continue({ work }: { work: ContinueWork }) {
+export function Continue({ work }: { work: ContinueWork }) {
   const status = strings.jobs.detail.statuses[work.jobStatus];
   return (
     <section

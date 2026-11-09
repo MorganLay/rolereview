@@ -4,6 +4,7 @@ import {
   addCalendarDays,
   onboardingComplete,
   onboardingSteps,
+  showGettingStarted,
   pipelineCounts,
   recentJobs,
   thisWeek,
@@ -178,6 +179,9 @@ describe("onboardingSteps", () => {
     });
     expect(onboardingComplete(ready)).toBe(true);
     expect(onboardingComplete([])).toBe(false);
+    expect(showGettingStarted(false, steps)).toBe(true);
+    expect(showGettingStarted(false, ready)).toBe(false);
+    expect(showGettingStarted(true, steps)).toBe(false);
   });
 });
 

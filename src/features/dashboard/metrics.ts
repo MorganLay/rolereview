@@ -185,6 +185,11 @@ export function onboardingComplete(steps: readonly OnboardingStep[]): boolean {
   return steps.length > 0 && steps.every((step) => step.done);
 }
 
+/** The checklist stays up until the four steps are done. Finishing them switches to the search dashboard. */
+export function showGettingStarted(completed: boolean, steps: readonly OnboardingStep[]): boolean {
+  return !completed && !onboardingComplete(steps);
+}
+
 function emptyCounts(): Record<BoardStage, number> {
   return Object.fromEntries(BOARD_STAGES.map((stage) => [stage, 0])) as Record<BoardStage, number>;
 }

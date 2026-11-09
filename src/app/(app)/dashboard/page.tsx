@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 
 import { strings } from "@/copy/strings";
-import { HomeSections } from "@/features/dashboard/components/home-sections";
-import { onboardingComplete } from "@/features/dashboard/metrics";
+import { GettingStarted } from "@/features/dashboard/components/getting-started";
+import { Continue, HomeSections } from "@/features/dashboard/components/home-sections";
+import { showGettingStarted } from "@/features/dashboard/metrics";
 import { completeOnboarding } from "@/features/dashboard/onboarding";
 import { getDashboard } from "@/features/dashboard/queries";
 import { requireUser } from "@/lib/auth";
@@ -20,9 +21,9 @@ export default async function DashboardPage() {
   await connection();
   const user = await requireUser();
   const home = await getDashboard(user.id);
-  const ready = onboardingComplete(home.steps);
+  const setup = showGettingStarted(home.onboardingCompleted, home.steps);
   const justCompleted =
-    !home.onboardingCompleted && ready ? await completeOnboarding(user.id) : false;
+    !home.onboardingCompleted && !setup ? await completeOnboarding(user.id) : false;
   const completedAt = home.onboardingCompletedAt?.getTime() ?? null;
   const finishedThisVisit =
     justCompleted ||
@@ -41,7 +42,18 @@ export default async function DashboardPage() {
           {strings.pages.dashboard.success}
         </p>
       ) : null}
-      <HomeSections home={home} />
+      {setup ? (
+        home.continueWork?.kind === "tailoring" ? (
+          <div className="grid items-stretch gap-4 lg:grid-cols-2">
+            <GettingStarted steps={home.steps} work={home.continueWork} />
+            <Continue work={home.continueWork} />
+          </div>
+        ) : (
+          <GettingStarted steps={home.steps} work={home.continueWork} />
+        )
+      ) : (
+        <HomeSections home={home} />
+      )}
     </div>
   );
 }

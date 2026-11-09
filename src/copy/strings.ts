@@ -850,6 +850,23 @@ export const strings = {
       remindersEmpty: "Nothing due today.",
       interviewsEmpty: "No interviews in the next 48 hours.",
       success: "You’re set up. This page now shows your search at a glance.",
+      gettingStarted: "Getting started",
+      setupTitle: "Set up your job search.",
+      setupBody: "Tailored resumes use only your real experience.",
+      stepDone: "Done",
+      stepCurrent: "Current",
+      steps: {
+        library: "Build your library",
+        job: "Add a job",
+        tailor: "Tailor your resume",
+        export: "Export it",
+      },
+      stepPurpose: {
+        library: "Add the work you have actually done.",
+        job: "Paste one posting to tailor for.",
+        tailor: "Write the resume from your library.",
+        export: "Download it when it is ready to send.",
+      },
       startTitle: "Found an interesting role?",
       startBody:
         "Add a job posting, analyze its requirements, and tailor your resume using your saved experience.",

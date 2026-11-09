@@ -43,7 +43,7 @@ Work down the list. After each Load, use the links on `/dev` (Dashboard, Library
 Empty library, no jobs.
 
 - Dashboard says **Dashboard** and **Your job search, at a glance.**
-- The card is **Start with your experience.** **Import resume** is the strong action. **New job** is on that card as well as in the header. **Add manually** opens Library, which says **Your library is empty**, with **Import a resume** and **Add manually**.
+- The card is **Getting started**, **Set up your job search.** The current step is **Build your library**, with **Add the work you have actually done.** The button is **Build your library**. It opens Library, which says **Your library is empty**, with **Import a resume** and **Add manually**.
 - There is no application count and no attention list.
 - Import says **Import your resume** and **Start your library from a resume. Nothing is saved until you save it to your library.** **Read resume** stays quiet until a file or enough text is there. After a resume is read, an empty library shows **Your resume has been read.** with the section counts, **Save to library**, and **Review and edit first**.
 - Jobs says **No jobs yet. Paste a job posting to accept your first job.** The empty board’s **New job** opens a blank posting. The toolbar does not add another one.
@@ -54,7 +54,7 @@ This is the pass for the first-run screens. Notice whether the next action is ob
 
 The sample library is in. No jobs.
 
-- Dashboard: **Found an interesting role?** with **New job**. **Your library** gives one quality line and **Improve library** or **Open library**. There is no application count.
+- Dashboard: **Build your library** says **Done.** The current step is **Add a job**, with **Paste one posting to tailor for.** The button is **Add a job**. There is no application count.
 - Library shows the sample roles, projects, degree, and skills. The empty card is gone.
 - Jobs is still the empty board.
 
@@ -62,7 +62,7 @@ The sample library is in. No jobs.
 
 Midpoint. Library, plus one saved job and no resume.
 
-- Dashboard: **Continue where you left off** names Product Designer at Lakeshore Civic. The button is **Tailor resume**. **Found an interesting role?** is there too, with **New job**.
+- Dashboard: library and job say **Done.** The current step is **Tailor your resume**. The button opens that job’s documents.
 - The board has one card: **Product Designer**, then **Lakeshore Civic**. Priority is three filled stars of five. The link is **Tailor resume**.
 - Open it. Status is Saved. The main button is **Tailor resume**.
 - Documents has no finished resume.
@@ -73,7 +73,7 @@ Do not tailor unless you mean to. A real tailor spends a model call. This snapsh
 
 The same job, with one tailored resume that has not been exported.
 
-- Dashboard: **Continue where you left off** names that role. The button is **Review resume** and opens it. The card stays compact. It is not the whole page.
+- Dashboard: the first three steps say **Done.** The current step is **Export it**. The button opens that resume. The checklist is still the page.
 - The job’s main button is **Review resume**. It opens that resume.
 - Opening it does not count as an export. Exporting does, and it can finish setup. Leave export alone if you still want this snapshot.
 
