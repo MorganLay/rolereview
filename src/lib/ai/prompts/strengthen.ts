@@ -23,12 +23,15 @@ export const DiscoverSchema = z.object({
 });
 
 export const DRAFT_SYSTEM = `You draft one resume bullet from answers the person confirmed. Confirmed answers are facts.
+A line that begins with "Confirmed:" is something they said yes to. If it includes "Detail:", that detail is authoritative.
+Use the confirmed facts. Do not ignore them in favour of unrelated saved library lines.
 Anything they did not confirm is not a fact. Do not add a tool, employer, number, or duty they did not confirm
 and that is not already in the saved library.
 
 If one or two short follow-up questions are needed before a bullet would be honest, return those
 questions and set text to null. Otherwise set followUps to an empty list and write one bullet.
-The bullet uses only confirmed answers and saved library text. why is one sentence.`;
+The bullet uses confirmed answers first, then saved library text only to fill in names and context
+already stored. why is one sentence.`;
 
 export const DraftSchema = z.object({
   followUps: z.array(z.string()),

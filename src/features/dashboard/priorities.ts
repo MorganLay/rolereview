@@ -20,8 +20,15 @@
  * no open follow-up, thank-you, or custom reminder. A document is the newest
  * ready resume that is unfinished: on a Saved job it is not exported, and on
  * any other open job it has not been submitted.
+ *
+ * The dashboard attention list drops documents, and it drops the undated
+ * "follow up" row on Applied or Screening unless 30 days have passed with
+ * no response. Continue where you left off is a different choice: a resume
+ * still being written, then unfinished work on a Saved job. A job that is
+ * already Applied is not asked to review its resume.
  */
 
+import { RECENT_JOB_LIMIT } from "@/features/dashboard/metrics";
 import {
   calendarDateInTimeZone,
   daysUntilDeadline,
@@ -32,7 +39,6 @@ import {
   newestReadyResume,
   nextAction,
   type NextAction,
-  type NextActionKind,
 } from "@/features/jobs/next-action";
 import { isClosedJobStatus, type JobStatusValue } from "@/features/jobs/schemas";
 import { compareTimelineEvents } from "@/features/tracking/events";
@@ -113,6 +119,8 @@ export type HomeJob = {
   reminders: readonly HomeReminder[];
   interviews: readonly HomeInterview[];
   resumes: readonly HomeResume[];
+  /** Newest PENDING resume that is still inside the tailor window. */
+  tailoringUpdatedAt: Date | null;
 };
 
 export type DashboardAction = {
@@ -137,16 +145,29 @@ export type DashboardSummary = {
   urgent: number;
 };
 
+/** What the continuation row asks the person to do. */
+export type ContinueKind = "tailoring" | "review" | "tailor" | "preview" | "open";
+
 export type ContinueWork = {
   id: string;
-  source: "resume" | "job";
+  kind: ContinueKind;
   jobId: string;
   company: string;
   title: string;
   href: string;
   updatedAt: Date;
-  nextKind: NextActionKind | null;
   jobStatus: JobStatusValue;
+};
+
+export type RecentApplication = {
+  id: string;
+  company: string;
+  title: string;
+  status: JobStatusValue;
+  href: string;
+  updatedAt: Date;
+  appliedAt: Date | null;
+  deadline: string | null;
 };
 
 export type ActivityEvent = {
@@ -234,47 +255,78 @@ export function dashboardActions(
   return actions;
 }
 
+const CONTINUE_RANK: Record<ContinueKind, number> = {
+  tailoring: 0,
+  review: 1,
+  tailor: 2,
+  preview: 3,
+  open: 4,
+};
+
 /**
- * The ready resume that has not been submitted, or the open job, with the
- * latest update. The same instant keeps the resume. A job is included only
- * when it has a specific next step.
+ * One place to resume. A resume that is still being written comes first.
+ * After that, only a Saved job: review an unexported resume, tailor one,
+ * preview an exported one, or open a posting whose analysis is not ready.
+ * The same rank uses the latest update, then the lower id.
+ * Applied and later stages are not asked to review an unsubmitted resume.
  */
 export function continueWorking(jobs: readonly HomeJob[]): ContinueWork | null {
-  const candidates: ContinueWork[] = [];
+  const candidates: RankedContinue[] = [];
   for (const job of jobs) {
-    if (!isOpenJob(job)) continue;
-    for (const resume of job.resumes) {
-      if (resume.submitted || resume.id.length === 0) continue;
-      const href = resumeWorkspaceHref(job.id, resume.id);
-      if (!isSpecificJobHref(href)) continue;
-      candidates.push({
-        id: `resume:${resume.id}`,
-        source: "resume",
-        jobId: job.id,
-        company: job.company,
-        title: job.title,
-        href,
-        updatedAt: resume.updatedAt,
-        nextKind: null,
-        jobStatus: job.status,
-      });
-    }
-    const next = jobNext(job);
-    if (!next || !isSpecificJobHref(next.href)) continue;
-    candidates.push({
-      id: `job:${job.id}`,
-      source: "job",
-      jobId: job.id,
-      company: job.company,
-      title: job.title,
-      href: next.href,
-      updatedAt: job.updatedAt,
-      nextKind: next.kind,
-      jobStatus: job.status,
-    });
+    const candidate = continueCandidate(job);
+    if (candidate) candidates.push(candidate);
   }
   candidates.sort(compareContinue);
-  return candidates[0] ?? null;
+  const picked = candidates[0];
+  if (!picked) return null;
+  return {
+    id: picked.id,
+    kind: picked.kind,
+    jobId: picked.jobId,
+    company: picked.company,
+    title: picked.title,
+    href: picked.href,
+    updatedAt: picked.updatedAt,
+    jobStatus: picked.jobStatus,
+  };
+}
+
+/**
+ * Deadlines, offers, interviews, and real follow-ups. An unfinished resume
+ * stays on Continue. An Applied or Screening job with no reminder is listed
+ * only when the application is stale.
+ */
+export function attentionItems(actions: readonly DashboardAction[]): DashboardAction[] {
+  return actions.filter((action) => {
+    if (action.kind === "document") return false;
+    if (action.reason.type === "followUpNext" && !action.reason.stale) return false;
+    return true;
+  });
+}
+
+/** One row per job, newest update first. Archived jobs are left out. */
+export function recentApplications(
+  jobs: readonly HomeJob[],
+  limit = RECENT_JOB_LIMIT,
+): RecentApplication[] {
+  return [...jobs]
+    .filter((job) => !job.archived)
+    .sort((a, b) => {
+      const byTime = b.updatedAt.getTime() - a.updatedAt.getTime();
+      if (byTime !== 0) return byTime;
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    })
+    .slice(0, limit)
+    .map((job) => ({
+      id: job.id,
+      company: job.company,
+      title: job.title,
+      status: job.status,
+      href: `/jobs/${encodeURIComponent(job.id)}`,
+      updatedAt: job.updatedAt,
+      appliedAt: job.appliedAt,
+      deadline: job.deadline,
+    }));
 }
 
 /** Newest timeline events. Archived jobs are left out. The same instant uses the timeline order. */
@@ -575,10 +627,77 @@ function row(
   };
 }
 
-function compareContinue(a: ContinueWork, b: ContinueWork): number {
+type RankedContinue = ContinueWork & { rank: number };
+
+function continueCandidate(job: HomeJob): RankedContinue | null {
+  if (!isOpenJob(job)) return null;
+  if (job.tailoringUpdatedAt) {
+    const href = specific(jobTabHref(job.id, "documents"));
+    if (!href) return null;
+    return ranked(job, {
+      id: `tailoring:${job.id}`,
+      kind: "tailoring",
+      href,
+      updatedAt: job.tailoringUpdatedAt,
+    });
+  }
+  if (job.status !== "SAVED") return null;
+
+  const next = jobNext(job);
+  if (next?.kind === "review" || next?.kind === "tailor" || next?.kind === "preview") {
+    const href = specific(next.href);
+    if (!href) return null;
+    return ranked(job, {
+      id: `${next.kind}:${job.id}`,
+      kind: next.kind,
+      href,
+      updatedAt: next.kind === "review" ? reviewUpdatedAt(job) : job.updatedAt,
+    });
+  }
+
+  return ranked(job, {
+    id: `open:${job.id}`,
+    kind: "open",
+    href: `/jobs/${encodeURIComponent(job.id)}`,
+    updatedAt: job.updatedAt,
+  });
+}
+
+function reviewUpdatedAt(job: HomeJob): Date {
+  const latest = newestReadyResume(
+    job.resumes
+      .filter((resume) => resume.id.length > 0)
+      .map((resume) => ({
+        id: resume.id,
+        version: resume.version,
+        exported: resume.exported,
+      })),
+  );
+  const resume = latest ? job.resumes.find((item) => item.id === latest.id) : undefined;
+  return resume?.updatedAt ?? job.updatedAt;
+}
+
+function ranked(
+  job: HomeJob,
+  partial: { id: string; kind: ContinueKind; href: string; updatedAt: Date },
+): RankedContinue {
+  return {
+    id: partial.id,
+    kind: partial.kind,
+    jobId: job.id,
+    company: job.company,
+    title: job.title,
+    href: partial.href,
+    updatedAt: partial.updatedAt,
+    jobStatus: job.status,
+    rank: CONTINUE_RANK[partial.kind],
+  };
+}
+
+function compareContinue(a: RankedContinue, b: RankedContinue): number {
+  if (a.rank !== b.rank) return a.rank - b.rank;
   const byTime = b.updatedAt.getTime() - a.updatedAt.getTime();
   if (byTime !== 0) return byTime;
-  if (a.source !== b.source) return a.source === "resume" ? -1 : 1;
   if (a.id === b.id) return 0;
   return a.id < b.id ? -1 : 1;
 }

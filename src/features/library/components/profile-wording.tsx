@@ -18,11 +18,13 @@ const copy = strings.library.assist;
 export function ProfileWording({
   kind,
   wordings,
+  defaultOpen = false,
 }: {
   kind: "HEADLINE" | "SUMMARY";
   wordings: readonly WordingView[];
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [pending, startTransition] = useTransition();
   const rows = wordings.filter((item) => item.kind === kind && item.jobId === null);
   const label = kind === "HEADLINE" ? copy.headlines : copy.summaries;
@@ -46,11 +48,11 @@ export function ProfileWording({
   }
 
   return (
-    <div className="grid gap-1">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="grid gap-1.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <button
           type="button"
-          className="text-xs text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="text-[0.8125rem] text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           aria-expanded={open}
           onClick={() => setOpen((value) => !value)}
         >
@@ -59,7 +61,7 @@ export function ProfileWording({
         </button>
         <button
           type="button"
-          className="text-xs text-slate underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60"
+          className="text-[0.8125rem] text-slate underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60"
           disabled={pending}
           onClick={suggest}
         >
@@ -68,20 +70,24 @@ export function ProfileWording({
       </div>
       {open ? (
         rows.length === 0 ? (
-          <p className="text-xs text-slate">{copy.noneYet}</p>
+          <p className="text-[0.8125rem] text-slate">{copy.noneYet}</p>
         ) : (
-          <ul className="grid gap-2 border-t border-line pt-2">
+          <ul className="grid gap-2.5 border-t border-line pt-2.5">
             {rows.map((item) => (
-              <li key={item.id}>
-                <p className="text-sm text-ink">{item.text}</p>
-                <p className="text-xs text-slate">
-                  {item.status === "PROPOSED" ? item.reason : item.isDefault ? copy.default : copy.approved}
+              <li key={item.id} className="grid gap-1">
+                <p className="text-sm leading-relaxed text-ink">{item.text}</p>
+                <p className="text-[0.75rem] text-slate">
+                  {item.status === "PROPOSED"
+                    ? item.reason
+                    : item.isDefault
+                      ? copy.default
+                      : copy.approved}
                 </p>
                 <div className="mt-1 flex flex-wrap gap-3">
                   {item.isDefault ? null : (
                     <button
                       type="button"
-                      className="text-xs text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60"
+                      className="text-[0.8125rem] text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60"
                       disabled={pending}
                       onClick={() => {
                         startTransition(async () => {
@@ -103,7 +109,7 @@ export function ProfileWording({
                   )}
                   <button
                     type="button"
-                    className="text-xs text-slate underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60"
+                    className="text-[0.8125rem] text-slate underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60"
                     disabled={pending}
                     onClick={() => {
                       startTransition(async () => {

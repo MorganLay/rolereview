@@ -67,13 +67,16 @@ test.describe("happy path", () => {
 
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 30_000 });
     await expect(
-      page.getByRole("heading", { name: copy.pages.dashboard.setupTitle }),
+      page.getByRole("heading", { name: copy.pages.dashboard.startTitle }),
     ).toBeVisible();
 
-    await page.getByRole("link", { name: copy.pages.dashboard.steps.job, exact: true }).click();
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: copy.actions.newJob, exact: true })
+      .click();
     await expect(page).toHaveURL(/\/jobs\/new/, { timeout: 15_000 });
     await page.getByLabel(copy.jobs.postingLabel).fill(posting);
-    await page.getByRole("button", { name: copy.actions.addJob }).click();
+    await page.getByRole("button", { name: copy.jobs.submit }).click();
     await expect(page).toHaveURL(/\/jobs\/[0-9a-f-]+/i, { timeout: AI_TIMEOUT_MS });
     await expect(page.getByRole("button", { name: copy.jobs.result.retry })).toHaveCount(0);
 

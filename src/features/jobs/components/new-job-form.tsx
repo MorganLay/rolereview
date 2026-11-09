@@ -9,6 +9,7 @@ import {
   useState,
   type ChangeEvent,
   type FormEvent,
+  type KeyboardEvent,
 } from "react";
 import { useRouter } from "next/navigation";
 import { CheckIcon, Star } from "lucide-react";
@@ -38,7 +39,9 @@ import {
   rememberAnalyses,
 } from "../analyses-left";
 import { subscribeNewJobVisit } from "./new-job-link";
+import { postingStatus } from "../posting-status";
 import { JOB_LIMITS, JOB_SOURCES } from "../schemas";
+import { sourceFromPostingUrl } from "../source-from-url";
 
 const copy = strings.jobs;
 const NONE = "NONE";
@@ -51,11 +54,13 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
   const router = useRouter();
   const formId = useId();
   const [posting, setPosting] = useState("");
+  const [postingTouched, setPostingTouched] = useState(false);
   const [url, setUrl] = useState("");
   const [deadline, setDeadline] = useState("");
   const [source, setSource] = useState<string>(NONE);
   const [priority, setPriority] = useState<number | null>(null);
   const [fields, setFields] = useState<FieldErrors>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
   const [stage, setStage] = useState(0);
   const [analysesAdjust, setAnalysesAdjust] = useState(() =>
@@ -68,6 +73,7 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
   const busy = useRef(false);
   const live = useRef(true);
   const postingRef = useRef<HTMLTextAreaElement>(null);
+  const readingTitleRef = useRef<HTMLHeadingElement>(null);
   const scrollPosting = useRef(false);
   const draftGeneration = useRef(0);
   const resetDraft = useCallback(() => {
@@ -75,11 +81,13 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
     busy.current = false;
     scrollPosting.current = false;
     setPosting("");
+    setPostingTouched(false);
     setUrl("");
     setDeadline("");
     setSource(NONE);
     setPriority(null);
     setFields({});
+    setSubmitError(null);
     setReading(false);
     setStage(0);
   }, []);
@@ -126,9 +134,20 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
     return () => window.clearInterval(id);
   }, [reading]);
 
+  useEffect(() => {
+    if (!reading) return;
+    readingTitleRef.current?.focus();
+  }, [reading]);
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (busy.current) return;
+    const count = posting.trim().length;
+    const ready = count >= JOB_LIMITS.postingMin && count <= JOB_LIMITS.postingMax;
+    if (!ready) {
+      setPostingTouched(true);
+      return;
+    }
     if (analysesLeft <= 0) {
       openUpgradeModal({ kind: "quota", meter: "ANALYZE" });
       return;
@@ -140,6 +159,7 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
     const visibleAtSubmit = analysesLeft;
     busy.current = true;
     setFields({});
+    setSubmitError(null);
     setStage(0);
     setReading(true);
     try {
@@ -166,6 +186,7 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
           setFields(result.error.fields ?? {});
           return;
         }
+        setSubmitError(copy.saveFailed);
         toast.error(copy.saveFailed);
         return;
       }
@@ -186,6 +207,7 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
     } catch {
       if (!live.current || draftGeneration.current !== generation) return;
       setReading(false);
+      setSubmitError(copy.saveFailed);
       toast.error(copy.saveFailed);
     } finally {
       if (draftGeneration.current === generation) busy.current = false;
@@ -214,7 +236,12 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
             <span className="import-read-arc absolute inset-0 rounded-full border-2 border-transparent border-t-pine dark:border-t-pine-300" />
           </span>
           <div className="min-w-0">
-            <h2 id={`${formId}-reading`} className="text-base font-medium text-ink">
+            <h2
+              ref={readingTitleRef}
+              id={`${formId}-reading`}
+              tabIndex={-1}
+              className="text-base font-medium text-ink outline-none"
+            >
               {copy.reading}
             </h2>
             <p className="mt-1 text-sm text-slate">{copy.readingHint}</p>
@@ -263,18 +290,23 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
   const deadlineError = fieldMessage(fields, "deadline");
   const sourceError = fieldMessage(fields, "source");
   const priorityError = fieldMessage(fields, "priority");
-  const lengthMessage =
-    count > JOB_LIMITS.postingMax
-      ? copy.errors.postingLong
-      : count > 0 && count < JOB_LIMITS.postingMin
-        ? copy.errors.postingShort
-        : null;
+  const status = postingStatus(
+    count,
+    postingTouched || Boolean(postingError),
+  );
   const postingReady =
     count >= JOB_LIMITS.postingMin && count <= JOB_LIMITS.postingMax;
+  const postingAlert =
+    postingError && !status.text.includes(postingError) ? postingError : null;
   const postingDescribedBy = [
-    `${formId}-posting-hint`,
-    `${formId}-posting-count`,
-    lengthMessage ? `${formId}-posting-length` : null,
+    `${formId}-posting-status`,
+    postingAlert ? `${formId}-posting-error` : null,
+  ]
+    .filter((id) => id !== null)
+    .join(" ");
+  const buttonDescribedBy = [
+    postingReady ? null : `${formId}-posting-status`,
+    submitError ? `${formId}-submit-error` : null,
   ]
     .filter((id) => id !== null)
     .join(" ");
@@ -282,60 +314,50 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
   return (
     <form
       onSubmit={onSubmit}
-      className="overflow-hidden rounded-card border border-line bg-surface"
+      noValidate
+      className="rounded-card border border-line bg-surface"
     >
       <div className="flex flex-col gap-2 p-4 sm:p-5">
         <div className="flex items-baseline justify-between gap-3">
-          <Label htmlFor={`${formId}-posting`}>{copy.postingLabel}</Label>
+          <Label htmlFor={`${formId}-posting`} className="text-base">
+            {copy.postingLabel}
+          </Label>
           <p className="text-right text-xs text-slate">{copy.analysesLeft(analysesLeft)}</p>
         </div>
-        <div className="relative">
-          <Textarea
-            ref={postingRef}
-            id={`${formId}-posting`}
-            value={posting}
-            onChange={(event) => onPostingChange(event)}
-            placeholder={copy.postingPlaceholder}
-            rows={8}
-            className="field-sizing-fixed max-h-56 min-h-44 resize-none overflow-y-auto pb-8 sm:max-h-72 sm:min-h-52 lg:max-h-80 lg:min-h-64"
-            required
-            aria-invalid={Boolean(postingError) || count > JOB_LIMITS.postingMax}
-            aria-describedby={postingDescribedBy}
-          />
-          <p
-            id={`${formId}-posting-count`}
-            className={cn(
-              "pointer-events-none absolute right-2.5 bottom-2 bg-surface px-1 text-xs tabular-nums",
-              count > JOB_LIMITS.postingMax ? "text-destructive" : "text-slate",
-            )}
-          >
-            {copy.postingCount(count)}
-          </p>
-        </div>
-        <p id={`${formId}-posting-hint`} className="text-xs text-slate">
-          {copy.postingHint}
+        <Textarea
+          ref={postingRef}
+          id={`${formId}-posting`}
+          value={posting}
+          onChange={onPostingChange}
+          onBlur={() => setPostingTouched(true)}
+          placeholder={copy.postingPlaceholder}
+          rows={8}
+          className="field-sizing-fixed max-h-[min(32rem,70dvh)] min-h-[200px] resize-y overflow-y-auto px-3 py-3 leading-6 md:min-h-[260px]"
+          required
+          aria-invalid={status.invalid || Boolean(postingAlert)}
+          aria-describedby={postingDescribedBy}
+        />
+        <p
+          id={`${formId}-posting-status`}
+          className={cn(
+            "min-h-5 text-xs leading-5",
+            status.invalid ? "text-destructive" : "text-slate",
+          )}
+        >
+          {status.text}
         </p>
-        {lengthMessage ? (
-          <p
-            id={`${formId}-posting-length`}
-            className={
-              count > JOB_LIMITS.postingMax
-                ? "text-sm text-destructive"
-                : "text-sm text-slate"
-            }
-          >
-            {lengthMessage}
-          </p>
-        ) : null}
-        {postingError && postingError !== lengthMessage ? (
-          <FieldAlert message={postingError} />
+        <p className="sr-only" aria-live="polite">
+          {status.live}
+        </p>
+        {postingAlert ? (
+          <FieldAlert id={`${formId}-posting-error`} message={postingAlert} />
         ) : null}
       </div>
 
       <div className="flex flex-col gap-5 border-t border-line p-4 sm:p-5">
         <div>
           <h2 className="text-base font-medium text-ink">{copy.detailsHeading}</h2>
-          <p className="mt-1 text-sm text-slate">{copy.detailsBody}</p>
+          <p className="mt-1 text-sm leading-relaxed text-slate">{copy.detailsBody}</p>
         </div>
 
         <div className="grid gap-1.5">
@@ -346,42 +368,61 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
             inputMode="url"
             autoComplete="off"
             value={url}
-            onChange={(event) => setUrl(event.target.value)}
+            onChange={(event) => {
+              const next = event.target.value;
+              setUrl(next);
+              const detected = sourceFromPostingUrl(next);
+              if (!detected) return;
+              setSource((current) =>
+                current === NONE || current === "LINKEDIN" || current === "INDEED"
+                  ? detected
+                  : current,
+              );
+            }}
             className="h-11 min-h-11"
             aria-invalid={Boolean(urlError)}
-            aria-describedby={`${formId}-url-hint`}
+            aria-describedby={
+              urlError ? `${formId}-url-hint ${formId}-url-error` : `${formId}-url-hint`
+            }
           />
-          <p id={`${formId}-url-hint`} className="text-xs text-slate">
+          <p id={`${formId}-url-hint`} className="text-xs leading-5 text-slate">
             {copy.urlSaved}
           </p>
-          {urlError ? <FieldAlert message={urlError} /> : null}
+          {urlError ? <FieldAlert id={`${formId}-url-error`} message={urlError} /> : null}
         </div>
 
-        <div className="grid items-start gap-5 lg:grid-cols-2">
-          <div className="grid gap-1.5">
+        <div className="grid items-start gap-5 md:grid-cols-2">
+          <div className="grid min-w-0 gap-1.5">
             <Label htmlFor={`${formId}-deadline`}>{copy.deadlineLabel}</Label>
             <Input
               id={`${formId}-deadline`}
               type="date"
               value={deadline}
               onChange={(event) => setDeadline(event.target.value)}
-              className="h-11 min-h-11"
+              className="h-11 min-h-11 w-full min-w-0 max-w-full"
               aria-invalid={Boolean(deadlineError)}
-              aria-describedby={`${formId}-deadline-hint`}
+              aria-describedby={
+                deadlineError
+                  ? `${formId}-deadline-hint ${formId}-deadline-error`
+                  : `${formId}-deadline-hint`
+              }
             />
-            <p id={`${formId}-deadline-hint`} className="text-xs text-slate">
+            <p id={`${formId}-deadline-hint`} className="text-xs leading-5 text-slate">
               {copy.deadlineHint}
             </p>
-            {deadlineError ? <FieldAlert message={deadlineError} /> : null}
+            {deadlineError ? (
+              <FieldAlert id={`${formId}-deadline-error`} message={deadlineError} />
+            ) : null}
           </div>
 
-          <div className="grid gap-1.5">
+          <div className="grid min-w-0 gap-1.5">
             <Label htmlFor={`${formId}-source`}>{copy.sourceLabel}</Label>
             <Select value={source} onValueChange={setSource}>
               <SelectTrigger
                 id={`${formId}-source`}
-                className="h-11 min-h-11 w-full"
+                className="h-11 min-h-11 w-full text-base md:text-sm"
                 aria-invalid={Boolean(sourceError)}
+                aria-describedby={sourceError ? `${formId}-source-error` : undefined}
               >
                 <SelectValue />
               </SelectTrigger>
@@ -394,7 +435,9 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
                 ))}
               </SelectContent>
             </Select>
-            {sourceError ? <FieldAlert message={sourceError} /> : null}
+            {sourceError ? (
+              <FieldAlert id={`${formId}-source-error`} message={sourceError} />
+            ) : null}
           </div>
         </div>
 
@@ -404,16 +447,22 @@ export function NewJobForm({ analysesLeft: analysesLeftProp }: NewJobFormProps) 
           error={priorityError}
           onChange={setPriority}
         />
-      </div>
 
-      <div className="border-t border-line px-4 py-4 sm:px-5">
-        <Button
-          type="submit"
-          className="min-h-11 w-full px-5 sm:w-auto"
-          disabled={!postingReady}
-        >
-          {strings.actions.addJob}
-        </Button>
+        <div className="flex flex-col items-stretch gap-3 border-t border-line pt-4 sm:items-start">
+          {submitError ? (
+            <p id={`${formId}-submit-error`} role="alert" className="text-sm text-destructive">
+              {submitError}
+            </p>
+          ) : null}
+          <Button
+            type="submit"
+            className="h-11 min-h-11 w-full px-6 sm:w-auto disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
+            disabled={!postingReady}
+            aria-describedby={buttonDescribedBy || undefined}
+          >
+            {copy.submit}
+          </Button>
+        </div>
       </div>
     </form>
   );
@@ -431,17 +480,39 @@ function PriorityField({
   onChange: (next: number | null) => void;
 }) {
   const [preview, setPreview] = useState<number | null>(null);
+  const [tabStop, setTabStop] = useState(1);
+  const stars = useRef<Array<HTMLButtonElement | null>>([]);
   const shown = preview ?? priority;
+  const tabbable = priority ?? tabStop;
+  const describedBy = error
+    ? `${formId}-priority-hint ${formId}-priority-error`
+    : `${formId}-priority-hint`;
+
+  function onKeyDown(event: KeyboardEvent<HTMLButtonElement>, n: number) {
+    const next = nextStar(n, event.key);
+    if (next === null) return;
+    event.preventDefault();
+    setPreview(null);
+    setTabStop(next);
+    onChange(next);
+    stars.current[next - 1]?.focus();
+  }
 
   return (
-    <fieldset className="grid min-w-0 gap-1.5 border-0 p-0">
-      <legend className="text-sm font-medium text-ink">{copy.priorityLabel}</legend>
-      <p id={`${formId}-priority-hint`} className="text-xs text-slate">
+    <div className="grid min-w-0 gap-1.5">
+      <div id={`${formId}-priority-label`} className="text-sm font-medium text-ink">
+        {copy.priorityLabel}
+      </div>
+      <p id={`${formId}-priority-hint`} className="text-xs leading-5 text-slate">
         {copy.priorityHint}
       </p>
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
         <div
-          className="flex"
+          role="radiogroup"
+          aria-labelledby={`${formId}-priority-label`}
+          aria-describedby={describedBy}
+          aria-invalid={Boolean(error) || undefined}
+          className="flex gap-1"
           onPointerLeave={(event) => {
             if (event.pointerType !== "mouse") return;
             setPreview(null);
@@ -450,15 +521,21 @@ function PriorityField({
           {[1, 2, 3, 4, 5].map((n) => (
             <button
               key={n}
+              ref={(node) => {
+                stars.current[n - 1] = node;
+              }}
               type="button"
+              role="radio"
+              aria-checked={priority === n}
+              tabIndex={n === tabbable ? 0 : -1}
               className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              aria-pressed={priority === n}
-              aria-describedby={`${formId}-priority-hint`}
-              aria-label={priority === n ? copy.priorityClear : copy.prioritySet(n)}
+              aria-label={copy.priorityValue(n)}
               onClick={() => {
                 setPreview(null);
+                setTabStop(n);
                 onChange(priority === n ? null : n);
               }}
+              onKeyDown={(event) => onKeyDown(event, n)}
               onPointerEnter={(event) => {
                 if (event.pointerType !== "mouse") return;
                 setPreview(n);
@@ -468,13 +545,28 @@ function PriorityField({
             </button>
           ))}
         </div>
-        <p className="text-sm text-slate">
+        <p
+          className={cn(
+            "text-sm",
+            priority === null ? "text-slate" : "font-medium text-ink",
+          )}
+          aria-live="polite"
+          aria-atomic="true"
+        >
           {priority === null ? copy.priorityNone : copy.priorityValue(priority)}
         </p>
       </div>
-      {error ? <FieldAlert message={error} /> : null}
-    </fieldset>
+      {error ? <FieldAlert id={`${formId}-priority-error`} message={error} /> : null}
+    </div>
   );
+}
+
+function nextStar(n: number, key: string): number | null {
+  if (key === "ArrowRight" || key === "ArrowDown") return n === 5 ? 1 : n + 1;
+  if (key === "ArrowLeft" || key === "ArrowUp") return n === 1 ? 5 : n - 1;
+  if (key === "Home") return 1;
+  if (key === "End") return 5;
+  return null;
 }
 
 /** Saved stars stay filled. A mouse hover previews a different value without changing it. */
@@ -510,9 +602,9 @@ function ReadingMark({ state }: { state: "done" | "current" | "upcoming" }) {
   );
 }
 
-function FieldAlert({ message }: { message: string }) {
+function FieldAlert({ id, message }: { id?: string; message: string }) {
   return (
-    <p className="text-sm text-destructive" role="alert">
+    <p id={id} className="text-sm text-destructive" role="alert">
       {message}
     </p>
   );

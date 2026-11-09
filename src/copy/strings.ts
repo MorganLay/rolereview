@@ -843,42 +843,54 @@ export const strings = {
   pages: {
     dashboard: {
       title: "Dashboard",
-      body: "What to do next.",
+      body: "Your job search, at a glance.",
       today: "Today",
       reminders: "Reminders",
       interviews: "Interviews",
       remindersEmpty: "Nothing due today.",
       interviewsEmpty: "No interviews in the next 48 hours.",
-      success: "You’re set up. This page now shows what needs you today.",
-      gettingStarted: "Getting started",
-      setupTitle: "Set up your job search.",
-      setupBody: "Tailored resumes use only your real experience.",
-      stepDone: "Done",
-      stepCurrent: "Current",
-      steps: {
-        library: "Build your library",
-        job: "Add a job",
-        tailor: "Tailor your resume",
-        export: "Export it",
+      success: "You’re set up. This page now shows your search at a glance.",
+      startTitle: "Found an interesting role?",
+      startBody:
+        "Add a job posting, analyze its requirements, and tailor your resume using your saved experience.",
+      libraryEmptyTitle: "Start with your experience",
+      libraryEmptyBody:
+        "Import a resume, or add roles you have actually done. A tailored resume can only use what you save.",
+      libraryEmptyManual: "Add manually",
+      libraryTitle: "Your library",
+      libraryStrength: (strong: number, total: number) => {
+        const noun = total === 1 ? "bullet is" : "bullets are";
+        return `${strong} of ${total} ${noun} Strong or Excellent.`;
       },
-      stepPurpose: {
-        library: "Add the work you have actually done.",
-        job: "Paste one posting to tailor for.",
-        tailor: "Write the resume from your library.",
-        export: "Download it when it is ready to send.",
+      libraryWording: (count: number) =>
+        count === 1
+          ? "1 bullet could use clearer wording."
+          : `${count} bullets could use clearer wording.`,
+      libraryEvidence: (count: number) =>
+        count === 1
+          ? "1 bullet could use a concrete number or a named tool."
+          : `${count} bullets could use a concrete number or a named tool.`,
+      libraryCompleteness: (percent: number) =>
+        `Completeness is ${percent}%. That is required detail, separate from writing quality.`,
+      libraryEmptyBullets: "No bullets yet. Add what you actually did.",
+      libraryReady: "Nothing in the library needs attention right now.",
+      libraryImprove: "Improve library",
+      libraryOpen: "Open library",
+      continueTitle: "Continue where you left off",
+      continueTailoring: "Continue tailoring",
+      continueOpen: "Open application",
+      continueDetail: {
+        tailoring: "A tailored resume is being written.",
+        review: "This resume is ready and has not been exported.",
+        tailor: "The posting is analyzed. A resume has not been written yet.",
+        preview: "This resume is exported. The job is still saved.",
+        open: "This posting is saved.",
       },
-      summary: "Summary",
-      summaryActive: "Active",
-      summaryInterviews: "Interviews",
-      summaryOffers: "Offers",
-      summaryUrgent: "Urgent",
-      actions: "Needs you",
-      actionsEmpty: "Nothing else needs you right now.",
-      startEmpty: "Add a job when you want a resume tailored to a posting.",
+      attention: "Needs your attention",
+      attentionEmpty: "Nothing needs attention right now.",
       deadlineLabel: "Deadline",
       offerLabel: "Respond to the offer",
       followUpLabel: "Follow up",
-      documentLabel: "Finish the resume",
       interviewLabel: "Interview",
       deadlineOverdue: (date: string) => `This deadline was ${date}.`,
       deadlineToday: "This deadline is today.",
@@ -893,26 +905,23 @@ export const strings = {
       followUpUpcoming: (date: string) => `This follow-up is due ${date}.`,
       followUpStale: "No response after 30 days.",
       followUpNext: "This application needs a follow-up.",
+      documentLabel: "Finish the resume",
       documentUnexported: "This resume is ready and has not been exported.",
       documentInProgress: "Review it, then mark it submitted when you apply.",
-      continueTitle: "Continue working",
-      continueEmpty: "Nothing in progress.",
-      continueResume: "Review your resume",
-      continueReady: "Tailored from your library and ready to review.",
-      continueEdited: (when: string) => `Last edited ${when}`,
-      continueReview: "Review resume",
-      activity: "Recent activity",
-      activityEmpty: "No recent activity.",
-      activityFallback: "Update",
-      thisWeek: "This week",
-      applications: "Applications sent",
-      tailored: "Resumes tailored",
-      tailoredEmpty: "—",
-      responses: "Responses",
+      applicationsTitle: "Applications",
+      applicationsActive: "Active",
+      applicationsSent: "Sent this week",
+      applicationsInterviews: "Interviews",
+      applicationsTailored: "Tailored this week",
+      applicationsBoard: "View jobs board",
+      recent: "Recent applications",
+      recentApplied: (date: string) => `Applied ${date}`,
+      recentUpdated: (date: string) => `Updated ${date}`,
+      recentDeadline: (date: string) => `Deadline ${date}`,
     },
     library: {
       title: "Library",
-      body: "Roles, projects, bullets, and skills. Each bullet shows how strong it is.",
+      body: "Experience you’ve saved. Tailoring draws from this library without changing it.",
     },
     libraryImport: {
       title: "Import your resume",
@@ -927,8 +936,8 @@ export const strings = {
       body: "Your applications, organized from first interest to final offer.",
     },
     jobsNew: {
-      title: "New job",
-      body: "Paste a job posting to analyze its requirements and start tracking.",
+      title: "Add a job",
+      body: "Paste a job posting to analyze its requirements and start tailoring your resume.",
     },
     jobDetail: {
       title: "Job",
@@ -968,23 +977,23 @@ export const strings = {
       scenarios: {
         new: {
           title: "New",
-          body: "No library and no jobs. Getting started is on the first step.",
+          body: "No library and no jobs. The dashboard asks you to build your library.",
         },
         library: {
           title: "Library",
-          body: "Library only. The next step is to add a job.",
+          body: "Library only. The dashboard asks you to add a job.",
         },
         job: {
           title: "Job",
-          body: "Library and one saved job, with no resume yet.",
+          body: "Library and one saved job, with no resume yet. The dashboard offers to tailor it.",
         },
         ready: {
           title: "Ready resume",
-          body: "A tailored resume that has not been exported.",
+          body: "A tailored resume that has not been exported. The dashboard offers to review it.",
         },
         returning: {
           title: "Returning",
-          body: "The full search. The dashboard shows what needs you today.",
+          body: "The full search. The dashboard shows what needs attention.",
         },
       },
     },
@@ -1018,7 +1027,29 @@ export const strings = {
       summaryHint:
         "Your usual professional summary. Tailoring shortens it to fit a resume.",
       emptyName: "Add your name",
-      emptySummary: "No summary yet.",
+      emptyHeadline: "Add a professional headline",
+      emptyLocation: "Add a location",
+      emptySummary: "No professional summary yet.",
+      showSummary: "Show full summary",
+      hideSummary: "Show less",
+      viewDetails: "View profile details",
+      hideVariants: "Hide saved headlines and summaries",
+      variantCount: (headlines: number, summaries: number) => {
+        const parts: string[] = [];
+        if (headlines > 0) {
+          parts.push(
+            headlines === 1 ? "1 saved headline" : `${headlines} saved headlines`,
+          );
+        }
+        if (summaries > 0) {
+          parts.push(
+            summaries === 1 ? "1 saved summary" : `${summaries} saved summaries`,
+          );
+        }
+        return parts.length > 0
+          ? `Saved alternatives · ${parts.join(" · ")}`
+          : "Save alternate headlines or summaries";
+      },
       saved: "Profile saved.",
       saveFailed: "Couldn’t save your profile. Try again.",
       saving: "Saving…",
@@ -1041,6 +1072,16 @@ export const strings = {
       moveUp: "Move up",
       moveDown: "Move down",
       actionsLabel: (title: string) => `Actions for ${title}`,
+      bulletCount: (count: number) =>
+        count === 1 ? "1 bullet" : `${count} bullets`,
+      expand: "Show bullets",
+      collapse: "Hide bullets",
+      explore: "Find missing details",
+      overlapTitle: "Some bullets may describe overlapping work.",
+      overlapBody:
+        "They may be distinct, or they may cover the same accomplishment. Nothing is changed until you choose.",
+      overlapKeep: "Keep both",
+      overlapReview: "Review together",
       present: "Present",
       month: "Month",
       year: "Year",
@@ -1145,31 +1186,48 @@ export const strings = {
     },
     assist: {
       rewrite: "Rewrite",
+      improve: {
+        clarify: "Clarify wording",
+        evidence: "Strengthen evidence",
+        detail: "Explore more detail",
+        repetition: "Reduce repetition",
+      },
       strengthen: "Strengthen",
-      wording: "Wording",
+      explore: "Find missing details",
+      wording: "Alternate wording",
+      alternateWording: (count: number) =>
+        count === 1 ? "1 saved alternate" : `${count} saved alternates`,
+      alternateWordingHint: "Saved versions of this line you can switch to.",
       working: "Reading what you saved…",
       stillWorking: "Checking it against your library…",
+      assessment: "Assessment",
       why: "Why this wording",
-      original: "Original",
-      suggestion: "Suggestion",
-      question: "A number would help, if you have one.",
+      original: "What you wrote",
+      suggestion: "Suggested wording",
+      replaceNote: "Accepting replaces this library bullet. Your earlier wording is kept as a saved alternate.",
+      question: "Confirm before accepting",
       accept: "Use this wording",
-      dismiss: "Dismiss",
-      editHint: "Edit the suggestion before you accept it.",
+      dismiss: "Keep original",
+      editHint: "Edit the suggestion before you accept it. Nothing changes until you accept.",
       accepted: "Bullet updated.",
       undone: "Previous wording restored.",
       dropped: "That suggestion added a fact that isn’t in your library, so it was dropped.",
+      strengthenDropped:
+        "That draft added something you didn’t confirm, so it was dropped. Your answers are unchanged.",
+      strengthenEmpty:
+        "Those answers weren’t enough to draft a new bullet yet. Add a detail on a yes, or try again.",
       unchanged: "This line is already as clear as the saved facts allow.",
       rejected: "That wording adds something your library doesn’t support.",
       failed: "Couldn’t draft that. The bullet is unchanged.",
       allowance: "You’ve used this month’s rewrites.",
-      strengthenTitle: "Look for missing detail",
+      strengthenTitle: "Look for missing accomplishments",
       strengthenBody:
         "These are questions, not facts. Nothing is saved until you confirm it.",
       yes: "Yes",
-      no: "No",
+      no: "Doesn’t apply",
+      skip: "Skip",
       detail: "Add a detail, if you want",
-      useAnswers: "Use these answers",
+      useAnswers: "Continue with these answers",
       nothingConfirmed: "Nothing new was confirmed, so this role stays as it is.",
       followUp: "One more detail",
       addBullet: "Add this bullet",
@@ -1182,7 +1240,7 @@ export const strings = {
       hideSummaries: "Hide summaries",
       proposed: "Suggestion",
       approved: "Saved",
-      default: "Default",
+      default: "Selected",
       forJob: "For one job",
       useDefault: "Use as default",
       approve: "Approve",
@@ -1201,15 +1259,42 @@ export const strings = {
       savedDefault: "Usual summary updated.",
       sourcesNote:
         "This line cited more than one saved bullet. Each one is shown here.",
-      where: "Rewrite and Strengthen sit on the experience they apply to.",
+      where:
+        "Completeness is whether required information is filled in. It is separate from writing quality and evidence. Help sits on each experience.",
       needsWork: (count: number) =>
-        count === 1 ? "1 line needs clearer wording." : `${count} lines need clearer wording.`,
+        count === 1
+          ? "1 line to clarify"
+          : `${count} lines to clarify`,
+      reviewOpportunities: "Open the experience below to improve those lines.",
       missing: {
         fullName: "Add your name",
         headline: "Add a headline",
         location: "Add a location",
         summary: "Add a summary",
       },
+      focusWording: "Show wording opportunities",
+      focusEvidence: "Show evidence opportunities",
+      clearFocus: "Clear focus",
+      focusedWording: (count: number) =>
+        count === 1
+          ? "Focusing 1 wording opportunity"
+          : `Focusing ${count} wording opportunities`,
+      focusedEvidence: (count: number) =>
+        count === 1
+          ? "Focusing 1 evidence opportunity"
+          : `Focusing ${count} evidence opportunities`,
+      nextActionLabel: "Suggested next step",
+      nextProfile: (field: string) => field,
+      nextWording: (count: number) =>
+        count === 1
+          ? "Clarify the weakest line"
+          : `Clarify ${count} lines that need clearer wording`,
+      nextEvidence: (count: number) =>
+        count === 1
+          ? "Add confirmed detail to 1 line"
+          : `Add confirmed detail to ${count} lines`,
+      nextCheck: (check: string) => check,
+      nextDone: "Library looks complete. Keep refining lines as you go.",
     },
     skills: {
       title: "Skills",
@@ -1389,17 +1474,35 @@ export const strings = {
       },
     },
     health: {
-      title: "Library completeness",
-      percent: (value: number) => `${value}% complete`,
-      strengthTitle: "Bullet strength",
-      strengthSummary: (strong: number, total: number) => {
-        if (total === 0) return "No bullets yet.";
-        const noun = total === 1 ? "bullet" : "bullets";
-        return `${strong} of ${total} ${noun} Strong or better`;
+      stripLabel: "Library quality summary",
+      title: "Completeness",
+      completenessHint: "Required information filled in",
+      completenessDetail: "Separate from writing quality.",
+      percent: (value: number) => `${value}%`,
+      strengthTitle: "Writing quality",
+      strengthValue: (strong: number, total: number) => {
+        if (total === 0) return "—";
+        return `${strong}/${total}`;
       },
+      strengthSummary: (strong: number, total: number) => {
+        if (total === 0) return "No bullets yet";
+        const noun = total === 1 ? "bullet" : "bullets";
+        return `${strong} of ${total} ${noun} Strong+`;
+      },
+      strengthHint: "Bullets at Strong or Excellent",
+      opportunitiesTitle: "Wording",
+      opportunitiesValue: (count: number) => `${count}`,
+      opportunitiesNone: "None flagged",
+      opportunitiesHint: "Lines that need clearer wording",
+      evidenceTitle: "Evidence",
+      evidenceValue: (count: number) => `${count}`,
+      evidenceNone: "None flagged",
+      evidenceHint: "Confirmable detail you can add",
+      evidenceSummary: (count: number) =>
+        count === 1 ? "1 line could use more detail" : `${count} lines could use more detail`,
       weakestTitle: "Lines to clarify",
-      expand: "How to improve",
-      collapse: "Hide",
+      expand: "Show details",
+      collapse: "Hide details",
       checks: {
         profile: "Name, headline, location, and summary",
         experience: "At least one experience entry",
@@ -1515,15 +1618,16 @@ export const strings = {
       return `${count} analyses left today.`;
     },
     postingLabel: "Job posting",
-    postingHint: "Paste the full posting. 200 to 30,000 characters.",
+    postingRange: "200 to 30,000",
     postingPlaceholder: "Paste the job posting here.",
     postingCount: (count: number) =>
       `${count.toLocaleString("en-CA")} characters`,
     detailsHeading: "Job details",
-    detailsBody: "Optional information to help organize and track this application.",
+    detailsBody: "Optional information to organize and track this application.",
     urlLabel: "Posting URL",
     urlHint: "Optional. We store the link and don’t open it.",
-    urlSaved: "Saved for reference. The link isn’t imported automatically.",
+    urlSaved: "Saved for reference only. Adding a link does not import the posting.",
+    submit: "Analyze & add job",
     deadlineLabel: "Deadline",
     deadlineHint: "Optional. A reminder is set for 3 days before.",
     sourceLabel: "Where you found it",

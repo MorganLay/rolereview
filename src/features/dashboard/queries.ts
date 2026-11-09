@@ -5,20 +5,24 @@ import { connection } from "next/server";
 import { displayedAnalysisStatus } from "@/features/jobs/analyze";
 import { formatDeadlineDate } from "@/features/jobs/dates";
 import { isJobStatus } from "@/features/jobs/schemas";
-import { isManualEventType } from "@/features/tracking/events";
+import { libraryHealth } from "@/features/library/health";
+import { getLibrary } from "@/features/library/queries";
+import { displayedTailorStatus } from "@/features/tailor/status";
 import { db } from "@/lib/db";
 
+import { libraryOverview, type LibraryOverview } from "./library-overview";
 import { onboardingSteps, thisWeek, type OnboardingStep, type ThisWeek } from "./metrics";
 import {
+  attentionItems,
   continueWorking,
   dashboardActions,
   dashboardSummary,
-  recentActivity,
-  type ActivityItem,
+  recentApplications,
   type ContinueWork,
   type DashboardAction,
   type DashboardSummary,
   type HomeJob,
+  type RecentApplication,
 } from "./priorities";
 
 export type DashboardData = {
@@ -29,21 +33,26 @@ export type DashboardData = {
   asOf: Date;
   steps: OnboardingStep[];
   summary: DashboardSummary;
+  /** Jobs that are not archived, including closed ones. */
+  tracked: number;
   actions: DashboardAction[];
+  attention: DashboardAction[];
   continueWork: ContinueWork | null;
-  activity: ActivityItem[];
+  recent: RecentApplication[];
   week: ThisWeek;
+  library: LibraryOverview;
 };
 
 /** Home screen for one user. Archived jobs stay out of the returning sections. */
 export async function getDashboard(userId: string): Promise<DashboardData> {
   await connection();
   const now = new Date();
-  const [owner, entries, readyResumes, exportedResumes, rows, eventRows] = await Promise.all([
+  const [owner, library, entries, readyResumes, exportedResumes, rows] = await Promise.all([
     db.user.findFirst({
       where: { id: userId },
       select: { timezone: true, onboardingCompletedAt: true },
     }),
+    getLibrary(userId),
     db.entry.count({ where: { userId } }),
     db.tailoredResume.count({ where: { userId, status: "READY" } }),
     db.tailoredResume.count({ where: { userId, exportedAt: { not: null } } }),
@@ -70,10 +79,10 @@ export async function getDashboard(userId: string): Promise<DashboardData> {
           select: { id: true, round: true, kind: true, scheduledAt: true },
         },
         tailoredResumes: {
-          where: { status: "READY" },
           select: {
             id: true,
             version: true,
+            status: true,
             exportedAt: true,
             submittedAt: true,
             updatedAt: true,
@@ -82,24 +91,14 @@ export async function getDashboard(userId: string): Promise<DashboardData> {
         },
       },
     }),
-    db.jobEvent.findMany({
-      where: { userId, job: { archivedAt: null } },
-      orderBy: [{ occurredAt: "desc" }, { createdAt: "desc" }, { id: "desc" }],
-      take: 40,
-      select: {
-        id: true,
-        type: true,
-        occurredAt: true,
-        createdAt: true,
-        jobId: true,
-        job: { select: { company: true, title: true, archivedAt: true } },
-      },
-    }),
   ]);
 
   const timeZone = owner?.timezone || "America/Toronto";
   const jobs = rows.flatMap((row) => toHomeJob(row, now));
   const actions = dashboardActions(jobs, now, timeZone);
+  const health = library ? libraryHealth(library) : null;
+  const populated =
+    library !== null && (library.entries.length > 0 || library.skills.length > 0);
 
   return {
     timeZone,
@@ -113,34 +112,31 @@ export async function getDashboard(userId: string): Promise<DashboardData> {
       exportedResumes,
     }),
     summary: dashboardSummary(jobs, actions),
+    tracked: jobs.filter((job) => !job.archived).length,
     actions,
+    attention: attentionItems(actions),
     continueWork: continueWorking(jobs),
-    activity: recentActivity(
-      eventRows.flatMap((event) => {
-        if (!event.job) return [];
-        return [
-          {
-            id: event.id,
-            jobId: event.jobId,
-            company: event.job.company,
-            title: event.job.title,
-            type: event.type,
-            occurredAt: event.occurredAt,
-            createdAt: event.createdAt,
-            manual: isManualEventType(event.type),
-            archived: event.job.archivedAt !== null,
-          },
-        ];
-      }),
-    ),
+    recent: recentApplications(jobs),
     week: thisWeek(
       jobs,
       now,
       timeZone,
       rows.flatMap((row) =>
-        row.archivedAt ? [] : row.tailoredResumes.map((resume) => resume.createdAt),
+        row.archivedAt
+          ? []
+          : row.tailoredResumes.flatMap((resume) =>
+              resume.status === "READY" ? [resume.createdAt] : [],
+            ),
       ),
     ),
+    library: libraryOverview({
+      populated,
+      percent: health?.percent ?? 0,
+      strongOrBetter: health?.strongOrBetter ?? 0,
+      bulletCount: health?.bulletCount ?? 0,
+      wording: health?.weakest.length ?? 0,
+      evidence: health?.evidenceGaps ?? 0,
+    }),
   };
 }
 
@@ -162,6 +158,7 @@ type JobRow = {
   tailoredResumes: {
     id: string;
     version: number;
+    status: string;
     exportedAt: Date | null;
     submittedAt: Date | null;
     updatedAt: Date;
@@ -204,15 +201,36 @@ function toHomeJob(row: JobRow, now: Date): HomeJob[] {
           },
         ];
       }),
-      resumes: row.tailoredResumes.map((resume) => ({
-        id: resume.id,
-        version: resume.version,
-        exported: resume.exportedAt !== null,
-        submitted: resume.submittedAt !== null,
-        updatedAt: resume.updatedAt,
-      })),
+      tailoringUpdatedAt: newestTailoring(row.tailoredResumes, now),
+      resumes: row.tailoredResumes.flatMap((resume) => {
+        if (resume.status !== "READY" || resume.id.length === 0) return [];
+        return [
+          {
+            id: resume.id,
+            version: resume.version,
+            exported: resume.exportedAt !== null,
+            submitted: resume.submittedAt !== null,
+            updatedAt: resume.updatedAt,
+          },
+        ];
+      }),
     },
   ];
+}
+
+function newestTailoring(
+  resumes: readonly { status: string; updatedAt: Date }[],
+  now: Date,
+): Date | null {
+  let latest: Date | null = null;
+  for (const resume of resumes) {
+    if (resume.status !== "PENDING" && resume.status !== "READY" && resume.status !== "FAILED") {
+      continue;
+    }
+    if (displayedTailorStatus(resume.status, resume.updatedAt, now) !== "PENDING") continue;
+    if (!latest || resume.updatedAt.getTime() > latest.getTime()) latest = resume.updatedAt;
+  }
+  return latest;
 }
 
 function readyAnalysis(status: string, updatedAt: Date, now: Date): boolean {

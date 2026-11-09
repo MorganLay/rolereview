@@ -29,15 +29,15 @@ export default async function NewJobPage({
   const analysesLeft = await analysesRemaining(user.id, user.plan);
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-6">
-      <div>
-        <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">
+    <div className="mx-auto flex w-full min-w-0 max-w-[52.5rem] flex-col gap-5">
+      <header>
+        <h1 className="font-serif text-[1.75rem] leading-tight font-semibold tracking-tight text-ink md:text-[2rem]">
           {strings.pages.jobsNew.title}
         </h1>
-        <p className="mt-2 max-w-xl text-sm text-slate">
+        <p className="mt-1.5 text-sm leading-relaxed text-slate">
           {strings.pages.jobsNew.body}
         </p>
-      </div>
+      </header>
       {/* The key remounts when the router applies `new`. The form also clears state the app router and the back-forward cache keep. */}
       <NewJobForm key={fresh ?? "new"} analysesLeft={analysesLeft} />
     </div>

@@ -95,6 +95,7 @@ describe("libraryHealth", () => {
       }),
     );
     expect(result.weakest.map((item) => item.id)).not.toContain("n1");
+    expect(result.evidenceGaps).toBeGreaterThanOrEqual(1);
   });
 
   it("does not ask a coursework line to start with an action verb", () => {

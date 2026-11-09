@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  attentionItems,
   continueWorking,
   dashboardActions,
   dashboardSummary,
   isSpecificJobHref,
   recentActivity,
+  recentApplications,
   type HomeJob,
   type HomeReminder,
 } from "@/features/dashboard/priorities";
@@ -43,6 +45,7 @@ function homeJob(partial: Partial<HomeJob> & Pick<HomeJob, "id">): HomeJob {
     reminders: [],
     interviews: [],
     resumes: [],
+    tailoringUpdatedAt: null,
     ...partial,
   };
 }
@@ -413,60 +416,128 @@ describe("dashboardSummary", () => {
 });
 
 describe("continueWorking", () => {
-  it("keeps the latest resume or job, and prefers the resume when the time matches", () => {
-    const same = new Date("2026-10-22T12:00:00.000Z");
+  it("reviews a saved resume ahead of a newer applied resume", () => {
     const picked = continueWorking([
       homeJob({
-        id: "older",
+        id: "applied",
         status: "APPLIED",
-        updatedAt: new Date("2026-10-20T12:00:00.000Z"),
+        updatedAt: NOW,
+        resumes: [
+          {
+            id: "applied-draft",
+            version: 2,
+            exported: false,
+            submitted: false,
+            updatedAt: NOW,
+          },
+        ],
+      }),
+      homeJob({
+        id: "saved",
+        status: "SAVED",
+        updatedAt: new Date("2026-10-01T00:00:00.000Z"),
+        resumes: [
+          {
+            id: "saved-draft",
+            version: 1,
+            exported: false,
+            submitted: false,
+            updatedAt: new Date("2026-10-02T00:00:00.000Z"),
+          },
+        ],
       }),
       homeJob({
         id: "closed",
         status: "REJECTED",
-        updatedAt: new Date("2026-10-22T18:00:00.000Z"),
         resumes: [
           { id: "closed-resume", version: 1, exported: false, submitted: false, updatedAt: NOW },
         ],
       }),
-      homeJob({
-        id: "live",
-        status: "INTERVIEWING",
-        updatedAt: same,
-        resumes: [
-          { id: "sent", version: 1, exported: true, submitted: true, updatedAt: NOW },
-          { id: "draft", version: 2, exported: false, submitted: false, updatedAt: same },
-        ],
-      }),
     ]);
     expect(picked).toMatchObject({
-      source: "resume",
-      href: "/jobs/live/resumes/draft",
-      nextKind: null,
+      kind: "review",
+      href: "/jobs/saved/resumes/saved-draft",
+      jobId: "saved",
     });
+  });
 
-    const jobWins = continueWorking([
+  it("does not ask an applied or offer job to review its resume", () => {
+    expect(
+      continueWorking([
+        homeJob({
+          id: "offer job",
+          status: "OFFER",
+          hasOffer: true,
+          updatedAt: NOW,
+          resumes: [
+            {
+              id: "draft",
+              version: 1,
+              exported: false,
+              submitted: false,
+              updatedAt: NOW,
+            },
+          ],
+        }),
+      ]),
+    ).toBeNull();
+  });
+
+  it("prefers a resume being written, then an unexported saved resume, then tailoring", () => {
+    const writing = continueWorking([
       homeJob({
-        id: "offer job",
-        status: "OFFER",
-        hasOffer: true,
-        updatedAt: new Date("2026-10-22T18:00:00.000Z"),
+        id: "saved",
         resumes: [
           {
             id: "draft",
             version: 1,
             exported: false,
             submitted: false,
-            updatedAt: new Date("2026-10-22T12:00:00.000Z"),
+            updatedAt: new Date("2026-10-20T00:00:00.000Z"),
+          },
+        ],
+      }),
+      homeJob({
+        id: "writing",
+        status: "APPLIED",
+        tailoringUpdatedAt: new Date("2026-10-21T00:00:00.000Z"),
+      }),
+    ]);
+    expect(writing).toMatchObject({
+      kind: "tailoring",
+      href: "/jobs/writing?tab=documents",
+    });
+
+    const review = continueWorking([
+      homeJob({
+        id: "needs-tailor",
+        analysisReady: true,
+        updatedAt: NOW,
+      }),
+      homeJob({
+        id: "needs-review",
+        updatedAt: new Date("2026-10-01T00:00:00.000Z"),
+        resumes: [
+          {
+            id: "draft",
+            version: 1,
+            exported: false,
+            submitted: false,
+            updatedAt: new Date("2026-10-02T00:00:00.000Z"),
           },
         ],
       }),
     ]);
-    expect(jobWins?.href).toBe("/jobs/offer%20job?tab=offer");
-    expect(jobWins?.nextKind).toBe("decision");
+    expect(review?.kind).toBe("review");
+
+    expect(
+      continueWorking([
+        homeJob({ id: "plain", analysisReady: true, updatedAt: NOW }),
+      ])?.kind,
+    ).toBe("tailor");
   });
 
-  it("skips a job that has no specific next step", () => {
+  it("opens a saved posting whose analysis is not ready", () => {
     expect(
       continueWorking([
         homeJob({
@@ -475,7 +546,73 @@ describe("continueWorking", () => {
           updatedAt: NOW,
         }),
       ]),
-    ).toBeNull();
+    ).toMatchObject({ kind: "open", href: "/jobs/unread" });
+  });
+
+  it("keeps the newer saved job when the rank matches", () => {
+    const picked = continueWorking([
+      homeJob({ id: "older", analysisReady: true, updatedAt: new Date("2026-10-01T00:00:00.000Z") }),
+      homeJob({ id: "newer", analysisReady: true, updatedAt: NOW }),
+    ]);
+    expect(picked?.jobId).toBe("newer");
+  });
+});
+
+describe("attentionItems", () => {
+  it("drops unfinished resumes and undated follow-ups, and keeps a stale application", () => {
+    const actions = dashboardActions(
+      [
+        homeJob({
+          id: "saved",
+          resumes: [
+            { id: "draft", version: 1, exported: false, submitted: false, updatedAt: NOW },
+          ],
+        }),
+        homeJob({
+          id: "fresh",
+          status: "APPLIED",
+          appliedAt: new Date("2026-10-20T15:00:00.000Z"),
+        }),
+        homeJob({
+          id: "stale",
+          status: "APPLIED",
+          appliedAt: new Date("2026-08-01T15:00:00.000Z"),
+        }),
+        homeJob({
+          id: "due",
+          status: "APPLIED",
+          reminders: [
+            reminder({
+              id: "follow",
+              kind: "FOLLOW_UP",
+              title: "Follow up on your application",
+              dueAt: new Date("2026-10-21T16:00:00.000Z"),
+            }),
+          ],
+        }),
+      ],
+      NOW,
+      ZONE,
+    );
+    const shown = attentionItems(actions);
+    expect(shown.map((item) => item.id)).toEqual(["followUp:follow", "followUpNext:stale"]);
+    expect(shown.some((item) => item.kind === "document")).toBe(false);
+  });
+});
+
+describe("recentApplications", () => {
+  it("keeps one row per job, newest first, and drops archived jobs", () => {
+    const rows = recentApplications([
+      homeJob({ id: "old", updatedAt: new Date("2026-10-01T00:00:00.000Z") }),
+      homeJob({ id: "newest", company: "Bright Path", updatedAt: NOW }),
+      homeJob({ id: "hidden", archived: true, updatedAt: new Date("2026-10-23T00:00:00.000Z") }),
+    ]);
+    expect(rows.map((row) => row.id)).toEqual(["newest", "old"]);
+    expect(rows[0]).toMatchObject({
+      company: "Bright Path",
+      href: "/jobs/newest",
+      status: "SAVED",
+    });
   });
 });
 

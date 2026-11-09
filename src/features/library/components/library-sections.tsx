@@ -10,6 +10,7 @@ import { addHidden, removeHidden } from "@/lib/undo-delete";
 import { useUndoDelete } from "@/lib/use-undo-delete";
 
 import { deleteEntry, reorderEntry } from "../actions";
+import type { LibraryFocus } from "../health";
 import type { LibraryEntry } from "../types";
 import type { WordingView } from "../wording";
 import { DeleteEntryDialog } from "./delete-entry-dialog";
@@ -21,6 +22,7 @@ type LibrarySectionsProps = {
   skills: readonly string[];
   wordings: readonly WordingView[];
   kinds?: readonly (typeof ENTRY_KINDS)[number][];
+  focus?: LibraryFocus | null;
 };
 
 const copy = strings.library.entries;
@@ -30,6 +32,7 @@ export function LibrarySections({
   skills,
   wordings,
   kinds = ENTRY_KINDS,
+  focus = null,
 }: LibrarySectionsProps) {
   const [editor, setEditor] = useState<EntryEditor | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LibraryEntry | null>(null);
@@ -76,16 +79,18 @@ export function LibrarySections({
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-9">
       {kinds.map((kind) => {
         const kindCopy = copy.kinds[kind];
         const section = entries.filter(
           (entry) => entry.kind === kind && !hidden.has(entry.id),
         );
         return (
-          <section key={kind} className="grid gap-3">
+          <section key={kind} className="grid gap-3.5">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-base font-medium text-ink">{kindCopy.title}</h2>
+              <h2 className="font-serif text-lg font-semibold tracking-tight text-ink">
+                {kindCopy.title}
+              </h2>
               <Button
                 type="button"
                 variant="outline"
@@ -96,7 +101,9 @@ export function LibrarySections({
               </Button>
             </div>
             {section.length === 0 ? (
-              <p className="text-sm text-slate">{copy.noneYet}</p>
+              <p className="rounded-[var(--radius-card)] border border-dashed border-line bg-surface/60 px-4 py-5 text-sm text-slate">
+                {copy.noneYet}
+              </p>
             ) : (
               <div className="grid gap-3">
                 {section.map((entry, index) => (
@@ -108,6 +115,7 @@ export function LibrarySections({
                     canMoveUp={index > 0}
                     canMoveDown={index < section.length - 1}
                     moving={movingId !== null}
+                    focus={focus}
                     onEdit={() => setEditor({ mode: "edit", entry })}
                     onDelete={() => setDeleteTarget(entry)}
                     onMove={(direction) => onMove(entry.id, direction)}

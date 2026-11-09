@@ -27,7 +27,6 @@ import {
   type JobListQuery,
 } from "../list-params";
 import { JOB_SOURCES, WORK_MODES, type BoardStage } from "../schemas";
-import { NewJobLink } from "./new-job-link";
 
 const copy = strings.jobs.board;
 const detail = strings.jobs.detail;
@@ -89,31 +88,26 @@ export function JobsToolbar({ query }: { query: JobListQuery }) {
 
   return (
     <div className="flex flex-col gap-3" aria-busy={pending}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div
-          role="group"
-          aria-label={copy.viewLabel}
-          className="inline-flex w-fit rounded-lg border border-border p-0.5"
-        >
-          <Button variant={query.view === "board" ? "default" : "ghost"} size="sm" asChild>
-            <Link
-              href={jobListHref(query, { view: "board" })}
-              aria-current={query.view === "board" ? "page" : undefined}
-            >
-              {copy.viewBoard}
-            </Link>
-          </Button>
-          <Button variant={query.view === "list" ? "default" : "ghost"} size="sm" asChild>
-            <Link
-              href={jobListHref(query, { view: "list" })}
-              aria-current={query.view === "list" ? "page" : undefined}
-            >
-              {copy.viewList}
-            </Link>
-          </Button>
-        </div>
-        <Button asChild size="sm">
-          <NewJobLink>{strings.actions.newJob}</NewJobLink>
+      <div
+        role="group"
+        aria-label={copy.viewLabel}
+        className="inline-flex w-fit rounded-lg border border-border p-0.5"
+      >
+        <Button variant={query.view === "board" ? "default" : "ghost"} size="sm" asChild>
+          <Link
+            href={jobListHref(query, { view: "board" })}
+            aria-current={query.view === "board" ? "page" : undefined}
+          >
+            {copy.viewBoard}
+          </Link>
+        </Button>
+        <Button variant={query.view === "list" ? "default" : "ghost"} size="sm" asChild>
+          <Link
+            href={jobListHref(query, { view: "list" })}
+            aria-current={query.view === "list" ? "page" : undefined}
+          >
+            {copy.viewList}
+          </Link>
         </Button>
       </div>
 

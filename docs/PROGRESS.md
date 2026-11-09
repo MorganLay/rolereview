@@ -126,6 +126,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-11-09 Dashboard:** The page leads with a new job or the library, then continue-where-you-left-off for a resume still being written or a Saved job. An applied job is not asked to review its resume. Needs your attention is reminders, deadlines, interviews, and offers. Recent applications is one row per job. The Jobs toolbar no longer repeats New job; the header and the empty board still have it.
+- **2026-11-09 Header New job:** The header has New job before the reminders bell. It opens a blank posting form. The Jobs toolbar does not repeat it.
 - **2026-11-09 Phase R:** T13.5a is deferred, not closed. Friends can keep using the live app, and notes still go in `docs/Feedback.md`. The formal 5–10 person pass waits until the library and tailoring tasks are done. TR.1 is the first of those tasks. Building a library from nothing, with no resume to import, is logged in `docs/Feedback.md`. Not a task yet.
 - **2026-11-08 T13.4b:** Production uses `rolerefine-prod` in Canada on Vercel Pro, with live Stripe. A CA$32.77 charge upgraded the account to Pro; the refund and an immediate cancel returned it to Free. PostHog project 672487 is on Vercel Production. The local `.env` PostHog key stays the placeholder. `MAILING_ADDRESS` stays unset until a PO box. No new founding coupon. Deploy `fa8bea1` fixed the board-title type error that had failed the build.
 - **2026-11-07 Library variants:** Completeness names the whole profile check when only the headline is empty. Bullet advice is the strength checks, including a number and an action verb. Approved headlines, summaries, and bullet variants, chosen per job with a reason, are logged in `docs/Feedback.md`. Not a task yet.

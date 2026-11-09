@@ -8,25 +8,45 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { strings } from "@/copy/strings";
 
-import { addStrengthenedBullet, draftStrengthenedBullet, proposeStrengthQuestions } from "../wording-actions";
+import {
+  confirmedFromAnswers,
+  mergeConfirmed,
+  type StrengthenAnswer,
+} from "../strengthen-confirm";
+import {
+  addStrengthenedBullet,
+  draftStrengthenedBullet,
+  proposeStrengthQuestions,
+} from "../wording-actions";
 
 const copy = strings.library.assist;
-
-type Answer = { question: string; yes: boolean; detail: string };
+const entryCopy = strings.library.entries;
 
 export function StrengthenPanel({ entryId }: { entryId: string }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
-  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [answers, setAnswers] = useState<StrengthenAnswer[]>([]);
+  const [priorConfirmed, setPriorConfirmed] = useState<string[]>([]);
   const [followUp, setFollowUp] = useState(false);
   const [draft, setDraft] = useState<string | null>(null);
   const [why, setWhy] = useState<string | null>(null);
+
+  function reset() {
+    setOpen(false);
+    setAnswers([]);
+    setPriorConfirmed([]);
+    setFollowUp(false);
+    setDraft(null);
+    setWhy(null);
+  }
 
   function start() {
     setOpen(true);
     setDraft(null);
     setWhy(null);
     setFollowUp(false);
+    setPriorConfirmed([]);
+    setAnswers([]);
     startTransition(async () => {
       const result = await proposeStrengthQuestions({ id: entryId });
       if (!result.ok) {
@@ -34,34 +54,28 @@ export function StrengthenPanel({ entryId }: { entryId: string }) {
           toast.error(copy.allowance);
           openUpgradeModal({ kind: "plan" });
         } else toast.error(copy.failed);
-        setOpen(false);
+        reset();
         return;
       }
       if (result.data.questions.length === 0) {
         toast.message(copy.unchanged);
-        setOpen(false);
+        reset();
         return;
       }
-      setAnswers(result.data.questions.map((question) => ({ question, yes: false, detail: "" })));
+      setAnswers(
+        result.data.questions.map((question) => ({ question, yes: null, detail: "" })),
+      );
     });
   }
 
-  function confirmedLines(): string[] {
-    return answers
-      .filter((answer) => answer.yes)
-      .map((answer) => {
-        const detail = answer.detail.trim();
-        return detail.length > 0 ? `${answer.question} ${detail}` : answer.question;
-      });
-  }
-
   function submitAnswers() {
-    const confirmed = confirmedLines();
-    if (confirmed.length === 0) {
+    const round = confirmedFromAnswers(answers);
+    if (round.length === 0 && priorConfirmed.length === 0) {
       toast.message(copy.nothingConfirmed);
-      setOpen(false);
+      reset();
       return;
     }
+    const confirmed = mergeConfirmed(priorConfirmed, round);
     startTransition(async () => {
       const result = await draftStrengthenedBullet({
         entryId,
@@ -76,12 +90,17 @@ export function StrengthenPanel({ entryId }: { entryId: string }) {
         return;
       }
       if (result.data.status === "followUps") {
+        setPriorConfirmed(confirmed);
         setFollowUp(true);
-        setAnswers(result.data.questions.map((question) => ({ question, yes: false, detail: "" })));
+        setAnswers(
+          result.data.questions.map((question) => ({ question, yes: null, detail: "" })),
+        );
         return;
       }
       if (result.data.status === "dropped") {
-        toast.message(copy.dropped);
+        toast.message(
+          result.data.reason === "empty" ? copy.strengthenEmpty : copy.strengthenDropped,
+        );
         return;
       }
       setDraft(result.data.text);
@@ -102,8 +121,7 @@ export function StrengthenPanel({ entryId }: { entryId: string }) {
         return;
       }
       toast.success(copy.added);
-      setOpen(false);
-      setDraft(null);
+      reset();
     });
   }
 
@@ -111,47 +129,67 @@ export function StrengthenPanel({ entryId }: { entryId: string }) {
     return (
       <button
         type="button"
-        className="text-xs text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="inline-flex min-h-8 items-center text-[0.8125rem] font-medium text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         onClick={start}
       >
-        {copy.strengthen}
+        {entryCopy.explore}
       </button>
     );
   }
 
   return (
-    <div className="mt-2 grid max-w-prose gap-2 rounded-md border border-line bg-surface px-3 py-2">
-      <p className="text-sm font-medium text-ink">{followUp ? copy.followUp : copy.strengthenTitle}</p>
-      <p className="text-xs text-slate">{copy.strengthenBody}</p>
-      {pending && answers.length === 0 ? (
-        <p className="text-xs text-slate" role="status">
+    <div className="w-full max-w-prose grid gap-3 rounded-md border border-line bg-paper px-3.5 py-3">
+      <div className="grid gap-1">
+        <p className="text-sm font-medium text-ink">
+          {draft ? copy.suggestion : followUp ? copy.followUp : copy.strengthenTitle}
+        </p>
+        {!draft ? (
+          <p className="text-[0.8125rem] leading-relaxed text-slate">{copy.strengthenBody}</p>
+        ) : null}
+      </div>
+      {pending && answers.length === 0 && !draft ? (
+        <p className="text-[0.8125rem] text-slate" role="status">
           {copy.working}
         </p>
       ) : null}
       {draft ? (
         <>
-          <Textarea value={draft} maxLength={400} rows={3} onChange={(event) => setDraft(event.target.value)} />
-          {why ? <p className="text-xs text-ink">{why}</p> : null}
+          <div className="grid gap-1.5">
+            <Textarea
+              value={draft}
+              maxLength={400}
+              rows={3}
+              className="bg-surface text-sm leading-relaxed"
+              onChange={(event) => setDraft(event.target.value)}
+            />
+          </div>
+          {why ? (
+            <p className="text-[0.8125rem] leading-relaxed text-ink">
+              <span className="font-medium">{copy.why}. </span>
+              {why}
+            </p>
+          ) : null}
+          <p className="text-[0.75rem] leading-relaxed text-slate">{copy.editHint}</p>
           <div className="flex flex-wrap gap-2">
             <Button type="button" size="sm" disabled={pending} onClick={addBullet}>
               {copy.addBullet}
             </Button>
-            <Button type="button" size="sm" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" size="sm" variant="outline" onClick={reset}>
               {copy.dismiss}
             </Button>
           </div>
         </>
       ) : (
         <>
-          <ul className="grid gap-2">
+          <ul className="grid gap-3.5">
             {answers.map((answer, index) => (
-              <li key={answer.question} className="grid gap-1">
-                <p className="text-sm text-ink">{answer.question}</p>
-                <div className="flex gap-2">
+              <li key={answer.question} className="grid gap-2">
+                <p className="text-sm leading-relaxed text-ink">{answer.question}</p>
+                <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
                     size="sm"
-                    variant={answer.yes ? "default" : "outline"}
+                    variant={answer.yes === true ? "default" : "outline"}
                     onClick={() =>
                       setAnswers((current) =>
                         current.map((item, itemIndex) =>
@@ -165,7 +203,7 @@ export function StrengthenPanel({ entryId }: { entryId: string }) {
                   <Button
                     type="button"
                     size="sm"
-                    variant={!answer.yes ? "default" : "outline"}
+                    variant={answer.yes === false ? "default" : "outline"}
                     onClick={() =>
                       setAnswers((current) =>
                         current.map((item, itemIndex) =>
@@ -177,12 +215,12 @@ export function StrengthenPanel({ entryId }: { entryId: string }) {
                     {copy.no}
                   </Button>
                 </div>
-                {answer.yes ? (
+                {answer.yes === true ? (
                   <input
                     value={answer.detail}
                     aria-label={copy.detail}
                     placeholder={copy.detail}
-                    className="rounded-md border border-line bg-paper px-2 py-1 text-sm text-ink"
+                    className="rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                     onChange={(event) =>
                       setAnswers((current) =>
                         current.map((item, itemIndex) =>
@@ -199,7 +237,7 @@ export function StrengthenPanel({ entryId }: { entryId: string }) {
             <Button type="button" size="sm" disabled={pending} onClick={submitAnswers}>
               {copy.useAnswers}
             </Button>
-            <Button type="button" size="sm" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" size="sm" variant="outline" onClick={reset}>
               {copy.dismiss}
             </Button>
           </div>

@@ -24,16 +24,48 @@ export type RowAction = {
 };
 
 /**
- * Icon buttons from the `md` breakpoint up. Under `md`, the same actions
- * are one menu so a row of controls does not stack under the text.
+ * `icons`: icon buttons from `md` up; one menu under `md`.
+ * `menu`: always one menu so secondary actions stay quiet on dense rows.
  */
 export function RowActions({
   menuLabel,
   actions,
+  layout = "icons",
 }: {
   menuLabel: string;
   actions: readonly RowAction[];
+  layout?: "icons" | "menu";
 }) {
+  if (layout === "menu") {
+    return (
+      <div className="flex shrink-0 items-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" variant="ghost" size="icon-sm" aria-label={menuLabel}>
+              <MoreHorizontalIcon aria-hidden />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-auto min-w-44">
+            {actions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <DropdownMenuItem
+                  key={action.id}
+                  disabled={action.disabled}
+                  variant={action.destructive ? "destructive" : "default"}
+                  onSelect={action.onSelect}
+                >
+                  <Icon aria-hidden />
+                  {action.label}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  }
+
   return (
     <div className="flex shrink-0 items-center">
       <div className="hidden items-center md:flex">

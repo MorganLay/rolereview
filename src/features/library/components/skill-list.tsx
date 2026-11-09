@@ -218,9 +218,12 @@ export function SkillList({ skills }: SkillListProps) {
   ) : null;
 
   return (
-    <section className="grid gap-3" aria-labelledby={headingId}>
+    <section className="grid gap-3.5" aria-labelledby={headingId}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id={headingId} className="text-base font-medium text-ink">
+        <h2
+          id={headingId}
+          className="font-serif text-lg font-semibold tracking-tight text-ink"
+        >
           {copy.title}
         </h2>
         {editor?.mode === "add" ? null : (

@@ -33,6 +33,11 @@ export const PROFILE_FIELD_IDS = ["fullName", "headline", "location", "summary"]
 
 export type ProfileFieldId = (typeof PROFILE_FIELD_IDS)[number];
 
+export type EvidenceGapBullet = {
+  id: string;
+  entryId: string;
+};
+
 export type LibraryHealth = {
   percent: number;
   passed: HealthCheckId[];
@@ -45,6 +50,21 @@ export type LibraryHealth = {
   bulletCount: number;
   /** Score 5 or 6: Strong or Excellent. Separate from the completeness percent. */
   strongOrBetter: number;
+  /**
+   * Accomplishment lines that are otherwise clear but lack a verified number
+   * or named tool. Not a completeness gap — inventing a metric does not raise it.
+   */
+  evidenceGaps: number;
+  /** Same lines as `evidenceGaps`, with ids for focusing the matching bullets. */
+  evidenceNeeds: EvidenceGapBullet[];
+};
+
+export type LibraryFocusKind = "wording" | "evidence";
+
+export type LibraryFocus = {
+  kind: LibraryFocusKind;
+  bulletIds: readonly string[];
+  entryIds: readonly string[];
 };
 
 const SKILL_TARGET = 5;
@@ -80,6 +100,20 @@ export function libraryHealth(library: Library): LibraryHealth {
   );
   const belowGood = scored.filter((item) => item.strength.score < GOOD_SCORE).length;
   const strongOrBetter = scored.filter((item) => item.strength.score >= STRONG_SCORE).length;
+  const evidenceNeeds = scored
+    .filter((item) => {
+      const role = bulletRole(item.entry.kind, item.bullet.text);
+      if (role === "record") return false;
+      const { concerns, score } = item.strength;
+      if (score < GOOD_SCORE) return false;
+      const hasEvidenceAsk =
+        concerns.missing.length > 0 || concerns.evidence.length > 0;
+      return hasEvidenceAsk && concerns.clarity.length === 0;
+    })
+    .map((item) => ({
+      id: item.bullet.id,
+      entryId: item.entry.id,
+    }));
   const goodCount = scored.length - belowGood;
   if (scored.length > 0 && goodCount * 2 >= scored.length) passed.push("goodBullets");
 
@@ -120,6 +154,8 @@ export function libraryHealth(library: Library): LibraryHealth {
     belowGood,
     bulletCount: scored.length,
     strongOrBetter,
+    evidenceGaps: evidenceNeeds.length,
+    evidenceNeeds,
   };
 }
 

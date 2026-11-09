@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, UserRound } from "lucide-react";
 
 import { signOut } from "@/features/account/actions";
 import { useOpenFeedback } from "@/features/growth/feedback/components/feedback-button";
+import { NewJobLink } from "@/features/jobs/components/new-job-link";
 import { RemindersBell } from "@/features/tracking/components/reminders-bell";
 import type { ReminderView } from "@/features/tracking/reminders";
 import { Button } from "@/components/ui/button";
@@ -35,6 +37,8 @@ type AppHeaderProps = {
 };
 
 export function AppHeader({ userEmail, reminders, usage }: AppHeaderProps) {
+  const pathname = usePathname();
+  const showNewJob = pathname !== "/jobs/new";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [signOutPending, startSignOut] = useTransition();
   const openFeedback = useOpenFeedback();
@@ -69,6 +73,11 @@ export function AppHeader({ userEmail, reminders, usage }: AppHeaderProps) {
       </Sheet>
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+        {showNewJob ? (
+          <Button asChild>
+            <NewJobLink>{strings.actions.newJob}</NewJobLink>
+          </Button>
+        ) : null}
         <RemindersBell reminders={reminders} />
 
         <DropdownMenu>

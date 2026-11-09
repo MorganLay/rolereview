@@ -40,22 +40,21 @@ Work down the list. After each Load, use the links on `/dev` (Dashboard, Library
 
 ### New
 
-Empty library, no jobs. Getting started is on the first step.
+Empty library, no jobs.
 
-- Dashboard still says **Dashboard** and **What needs you today.**
-- Under that, a card: **Getting started**, **Set up your job search.**, **Tailored resumes use only your real experience.**, and a **Build your library** button. That button is the only strong action.
-- The steps are **Build your library** (says **Current**, with one purpose line), **Add a job**, **Tailor your resume**, and **Export it**. Upcoming steps are the name only. None of them say **To do.**
-- **Build your library** opens Library, which says **Your library is empty**, with **Import a resume** and **Add manually**.
+- Dashboard says **Dashboard** and **Your job search, at a glance.**
+- The card is **Start with your experience.** **Import resume** is the strong action. **New job** is on that card as well as in the header. **Add manually** opens Library, which says **Your library is empty**, with **Import a resume** and **Add manually**.
+- There is no application count and no attention list.
 - Import says **Import your resume** and **Start your library from a resume. Nothing is saved until you save it to your library.** **Read resume** stays quiet until a file or enough text is there. After a resume is read, an empty library shows **Your resume has been read.** with the section counts, **Save to library**, and **Review and edit first**.
-- Jobs says **No jobs yet. Paste a job posting to accept your first job.**
+- Jobs says **No jobs yet. Paste a job posting to accept your first job.** The empty board’s **New job** opens a blank posting. The toolbar does not add another one.
 
-This is the pass for the first-run screens. Notice whether the next action is obvious. **New job** is not in the header, so the first screen does not offer a job before the library.
+This is the pass for the first-run screens. Notice whether the next action is obvious.
 
 ### Library
 
-The sample library is in. No jobs. Step 1 is done. The next step is a job.
+The sample library is in. No jobs.
 
-- Dashboard: **Build your library** says **Done.** The button says **Add a job.** That step says **Current.**
+- Dashboard: **Found an interesting role?** with **New job**. **Your library** gives one quality line and **Improve library** or **Open library**. There is no application count.
 - Library shows the sample roles, projects, degree, and skills. The empty card is gone.
 - Jobs is still the empty board.
 
@@ -63,7 +62,7 @@ The sample library is in. No jobs. Step 1 is done. The next step is a job.
 
 Midpoint. Library, plus one saved job and no resume.
 
-- Dashboard: library and job say **Done.** The button says **Tailor your resume.** That step says **Current.**
+- Dashboard: **Continue where you left off** names Product Designer at Lakeshore Civic. The button is **Tailor resume**. **Found an interesting role?** is there too, with **New job**.
 - The board has one card: **Product Designer**, then **Lakeshore Civic**. Priority is three filled stars of five. The link is **Tailor resume**.
 - Open it. Status is Saved. The main button is **Tailor resume**.
 - Documents has no finished resume.
@@ -74,7 +73,7 @@ Do not tailor unless you mean to. A real tailor spends a model call. This snapsh
 
 The same job, with one tailored resume that has not been exported.
 
-- Dashboard: the first three steps say **Done.** The button says **Export it.** That step says **Current.**
+- Dashboard: **Continue where you left off** names that role. The button is **Review resume** and opens it. The card stays compact. It is not the whole page.
 - The job’s main button is **Review resume**. It opens that resume.
 - Opening it does not count as an export. Exporting does, and it can finish setup. Leave export alone if you still want this snapshot.
 
@@ -82,8 +81,8 @@ The same job, with one tailored resume that has not been exported.
 
 The full sample search. Eight jobs, interviews, contacts, reminders, an offer, and two finished resumes. Onboarding is already closed, so the line “You’re set up” does not show.
 
-- Dashboard is no longer the checklist. You get **Active**, **Interviews**, **Offers**, and **Urgent**, then **Needs you** and **Continue working**.
-- The first row in **Needs you** is the interview that starts within 48 hours. It opens that job’s Interviews tab.
+- Dashboard is **Found an interesting role?**, **Continue where you left off** for the saved Lakeshore Civic role (**Tailor resume**), **Your library**, **Applications**, **Needs your attention**, and **Recent applications**. It does not lead with **Review your resume** for a job that is already applied. Recent applications is one row per job, not repeated “Resume tailored” lines.
+- The first row in **Needs your attention** is the interview that starts within 48 hours. It opens that job’s Interviews tab.
 - The board has cards across the stages. The list view is `/jobs?view=list`.
 - Contacts and Insights have something to show. Insights on the Free plan blurs **What’s working**.
 
@@ -92,7 +91,7 @@ The full sample search. Eight jobs, interviews, contacts, reminders, an offer, a
 After the desktop pass, narrow the window to about 375 pixels wide and repeat the screen you care about.
 
 - The sidebar becomes the menu button. Dashboard, Library, Jobs, Contacts, Insights, and Settings are in that menu.
-- **New job** is on the Jobs page, beside Board and List. The header keeps the reminders bell and the account menu.
+- **New job** is in the header, before the reminders bell, except on the new-job page. It opens a blank posting form. The Jobs toolbar does not repeat it. An empty board still offers **New job**. The header also keeps the reminders bell and the account menu.
 - The page does not scroll sideways. Text stays inside the screen.
 
 ## Public pages

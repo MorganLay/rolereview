@@ -31,6 +31,7 @@ function job(partial: Partial<HomeJob> & Pick<HomeJob, "id">): HomeJob {
     reminders: [],
     interviews: [],
     resumes: [],
+    tailoringUpdatedAt: null,
     ...partial,
   };
 }
@@ -265,8 +266,14 @@ describe("seedClock", () => {
             },
           ],
         }),
-      ])?.href,
-    ).toBe("/jobs/interviewing/resumes/draft");
+        job({
+          id: "saved",
+          status: "SAVED",
+          analysisReady: true,
+          updatedAt: clock.updated.saved,
+        }),
+      ]),
+    ).toMatchObject({ kind: "tailor", jobId: "saved", href: "/jobs/saved?tab=documents" });
   });
 
   it("counts one application and one response in this week", () => {

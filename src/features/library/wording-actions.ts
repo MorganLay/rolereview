@@ -250,7 +250,7 @@ export async function draftStrengthenedBullet(input: unknown): Promise<
   ActionResult<
     | { status: "followUps"; questions: string[] }
     | { status: "bullet"; text: string; why: string }
-    | { status: "dropped" }
+    | { status: "dropped"; reason: "empty" | "unsupported" | "number" | "unchanged" }
   >
 > {
   const user = await requireUserForAction();
@@ -260,10 +260,13 @@ export async function draftStrengthenedBullet(input: unknown): Promise<
   const library = await getLibrary(user.id);
   const entry = library?.entries.find((item) => item.id === parsed.entryId);
   if (!library || !entry) return fail("NOT_FOUND");
-  if (parsed.confirmed.length === 0) return ok({ status: "dropped" });
+  if (parsed.confirmed.length === 0) {
+    return ok({ status: "dropped", reason: "empty" });
+  }
 
   const quota = await checkQuota(user, "BULLET_COACH");
   if (!quota.allowed) return fail("QUOTA_EXCEEDED");
+  // Confirmed answers are facts the person just verified. They count as evidence.
   const evidence = [...libraryEvidence(library), ...parsed.confirmed];
   const result = await runStructured({
     kind: "BULLET_COACH",
@@ -293,7 +296,12 @@ export async function draftStrengthenedBullet(input: unknown): Promise<
     original: "",
     evidence,
   });
-  if (!reviewed.ok) return ok({ status: "dropped" });
+  if (!reviewed.ok) {
+    return ok({
+      status: "dropped",
+      reason: reviewed.reason === "number" ? "number" : reviewed.reason,
+    });
+  }
   return ok({ status: "bullet", text: reviewed.text, why: reviewed.why });
 }
 
