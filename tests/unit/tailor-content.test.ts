@@ -400,6 +400,26 @@ describe("preserveUserEdits", () => {
     expect(bullet?.suggestion).toBe("Maintained 14 reports for the processing team.");
   });
 
+  it("drops a manual edit when the cited source text changed", () => {
+    const snapshot = librarySnapshot();
+    const previousAi = validateTailorOutput(tailorOutput(), snapshot, jobAnalysis()).output;
+    const previous = assembleResumeContent(previousAi, snapshot, ids());
+    const edited = previous.entries[0]?.bullets[0];
+    if (!edited) throw new Error("missing bullet");
+    edited.text = "Kept the weekly reports current for the team.";
+    edited.edited = true;
+
+    const next = assembleResumeContent(previousAi, snapshot, ids());
+    const fresh = next.entries[0]?.bullets[0];
+    if (!fresh) throw new Error("missing fresh bullet");
+    fresh.originalText = "A different saved line about a later role.";
+
+    const kept = preserveUserEdits(next, previous, previousAi);
+    expect(kept.entries[0]?.bullets[0]?.text).not.toBe(
+      "Kept the weekly reports current for the team.",
+    );
+  });
+
   it("leaves a new tailor alone when the previous version was not edited", () => {
     const snapshot = librarySnapshot();
     const ai = validateTailorOutput(tailorOutput(), snapshot, jobAnalysis()).output;

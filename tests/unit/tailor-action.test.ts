@@ -34,6 +34,7 @@ vi.mock("@/lib/db", () => ({
         jobEvent: { create: eventCreate },
       }),
     job: { findFirst: jobFindFirst },
+    wordingVariant: { findMany: vi.fn().mockResolvedValue([]) },
     tailoredResume: {
       findFirst: resumeFindFirst,
       updateMany: resumeUpdate,

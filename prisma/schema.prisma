@@ -40,6 +40,27 @@ enum EntryKind {
   OTHER
 }
 
+/// What a saved wording belongs to. Not a target profile.
+enum WordingKind {
+  BULLET
+  HEADLINE
+  SUMMARY
+}
+
+enum WordingStatus {
+  PROPOSED
+  APPROVED
+}
+
+/// How the wording was produced. CANONICAL is the earlier library text.
+enum WordingOrigin {
+  CANONICAL
+  REWRITE
+  STRENGTHEN
+  USER
+  JOB
+}
+
 enum AnalysisStatus {
   PENDING
   READY
@@ -252,6 +273,7 @@ model User {
 
   entries         Entry[]
   bullets         Bullet[]
+  wordings        WordingVariant[]
   skills          Skill[]
   targetProfiles  TargetProfile[]
   jobs            Job[]
@@ -309,11 +331,43 @@ model Bullet {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  entry Entry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entry    Entry            @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  wordings WordingVariant[]
 
   @@index([entryId, sortOrder])
   @@index([userId])
+}
+
+/// An approved or proposed way to say a bullet, headline, or summary.
+/// The library bullet, headline, and summary stay the canonical text.
+/// A jobId marks wording for one posting. It does not replace the default.
+model WordingVariant {
+  id         String        @id @default(uuid()) @db.Uuid
+  userId     String        @db.Uuid
+  kind       WordingKind
+  status     WordingStatus
+  origin     WordingOrigin
+  bulletId   String?       @db.Uuid
+  jobId      String?       @db.Uuid
+  text       String        @db.Text
+  reason     String?       @db.Text
+  /// Stable library ids (bullet, entry, skill), not E1.B2 labels.
+  sourceRefs String[]      @default([])
+  basedOnId  String?       @db.Uuid
+  isDefault  Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bullet  Bullet?          @relation(fields: [bulletId], references: [id], onDelete: Cascade)
+  job     Job?             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  basedOn WordingVariant?  @relation("WordingLineage", fields: [basedOnId], references: [id], onDelete: SetNull)
+  derived WordingVariant[] @relation("WordingLineage")
+
+  @@index([userId, kind])
+  @@index([userId, bulletId])
+  @@index([jobId])
 }
 
 model Skill {
@@ -407,6 +461,7 @@ model Job {
   reminders            Reminder[]
   offer                Offer?
   prepKits             PrepKit[]
+  wordings             WordingVariant[]
 
   @@index([userId, status, boardOrder])
   @@index([userId, archivedAt, updatedAt])

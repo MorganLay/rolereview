@@ -28,14 +28,30 @@ export const STRENGTH_TIERS = [
 
 export type StrengthTier = (typeof STRENGTH_TIERS)[number];
 
+export type BulletRole = "accomplishment" | "record";
+
+export type StrengthConcern = "missing" | "clarity" | "evidence";
+
 export type BulletStrength = {
   score: number;
   tier: StrengthTier;
   passed: CheckId[];
   fixes: string[];
+  /** Missing information, writing clarity, and evidence, kept apart. */
+  concerns: Record<StrengthConcern, string[]>;
   /** Shape for the first failing check. Null when every check passes. */
   example: string | null;
 };
+
+/**
+ * Coursework and credentials are records. They are not scored as accomplishments.
+ * A line that says "coursework" is a record even when it sits on another entry.
+ */
+export function bulletRole(kind: string, text: string): BulletRole {
+  if (kind === "EDUCATION" || kind === "CERTIFICATION") return "record";
+  if (/\b(coursework|course work|courses in)\b/i.test(text)) return "record";
+  return "accomplishment";
+}
 
 /** Tools and domain terms that satisfy `specific` without a matching skill. */
 export const KNOWN_TERMS = [
@@ -159,7 +175,8 @@ const MIN_WORDS = 8;
 const MAX_WORDS = 32;
 
 type Failure =
-  | { id: "verb" | "voice" | "specific" }
+  | { id: "verb"; present: boolean }
+  | { id: "voice" | "specific" }
   | { id: "metric"; kind: "missing" | "spelled" }
   | { id: "length"; kind: "short" | "long" }
   | { id: "filler"; phrase: string };
@@ -184,12 +201,19 @@ export function filledSegments(tier: StrengthTier): number {
 export function bulletStrength(
   text: string,
   skills: readonly string[],
+  role: BulletRole = "accomplishment",
 ): BulletStrength {
   const tokens = tokenize(text);
   const failures: Failure[] = [];
+  const record = role === "record";
 
-  if (!STRONG_VERBS.has(tokens[0] ?? "")) failures.push({ id: "verb" });
-  if (!hasMetric(text)) {
+  if (!record && !STRONG_VERBS.has(tokens[0] ?? "")) {
+    failures.push({
+      id: "verb",
+      present: tokens.slice(1).some((token) => STRONG_VERBS.has(token)),
+    });
+  }
+  if (!record && !hasMetric(text)) {
     failures.push({
       id: "metric",
       kind: hasSpelledNumber(text) ? "spelled" : "missing",
@@ -203,17 +227,45 @@ export function bulletStrength(
   if (!isSpecific(text, skills)) failures.push({ id: "specific" });
 
   const failed = new Set(failures.map((failure) => failure.id));
-  const passed = CHECK_IDS.filter((id) => !failed.has(id));
+  const applicable = record
+    ? CHECK_IDS.filter((id) => id !== "verb" && id !== "metric")
+    : CHECK_IDS;
+  const passed = applicable.filter((id) => !failed.has(id));
   const score = passed.length;
 
   const first = failures[0];
+  const fixes = score >= CHECK_IDS.length ? [] : failures.map((failure) => fixFor(failure, score));
   return {
     score,
     tier: tierForScore(score),
     passed,
-    fixes: score >= CHECK_IDS.length ? [] : failures.map((failure) => fixFor(failure, score)),
+    fixes,
+    concerns: concernsFor(failures, fixes),
     example: first ? exampleFor(first) : null,
   };
+}
+
+function concernsFor(
+  failures: readonly Failure[],
+  fixes: readonly string[],
+): Record<StrengthConcern, string[]> {
+  const concerns: Record<StrengthConcern, string[]> = {
+    missing: [],
+    clarity: [],
+    evidence: [],
+  };
+  failures.forEach((failure, index) => {
+    const fix = fixes[index];
+    if (!fix) return;
+    concerns[concernFor(failure.id)].push(fix);
+  });
+  return concerns;
+}
+
+function concernFor(id: CheckId): StrengthConcern {
+  if (id === "metric") return "missing";
+  if (id === "specific") return "evidence";
+  return "clarity";
 }
 
 function fixFor(failure: Failure, score: number): string {
@@ -221,7 +273,7 @@ function fixFor(failure: Failure, score: number): string {
   const copy = strings.strength.fixes;
   switch (failure.id) {
     case "verb":
-      return copy.verb(tier);
+      return failure.present ? copy.verbPresent(tier) : copy.verb(tier);
     case "metric":
       return failure.kind === "spelled" ? copy.metricDigit(tier) : copy.metric(tier);
     case "length":

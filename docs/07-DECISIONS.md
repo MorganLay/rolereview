@@ -46,7 +46,12 @@ Contradicts the quality positioning, risks users' accounts on job boards.
 
 **D-31 — Production split after a week of use** · Accepted 2026-10-26
 - Context: T13.4b was next in line, before Q3 and Q4. The live site can stay on the shared database while more of the product is built and used.
-- Choice: Build TQ.9–TQ.13 next, and use the app on your own search that same week. Phase S then turns that week's notes into feature changes and bug fixes, and finishes them before T13.4b. The private beta (T13.5a) starts after Phase S and T13.4b.
+- Choice: Build TQ.9–TQ.13 next, and use the app on your own search that same week. Phase S then turns that week's notes into feature changes and bug fixes, and finishes them before T13.4b. The private beta (T13.5a) starts after Phase S and T13.4b. Updated 2026-11-09 by D-34: the formal beta waits until Phase R.
+
+**D-34 — Library and tailoring before the formal beta** · Accepted 2026-11-09
+- Context: T13.5a was next. The library judges a bullet and does not rewrite it. Friends can use the live site while that is improved. D-23 and D-28 keep the rest of Release 1.1 closed until 1.0 ships.
+- Choice: Defer T13.5a. Do not mark it done. Phase R refines the library and the tailor that already exist, starting with TR.1. A library rewrite counts against the bullet-coach allowance already in `plans.ts`. The Phase 17 coach (three suggestions, and a placeholder that blocks save) stays in 1.1. Notes from ongoing use still go in `docs/Feedback.md`.
+- Consequences: the next task is TR.1. The public launch still waits for the formal beta, TQ.14, and TQ.15.
 
 **D-29 — Requirement states are computed from the current resume** · Accepted 2026-10-25
 The AI's verdict at tailoring time is an input, not the answer. The match panel shows In this resume / In your library, not in this resume / Needs review / No evidence found, recomputed as the user edits. The score explains its basis and never implies a hiring probability.

@@ -1,7 +1,7 @@
 /**
  * Fabrication guard for a tailored resume.
  * docs/05-AI.md → The fabrication guard.
- * Pure: G1–G15 clean the model output before anything is saved.
+ * Pure: G1–G17 clean the model output before anything is saved.
  */
 
 import type { LibrarySnapshot } from "@/features/library/schemas";
@@ -11,6 +11,7 @@ import { hasUnsupportedNumber } from "@/lib/ai/numbers";
 import {
   citedExperienceYears,
   evidenceText,
+  inflatedRole,
   isRedundantBullet,
   requirementOverstated,
   unsupportedClaim,
@@ -48,6 +49,8 @@ export const GUARD_CODES = [
   "G13",
   "G14",
   "G15",
+  "G16",
+  "G17",
 ] as const;
 
 export type GuardCode = (typeof GUARD_CODES)[number];
@@ -257,6 +260,11 @@ function cleanBullets(
     const first = sources[0];
     if (first === undefined) continue;
 
+    if (sources.length > 1) {
+      issues.push({ code: "G17", ref: first.ref });
+      continue;
+    }
+
     const key = sources
       .map((source) => source.ref)
       .sort()
@@ -280,15 +288,14 @@ function cleanBullets(
       reverts += 1;
       issues.push({ code: "G5", ref: first.ref });
     } else {
-      const claim = unsupportedClaim(
-        text,
-        sources.map((source) => source.text),
-      );
-      if (claim !== null) {
+      const cited = sources.map((source) => source.text);
+      const claim = unsupportedClaim(text, cited);
+      const inflated = claim === null ? inflatedRole(text, cited) : null;
+      if (claim !== null || inflated !== null) {
         text = first.text;
         reverted = true;
         reverts += 1;
-        issues.push({ code: "G13", ref: first.ref });
+        issues.push({ code: claim !== null ? "G13" : "G16", ref: first.ref });
       }
     }
 

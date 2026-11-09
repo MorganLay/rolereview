@@ -15,18 +15,23 @@ import { useUndoDelete } from "@/lib/use-undo-delete";
 
 import { createBullet, deleteBullet, reorderBullet, updateBullet } from "../actions";
 import { applyBulletAction } from "../bullet-state";
+import { bulletRole } from "../strength";
 import type { LibraryBullet } from "../types";
+import type { WordingView } from "../wording";
+import { BulletAssist } from "./bullet-assist";
 import { StrengthMeter } from "./strength-meter";
 
 type BulletListProps = {
   entryId: string;
+  entryKind: string;
   bullets: LibraryBullet[];
   skills: readonly string[];
+  wordings: readonly WordingView[];
 };
 
 const copy = strings.library.bullets;
 
-export function BulletList({ entryId, bullets, skills }: BulletListProps) {
+export function BulletList({ entryId, entryKind, bullets, skills, wordings }: BulletListProps) {
   const [optimisticBullets, addOptimistic] = useOptimistic(bullets, applyBulletAction);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -204,7 +209,11 @@ export function BulletList({ entryId, bullets, skills }: BulletListProps) {
                     <span className="sr-only">{copy.edit}: </span>
                     {bullet.text}
                   </button>
-                  <StrengthMeter text={bullet.text} skills={skills} />
+                  <StrengthMeter
+                    text={bullet.text}
+                    skills={skills}
+                    role={bulletRole(entryKind, bullet.text)}
+                  />
                   <RowActions
                     menuLabel={copy.actionsLabel(bullet.text)}
                     actions={[
@@ -236,6 +245,9 @@ export function BulletList({ entryId, bullets, skills }: BulletListProps) {
                     ]}
                   />
                 </div>
+              )}
+              {editingId === bullet.id ? null : (
+                <BulletAssist bulletId={bullet.id} text={bullet.text} wordings={wordings} />
               )}
             </li>
           ))}

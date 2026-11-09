@@ -111,12 +111,16 @@ export const ContentBullet = z.object({
   suggestion: z.string().max(RESUME_LIMITS.bullet).nullable().default(null),
   /** Why the suggestion differs from the library bullet. */
   suggestionNote: z.string().max(RESUME_LIMITS.note).nullable().default(null),
+  /** Stable library bullet ids. Empty on resumes saved before wording variants. */
+  sourceIds: z.array(z.string()).optional(),
 });
 
 export const ContentEntry = z.object({
   ref: z.string(),
   kind: EntryKindEnum,
   included: z.boolean(),
+  /** Stable library entry id. Absent on resumes saved before wording variants. */
+  entryId: z.string().optional(),
   bullets: z.array(ContentBullet),
 });
 

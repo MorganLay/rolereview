@@ -113,15 +113,20 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **TS.5** New job paste and a blank form
 - T13.4b waits until TS.2–TS.5 are ticked.
 
+## Phase R — Library and tailoring
+- [ ] **TR.1** Grounded bullet rewrite
+- The formal beta waits until this phase is done. Further library and tailoring notes become the next task here, one at a time.
+
 ## Production and launch
 - [x] **T13.4b** Separate production environment
-- [ ] **T13.5a** Private beta (5–10 people)
+- [ ] **T13.5a** Private beta (5–10 people) — deferred until Phase R
 - [ ] **TQ.14** Behaviour test pass
 - [ ] **TQ.15** Fix what testers hit
 - [ ] **T13.5b** Public launch
 
 ## Notes
 
+- **2026-11-09 Phase R:** T13.5a is deferred, not closed. Friends can keep using the live app, and notes still go in `docs/Feedback.md`. The formal 5–10 person pass waits until the library and tailoring tasks are done. TR.1 is the first of those tasks. Building a library from nothing, with no resume to import, is logged in `docs/Feedback.md`. Not a task yet.
 - **2026-11-08 T13.4b:** Production uses `rolerefine-prod` in Canada on Vercel Pro, with live Stripe. A CA$32.77 charge upgraded the account to Pro; the refund and an immediate cancel returned it to Free. PostHog project 672487 is on Vercel Production. The local `.env` PostHog key stays the placeholder. `MAILING_ADDRESS` stays unset until a PO box. No new founding coupon. Deploy `fa8bea1` fixed the board-title type error that had failed the build.
 - **2026-11-07 Library variants:** Completeness names the whole profile check when only the headline is empty. Bullet advice is the strength checks, including a number and an action verb. Approved headlines, summaries, and bullet variants, chosen per job with a reason, are logged in `docs/Feedback.md`. Not a task yet.
 - **2026-11-07 Jobs board density:** Columns are 320px, about 480px tall when empty, and grow with their cards. The card title is the role, the place line drops a street, and a score reads "Match N of 100". Checked signed in. Move to… → Closed opened the close dialog and was cancelled, so the job stayed Saved. A cross-column drop was not completed.

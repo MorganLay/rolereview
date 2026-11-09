@@ -4,7 +4,7 @@
  * Recent role: every current Experience entry, or the latest one if none is current.
  */
 
-import { bulletStrength, type StrengthTier } from "./strength";
+import { bulletRole, bulletStrength, CHECK_IDS, type StrengthTier } from "./strength";
 import type { Library, LibraryEntry, LibraryProfile } from "./types";
 
 export const HEALTH_CHECK_IDS = [
@@ -29,9 +29,15 @@ export type WeakBullet = {
   example: string | null;
 };
 
+export const PROFILE_FIELD_IDS = ["fullName", "headline", "location", "summary"] as const;
+
+export type ProfileFieldId = (typeof PROFILE_FIELD_IDS)[number];
+
 export type LibraryHealth = {
   percent: number;
   passed: HealthCheckId[];
+  /** Empty profile fields only. A filled name is not listed when the headline is missing. */
+  missingProfile: ProfileFieldId[];
   weakest: WeakBullet[];
   /** Bullets scoring under Good. */
   belowGood: number;
@@ -46,11 +52,11 @@ const RECENT_BULLET_TARGET = 3;
 const WEAKEST_LIMIT = 5;
 const GOOD_SCORE = 4;
 const STRONG_SCORE = 5;
-const EXCELLENT_SCORE = 6;
 
 export function libraryHealth(library: Library): LibraryHealth {
+  const missingProfile = missingProfileFields(library.profile);
   const passed: HealthCheckId[] = [];
-  if (profileComplete(library.profile)) passed.push("profile");
+  if (missingProfile.length === 0) passed.push("profile");
   if (library.entries.some((entry) => entry.kind === "EXPERIENCE")) {
     passed.push("experience");
   }
@@ -69,7 +75,7 @@ export function libraryHealth(library: Library): LibraryHealth {
     entry.bullets.map((bullet) => ({
       entry,
       bullet,
-      strength: bulletStrength(bullet.text, skillNames),
+      strength: bulletStrength(bullet.text, skillNames, bulletRole(entry.kind, bullet.text)),
     })),
   );
   const belowGood = scored.filter((item) => item.strength.score < GOOD_SCORE).length;
@@ -78,7 +84,13 @@ export function libraryHealth(library: Library): LibraryHealth {
   if (scored.length > 0 && goodCount * 2 >= scored.length) passed.push("goodBullets");
 
   const weakest = scored
-    .filter((item) => item.strength.score < EXCELLENT_SCORE)
+    .filter((item) =>
+      needsClearerWording(
+        bulletRole(item.entry.kind, item.bullet.text),
+        item.strength.passed,
+        item.strength.score,
+      ),
+    )
     .sort((a, b) => {
       if (a.strength.score !== b.strength.score) {
         return a.strength.score - b.strength.score;
@@ -103,6 +115,7 @@ export function libraryHealth(library: Library): LibraryHealth {
   return {
     percent: passed.length * 20,
     passed,
+    missingProfile,
     weakest,
     belowGood,
     bulletCount: scored.length,
@@ -110,13 +123,32 @@ export function libraryHealth(library: Library): LibraryHealth {
   };
 }
 
-function profileComplete(profile: LibraryProfile): boolean {
-  return (
-    filled(profile.fullName) &&
-    filled(profile.headline) &&
-    filled(profile.location) &&
-    filled(profile.summary)
-  );
+export function missingProfileFields(profile: LibraryProfile): ProfileFieldId[] {
+  return PROFILE_FIELD_IDS.filter((id) => !filled(profile[id]));
+}
+
+/**
+ * A missing number alone does not put a line on the improvement list.
+ * A Good line stays off it unless the writing or the evidence is the problem.
+ * A record, such as coursework, is listed only for clarity or evidence.
+ */
+function needsClearerWording(
+  role: ReturnType<typeof bulletRole>,
+  passed: readonly string[],
+  score: number,
+): boolean {
+  const failed = CHECK_IDS.filter((id) => !passed.includes(id));
+  const meaningful = failed.filter((id) => id !== "metric");
+  if (meaningful.length === 0) return false;
+  if (role === "record") {
+    return meaningful.some((id) => id === "voice" || id === "filler" || id === "length" || id === "specific");
+  }
+  if (score >= GOOD_SCORE) {
+    return meaningful.some(
+      (id) => id === "voice" || id === "filler" || id === "length" || id === "specific" || id === "verb",
+    );
+  }
+  return true;
 }
 
 function filled(value: string | null): boolean {

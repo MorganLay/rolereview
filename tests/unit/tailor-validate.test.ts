@@ -162,7 +162,7 @@ describe("validateTailorOutput", () => {
     expect(result.issues).toContainEqual({ code: "G4", ref: "E1.B1" });
   });
 
-  it("G4 allows a number that appears on a later cited source", () => {
+  it("G17 drops a bullet that cites two sources", () => {
     const output = tailorOutput();
     const entry = output.entries[0];
     if (!entry) throw new Error("missing entry");
@@ -174,10 +174,14 @@ describe("validateTailorOutput", () => {
     const result = guard(output);
 
     expect(result.reverts).toBe(0);
-    expect(result.output.entries[0]?.bullets[0]?.reverted).toBe(false);
+    expect(result.output.entries[0]?.bullets.map((bullet) => bullet.sourceRefs)).not.toContainEqual([
+      "E1.B1",
+      "E1.B2",
+    ]);
+    expect(result.issues).toContainEqual({ code: "G17", ref: "E1.B1" });
   });
 
-  it("G4 restores the first source, not the second", () => {
+  it("G17 drops a merged bullet instead of keeping only the first source", () => {
     const output = tailorOutput();
     const entry = output.entries[0];
     if (!entry) throw new Error("missing entry");
@@ -188,10 +192,11 @@ describe("validateTailorOutput", () => {
 
     const result = guard(output);
 
-    expect(result.output.entries[0]?.bullets[0]?.text).toBe(
-      "Cut prep time from 2 days to 3 hours.",
-    );
-    expect(result.issues).toContainEqual({ code: "G4", ref: "E1.B2" });
+    expect(result.reverts).toBe(0);
+    expect(result.issues).toContainEqual({ code: "G17", ref: "E1.B2" });
+    expect(
+      result.output.entries[0]?.bullets.some((bullet) => bullet.text === "Shipped 99 features."),
+    ).toBe(false);
   });
 
   it("G4 treats 1,000 and 1 000 as the same number as 1000", () => {
@@ -301,7 +306,7 @@ describe("validateTailorOutput", () => {
     expect(reverted.issues).toContainEqual({ code: "G5", ref: "E1.B1" });
   });
 
-  it("G6 keeps the first bullet when source refs match in another order", () => {
+  it("G17 drops both copies of a merged bullet", () => {
     const output = tailorOutput();
     const entry = output.entries[0];
     if (!entry) throw new Error("missing entry");
@@ -318,11 +323,11 @@ describe("validateTailorOutput", () => {
 
     const result = guard(output);
 
-    expect(result.output.entries[0]?.bullets).toHaveLength(1);
-    expect(result.output.entries[0]?.bullets[0]?.text).toBe(
-      "Maintained 14 reports and cut prep to 3 hours.",
-    );
-    expect(result.issues).toContainEqual({ code: "G6", ref: "E1.B2" });
+    expect(result.output.entries[0]?.bullets).toHaveLength(0);
+    expect(result.issues).toEqual([
+      { code: "G17", ref: "E1.B1" },
+      { code: "G17", ref: "E1.B2" },
+    ]);
   });
 
   it("G6 drops a bullet whose refs match only after a bad ref is removed", () => {

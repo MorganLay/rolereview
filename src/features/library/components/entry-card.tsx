@@ -7,11 +7,14 @@ import { strings } from "@/copy/strings";
 import { formatResumeDateRange } from "@/features/library/dates";
 
 import type { LibraryEntry } from "../types";
+import type { WordingView } from "../wording";
 import { BulletList } from "./bullet-list";
+import { StrengthenPanel } from "./strengthen-panel";
 
 type EntryCardProps = {
   entry: LibraryEntry;
   skills: readonly string[];
+  wordings: readonly WordingView[];
   canMoveUp: boolean;
   canMoveDown: boolean;
   moving: boolean;
@@ -35,6 +38,7 @@ function httpUrl(value: string): string | null {
 export function EntryCard({
   entry,
   skills,
+  wordings,
   canMoveUp,
   canMoveDown,
   moving,
@@ -110,7 +114,14 @@ export function EntryCard({
           ]}
         />
       </div>
-      <BulletList entryId={entry.id} bullets={entry.bullets} skills={skills} />
+      <BulletList
+        entryId={entry.id}
+        entryKind={entry.kind}
+        bullets={entry.bullets}
+        skills={skills}
+        wordings={wordings}
+      />
+      <StrengthenPanel entryId={entry.id} />
     </article>
   );
 }

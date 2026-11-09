@@ -31,6 +31,7 @@ export function assembleResumeContent(
   validated: ValidatedTailorOutput,
   snapshot: LibrarySnapshot,
   createId: () => string = nanoid,
+  notes: ReadonlyMap<string, string> = new Map(),
 ): ResumeContentData {
   const byRef = new Map(snapshot.entries.map((entry) => [entry.ref, entry]));
   const selectedRefs = new Set<string>();
@@ -57,7 +58,7 @@ export function assembleResumeContent(
   const entries: ContentEntry[] = [];
   for (const kind of ENTRY_KINDS) {
     for (const selected of selectedByKind[kind]) {
-      entries.push(selectedEntry(selected, createId));
+      entries.push(selectedEntry(selected, createId, notes));
     }
     for (const snapshotEntry of snapshot.entries) {
       if (snapshotEntry.kind !== kind || selectedRefs.has(snapshotEntry.ref)) {
@@ -78,27 +79,37 @@ export function assembleResumeContent(
   });
 }
 
-function selectedEntry(selected: Selected, createId: () => string): ContentEntry {
+function selectedEntry(
+  selected: Selected,
+  createId: () => string,
+  notes: ReadonlyMap<string, string>,
+): ContentEntry {
   const chosen = new Set<string>();
   const bullets: ContentBullet[] = [];
 
   const sourceText = new Map(
     selected.snapshot.bullets.map((bullet) => [bullet.ref, bullet.text]),
   );
+  const sourceId = new Map(
+    selected.snapshot.bullets.map((bullet) => [bullet.ref, bullet.id]),
+  );
   for (const bullet of selected.validated.bullets) {
+    if (bullet.sourceRefs.length !== 1) continue;
     for (const ref of bullet.sourceRefs) chosen.add(ref);
-    bullets.push(contentBullet(bullet, sourceText, createId));
+    const why = notes.get(sourceKey(bullet.sourceRefs)) ?? null;
+    bullets.push(contentBullet(bullet, sourceText, sourceId, createId, why));
   }
 
   for (const original of selected.snapshot.bullets) {
     if (chosen.has(original.ref)) continue;
-    bullets.push(libraryBullet(original.text, [original.ref], false, createId));
+    bullets.push(libraryBullet(original.text, [original.ref], false, createId, [original.id]));
   }
 
   return {
     ref: selected.snapshot.ref,
     kind: selected.snapshot.kind,
     included: true,
+    entryId: selected.snapshot.id,
     bullets,
   };
 }
@@ -106,23 +117,27 @@ function selectedEntry(selected: Selected, createId: () => string): ContentEntry
 function contentBullet(
   bullet: ValidatedBullet,
   sourceText: ReadonlyMap<string, string>,
+  sourceId: ReadonlyMap<string, string>,
   createId: () => string,
+  why: string | null = null,
 ): ContentBullet {
   const text = clip(bullet.text, RESUME_LIMITS.bullet);
   const first = bullet.sourceRefs[0];
   const original = first ? sourceText.get(first) ?? text : text;
   const originalText = clip(original, RESUME_LIMITS.bullet);
   const changed = !bullet.reverted && !sameWording(text, originalText);
+  const note = why?.trim() || rewriteNote(bullet.sourceRefs.length);
   return {
     id: createId(),
     text,
     included: true,
     sourceRefs: bullet.sourceRefs,
+    sourceIds: idsFor(bullet.sourceRefs, sourceId),
     reverted: bullet.reverted,
     edited: false,
     originalText,
     suggestion: changed ? text : null,
-    suggestionNote: changed ? rewriteNote(bullet.sourceRefs.length) : null,
+    suggestionNote: changed ? clip(note, RESUME_LIMITS.note) : null,
   };
 }
 
@@ -131,6 +146,7 @@ function libraryBullet(
   sourceRefs: string[],
   included: boolean,
   createId: () => string,
+  sourceIds: string[] = [],
 ): ContentBullet {
   const originalText = clip(text, RESUME_LIMITS.bullet);
   return {
@@ -138,12 +154,29 @@ function libraryBullet(
     text: originalText,
     included,
     sourceRefs,
+    sourceIds,
     reverted: false,
     edited: false,
     originalText,
     suggestion: null,
     suggestionNote: null,
   };
+}
+
+function sourceKey(refs: readonly string[]): string {
+  return [...refs].sort().join("\0");
+}
+
+function idsFor(
+  refs: readonly string[],
+  sourceId: ReadonlyMap<string, string>,
+): string[] {
+  const ids: string[] = [];
+  for (const ref of refs) {
+    const id = sourceId.get(ref);
+    if (id) ids.push(id);
+  }
+  return ids;
 }
 
 function rewriteNote(sources: number): string {
@@ -160,8 +193,9 @@ function unselectedEntry(
     ref: snapshotEntry.ref,
     kind: snapshotEntry.kind,
     included: false,
+    entryId: snapshotEntry.id,
     bullets: snapshotEntry.bullets.map((bullet) =>
-      libraryBullet(bullet.text, [bullet.ref], false, createId),
+      libraryBullet(bullet.text, [bullet.ref], false, createId, [bullet.id]),
     ),
   };
 }

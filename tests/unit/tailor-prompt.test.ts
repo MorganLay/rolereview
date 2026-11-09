@@ -18,7 +18,7 @@ const base = {
 describe("tailor prompt", () => {
   it("keeps truthfulness rules in the system prompt", () => {
     expect(SYSTEM).toContain("TRUTHFULNESS");
-    expect(SYSTEM).toContain("sourceRefs");
+    expect(SYSTEM).toContain("sourceRef");
     expect(SYSTEM).toContain("Never add employers");
   });
 

@@ -238,6 +238,7 @@ function buildEntry(
       text,
       included: incoming.included,
       sourceRefs: [...sourceRefs],
+      sourceIds: stored.sourceIds ? [...stored.sourceIds] : undefined,
       reverted,
       edited: text !== baseline,
       originalText: stored.originalText ?? original,
@@ -252,6 +253,7 @@ function buildEntry(
       ref: snapshotEntry.ref,
       kind: snapshotEntry.kind,
       included: incomingEntry.included,
+      entryId: snapshotEntry.id,
       bullets,
     },
   };
@@ -272,15 +274,22 @@ export function preserveUserEdits(
   for (const entry of previous.entries) {
     for (const bullet of entry.bullets) {
       if (!bullet.edited) continue;
-      edited.set(`${entry.ref}\0${sourceKey(bullet.sourceRefs)}`, bullet);
+      edited.set(editKey(entry.ref, bullet), bullet);
     }
   }
 
   const entries = next.entries.map((entry) => ({
     ...entry,
     bullets: entry.bullets.map((bullet) => {
-      const kept = edited.get(`${entry.ref}\0${sourceKey(bullet.sourceRefs)}`);
+      const kept = edited.get(editKey(entry.ref, bullet));
       if (!kept) return bullet;
+      if (
+        kept.originalText &&
+        bullet.originalText &&
+        !sameWording(kept.originalText, bullet.originalText)
+      ) {
+        return bullet;
+      }
       const text = clipLine(kept.text);
       const original = bullet.originalText ?? kept.originalText;
       return {
@@ -367,6 +376,16 @@ function indexAi(
 
 function sourceKey(refs: readonly string[]): string {
   return [...refs].sort().join("\0");
+}
+
+/** Stable bullet ids when the resume has them. Older resumes keep the ref key. */
+function editKey(
+  entryRef: string,
+  bullet: { sourceRefs: readonly string[]; sourceIds?: readonly string[] },
+): string {
+  const ids = (bullet.sourceIds ?? []).filter((id) => id.length > 0);
+  if (ids.length > 0) return `id\0${[...ids].sort().join("\0")}`;
+  return `ref\0${entryRef}\0${sourceKey(bullet.sourceRefs)}`;
 }
 
 function categoryKey(category: string | null): string {

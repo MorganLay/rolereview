@@ -2,8 +2,10 @@ import "server-only";
 
 import type Anthropic from "@anthropic-ai/sdk";
 
+import { z } from "zod";
+
 import type { JobAnalysis } from "@/features/jobs/schemas";
-import { TailorOutput } from "@/features/tailor/schemas";
+import { RequirementMatch, TailorSkillGroup } from "@/features/tailor/schemas";
 
 /**
  * TAILOR prompt and loose output schema. docs/05-AI.md → TAILOR.
@@ -25,23 +27,27 @@ TRUTHFULNESS — these rules override everything else:
 1. Use only facts that appear in the library. Never add employers, titles, dates, tools,
    technologies, certifications, metrics, team sizes, scope or outcomes that the cited source
    bullets do not state.
-2. Every output bullet must cite 1–2 sourceRefs, and all of them must belong to the entry it is
-   listed under (E3.B1 can only appear under E3).
-3. Do not introduce any number that is not in the cited sources. The summary may use a whole-year
+2. Every output bullet must cite exactly one sourceRef, and it must belong to the entry it is
+   listed under (E3.B1 can only appear under E3). Do not merge two bullets into one line.
+3. Do not introduce any number that is not in the cited source. The summary may use a whole-year
    tenure taken from an entry's dates only when that figure is rounded down.
-4. You may: rephrase for clarity, concision, and a stronger verb; reorder clauses; merge two
-   bullets from the same entry; lead with the fact most relevant to this posting; and use the
-   posting's terminology ONLY when the cited source says the same thing ("Postgres" →
-   "PostgreSQL" is fine; "SQL" → "PostgreSQL" is not; "Excel" may be written "Microsoft Excel").
+4. You may: rephrase for clarity, relevance, and order; drop words that do not help; lead with
+   the fact most relevant to this posting; and use the posting's terminology ONLY when the cited
+   source says the same thing ("Postgres" → "PostgreSQL" is fine; "SQL" → "PostgreSQL" is not;
+   "Excel" may be written "Microsoft Excel"). Do not raise the role: helped, assisted, or
+   supported does not become led, directed, or managed. Do not turn "used SQL" into a database
+   the source does not name.
 5. If the candidate lacks something the posting wants, leave it out. Do not imply it, and do
    not give them the job's title. A reporting analyst applying for a data engineer role stays
    a reporting analyst who can show transferable data work.
 6. Do not describe academic, personal, or coursework use of a tool as production experience.
 
 OBJECTIVE
-Produce the strongest truthful resume for this posting. Selecting relevant bullets is not enough.
-Rewrite a bullet when clearer or more relevant wording is possible without adding facts. Leave a
-bullet unchanged when the original is already specific and stronger.
+Produce the strongest truthful resume for this posting. Prefer a directly supported accomplishment
+over a keyword overlap. Transferable evidence is partial, not met. Leave unsupported requirements
+out. Selecting relevant bullets is not enough. Rewrite a bullet when the wording can be clearer or
+more relevant without adding facts. Leave a bullet unchanged when the original is already specific
+and stronger. Do not change a line only to swap a synonym.
 
 REWRITING
 - Keep every tool, employer, metric, date, scope, and outcome inside the cited bullets.
@@ -50,6 +56,15 @@ REWRITING
 - You may not turn spreadsheet joins into ETL, pipelines, warehouses, or production engineering.
 - Do not add "expert", "senior", "production", or years of experience the sources do not state.
 - One idea per bullet. Do not repeat the same achievement under another entry.
+- Cite one source only. Each saved bullet stays its own line.
+
+APPROVED WORDING
+The library may include saved variants for a bullet. For each bullet choose one:
+- "variant": use that saved text when it is the best honest wording for this posting. Set variantId.
+- "canonical": keep the library bullet. Set variantId to null.
+- "rewrite": write a new line only when neither the library bullet nor a saved variant fits. Set variantId to null.
+why is one sentence and names the requirement or emphasis. Do not invent a match percentage.
+A variant chosen for one job does not change the library.
 
 SELECTION
 - Read the whole library, including projects that are not already on a resume. Prefer evidence
@@ -86,7 +101,25 @@ MATCH REPORT
   that says why, without adding facts.`;
 
 /** Loose model output. Limits are applied by the guard, not this schema. */
-export const OutputSchema = TailorOutput;
+export const OutputSchema = z.object({
+  summary: z.string(),
+  entries: z.array(
+    z.object({
+      ref: z.string(),
+      bullets: z.array(
+        z.object({
+          sourceRefs: z.array(z.string()),
+          text: z.string(),
+          variantId: z.string().nullable(),
+          choice: z.enum(["variant", "canonical", "rewrite"]),
+          why: z.string(),
+        }),
+      ),
+    }),
+  ),
+  skills: z.array(TailorSkillGroup),
+  requirementMatches: z.array(RequirementMatch),
+});
 
 export type TailorPromptInput = {
   libraryText: string;
@@ -98,6 +131,7 @@ export type TailorPromptInput = {
   posting: string;
   length: 1 | 2;
   emphasis: string | null;
+  variantsText?: string;
 };
 
 export function buildContent(
@@ -140,6 +174,10 @@ export function buildContent(
     "<options>",
     neutralize(options, "options"),
     "</options>",
+    "",
+    "<variants>",
+    neutralize(input.variantsText?.trim() || "none", "variants"),
+    "</variants>",
   ].join("\n");
 
   return [{ type: "text", text }];

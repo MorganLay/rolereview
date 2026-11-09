@@ -2,19 +2,20 @@
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { strings } from "@/copy/strings";
-import { bulletStrength, filledSegments } from "@/features/library/strength";
+import { bulletStrength, filledSegments, type BulletRole } from "@/features/library/strength";
 import { cn } from "@/lib/utils";
 
 type StrengthMeterProps = {
   text: string;
   skills: readonly string[];
+  role?: BulletRole;
 };
 
 const copy = strings.strength;
 const SEGMENTS = 5;
 
-export function StrengthMeter({ text, skills }: StrengthMeterProps) {
-  const result = bulletStrength(text, skills);
+export function StrengthMeter({ text, skills, role = "accomplishment" }: StrengthMeterProps) {
+  const result = bulletStrength(text, skills, role);
   const filled = filledSegments(result.tier);
   const label = copy[result.tier];
   const detail =
@@ -43,6 +44,7 @@ export function StrengthMeter({ text, skills }: StrengthMeterProps) {
         </button>
       </TooltipTrigger>
       <TooltipContent className="flex-col items-start gap-1">
+        {role === "record" ? <p>{copy.recordNote}</p> : null}
         {result.fixes.length > 0 ? (
           <ul className="grid gap-1">
             {result.fixes.map((fix) => (

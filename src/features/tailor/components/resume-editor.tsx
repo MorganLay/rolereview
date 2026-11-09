@@ -18,6 +18,7 @@ import { formatResumeDateRange } from "@/features/library/dates";
 import { StrengthMeter } from "@/features/library/components/strength-meter";
 import { ENTRY_KINDS, type LibrarySnapshot } from "@/features/library/schemas";
 import { saveResumeContent } from "@/features/tailor/actions";
+import { saveSummaryVariant } from "@/features/library/wording-actions";
 import {
   formatSavedTime,
   resumeSkills,
@@ -690,6 +691,48 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         <p id={`${summaryId}-count`} className="text-xs text-slate">
           {copy.count(content.summary.text.length, RESUME_LIMITS.summary)}
         </p>
+        {frozen ? null : (
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              className="text-xs text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              onClick={() => {
+                void saveSummaryVariant({
+                  jobId: workspace.jobId,
+                  text: content.summary.text,
+                  asDefault: false,
+                }).then((result) => {
+                  if (!result.ok) {
+                    toast.error(strings.library.assist.failed);
+                    return;
+                  }
+                  toast.success(strings.library.assist.savedJob);
+                });
+              }}
+            >
+              {strings.library.assist.saveForJob}
+            </button>
+            <button
+              type="button"
+              className="text-xs text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              onClick={() => {
+                void saveSummaryVariant({
+                  jobId: workspace.jobId,
+                  text: content.summary.text,
+                  asDefault: true,
+                }).then((result) => {
+                  if (!result.ok) {
+                    toast.error(result.error.fields?.text?.[0] ?? strings.library.assist.failed);
+                    return;
+                  }
+                  toast.success(strings.library.assist.savedDefault);
+                });
+              }}
+            >
+              {strings.library.assist.saveDefault}
+            </button>
+          </div>
+        )}
       </section>
 
       {ENTRY_KINDS.map((kind) => {
@@ -1167,7 +1210,13 @@ function RewriteCompare({
   readOnly: boolean;
   onRewrite: (text: string) => void;
 }) {
-  const original = (bullet.originalText ?? sources[0]?.text ?? "").trim();
+  const joined = sources
+    .map((source) => source.text.trim())
+    .filter((source) => source.length > 0)
+    .join("\n");
+  const original = (
+    sources.length > 1 ? joined : (bullet.originalText ?? sources[0]?.text ?? "")
+  ).trim();
   const current = bullet.text.trim();
   const suggestion = (
     bullet.suggestion ??
@@ -1176,16 +1225,31 @@ function RewriteCompare({
   if (original.length === 0 || suggestion.length === 0 || suggestion === original) return null;
   const showingOriginal = current === original;
   const note = bullet.suggestionNote?.trim() || copy.rewriteNote;
+  const tooLong = sources.length > 1 && original.length > 400;
 
   return (
     <details className="max-w-prose text-xs text-slate">
       <summary className="cursor-pointer text-pine focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
         {showingOriginal ? copy.rewriteKept : copy.rewriteShow}
       </summary>
-      <p className="mt-1 whitespace-pre-wrap">
-        <span className="font-medium text-ink">{copy.rewriteOriginal}. </span>
-        {original}
-      </p>
+      {sources.length > 1 ? (
+        <ul className="mt-1 grid gap-1">
+          {sources.map((source) => (
+            <li key={source.ref} className="whitespace-pre-wrap">
+              <span className="font-medium text-ink">{copy.rewriteOriginal}. </span>
+              {source.text}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1 whitespace-pre-wrap">
+          <span className="font-medium text-ink">{copy.rewriteOriginal}. </span>
+          {original}
+        </p>
+      )}
+      {sources.length > 1 ? (
+        <p className="mt-1">{strings.library.assist.sourcesNote}</p>
+      ) : null}
       {showingOriginal ? (
         <p className="mt-1 whitespace-pre-wrap">
           <span className="font-medium text-ink">{copy.rewriteSuggestion}. </span>
@@ -1193,7 +1257,7 @@ function RewriteCompare({
         </p>
       ) : null}
       <p className="mt-1">{note}</p>
-      {readOnly ? null : (
+      {readOnly || tooLong ? null : (
         <div className="mt-1">
           {showingOriginal ? (
             <button

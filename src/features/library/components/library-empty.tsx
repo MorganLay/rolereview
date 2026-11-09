@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { strings } from "@/copy/strings";
 
 import type { LibraryEntry, LibrarySkill } from "../types";
+import type { WordingView } from "../wording";
 import { LibrarySections } from "./library-sections";
 import { SkillList } from "./skill-list";
 
@@ -15,6 +16,7 @@ type LibraryEmptyProps = {
   entries: LibraryEntry[];
   skills: LibrarySkill[];
   skillNames: readonly string[];
+  wordings?: readonly WordingView[];
 };
 
 const copy = strings.library.empty;
@@ -24,13 +26,14 @@ export function LibraryEmpty({
   entries,
   skills,
   skillNames,
+  wordings = [],
 }: LibraryEmptyProps) {
   const [manual, setManual] = useState(false);
 
   if (manual) {
     return (
       <>
-        <LibrarySections entries={entries} skills={skillNames} />
+        <LibrarySections entries={entries} skills={skillNames} wordings={wordings} />
         <SkillList skills={skills} />
       </>
     );

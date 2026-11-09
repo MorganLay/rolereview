@@ -1,13 +1,13 @@
 # 04 — Data Model
 
-> The real schema is `prisma/schema.prisma` (25 tables, validated). This doc explains it, maps every tracking need to a field, defines the **JSON column shapes**, and specifies the **automatic side effects** that keep tracking data accurate without extra typing.
+> The real schema is `prisma/schema.prisma` (26 tables, validated). This doc explains it, maps every tracking need to a field, defines the **JSON column shapes**, and specifies the **automatic side effects** that keep tracking data accurate without extra typing.
 >
-> All tables exist from the first migration, even ones first used in Release 1.1/1.2 (marked `R1.1` in the schema). Later releases add features, not data reshaping.
+> Tables marked `R1.1` exist from the first migration. `WordingVariant` was added in `20261109074623_wording_variants`.
 
 ## Entity map
 
 ```
-User ─┬─ Library:   Entry ── Bullet,  Skill,  TargetProfile(R1.1)
+User ─┬─ Library:   Entry ── Bullet ── WordingVariant,  Skill,  TargetProfile(R1.1)
       ├─ Hunt:        Job ─┬─ JobEvent (timeline)
       │                      ├─ Interview ── Reminder
       │                      ├─ JobContact ── Contact
@@ -49,6 +49,7 @@ All user-owned rows carry `userId` and cascade-delete with the user (feedback an
 | Cover letter versions | `CoverLetter` |
 | Interview prep questions and your notes | `PrepKit` |
 | Your experience library | `Entry`, `Bullet`, `Skill` |
+| Approved wording for a bullet, headline, or summary | `WordingVariant` (canonical text stays on `Bullet.text`, `User.headline`, `User.summary`) |
 | Targeting presets | `TargetProfile` |
 | AI usage, cost, quota | `AiCall`, `BonusCredit` |
 | Milestones, weekly momentum streak | `UserMilestone`; streak derived from `JobEvent` + `TailoredResume` |
@@ -292,7 +293,7 @@ export const LibrarySnapshot = z.object({
     title: z.string(), organization: z.string().nullable(), location: z.string().nullable(),
     startDate: z.string().nullable(), endDate: z.string().nullable(), isCurrent: z.boolean(),
     url: z.string().nullable(),
-    bullets: z.array(z.object({ ref: z.string(), id: z.string(), text: z.string() })),  // "E1.B2"
+    bullets: z.array(z.object({ ref: z.string(), id: z.string(), text: z.string() })),  // "E1.B2", stable id
   })),
   skills: z.array(z.object({ ref: z.string(), id: z.string(), name: z.string(), category: z.string().nullable() })), // "S4"
 });
@@ -307,10 +308,12 @@ export const ContentBullet = z.object({
   originalText: z.string().max(400).nullable().default(null),
   suggestion: z.string().max(400).nullable().default(null),
   suggestionNote: z.string().max(200).nullable().default(null),
+  sourceIds: z.array(z.string()).optional(), // stable Bullet ids; older resumes omit this
 });
 export const ContentEntry = z.object({
   ref: z.string(),             // title/org/dates come from librarySnapshot — never stored here (D-14)
   kind: EntryKindEnum, included: z.boolean(), bullets: z.array(ContentBullet),
+  entryId: z.string().optional(), // stable Entry id
 });
 export const ResumeContent = z.object({
   schemaVersion: z.literal(1),
@@ -434,7 +437,7 @@ T10.2 draws the funnel for that same window. A job with `appliedAt` in the windo
 
 ## Migrations
 
-1. `init`: `npx prisma migrate dev --name init` (creates all 25 tables).
+1. `init`: `npx prisma migrate dev --name init` (creates the original 25 tables).
 2. `enable_rls`: `npx prisma migrate dev --create-only --name enable_rls`, paste the SQL below, then `npx prisma migrate dev`:
    ```sql
    DO $$
@@ -453,8 +456,9 @@ T10.2 draws the funnel for that same window. A job with `appliedAt` in the windo
    -- Prisma connects as the postgres role, which bypasses RLS.
    ```
    **Every table added later needs the same line in its migration.**
-3. Never edit an applied migration.
-4. Changing a JSON shape: bump `schemaVersion` and handle old versions on parse, or write a data migration script.
+3. `20261109074623_wording_variants`: `WordingVariant`, its enums, indexes, and row level security. Canonical bullet, headline, and summary text stay on their existing columns. `jobId` marks wording for one posting. `isDefault` is the reusable headline or summary. `sourceRefs` stores stable library ids.
+4. Never edit an applied migration.
+5. Changing a JSON shape: bump `schemaVersion` and handle old versions on parse, or write a data migration script.
 
 ## Seed data (`prisma/seed.ts`, dev only)
 

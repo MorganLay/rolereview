@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useEffect, useState, useTransition, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { PROFILE_LIMITS } from "@/features/library/schemas";
 import type { FieldErrors } from "@/lib/result";
 
 import { updateProfile } from "../actions";
+import type { ProfileFieldId } from "../health";
 import type { LibraryProfile } from "../types";
 
 type LinkDraft = {
@@ -30,6 +31,8 @@ type LinkDraft = {
 
 type ProfileDialogProps = {
   profile: LibraryProfile;
+  focusField?: ProfileFieldId | null;
+  openToken?: number;
 };
 
 const copy = strings.library.profile;
@@ -46,7 +49,7 @@ function fieldMessage(fields: FieldErrors, key: string): string | undefined {
   return fields[key]?.[0];
 }
 
-export function ProfileDialog({ profile }: ProfileDialogProps) {
+export function ProfileDialog({ profile, focusField = null, openToken = 0 }: ProfileDialogProps) {
   const [open, setOpen] = useState(false);
   const [fullName, setFullName] = useState(profile.fullName ?? "");
   const [headline, setHeadline] = useState(profile.headline ?? "");
@@ -68,6 +71,26 @@ export function ProfileDialog({ profile }: ProfileDialogProps) {
     setLinks(draftsFromProfile(profile));
     setFields({});
   }
+
+  const [openedToken, setOpenedToken] = useState(0);
+  if (openToken !== 0 && openToken !== openedToken) {
+    setOpenedToken(openToken);
+    setOpen(true);
+    resetFromProfile();
+  }
+
+  useEffect(() => {
+    if (openToken === 0) return;
+    const id =
+      focusField === "fullName"
+        ? "profile-name"
+        : focusField
+          ? `profile-${focusField}`
+          : null;
+    if (!id) return;
+    const timer = setTimeout(() => document.getElementById(id)?.focus(), 0);
+    return () => clearTimeout(timer);
+  }, [openToken, focusField]);
 
   function onOpenChange(next: boolean) {
     if (pending) return;

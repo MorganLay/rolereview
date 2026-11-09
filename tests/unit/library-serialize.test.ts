@@ -122,15 +122,15 @@ describe("serializeLibrary", () => {
         "Default summary: …",
         "",
         `E1 | EXPERIENCE | Junior Program Officer | Canada Revenue Agency | Ottawa, ON | 2023-11 ${EN_DASH} Present`,
-        "  E1.B1: Built and maintained 14 IBM Cognos reports used by a 20-person processing team.",
-        "  E1.B2: Automated monthly business review workbook with Excel VBA, cutting prep time from 2 days to 3 hours.",
+        "  E1.B1 id=bullet-1: Built and maintained 14 IBM Cognos reports used by a 20-person processing team.",
+        "  E1.B2 id=bullet-2: Automated monthly business review workbook with Excel VBA, cutting prep time from 2 days to 3 hours.",
         `E2 | PROJECT | Booking bot | ${EM_DASH} | ${EM_DASH} | 2025-03 ${EN_DASH} 2025-04`,
-        "  E2.B1: Wrote a Python/Playwright bot that …",
+        "  E2.B1 id=project-bullet: Wrote a Python/Playwright bot that …",
         `E3 | EDUCATION | B.CS. Honours | Carleton University | Ottawa, ON | ${EN_DASH} 2023`,
         "SKILLS",
-        "  S1: Python (Languages)",
-        "  S2: SQL (Languages)",
-        "  S3: IBM Cognos (Tools)",
+        "  S1 id=skill-1: Python (Languages)",
+        "  S2 id=skill-2: SQL (Languages)",
+        "  S3 id=skill-3: IBM Cognos (Tools)",
       ].join("\n"),
     );
     expect(text).not.toContain("hidden-email@example.com");
@@ -385,8 +385,8 @@ describe("serializeLibrary", () => {
     expect(text).toContain(
       `E4 | OTHER | ${EM_DASH} | ${EM_DASH} | ${EM_DASH} | ${EM_DASH}`,
     );
-    expect(text).toContain("  S1: Excel\n  S2: Sheets");
-    expect(text.endsWith("  S2: Sheets")).toBe(true);
+    expect(text).toContain("  S1 id=plain: Excel\n  S2 id=blank: Sheets");
+    expect(text.endsWith("  S2 id=blank: Sheets")).toBe(true);
     expect(text).not.toContain("Excel (");
     expect(text).not.toContain("Sheets (");
   });
@@ -411,7 +411,7 @@ describe("serializeLibrary", () => {
 
     expect(text).toContain("Default summary: Line one. Line two.");
     expect(text).toContain("E1 | EXPERIENCE | Role | team |");
-    expect(text).toContain("  E1.B1: Did a thing. Then another.");
+    expect(text).toContain("  E1.B1 id=bullet: Did a thing. Then another.");
     expect(snapshot.profile.summary).toBe(summary);
     expect(snapshot.entries[0]?.bullets[0]?.text).toBe(bullet);
   });

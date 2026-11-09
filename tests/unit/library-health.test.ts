@@ -67,6 +67,59 @@ function library(overrides: Partial<Library> = {}): Library {
 }
 
 describe("libraryHealth", () => {
+  it("names only the empty profile fields", () => {
+    const result = libraryHealth(
+      library({
+        profile: profile({ headline: null }),
+      }),
+    );
+    expect(result.missingProfile).toEqual(["headline"]);
+    expect(result.passed).not.toContain("profile");
+  });
+
+  it("does not list a line that is only missing a number", () => {
+    const result = libraryHealth(
+      library({
+        entries: [
+          entry({
+            id: "role",
+            kind: "EXPERIENCE",
+            isCurrent: true,
+            bullets: [
+              bullet("n1", "Led weekly reporting for the finance team using SQL and Excel."),
+              bullet("n2", EXCELLENT),
+              bullet("n3", EXCELLENT),
+            ],
+          }),
+        ],
+      }),
+    );
+    expect(result.weakest.map((item) => item.id)).not.toContain("n1");
+  });
+
+  it("does not ask a coursework line to start with an action verb", () => {
+    const result = libraryHealth(
+      library({
+        entries: [
+          entry({
+            id: "school",
+            kind: "EDUCATION",
+            title: "BCS",
+            bullets: [bullet("course", "Coursework in software engineering, databases, and operating systems this year.")],
+          }),
+          entry({
+            id: "role",
+            kind: "EXPERIENCE",
+            isCurrent: true,
+            bullets: [bullet("b1", EXCELLENT), bullet("b2", EXCELLENT), bullet("b3", EXCELLENT)],
+          }),
+        ],
+      }),
+    );
+    const course = result.weakest.find((item) => item.id === "course");
+    expect(course?.fixes.join(" ") ?? "").not.toContain("action verb");
+  });
+
   it("scores an empty library at 0", () => {
     const result = libraryHealth({
       profile: profile({

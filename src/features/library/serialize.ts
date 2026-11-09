@@ -90,7 +90,7 @@ function promptText(snapshot: LibrarySnapshot): string {
       ].join(" | "),
     );
     for (const bullet of entry.bullets) {
-      lines.push(`  ${bullet.ref}: ${oneLine(bullet.text)}`);
+      lines.push(`  ${bullet.ref} id=${bullet.id}: ${oneLine(bullet.text)}`);
     }
   }
 
@@ -109,13 +109,15 @@ export function libraryPromptText(snapshot: LibrarySnapshot): string {
 
 function skillLine(skill: {
   ref: string;
+  id: string;
   name: string;
   category: string | null;
 }): string {
   const name = oneLine(skill.name);
   const category = skill.category === null ? "" : oneLine(skill.category);
-  if (category.length === 0) return `  ${skill.ref}: ${name}`;
-  return `  ${skill.ref}: ${name} (${category})`;
+  const label = `${skill.ref} id=${skill.id}`;
+  if (category.length === 0) return `  ${label}: ${name}`;
+  return `  ${label}: ${name} (${category})`;
 }
 
 /** Newest first inside one kind. A missing month is December on an end, January on a start. */

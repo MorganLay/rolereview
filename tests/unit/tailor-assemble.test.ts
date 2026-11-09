@@ -59,6 +59,7 @@ describe("assembleResumeContent", () => {
         text: "Cut prep time from 2 days to 3 hours.",
         included: true,
         sourceRefs: ["E1.B2"],
+        sourceIds: ["b2"],
         reverted: true,
         edited: false,
         originalText: "Cut prep time from 2 days to 3 hours.",
@@ -70,6 +71,7 @@ describe("assembleResumeContent", () => {
         text: "Built and maintained 14 reports for a 20-person team.",
         included: false,
         sourceRefs: ["E1.B1"],
+        sourceIds: ["b1"],
         reverted: false,
         edited: false,
         originalText: "Built and maintained 14 reports for a 20-person team.",
@@ -119,7 +121,7 @@ describe("assembleResumeContent", () => {
     );
   });
 
-  it("does not copy a merged bullet's sources back as separate bullets", () => {
+  it("keeps each source as its own bullet when a merge is offered", () => {
     const snapshot = librarySnapshot();
     const validated = validateTailorOutput(
       tailorOutput(),
@@ -138,10 +140,9 @@ describe("assembleResumeContent", () => {
 
     const content = assembleResumeContent(validated, snapshot, ids());
 
-    expect(content.entries[0]?.bullets).toHaveLength(1);
-    expect(content.entries[0]?.bullets[0]?.sourceRefs).toEqual([
-      "E1.B1",
-      "E1.B2",
+    expect(content.entries[0]?.bullets.map((bullet) => bullet.sourceRefs)).toEqual([
+      ["E1.B1"],
+      ["E1.B2"],
     ]);
   });
 

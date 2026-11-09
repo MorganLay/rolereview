@@ -93,6 +93,69 @@ export function sameWording(left: string, right: string): boolean {
  * A tool, credential, or overclaim in `text` that the cited sources do not
  * support. Null when the wording stays inside that evidence.
  */
+const LEADERSHIP = [
+  "led",
+  "lead",
+  "directed",
+  "direct",
+  "managed",
+  "manage",
+  "supervised",
+  "supervise",
+  "spearheaded",
+  "owned",
+  "owns",
+] as const;
+
+const SUPPORT = ["helped", "assisted", "supported", "contributed", "aided"] as const;
+
+const BUILD = ["developed", "develop", "architected", "architect", "engineered"] as const;
+
+const BUILD_OK = [
+  ...BUILD,
+  "built",
+  "build",
+  "designed",
+  "design",
+  "created",
+  "create",
+] as const;
+
+const SCOPE = ["infrastructure", "enterprise", "strategy"] as const;
+
+const ENGINES = ["postgresql", "postgres", "mysql", "oracle", "snowflake"] as const;
+
+/**
+ * A rewrite that raises the role or the tool past what the sources say.
+ * "Helped coordinate" does not become "Led". "Used SQL" does not become
+ * "Developed PostgreSQL infrastructure".
+ */
+export function inflatedRole(text: string, sources: readonly string[]): string | null {
+  const evidence = sources.join("\n");
+  if (sources.length === 0) return "source";
+  if (sources.some((source) => sameWording(text, source))) return null;
+
+  const textLead = firstMatch(text, LEADERSHIP);
+  const evidenceLead = firstMatch(evidence, LEADERSHIP);
+  const evidenceSupport = firstMatch(evidence, SUPPORT);
+  if (textLead && !evidenceLead && evidenceSupport) return textLead;
+
+  for (const engine of ENGINES) {
+    if (mentions(text, engine) && !mentions(evidence, engine)) return engine;
+  }
+
+  for (const word of SCOPE) {
+    if (mentions(text, word) && !mentions(evidence, word)) return word;
+  }
+
+  const textBuild = firstMatch(text, BUILD);
+  const evidenceBuild = firstMatch(evidence, BUILD_OK);
+  const evidenceUsed = firstMatch(evidence, ["used", "using", "use"]);
+  if (textBuild && evidenceUsed && !evidenceBuild) return textBuild;
+
+  return null;
+}
+
 export function unsupportedClaim(
   text: string,
   sources: readonly string[],
@@ -194,6 +257,13 @@ function supported(token: string, evidence: string): boolean {
   const haystack = normalizeMatchText(evidence);
   const needle = normalizeMatchText(token);
   return termAppears(haystack, needle);
+}
+
+function firstMatch(text: string, words: readonly string[]): string | null {
+  for (const word of words) {
+    if (mentions(text, word)) return word;
+  }
+  return null;
 }
 
 function mentions(text: string, word: string): boolean {

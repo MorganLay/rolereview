@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
-import { Button } from "@/components/ui/button";
 import { strings } from "@/copy/strings";
-import { HealthCard } from "@/features/library/components/health-card";
-import { LibraryEmpty } from "@/features/library/components/library-empty";
-import { LibrarySections } from "@/features/library/components/library-sections";
-import { ProfileCard } from "@/features/library/components/profile-card";
-import { SkillList } from "@/features/library/components/skill-list";
-import { libraryHealth } from "@/features/library/health";
+import { LibraryScreen } from "@/features/library/components/library-screen";
 import { getLibrary } from "@/features/library/queries";
+import { listWordings } from "@/features/library/wording-store";
 import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -21,45 +16,14 @@ export const metadata: Metadata = {
 /** Profile comes from the signed-in user row — not an instant static shell. */
 export const instant = false;
 
+export const maxDuration = 120;
+
 export default async function LibraryPage() {
+  await connection();
   const user = await requireUser();
   const library = await getLibrary(user.id);
   if (!library) notFound();
+  const wordings = await listWordings(user.id);
 
-  const skillNames = library.skills.map((skill) => skill.name);
-  const empty = library.entries.length === 0 && library.skills.length === 0;
-
-  return (
-    <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink md:text-3xl">
-            {strings.pages.library.title}
-          </h1>
-          <p className="mt-2 max-w-xl text-sm text-slate">
-            {strings.pages.library.body}
-          </p>
-        </div>
-        <Button variant="outline" asChild>
-          <Link href="/library/import">{strings.library.importResume}</Link>
-        </Button>
-      </div>
-      <div className="grid items-start gap-6 xl:grid-cols-2">
-        <ProfileCard profile={library.profile} />
-        <HealthCard health={libraryHealth(library)} />
-      </div>
-      {empty ? (
-        <LibraryEmpty
-          entries={library.entries}
-          skills={library.skills}
-          skillNames={skillNames}
-        />
-      ) : (
-        <>
-          <LibrarySections entries={library.entries} skills={skillNames} />
-          <SkillList skills={library.skills} />
-        </>
-      )}
-    </div>
-  );
+  return <LibraryScreen library={library} wordings={wordings} />;
 }

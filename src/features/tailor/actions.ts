@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { nanoid } from "nanoid";
 
 import { strings } from "@/copy/strings";
 import { can } from "@/features/billing/entitlements";
@@ -9,6 +10,7 @@ import { applyStatusChange } from "@/features/jobs/pipeline";
 import { getLibrary } from "@/features/library/queries";
 import { LibrarySnapshot, zodFieldErrors } from "@/features/library/schemas";
 import { serializeLibrary } from "@/features/library/serialize";
+import { approvedBulletWordings } from "@/features/library/wording-store";
 import type { Library } from "@/features/library/types";
 import { JobAnalysis } from "@/features/jobs/schemas";
 import { Prisma } from "@/generated/prisma/client";
@@ -20,6 +22,7 @@ import { db } from "@/lib/db";
 import { fail, ok, type ActionResult } from "@/lib/result";
 
 import { assembleResumeContent } from "./assemble";
+import { preferSavedWording, variantPrompt } from "./variants";
 import { applyResumeEdit, preserveUserEdits } from "./content";
 import { TAILOR_STALE_MS } from "./status";
 import { scoreMatch } from "./score";
@@ -87,6 +90,7 @@ export async function tailorResume(
   });
   const now = new Date();
   const serialized = serializeLibrary(library, now.toISOString());
+  const savedWordings = await approvedBulletWordings(user.id, job.id);
 
   let resumeId: string;
   try {
@@ -119,6 +123,7 @@ export async function tailorResume(
         posting: job.rawText,
         length: options.length,
         emphasis: options.emphasis ?? null,
+        variantsText: variantPrompt(serialized.snapshot, savedWordings),
       }),
       schema: OutputSchema,
       refId: resumeId,
@@ -129,13 +134,19 @@ export async function tailorResume(
       return fail("AI_FAILED");
     }
 
+    const prepared = preferSavedWording(result.data, savedWordings, serialized.snapshot);
     const guard = validateTailorOutput(
-      result.data,
+      prepared.output,
       serialized.snapshot,
       analysis.data,
     );
     logGuard(user.id, resumeId, guard.reverts, guard.issues);
-    const assembled = assembleResumeContent(guard.output, serialized.snapshot);
+    const assembled = assembleResumeContent(
+      guard.output,
+      serialized.snapshot,
+      nanoid,
+      prepared.why,
+    );
     const previous = await db.tailoredResume.findFirst({
       where: {
         userId: user.id,

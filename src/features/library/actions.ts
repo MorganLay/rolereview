@@ -30,6 +30,7 @@ import {
   resolveCategory,
   skillNameKey,
 } from "./skill-state";
+import { rememberUserWording } from "./wording-store";
 
 /** Save the library profile. Email is the sign-in address and is not written here. */
 export async function updateProfile(
@@ -42,6 +43,12 @@ export async function updateProfile(
   if (!parsed.success) {
     return fail("VALIDATION", profileFieldErrors(parsed.error));
   }
+
+  const existing = await db.user.findFirst({
+    where: { id: user.id },
+    select: { headline: true, summary: true },
+  });
+  if (!existing) return fail("NOT_FOUND");
 
   const result = await db.user.updateMany({
     where: { id: user.id },
@@ -56,6 +63,20 @@ export async function updateProfile(
   });
 
   if (result.count === 0) return fail("NOT_FOUND");
+  await rememberUserWording({
+    userId: user.id,
+    kind: "HEADLINE",
+    bulletId: null,
+    previous: existing.headline,
+    next: parsed.data.headline,
+  });
+  await rememberUserWording({
+    userId: user.id,
+    kind: "SUMMARY",
+    bulletId: null,
+    previous: existing.summary,
+    next: parsed.data.summary,
+  });
 
   revalidatePath("/library");
   return ok({ saved: true });
@@ -222,11 +243,25 @@ export async function updateBullet(
   const parsed = updateBulletSchema.safeParse(input);
   if (!parsed.success) return fail("VALIDATION", zodFieldErrors(parsed.error));
 
+  const existing = await db.bullet.findFirst({
+    where: { id: parsed.data.id, userId: user.id },
+    select: { text: true },
+  });
+  if (!existing) return fail("NOT_FOUND");
+
   const result = await db.bullet.updateMany({
     where: { id: parsed.data.id, userId: user.id },
     data: { text: parsed.data.text },
   });
   if (result.count === 0) return fail("NOT_FOUND");
+  await rememberUserWording({
+    userId: user.id,
+    kind: "BULLET",
+    bulletId: parsed.data.id,
+    previous: existing.text,
+    next: parsed.data.text,
+    sourceRefs: [parsed.data.id],
+  });
 
   revalidatePath("/library");
   return ok({ saved: true });
