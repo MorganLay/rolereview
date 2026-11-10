@@ -351,6 +351,8 @@ export const MatchReport = z.object({
 });
 ```
 
+Restoring a combined bullet replaces that line with one bullet per cited source, in library order, each using that source's wording. A save accepts that split. Any other added or removed bullet is rejected.
+
 `unassessed` means the model returned no verdict for that requirement. A row saved earlier may say `missing` with the note "Not assessed." Readers treat that note as `unassessed`. The match panel does not display this verdict directly. It recomputes Met / Not on this resume / Needs review / Not demonstrated from the resume on screen (`05-AI.md` → Requirement states). Met means the requirement is shown in this resume. Not on this resume means the library has evidence the resume left out. Not demonstrated means the library does not support it, and the panel does not offer a rewrite for that gap.
 
 `score` is null when the posting has no requirements, and when every requirement is unassessed. An unassessed requirement is left out of the score. A null score shows as an em dash on the jobs list. The number stays the one stored at tailoring time.
@@ -398,6 +400,7 @@ export const PrepKitContent = z.object({ schemaVersion: z.literal(1), questions:
 ```
 period(kind) = UTC calendar month
 used         = count(AiCall where userId, kind, success = true, usedBonusCredit = false, createdAt in period)
+A repair or revision for a resume already charged is stored with `usedBonusCredit` true and does not decrement a bonus credit, so it is outside `used`.
 allowance    = PLANS[user.plan].limits[kind]
 bonus        = sum(BonusCredit.remaining where userId, kind, (expiresAt null or > now))
 dailyCap     = optional abuse ceiling. ANALYZE counts every successful call in the UTC day, including calls that used a bonus credit. Bonus credits do not raise it.

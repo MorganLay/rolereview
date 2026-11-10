@@ -105,7 +105,7 @@ function selectedEntry(
     selected.snapshot.bullets.map((bullet) => [bullet.ref, bullet.id]),
   );
   for (const bullet of selected.validated.bullets) {
-    if (bullet.sourceRefs.length !== 1) continue;
+    if (bullet.sourceRefs.length === 0) continue;
     for (const ref of bullet.sourceRefs) chosen.add(ref);
     const note = notes.get(sourceKey(bullet.sourceRefs)) ?? null;
     bullets.push(contentBullet(bullet, sourceText, sourceId, createId, note));
@@ -133,9 +133,11 @@ function contentBullet(
   note: BulletNote | null = null,
 ): ContentBullet {
   const text = clip(bullet.text, RESUME_LIMITS.bullet);
-  const first = bullet.sourceRefs[0];
-  const original = first ? (sourceText.get(first) ?? text) : text;
-  const originalText = clip(original, RESUME_LIMITS.bullet);
+  const original = bullet.sourceRefs
+    .map((ref) => sourceText.get(ref))
+    .filter((item): item is string => item !== undefined)
+    .join(" ");
+  const originalText = clip(original.length > 0 ? original : text, RESUME_LIMITS.bullet);
   const changed = !bullet.reverted && !sameWording(text, originalText);
   const why = specificReason(note?.why);
   const what = specificReason(note?.what);

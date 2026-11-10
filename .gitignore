@@ -37,6 +37,7 @@ yarn-error.log*
 # env files — keep .env.example committed
 .env*
 !.env.example
+old.env
 
 # vercel
 .vercel

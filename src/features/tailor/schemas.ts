@@ -113,7 +113,7 @@ export const ContentBullet = z.object({
   sourceRefs: z.array(z.string()),
   reverted: z.boolean().default(false),
   edited: z.boolean().default(false),
-  /** Library wording for the first cited bullet. Null on resumes saved before this field. */
+  /** Cited source wording. A combined line joins its sources until restore splits them. */
   originalText: z.string().max(RESUME_LIMITS.bullet).nullable().default(null),
   /** Grounded tailored wording, kept after the user restores the original. */
   suggestion: z.string().max(RESUME_LIMITS.bullet).nullable().default(null),

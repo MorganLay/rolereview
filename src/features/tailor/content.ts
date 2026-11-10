@@ -4,6 +4,8 @@
  * docs/02-USER-FLOWS.md → Resume workspace. docs/04-DATA-MODEL.md → ResumeContent.
  */
 
+import { nanoid } from "nanoid";
+
 import type { Requirement } from "@/features/jobs/schemas";
 import type { LibrarySnapshot } from "@/features/library/schemas";
 import type { ResumeTemplateId } from "@/lib/pdf/template";
@@ -93,6 +95,80 @@ export function formatSavedTime(iso: string, timeZone: string): string {
  * Entry order follows section order, and within a section the tailored order.
  * Bullet ids, their entry, and source refs stay as stored.
  */
+/**
+ * Restore a combined bullet as its library sources.
+ * Each source becomes its own bullet, in library order, with that source's wording.
+ */
+export function restoreSourceBullets(
+  content: ResumeContent,
+  entryRef: string,
+  bulletId: string,
+  snapshot: LibrarySnapshot,
+  createId: () => string = nanoid,
+): ResumeContent {
+  const snapshotEntry = snapshot.entries.find((entry) => entry.ref === entryRef);
+  if (!snapshotEntry) return content;
+  return {
+    ...content,
+    entries: content.entries.map((entry) => {
+      if (entry.ref !== entryRef) return entry;
+      const index = entry.bullets.findIndex((bullet) => bullet.id === bulletId);
+      const bullet = entry.bullets[index];
+      if (!bullet) return entry;
+      const ordered = snapshotEntry.bullets.filter((source) =>
+        bullet.sourceRefs.includes(source.ref),
+      );
+      if (ordered.length <= 1) {
+        const text = clipLine(ordered[0]?.text ?? bullet.originalText ?? bullet.text);
+        return {
+          ...entry,
+          bullets: entry.bullets.map((item) =>
+            item.id === bulletId ? { ...item, text } : item,
+          ),
+        };
+      }
+      const already = new Set(
+        entry.bullets
+          .filter((item) => item.id !== bulletId && item.sourceRefs.length === 1)
+          .map((item) => item.sourceRefs[0]),
+      );
+      const created = ordered
+        .filter((source) => !already.has(source.ref))
+        .map((source) => libraryBullet(source, bullet.included, createId));
+      return {
+        ...entry,
+        bullets: [
+          ...entry.bullets.slice(0, index),
+          ...created,
+          ...entry.bullets.slice(index + 1),
+        ],
+      };
+    }),
+  };
+}
+
+function libraryBullet(
+  source: SnapshotEntry["bullets"][number],
+  included: boolean,
+  createId: () => string,
+): ContentBullet {
+  const text = clipLine(source.text);
+  return {
+    id: createId(),
+    text,
+    included,
+    sourceRefs: [source.ref],
+    sourceIds: [source.id],
+    reverted: true,
+    edited: false,
+    originalText: text,
+    suggestion: null,
+    suggestionNote: null,
+    changeWhat: null,
+    requirementIds: [],
+  };
+}
+
 export function applyResumeEdit(input: {
   stored: ResumeContent;
   incoming: ResumeContent;
@@ -192,6 +268,73 @@ export function resumeSkills(
   return order.filter((group) => group.names.length > 0);
 }
 
+function restoredSplit(
+  stored: readonly ContentBullet[],
+  incoming: readonly ContentBullet[],
+  snapshotEntry: SnapshotEntry,
+): { createdIds: string[] } | null {
+  const storedIds = new Set(stored.map((bullet) => bullet.id));
+  const incomingIds = new Set(incoming.map((bullet) => bullet.id));
+  const removed = stored.filter((bullet) => !incomingIds.has(bullet.id));
+  const created = incoming.filter((bullet) => !storedIds.has(bullet.id));
+  if (removed.length !== 1 || created.length === 0) return null;
+  const source = removed[0];
+  if (!source || source.sourceRefs.length < 2) return null;
+  for (const bullet of stored) {
+    if (bullet.id !== source.id && !incomingIds.has(bullet.id)) return null;
+  }
+  const expected = new Set(source.sourceRefs);
+  const seen = new Set<string>();
+  for (const bullet of created) {
+    if (bullet.sourceRefs.length !== 1) return null;
+    const ref = bullet.sourceRefs[0];
+    if (!ref || !expected.has(ref) || seen.has(ref)) return null;
+    if (!snapshotEntry.bullets.some((item) => item.ref === ref)) return null;
+    seen.add(ref);
+  }
+  for (const ref of expected) {
+    const covered =
+      seen.has(ref) ||
+      incoming.some(
+        (bullet) =>
+          storedIds.has(bullet.id) &&
+          bullet.sourceRefs.length === 1 &&
+          bullet.sourceRefs[0] === ref,
+      );
+    if (!covered) return null;
+  }
+  return { createdIds: created.map((bullet) => bullet.id) };
+}
+
+function restoredBullet(
+  incoming: ContentBullet,
+  snapshotEntry: SnapshotEntry,
+): ContentBullet | null {
+  const ref = incoming.sourceRefs.length === 1 ? incoming.sourceRefs[0] : undefined;
+  const library = ref
+    ? snapshotEntry.bullets.find((bullet) => bullet.ref === ref)
+    : undefined;
+  if (!library) return null;
+  const text = incoming.text.trim();
+  if (text.length === 0 || text.length > RESUME_LIMITS.bullet) return null;
+  const original = clipLine(library.text);
+  const matches = sameWording(text, original);
+  return {
+    id: incoming.id,
+    text,
+    included: incoming.included,
+    sourceRefs: [library.ref],
+    sourceIds: [library.id],
+    reverted: matches,
+    edited: !matches,
+    originalText: original,
+    suggestion: null,
+    suggestionNote: null,
+    changeWhat: null,
+    requirementIds: [],
+  };
+}
+
 function buildEntry(
   storedEntry: ContentEntry,
   incomingEntry: ContentEntry,
@@ -204,16 +347,29 @@ function buildEntry(
     if (storedBullets.has(bullet.id)) return { ok: false, issue: "bullets" };
     storedBullets.set(bullet.id, bullet);
   }
-  if (incomingEntry.bullets.length !== storedBullets.size) {
+  const split = restoredSplit(storedEntry.bullets, incomingEntry.bullets, snapshotEntry);
+  if (!split && incomingEntry.bullets.length !== storedBullets.size) {
     return { ok: false, issue: "bullets" };
   }
+  const created = new Set(split?.createdIds ?? []);
 
   const seen = new Set<string>();
   const bullets: ContentBullet[] = [];
   for (const incoming of incomingEntry.bullets) {
-    const stored = storedBullets.get(incoming.id);
-    if (!stored || seen.has(incoming.id)) return { ok: false, issue: "bullets" };
+    if (seen.has(incoming.id)) return { ok: false, issue: "bullets" };
     seen.add(incoming.id);
+    if (created.has(incoming.id)) {
+      const text = incoming.text.trim();
+      if (text.length === 0 || text.length > RESUME_LIMITS.bullet) {
+        return { ok: false, issue: "bulletText" };
+      }
+      const built = restoredBullet(incoming, snapshotEntry);
+      if (!built) return { ok: false, issue: "sources" };
+      bullets.push(built);
+      continue;
+    }
+    const stored = storedBullets.get(incoming.id);
+    if (!stored) return { ok: false, issue: "bullets" };
 
     const text = incoming.text.trim();
     if (text.length === 0 || text.length > RESUME_LIMITS.bullet) {

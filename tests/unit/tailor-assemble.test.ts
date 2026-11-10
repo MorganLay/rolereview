@@ -125,7 +125,7 @@ describe("assembleResumeContent", () => {
     );
   });
 
-  it("keeps each source as its own bullet when a merge is offered", () => {
+  it("keeps a combined bullet and does not repeat its sources", () => {
     const snapshot = librarySnapshot();
     const validated = validateTailorOutput(
       tailorOutput(),
@@ -144,10 +144,12 @@ describe("assembleResumeContent", () => {
 
     const content = assembleResumeContent(validated, snapshot, ids());
 
-    expect(content.entries[0]?.bullets.map((bullet) => bullet.sourceRefs)).toEqual([
-      ["E1.B1"],
-      ["E1.B2"],
+    expect(content.entries[0]?.bullets.filter((bullet) => bullet.included).map((bullet) => bullet.sourceRefs)).toEqual([
+      ["E1.B1", "E1.B2"],
     ]);
+    expect(
+      content.entries[0]?.bullets.filter((bullet) => !bullet.included).map((bullet) => bullet.sourceRefs),
+    ).toEqual([]);
   });
 
   it("puts every omitted kind after the selected entries, switched off", () => {

@@ -208,6 +208,7 @@ describe("tailorResume", () => {
     expect(prompt).toContain("<library>");
     expect(revalidatePath).toHaveBeenCalledWith(`/jobs/${jobId}`);
     expect(revalidatePath).toHaveBeenCalledWith("/jobs");
+    expect(runStructured).toHaveBeenCalledTimes(1);
   });
 
   it("reverts a new number before saving", async () => {
@@ -261,6 +262,103 @@ describe("tailorResume", () => {
     expect(saved.guardReverts).toBe(0);
     expect(runStructured).toHaveBeenCalledTimes(2);
     expect(runStructured.mock.calls[1]?.[0].usedBonusCredit).toBe(false);
+    expect(runStructured.mock.calls[1]?.[0].countsTowardQuota).toBe(false);
+  });
+
+  it("revises a draft that left Agile evidence off the page and does not change the library", async () => {
+    const source = library();
+    const role = source.entries[0];
+    if (!role) throw new Error("missing role");
+    role.bullets.push({
+      id: "b-agile",
+      text: "Worked in an Agile development environment.",
+      sortOrder: 1,
+    });
+    const original = source.entries.flatMap((entry) => entry.bullets.map((bullet) => bullet.text));
+    getLibrary.mockResolvedValue(source);
+    jobFindFirst.mockResolvedValue({
+      ...readyJob(),
+      title: "Junior software developer",
+      company: "Hootsuite",
+      analysis: jobAnalysis([
+        {
+          id: "r_agile",
+          text: "Agile development",
+          kind: "experience",
+          importance: "must",
+        },
+      ]),
+    });
+    runStructured
+      .mockResolvedValueOnce({
+        ok: true,
+        data: {
+          summary: "Analyst with reporting experience.",
+          entries: [
+            {
+              ref: "E1",
+              bullets: [
+                {
+                  sourceRefs: ["E1.B1"],
+                  text: "Maintained 14 reports.",
+                  what: "",
+                  why: "",
+                  requirementIds: [],
+                },
+              ],
+            },
+            { ref: "E2", bullets: [] },
+          ],
+          skills: [],
+          requirementMatches: [
+            {
+              requirementId: "r_agile",
+              verdict: "missing",
+              evidenceRefs: [],
+              note: "The draft left Agile off.",
+            },
+          ],
+        },
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        data: {
+          entries: [
+            {
+              ref: "E1",
+              bullets: [
+                {
+                  sourceRefs: ["E1.B1", "E1.B2"],
+                  text: "Maintained 14 reports and worked in an Agile development environment.",
+                  what: "Combined the reporting line with the Agile practice.",
+                  why: "The posting asks for Agile development, which this role states.",
+                  requirementIds: ["r_agile"],
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+    const result = await tailorResume({ jobId, length: 1 });
+
+    expect(result.ok).toBe(true);
+    const saved = txUpdate.mock.calls[0]?.[0].data;
+    const bullets = saved.content.entries.flatMap(
+      (entry: { bullets: { text: string; included: boolean; sourceRefs: string[] }[] }) =>
+        entry.bullets,
+    );
+    const agile = bullets.find(
+      (bullet: { text: string; included: boolean }) => bullet.included && bullet.text.includes("Agile"),
+    );
+    expect(agile?.sourceRefs).toEqual(["E1.B1", "E1.B2"]);
+    expect(agile?.text).toContain("14 reports");
+    expect(runStructured).toHaveBeenCalledTimes(2);
+    expect(runStructured.mock.calls[1]?.[0].countsTowardQuota).toBe(false);
+    expect(runStructured.mock.calls[1]?.[0].usedBonusCredit).toBe(false);
+    expect(source.entries.flatMap((entry) => entry.bullets.map((bullet) => bullet.text))).toEqual(
+      original,
+    );
   });
 
   it("returns CONFLICT while a tailor for this job is still running", async () => {

@@ -7,7 +7,7 @@ alwaysApply: false
 
 Spec: docs/05-AI.md. Read the relevant section before editing.
 
-- Call the model ONLY via `runStructured({ kind, userId, system, content, schema, normalize, refId, usedBonusCredit })` from `@/lib/ai/run`. It logs an `AiCall` (tokens, costMicros) for every attempt. `normalize` repairs optional fields before the schema check. A validation failure still records the returned token counts and does not count toward quota.
+- Call the model ONLY via `runStructured({ kind, userId, system, content, schema, normalize, refId, usedBonusCredit, countsTowardQuota })` from `@/lib/ai/run`. It logs an `AiCall` (tokens, costMicros) for every attempt. `normalize` repairs optional fields before the schema check. A validation failure still records the returned token counts and does not count toward quota. `countsTowardQuota: false` is only for a repair or revision of a resume already charged.
 - `userId` may be null ONLY for kind FREE_TOOL (anonymous keyword checker, after Turnstile + IP-hash limit).
 - Model IDs / effort / max_tokens only in `@/lib/ai/models.ts`; prices only in `@/lib/ai/pricing.ts`.
 - Each prompt module `src/lib/ai/prompts/<name>.ts` exports `SYSTEM`, `buildContent(...)`, `OutputSchema`.

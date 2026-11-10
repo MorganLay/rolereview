@@ -22,6 +22,8 @@ describe("tailor prompt", () => {
     expect(SYSTEM).toContain("Never add employers");
     expect(SYSTEM).toContain("finished resume");
     expect(SYSTEM).toContain("PLAN");
+    expect(SYSTEM).toContain("combine verified facts");
+    expect(SYSTEM).toContain("does not become professional");
   });
 
   it("cuts the posting at 12,000 characters and neutralizes a closing tag", () => {

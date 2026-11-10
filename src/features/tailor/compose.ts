@@ -46,10 +46,9 @@ const TERM_STOP = new Set([
   "using",
 ]);
 
-const PAGE_CAPS = {
-  1: [5, 3, 2],
-  2: [6, 4, 2],
-} as const;
+/** Lines for the page. A relevant entry may use more of this than a weak one. */
+const BULLET_BUDGET = { 1: 14, 2: 22 } as const;
+const STRONG_SCORE = 4;
 
 export type Composition = {
   output: ValidatedTailorOutput;
@@ -98,23 +97,44 @@ export function composeResume(input: {
   );
   const duplicateRefs = new Set(education.drop.map((item) => item.ref));
   for (const ref of duplicateRefs) selected.delete(ref);
+  const sameRole = dropSameStints(selected, byRef, input.snapshot.takenAt, terms);
 
   const droppedRelevance = new Set<string>();
   let added = 0;
   for (const entry of ranked(input.snapshot.entries, terms, input.snapshot.takenAt)) {
     if (entry.kind !== "PROJECT" || selected.has(entry.ref) || added >= 3) continue;
+    if (stintAlreadySelected(entry, selected, byRef, input.snapshot.takenAt, terms)) continue;
     const scored = scoreBullets(entry, terms);
     const best = scored[0];
     if (!best || best.score < 4 || !best.handsOn || best.academic) continue;
     const weakestExperience = weakestSelectedExperience(selected, byRef, terms, input.snapshot.takenAt);
     if (weakestExperience !== null && best.score < weakestExperience + 2) continue;
-    const chosen = scored.filter((item) => item.handsOn && !item.academic).slice(0, 3);
+    if (entryOverlap(entry, terms) < 1) continue;
+    const chosen = scored.filter((item) => item.handsOn && !item.academic).slice(0, 4);
     selected.set(entry.ref, {
       ref: entry.ref,
       origin: "prioritized",
       bullets: chosen.map((item) => libraryBullet(item.bullet)),
     });
     added += 1;
+  }
+
+  let addedRoles = 0;
+  for (const entry of ranked(input.snapshot.entries, terms, input.snapshot.takenAt)) {
+    if (entry.kind !== "EXPERIENCE" || selected.has(entry.ref) || addedRoles >= 2) continue;
+    if (stintAlreadySelected(entry, selected, byRef, input.snapshot.takenAt, terms)) continue;
+    if (entryScore(entry, terms, input.snapshot.takenAt) < STRONG_SCORE) continue;
+    if (entryOverlap(entry, terms) < 1) continue;
+    const chosen = scoreBullets(entry, terms)
+      .filter((item) => !item.academic && item.score >= 2)
+      .slice(0, 4);
+    if (chosen.length === 0) continue;
+    selected.set(entry.ref, {
+      ref: entry.ref,
+      origin: "prioritized",
+      bullets: chosen.map((item) => libraryBullet(item.bullet)),
+    });
+    addedRoles += 1;
   }
 
   for (const entry of input.snapshot.entries) {
@@ -133,13 +153,12 @@ export function composeResume(input: {
   const rankedSelected = [...selected.values()].sort(
     (left, right) => (relevance.get(right.ref) ?? 0) - (relevance.get(left.ref) ?? 0),
   );
-  rankedSelected.forEach((row, index) => {
+  for (const row of rankedSelected) {
     const entry = byRef.get(row.ref);
-    if (!entry) return;
-    const cap = bulletCap(input.length, index, entry.kind === "EXPERIENCE" && entry.isCurrent);
-    const next = preferBullets(entry, row.bullets, terms, cap, review);
-    row.bullets = next;
-  });
+    if (!entry) continue;
+    row.bullets = preferBullets(entry, row.bullets, terms, review);
+  }
+  trimBudget(rankedSelected, byRef, terms, input.snapshot.takenAt, input.length, review);
 
   const experienceOrder = input.output.entries
     .filter((entry) => byRef.get(entry.ref)?.kind === "EXPERIENCE")
@@ -191,11 +210,13 @@ export function composeResume(input: {
     const missing = !hasSource(entry);
     const reason = duplicateRefs.has(entry.ref)
       ? "same_degree"
-      : droppedRelevance.has(entry.ref)
-        ? "lower_relevance"
-        : missing
-          ? "missing_source"
-          : "not_selected";
+      : sameRole.has(entry.ref)
+        ? "same_role"
+        : droppedRelevance.has(entry.ref)
+          ? "lower_relevance"
+          : missing
+            ? "missing_source"
+            : "not_selected";
     review.push({ code: "ENTRY_EXCLUDED", severity: "note", ref: entry.ref, reason });
     if (entry.kind === "EXPERIENCE" && entry.isCurrent && !missing) {
       review.push({
@@ -253,6 +274,134 @@ export function composeResume(input: {
   };
 }
 
+/**
+ * Two records of one job. Same employer, or the same project title, and overlapping dates.
+ * "Def Hacks" and "Defhacks.co" are one employer. Different years at one employer stay separate.
+ */
+function dropSameStints(
+  selected: Map<string, Working>,
+  byRef: ReadonlyMap<string, SnapshotEntry>,
+  takenAt: string,
+  terms: readonly string[],
+): Set<string> {
+  const dropped = new Set<string>();
+  const refs = [...selected.keys()];
+  for (let i = 0; i < refs.length; i += 1) {
+    for (let j = i + 1; j < refs.length; j += 1) {
+      const leftRef = refs[i];
+      const rightRef = refs[j];
+      if (!leftRef || !rightRef || dropped.has(leftRef) || dropped.has(rightRef)) continue;
+      const left = byRef.get(leftRef);
+      const right = byRef.get(rightRef);
+      const leftRow = selected.get(leftRef);
+      const rightRow = selected.get(rightRef);
+      if (!left || !right || !leftRow || !rightRow || !sameStint(left, right, takenAt)) continue;
+      const loser = richerStint(leftRow, rightRow, left, right);
+      const loserEntry = loser === left.ref ? left : right;
+      const winnerEntry = loser === left.ref ? right : left;
+      if (addsJobTerm(loserEntry, winnerEntry, terms)) continue;
+      dropped.add(loser);
+      selected.delete(loser);
+    }
+  }
+  return dropped;
+}
+
+function stintAlreadySelected(
+  entry: SnapshotEntry,
+  selected: ReadonlyMap<string, Working>,
+  byRef: ReadonlyMap<string, SnapshotEntry>,
+  takenAt: string,
+  terms: readonly string[],
+): boolean {
+  for (const ref of selected.keys()) {
+    const other = byRef.get(ref);
+    if (!other || !sameStint(entry, other, takenAt)) continue;
+    if (addsJobTerm(entry, other, terms)) return false;
+    return true;
+  }
+  return false;
+}
+
+function comparableText(text: string): string {
+  return normalizeMatchText(text).replace(/\.+(?![a-z0-9])/g, " ");
+}
+
+function addsJobTerm(
+  entry: SnapshotEntry,
+  other: SnapshotEntry,
+  terms: readonly string[],
+): boolean {
+  const entryText = comparableText(entry.bullets.map((bullet) => bullet.text).join("\n"));
+  const otherText = comparableText(other.bullets.map((bullet) => bullet.text).join("\n"));
+  return terms.some((term) => {
+    const needle = normalizeMatchText(term);
+    return needle.length >= 3 && termAppears(entryText, needle) && !termAppears(otherText, needle);
+  });
+}
+
+function sameStint(left: SnapshotEntry, right: SnapshotEntry, takenAt: string): boolean {
+  if (left.kind !== right.kind) return false;
+  if (left.kind === "EDUCATION" || left.kind === "CERTIFICATION") return false;
+  if (stintKey(left) !== stintKey(right)) return false;
+  return datesOverlap(left, right, takenAt);
+}
+
+function stintKey(entry: SnapshotEntry): string {
+  const org = orgKey(entry.organization ?? "");
+  const label = org.length >= 4 ? org : orgKey(entry.title);
+  return `${entry.kind}:${label}`;
+}
+
+function orgKey(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\.(com|co|ca|io|org|net)\b/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function datesOverlap(left: SnapshotEntry, right: SnapshotEntry, takenAt: string): boolean {
+  const a = span(left, takenAt);
+  const b = span(right, takenAt);
+  if (!a || !b) return true;
+  return a.start <= b.end && b.start <= a.end;
+}
+
+function span(
+  entry: SnapshotEntry,
+  takenAt: string,
+): { start: number; end: number } | null {
+  const start = monthIndex(entry.startDate);
+  if (start === null) return null;
+  const end = entry.isCurrent
+    ? monthIndex(takenAt.slice(0, 7)) ?? start
+    : monthIndex(entry.endDate) ?? start;
+  return { start, end: Math.max(start, end) };
+}
+
+function monthIndex(value: string | null): number | null {
+  if (!value) return null;
+  const parsed = parseResumeDate(value);
+  if (!parsed) return null;
+  return parsed.year * 12 + (parsed.month ?? 1);
+}
+
+/** The ref to drop. Keep the record that already carries more of the role. */
+function richerStint(
+  left: Working,
+  right: Working,
+  leftEntry: SnapshotEntry,
+  rightEntry: SnapshotEntry,
+): string {
+  if (left.bullets.length !== right.bullets.length) {
+    return left.bullets.length > right.bullets.length ? right.ref : left.ref;
+  }
+  if (leftEntry.bullets.length !== rightEntry.bullets.length) {
+    return leftEntry.bullets.length > rightEntry.bullets.length ? right.ref : left.ref;
+  }
+  return right.ref;
+}
+
 function projectsBeforeExperience(): EntryKind[] {
   const order: EntryKind[] = [];
   for (const kind of ENTRY_KINDS) {
@@ -266,7 +415,6 @@ function preferBullets(
   entry: SnapshotEntry,
   modelBullets: readonly ValidatedBullet[],
   terms: readonly string[],
-  cap: number,
   review: ResumeReviewItem[],
 ): ValidatedBullet[] {
   const scored = scoreBullets(entry, terms);
@@ -274,10 +422,14 @@ function preferBullets(
   const chosen: { bullet: ValidatedBullet; score: number }[] = [];
   const used = new Set<string>();
   for (const bullet of modelBullets) {
-    const ref = bullet.sourceRefs[0];
-    if (!ref || used.has(ref)) continue;
-    used.add(ref);
-    chosen.push({ bullet, score: bySource.get(ref)?.score ?? 0 });
+    if (bullet.sourceRefs.length === 0) continue;
+    if (bullet.sourceRefs.every((ref) => used.has(ref))) continue;
+    for (const ref of bullet.sourceRefs) used.add(ref);
+    const score = bullet.sourceRefs.reduce(
+      (best, ref) => Math.max(best, bySource.get(ref)?.score ?? 0),
+      0,
+    );
+    chosen.push({ bullet, score });
   }
 
   const unused = scored.filter((item) => !used.has(item.bullet.ref));
@@ -287,7 +439,8 @@ function preferBullets(
     0,
   );
   const weakest = chosen[weakestIndex];
-  const weakestSource = weakest?.bullet.sourceRefs[0];
+  const weakestIsSingle = weakest?.bullet.sourceRefs.length === 1;
+  const weakestSource = weakestIsSingle ? weakest.bullet.sourceRefs[0] : undefined;
   const weakestScore = weakestSource ? bySource.get(weakestSource) : undefined;
   if (
     strongest &&
@@ -299,6 +452,7 @@ function preferBullets(
     const dropped = weakest.bullet.sourceRefs[0];
     chosen[weakestIndex] = { bullet: libraryBullet(strongest.bullet), score: strongest.score };
     if (dropped) {
+      used.add(strongest.bullet.ref);
       review.push({
         code: "BULLET_PREFERENCE",
         severity: "note",
@@ -309,13 +463,80 @@ function preferBullets(
   }
 
   chosen.sort((left, right) => right.score - left.score);
-  const kept = chosen.slice(0, Math.max(cap, 0));
-  for (const item of chosen.slice(kept.length)) {
-    const ref = item.bullet.sourceRefs[0];
-    if (!ref) continue;
-    review.push({ code: "BULLET_PREFERENCE", severity: "note", ref, reason: "space" });
+  return chosen.map((item) => item.bullet);
+}
+
+function trimBudget(
+  rows: readonly Working[],
+  byRef: ReadonlyMap<string, SnapshotEntry>,
+  terms: readonly string[],
+  takenAt: string,
+  length: 1 | 2,
+  review: ResumeReviewItem[],
+): void {
+  const budget = BULLET_BUDGET[length];
+  const ranked = rows.map((row) => ({
+    row,
+    relevance: (() => {
+      const entry = byRef.get(row.ref);
+      return entry ? entryScore(entry, terms, takenAt) : 0;
+    })(),
+    scores: scoreMap(byRef.get(row.ref), terms),
+  }));
+  const total = () => ranked.reduce((sum, item) => sum + item.row.bullets.length, 0);
+  const dropOne = (strongOnly: boolean): boolean => {
+    const candidates = ranked
+      .flatMap((item) =>
+        item.row.bullets.map((bullet, index) => ({
+          item,
+          index,
+          score: bulletScore(bullet, item.scores),
+        })),
+      )
+      .filter((candidate) => candidate.item.row.bullets.length > 1)
+      .filter((candidate) => (strongOnly ? candidate.score >= STRONG_SCORE : candidate.score < STRONG_SCORE))
+      .sort(
+        (left, right) =>
+          left.score - right.score || left.item.relevance - right.item.relevance,
+      );
+    const top = ranked[0];
+    const pick = candidates.find((candidate) => {
+      if (!strongOnly || !top || candidate.item.row !== top.row) return true;
+      return candidate.item.row.bullets.length > 3;
+    });
+    if (!pick) return false;
+    const removed = pick.item.row.bullets[pick.index];
+    pick.item.row.bullets = pick.item.row.bullets.filter((_, index) => index !== pick.index);
+    const ref = removed?.sourceRefs[0];
+    if (ref) {
+      review.push({ code: "BULLET_PREFERENCE", severity: "note", ref, reason: "space" });
+    }
+    return true;
+  };
+  let guard = 0;
+  while (total() > budget && guard < 40) {
+    if (!dropOne(false) && !dropOne(true)) break;
+    guard += 1;
   }
-  return kept.map((item) => item.bullet);
+}
+
+function scoreMap(
+  entry: SnapshotEntry | undefined,
+  terms: readonly string[],
+): Map<string, number> {
+  if (!entry) return new Map();
+  return new Map(scoreBullets(entry, terms).map((item) => [item.bullet.ref, item.score]));
+}
+
+function bulletScore(bullet: ValidatedBullet, scores: ReadonlyMap<string, number>): number {
+  return bullet.sourceRefs.reduce((best, ref) => Math.max(best, scores.get(ref) ?? 0), 0);
+}
+
+function entryOverlap(entry: SnapshotEntry, terms: readonly string[]): number {
+  const blob = [entry.title, entry.organization ?? "", ...entry.bullets.map((bullet) => bullet.text)].join(
+    " ",
+  );
+  return overlap(blob, terms);
 }
 
 function selectContacts(
@@ -613,12 +834,6 @@ function orderChanged(before: readonly string[], after: readonly string[]): bool
   const left = before.filter((ref) => after.includes(ref));
   const right = after.filter((ref) => left.includes(ref));
   return left.some((ref, index) => right[index] !== ref);
-}
-
-function bulletCap(length: 1 | 2, rank: number, currentRole: boolean): number {
-  const table = PAGE_CAPS[length];
-  const cap = table[Math.min(rank, table.length - 1)] ?? 2;
-  return currentRole ? Math.max(cap, 2) : cap;
 }
 
 function hasSource(entry: SnapshotEntry): boolean {

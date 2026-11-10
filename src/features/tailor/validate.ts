@@ -1,7 +1,7 @@
 /**
  * Fabrication guard for a tailored resume.
  * docs/05-AI.md → The fabrication guard.
- * Pure: G1–G18 clean the model output before anything is saved.
+ * Pure: G1–G20 clean the model output before anything is saved.
  */
 
 import type { LibrarySnapshot } from "@/features/library/schemas";
@@ -13,7 +13,10 @@ import {
   evidenceText,
   inflatedRole,
   isRedundantBullet,
+  raisedProficiency,
+  summaryProficiency,
   requirementOverstated,
+  sameWording,
   unsupportedClaim,
 } from "./grounding";
 import { chooseEducationKeepers } from "./identity";
@@ -54,6 +57,8 @@ export const GUARD_CODES = [
   "G16",
   "G17",
   "G18",
+  "G19",
+  "G20",
 ] as const;
 
 export type GuardCode = (typeof GUARD_CODES)[number];
@@ -119,6 +124,33 @@ function clipPlan(plan: EditorialPlan | undefined): EditorialPlan | undefined {
   return { narrative, priorities, gaps };
 }
 
+/**
+ * A summary may combine roles. Each tool, proficiency, responsibility, and
+ * result still has to appear in the library. A skill name is not proficiency.
+ */
+function summaryClaimUnsupported(
+  sentence: string,
+  presence: readonly string[],
+  bullets: readonly string[],
+): boolean {
+  if (presence.length > 0 && unsupportedClaim(sentence, presence) !== null) return true;
+  if (bullets.length > 0 && inflatedRole(sentence, bullets) !== null) return true;
+  return summaryProficiency(sentence, bullets) !== null;
+}
+
+function libraryPresence(snapshot: LibrarySnapshot): string[] {
+  const parts: string[] = [];
+  if (snapshot.profile.headline) parts.push(snapshot.profile.headline);
+  if (snapshot.profile.summary) parts.push(snapshot.profile.summary);
+  for (const entry of snapshot.entries) {
+    if (entry.title.trim().length > 0) parts.push(entry.title);
+    if (entry.organization) parts.push(entry.organization);
+    for (const bullet of entry.bullets) parts.push(bullet.text);
+  }
+  for (const skill of snapshot.skills) parts.push(skill.name);
+  return parts;
+}
+
 function clip(value: string, max: number): string {
   const text = value.replace(/\s+/g, " ").trim();
   return text.length > max ? text.slice(0, max) : text;
@@ -131,6 +163,8 @@ function cleanSummary(
 ): { text: string; reverts: number } {
   const tenure = snapshotTenure(snapshot);
   const sources = libraryNumberSources(snapshot, tenure);
+  const presence = libraryPresence(snapshot);
+  const bullets = snapshot.entries.flatMap((entry) => entry.bullets.map((bullet) => bullet.text));
   const parts = sentences(text);
   if (parts.length === 0) return { text, reverts: 0 };
 
@@ -140,7 +174,8 @@ function cleanSummary(
     const forNumbers = stripEducationDurationPhrases(sentence);
     if (
       hasOverstatedTenure(sentence, tenure) ||
-      hasUnsupportedNumber(forNumbers, sources)
+      hasUnsupportedNumber(forNumbers, sources) ||
+      summaryClaimUnsupported(sentence, presence, bullets)
     ) {
       dropped = true;
       continue;
@@ -276,6 +311,11 @@ function dropRedundant(
   return { entries, reverts: cleaned.reverts };
 }
 
+/** A composed line may cite this many bullets from the same entry. */
+const MAX_SOURCES = 5;
+/** One source may be split into this many lines. */
+const MAX_SPLITS = 2;
+
 function cleanBullets(
   bullets: readonly TailorBullet[],
   snapshotEntry: SnapshotEntry,
@@ -284,9 +324,20 @@ function cleanBullets(
   const owned = new Map(
     snapshotEntry.bullets.map((bullet) => [bullet.ref, bullet.text]),
   );
-  const kept: ValidatedBullet[] = [];
-  const seen = new Set<string>();
+  const pending: ValidatedBullet[] = [];
+  const seenMulti = new Set<string>();
+  const singles = new Map<string, string[]>();
   let reverts = 0;
+
+  const rememberSingle = (ref: string, text: string): boolean => {
+    const prior = singles.get(ref) ?? [];
+    if (prior.length >= MAX_SPLITS || prior.some((item) => sameWording(item, text))) {
+      return false;
+    }
+    prior.push(text);
+    singles.set(ref, prior);
+    return true;
+  };
 
   for (const bullet of bullets) {
     const sources: { ref: string; text: string }[] = [];
@@ -303,50 +354,80 @@ function cleanBullets(
     const first = sources[0];
     if (first === undefined) continue;
 
-    if (sources.length > 1) {
+    if (sources.length > MAX_SOURCES) {
       issues.push({ code: "G17", ref: first.ref });
       continue;
     }
 
-    const key = sources
-      .map((source) => source.ref)
-      .sort()
-      .join("\0");
-    if (seen.has(key)) {
+    const cited = sources.map((source) => source.text);
+    let text = bullet.text;
+    let reverted = false;
+    let code: GuardCode | null = null;
+    if (hasUnsupportedNumber(text, cited)) code = "G4";
+    else if (text.trim().length === 0 || text.length > RESUME_LIMITS.bullet) code = "G5";
+    else {
+      const claim = unsupportedClaim(text, cited);
+      const inflated =
+        claim === null ? inflatedRole(text, cited) ?? raisedProficiency(text, cited) : null;
+      if (claim !== null) code = "G13";
+      else if (inflated !== null) code = "G16";
+    }
+
+    if (code !== null && sources.length > 1) {
+      reverts += 1;
+      issues.push({ code, ref: first.ref });
+      for (const source of sources) {
+        if (!rememberSingle(source.ref, source.text)) {
+          issues.push({ code: "G6", ref: source.ref });
+          continue;
+        }
+        pending.push({ sourceRefs: [source.ref], text: source.text, reverted: true });
+      }
+      continue;
+    }
+
+    if (code !== null) {
+      text = first.text;
+      reverted = true;
+      reverts += 1;
+      issues.push({ code, ref: first.ref });
+    }
+
+    if (sources.length > 1) {
+      const key = sources
+        .map((source) => source.ref)
+        .sort()
+        .join("\0");
+      if (seenMulti.has(key)) {
+        issues.push({ code: "G6", ref: first.ref });
+        continue;
+      }
+      seenMulti.add(key);
+    } else if (!rememberSingle(first.ref, text)) {
       issues.push({ code: "G6", ref: first.ref });
       continue;
     }
-    seen.add(key);
 
-    let text = bullet.text;
-    let reverted = false;
-    if (hasUnsupportedNumber(text, sources.map((source) => source.text))) {
-      text = first.text;
-      reverted = true;
-      reverts += 1;
-      issues.push({ code: "G4", ref: first.ref });
-    } else if (text.trim().length === 0 || text.length > RESUME_LIMITS.bullet) {
-      text = first.text;
-      reverted = true;
-      reverts += 1;
-      issues.push({ code: "G5", ref: first.ref });
-    } else {
-      const cited = sources.map((source) => source.text);
-      const claim = unsupportedClaim(text, cited);
-      const inflated = claim === null ? inflatedRole(text, cited) : null;
-      if (claim !== null || inflated !== null) {
-        text = first.text;
-        reverted = true;
-        reverts += 1;
-        issues.push({ code: claim !== null ? "G13" : "G16", ref: first.ref });
-      }
-    }
-
-    kept.push({
+    pending.push({
       sourceRefs: sources.map((source) => source.ref),
       text,
       reverted,
     });
+  }
+
+  const covered = new Set<string>();
+  for (const bullet of pending) {
+    if (bullet.sourceRefs.length < 2 || bullet.reverted) continue;
+    for (const ref of bullet.sourceRefs) covered.add(ref);
+  }
+  const kept: ValidatedBullet[] = [];
+  for (const bullet of pending) {
+    const only = bullet.sourceRefs.length === 1 ? bullet.sourceRefs[0] : undefined;
+    if (only && covered.has(only)) {
+      issues.push({ code: "G19", ref: only });
+      continue;
+    }
+    kept.push(bullet);
   }
 
   return { bullets: kept, reverts };
@@ -448,14 +529,33 @@ function cleanEvidence(
     });
   if (overstated) issues.push({ code: "G15", ref: match.requirementId });
 
+  const skillOnly =
+    !overstated &&
+    verdict === "met" &&
+    evidenceRefs.length > 0 &&
+    evidenceRefs.every((ref) => skillRefs(snapshot).has(ref)) &&
+    requirement !== null &&
+    asksForDepth(requirement);
+  if (skillOnly) issues.push({ code: "G20", ref: match.requirementId });
+
   return {
     requirementId: match.requirementId,
-    verdict: overstated ? "partial" : verdict,
+    verdict: overstated || skillOnly ? "partial" : verdict,
     evidenceRefs,
     note: overstated
       ? "Related experience is on file. It does not show this requirement in full."
-      : match.note,
+      : skillOnly
+        ? "Declared as a skill. The library does not show this as experience."
+        : match.note,
   };
+}
+
+function skillRefs(snapshot: LibrarySnapshot): Set<string> {
+  return new Set(snapshot.skills.map((skill) => skill.ref));
+}
+
+function asksForDepth(requirement: string): boolean {
+  return /\b(years|professional|proficient|production|experience)\b/i.test(requirement);
 }
 
 function knownRefs(snapshot: LibrarySnapshot): Set<string> {

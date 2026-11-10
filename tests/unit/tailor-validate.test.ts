@@ -162,41 +162,52 @@ describe("validateTailorOutput", () => {
     expect(result.issues).toContainEqual({ code: "G4", ref: "E1.B1" });
   });
 
-  it("G17 drops a bullet that cites two sources", () => {
+  it("keeps a bullet that combines two sources from the same entry", () => {
     const output = tailorOutput();
     const entry = output.entries[0];
     if (!entry) throw new Error("missing entry");
-    entry.bullets[0] = {
-      sourceRefs: ["E1.B1", "E1.B2"],
-      text: "Maintained 14 reports and cut prep to 3 hours.",
-    };
+    entry.bullets = [
+      {
+        sourceRefs: ["E1.B1", "E1.B2"],
+        text: "Maintained 14 reports and cut prep to 3 hours.",
+      },
+    ];
 
     const result = guard(output);
 
     expect(result.reverts).toBe(0);
-    expect(result.output.entries[0]?.bullets.map((bullet) => bullet.sourceRefs)).not.toContainEqual([
-      "E1.B1",
-      "E1.B2",
+    expect(result.output.entries[0]?.bullets).toEqual([
+      {
+        sourceRefs: ["E1.B1", "E1.B2"],
+        text: "Maintained 14 reports and cut prep to 3 hours.",
+        reverted: false,
+      },
     ]);
-    expect(result.issues).toContainEqual({ code: "G17", ref: "E1.B1" });
+    expect(result.issues.some((issue) => issue.code === "G17")).toBe(false);
   });
 
-  it("G17 drops a merged bullet instead of keeping only the first source", () => {
+  it("splits an unsupported combined bullet back into its sources", () => {
     const output = tailorOutput();
     const entry = output.entries[0];
     if (!entry) throw new Error("missing entry");
-    entry.bullets[0] = {
-      sourceRefs: ["E1.B2", "E1.B1"],
-      text: "Shipped 99 features.",
-    };
+    entry.bullets = [
+      {
+        sourceRefs: ["E1.B2", "E1.B1"],
+        text: "Shipped 99 features.",
+      },
+    ];
 
     const result = guard(output);
 
-    expect(result.reverts).toBe(0);
-    expect(result.issues).toContainEqual({ code: "G17", ref: "E1.B2" });
+    expect(result.reverts).toBe(1);
+    expect(result.issues).toContainEqual({ code: "G4", ref: "E1.B2" });
     expect(
       result.output.entries[0]?.bullets.some((bullet) => bullet.text === "Shipped 99 features."),
     ).toBe(false);
+    expect(result.output.entries[0]?.bullets.map((bullet) => bullet.text).sort()).toEqual([
+      "Built and maintained 14 reports for a 20-person team.",
+      "Cut prep time from 2 days to 3 hours.",
+    ]);
   });
 
   it("G4 treats 1,000 and 1 000 as the same number as 1000", () => {
@@ -306,7 +317,7 @@ describe("validateTailorOutput", () => {
     expect(reverted.issues).toContainEqual({ code: "G5", ref: "E1.B1" });
   });
 
-  it("G17 drops both copies of a merged bullet", () => {
+  it("G6 keeps the first combined bullet and drops a second citation of the same sources", () => {
     const output = tailorOutput();
     const entry = output.entries[0];
     if (!entry) throw new Error("missing entry");
@@ -323,11 +334,114 @@ describe("validateTailorOutput", () => {
 
     const result = guard(output);
 
+    expect(result.output.entries[0]?.bullets).toHaveLength(1);
+    expect(result.issues).toEqual([{ code: "G6", ref: "E1.B2" }]);
+  });
+
+  it("G17 drops a bullet that cites more than five sources", () => {
+    const snapshot = librarySnapshot();
+    const role = snapshot.entries.find((entry) => entry.ref === "E1");
+    if (!role) throw new Error("missing role");
+    for (let index = 3; index <= 6; index += 1) {
+      role.bullets.push({
+        ref: `E1.B${index}`,
+        id: `extra-${index}`,
+        text: "Recorded a separate verified fact.",
+      });
+    }
+    const output = tailorOutput();
+    const entry = output.entries[0];
+    if (!entry) throw new Error("missing entry");
+    entry.bullets = [
+      {
+        sourceRefs: ["E1.B1", "E1.B2", "E1.B3", "E1.B4", "E1.B5", "E1.B6"],
+        text: "Maintained 14 reports and cut prep to 3 hours.",
+      },
+    ];
+
+    const result = guard(output, snapshot);
+
     expect(result.output.entries[0]?.bullets).toHaveLength(0);
-    expect(result.issues).toEqual([
-      { code: "G17", ref: "E1.B1" },
-      { code: "G17", ref: "E1.B2" },
+    expect(result.issues).toContainEqual({ code: "G17", ref: "E1.B1" });
+  });
+
+  it("G19 drops a source that is already inside a combined bullet", () => {
+    const output = tailorOutput();
+    const entry = output.entries[0];
+    if (!entry) throw new Error("missing entry");
+    entry.bullets = [
+      {
+        sourceRefs: ["E1.B1", "E1.B2"],
+        text: "Maintained 14 reports and cut prep to 3 hours.",
+      },
+      {
+        sourceRefs: ["E1.B2"],
+        text: "Cut prep time from 2 days to 3 hours.",
+      },
+    ];
+
+    const result = guard(output);
+
+    expect(result.output.entries[0]?.bullets).toHaveLength(1);
+    expect(result.issues).toContainEqual({ code: "G19", ref: "E1.B2" });
+  });
+
+  it("G16 reverts Java use that was rewritten as coursework or development", () => {
+    const snapshot = withBulletText("E1.B1", "Familiar with Java and has used it.");
+    const output = tailorOutput();
+    const bullet = output.entries[0]?.bullets[0];
+    if (!bullet) throw new Error("missing bullet");
+    bullet.text = "Completed introductory coursework in Java.";
+
+    const coursework = guard(output, snapshot);
+
+    expect(coursework.reverts).toBe(1);
+    expect(coursework.issues).toContainEqual({ code: "G16", ref: "E1.B1" });
+    expect(coursework.output.entries[0]?.bullets[0]?.text).toBe(
+      "Familiar with Java and has used it.",
+    );
+
+    const developed = tailorOutput();
+    const developedBullet = developed.entries[0]?.bullets[0];
+    if (!developedBullet) throw new Error("missing bullet");
+    developedBullet.text = "Developed Java services.";
+    const result = guard(developed, snapshot);
+    expect(result.issues).toContainEqual({ code: "G16", ref: "E1.B1" });
+    expect(result.output.entries[0]?.bullets[0]?.text).toBe(
+      "Familiar with Java and has used it.",
+    );
+  });
+
+  it("G20 marks a skill-only experience requirement as partial", () => {
+    const output = tailorOutput();
+    output.requirementMatches[0] = {
+      requirementId: "r1",
+      verdict: "met",
+      evidenceRefs: ["S1"],
+      note: "Python is listed.",
+    };
+
+    const result = guard(output, librarySnapshot(), [
+      {
+        id: "r1",
+        text: "Professional Python experience",
+        kind: "experience",
+        importance: "must",
+      },
+      baseRequirements[1] ?? {
+        id: "r2",
+        text: "AWS certification",
+        kind: "certification",
+        importance: "nice",
+      },
     ]);
+
+    expect(result.output.requirementMatches[0]).toMatchObject({
+      verdict: "partial",
+      evidenceRefs: ["S1"],
+    });
+    expect(result.issues).toContainEqual({ code: "G20", ref: "r1" });
+    expect(result.reverts).toBe(0);
   });
 
   it("G6 drops a bullet whose refs match only after a bad ref is removed", () => {

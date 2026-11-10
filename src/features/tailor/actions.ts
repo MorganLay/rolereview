@@ -20,6 +20,11 @@ import {
   REPAIR_SYSTEM,
   RepairSchema,
 } from "@/lib/ai/prompts/tailor-repair";
+import {
+  buildReviseContent,
+  REVISE_SYSTEM,
+  ReviseSchema,
+} from "@/lib/ai/prompts/tailor-revise";
 import { buildContent, OutputSchema, SYSTEM } from "@/lib/ai/prompts/tailor";
 import { runStructured } from "@/lib/ai/run";
 import { requireUserForAction } from "@/lib/auth";
@@ -35,6 +40,12 @@ import {
   repairTargets,
   withRepairNotes,
 } from "./repair";
+import {
+  acceptRevision,
+  mergeRevision,
+  notesForAccepted,
+  revisionTargets,
+} from "./revise";
 import { preferSavedWording, variantPrompt } from "./variants";
 import { applyResumeEdit, preserveUserEdits } from "./content";
 import { TAILOR_STALE_MS } from "./status";
@@ -161,6 +172,7 @@ export async function tailorResume(
           kind: "TAILOR",
           userId: user.id,
           usedBonusCredit: false,
+          countsTowardQuota: false,
           system: REPAIR_SYSTEM,
           content: buildRepairContent({
             title: job.title,
@@ -202,6 +214,56 @@ export async function tailorResume(
         }
       } catch {
         // The first guarded resume still stands.
+      }
+    }
+    const gaps = revisionTargets({
+      output: guard.output,
+      snapshot: serialized.snapshot,
+      analysis: analysis.data,
+    });
+    if (gaps.length > 0) {
+      try {
+        const revised = await runStructured({
+          kind: "TAILOR",
+          userId: user.id,
+          usedBonusCredit: false,
+          countsTowardQuota: false,
+          system: REVISE_SYSTEM,
+          content: buildReviseContent({
+            title: job.title,
+            company: job.company,
+            targets: gaps,
+          }),
+          schema: ReviseSchema,
+          refId: resumeId,
+        });
+        if (revised.ok) {
+          const merged = mergeRevision(guard.output, revised.data.entries, gaps);
+          const second = validateTailorOutput(
+            merged.output,
+            serialized.snapshot,
+            analysis.data,
+          );
+          const chosen = acceptRevision(
+            guard.output,
+            second.output,
+            gaps.map((target) => target.entryRef),
+          );
+          if (chosen.accepted.length > 0) {
+            const summaryReverts = Math.max(
+              0,
+              guard.reverts - countRevertedBullets(guard.output),
+            );
+            guard = {
+              output: chosen.output,
+              reverts: summaryReverts + countRevertedBullets(chosen.output),
+              issues: guard.issues,
+            };
+            notes = notesForAccepted(notes, merged.notes, chosen.accepted, chosen.output);
+          }
+        }
+      } catch {
+        // The guarded draft still stands.
       }
     }
     logGuard(user.id, resumeId, guard.reverts, guard.issues);

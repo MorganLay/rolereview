@@ -135,6 +135,39 @@ const SCOPE = ["infrastructure", "enterprise", "strategy"] as const;
 
 const ENGINES = ["postgresql", "postgres", "mysql", "oracle", "snowflake"] as const;
 
+const BUILD_VERB =
+  /\b(built|build|building|developed|develop|developing|implemented|implement|implementing|engineered|engineering|architected|architecting|programmed|programming|tested|testing|integrated|integrating|deployed|deploying|debugged|debugging|designed|designing|created|creating)\b/gi;
+
+const INSTRUMENT = /\b(used|using|use|with|via)\b/gi;
+
+const FAMILIARITY =
+  /\b(familiar(?:ity)?|exposure|introductory|basic)\b|\bintroduced to\b/i;
+
+const COURSEWORK = /\b(coursework|courses?|academic|studied|introduction to)\b/i;
+
+const PROFESSIONAL =
+  /\b(professional|production|extensive|expert|proficient|advanced)\b|\bdevelopment experience\b/i;
+
+type Proficiency = "familiarity" | "used" | "coursework" | "built" | "professional";
+
+/**
+ * Familiarity, use, coursework, a project built with a tool, and professional
+ * experience are separate claims. A rewrite may restate a weaker claim that
+ * the evidence already implies. It may not add a category the sources do not state.
+ */
+export function raisedProficiency(text: string, sources: readonly string[]): string | null {
+  if (sources.length === 0) return "source";
+  return proficiencyPromotion(text, sources);
+}
+
+/** Same category check for a summary sentence. Empty evidence supports no category. */
+export function summaryProficiency(
+  text: string,
+  sources: readonly string[],
+): string | null {
+  return proficiencyPromotion(text, sources);
+}
+
 /**
  * A rewrite that raises the role or the tool past what the sources say.
  * "Helped coordinate" does not become "Led". "Used SQL" does not become
@@ -291,8 +324,128 @@ function positivelyDeploys(text: string): boolean {
   return false;
 }
 
+function proficiencyPromotion(text: string, sources: readonly string[]): string | null {
+  if (sources.some((source) => sameWording(text, source))) return null;
+  const evidence = sources.join("\n");
+  for (const term of mentionedTerms(text)) {
+    const claimed = categoriesFor(text, term);
+    const supported = categoriesFor(evidence, term);
+    for (const claim of claimed) {
+      if (!categoryAllowed(claim, supported)) return term;
+    }
+  }
+  return null;
+}
+
+function categoriesFor(text: string, term: string): Set<Proficiency> {
+  const found = new Set<Proficiency>();
+  for (const sentence of evidenceSentences(text)) {
+    if (!mentions(sentence, term)) continue;
+    if (FAMILIARITY.test(sentence)) found.add("familiarity");
+    if (COURSEWORK.test(sentence)) found.add("coursework");
+    if (professionalNear(sentence, term)) found.add("professional");
+    const relation = toolRelation(sentence, term);
+    if (relation === "built") found.add("built");
+    if (relation === "used" || usedAfterTerm(sentence, term)) found.add("used");
+  }
+  return found;
+}
+
+/**
+ * Built practice implies the person used the tool and is familiar with it.
+ * Coursework implies familiarity only. Use does not imply a project, coursework,
+ * or professional experience.
+ */
+function categoryAllowed(claim: Proficiency, evidence: Set<Proficiency>): boolean {
+  if (evidence.has(claim)) return true;
+  if (claim === "familiarity") {
+    return (
+      evidence.has("used") ||
+      evidence.has("built") ||
+      evidence.has("professional") ||
+      evidence.has("coursework")
+    );
+  }
+  if (claim === "used") return evidence.has("built") || evidence.has("professional");
+  return false;
+}
+
+function professionalNear(sentence: string, term: string): boolean {
+  const at = termIndex(sentence, term);
+  if (at < 0) return false;
+  const window = tokenWindow(sentence, at, 5);
+  return PROFESSIONAL.test(window);
+}
+
+/** The verb nearest the tool. "Built a product using Java" is use, not a Java project. */
+function toolRelation(sentence: string, term: string): "built" | "used" | "none" {
+  const at = termIndex(sentence, term);
+  if (at < 0) return "none";
+  const before = sentence.slice(0, at);
+  const practice = [...before.matchAll(BUILD_VERB)];
+  const instrument = [...before.matchAll(INSTRUMENT)];
+  const lastPractice = practice.at(-1);
+  const lastInstrument = instrument.at(-1);
+  if (!lastPractice && !lastInstrument) return "none";
+  const practiceAt = lastPractice?.index ?? -1;
+  const instrumentAt = lastInstrument?.index ?? -1;
+  if (instrumentAt > practiceAt) {
+    const word = lastInstrument?.[1]?.toLowerCase() ?? "";
+    return word === "used" || word === "using" || word === "use" ? "used" : "none";
+  }
+  const between = before.slice(practiceAt).trim().split(/\s+/);
+  if (between.length > 5) return "none";
+  return "built";
+}
+
+/** "Familiar with Java and has used it" states use. "Used Excel and studied Java" does not. */
+function usedAfterTerm(sentence: string, term: string): boolean {
+  const at = termIndex(sentence, term);
+  if (at < 0) return false;
+  const after = looseText(sentence).slice(at + normalizeMatchText(term).length);
+  const used = /\b(used|using|use)\b/i.exec(after);
+  if (!used || used.index === undefined) return false;
+  const rest = after.slice(used.index + used[0].length);
+  return !mentionedTerms(rest).some((other) => other !== term);
+}
+
+function termIndex(sentence: string, term: string): number {
+  return looseText(sentence).indexOf(normalizeMatchText(term));
+}
+
+function tokenWindow(sentence: string, at: number, radius: number): string {
+  const haystack = looseText(sentence);
+  const tokens = haystack.split(/\s+/);
+  let cursor = 0;
+  let index = 0;
+  for (const token of tokens) {
+    if (cursor + token.length > at) break;
+    cursor += token.length + 1;
+    index += 1;
+  }
+  return tokens.slice(Math.max(0, index - radius), index + radius + 1).join(" ");
+}
+
+function mentionedTerms(text: string): string[] {
+  const haystack = looseText(text);
+  const found: string[] = [];
+  const terms = [...TECH].sort((left, right) => right.length - left.length);
+  for (const term of terms) {
+    if (term.length < 3 || !termAppears(haystack, term)) continue;
+    found.push(term);
+  }
+  return found;
+}
+
+function evidenceSentences(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence.length > 0);
+}
+
 function supported(token: string, evidence: string): boolean {
-  const haystack = normalizeMatchText(evidence);
+  const haystack = looseText(evidence);
   const needle = normalizeMatchText(token);
   return termAppears(haystack, needle);
 }
@@ -305,8 +458,13 @@ function firstMatch(text: string, words: readonly string[]): string | null {
 }
 
 function mentions(text: string, word: string): boolean {
-  const haystack = normalizeMatchText(text);
+  const haystack = looseText(text);
   return termAppears(haystack, word) || termAppears(haystack, `${word}s`);
+}
+
+/** Sentence periods are boundaries. A dot inside `.net` or `node.js` stays. */
+function looseText(text: string): string {
+  return normalizeMatchText(text).replace(/\.+(?![a-z0-9])/g, " ");
 }
 
 function lexiconPhrases(text: string): string[] {

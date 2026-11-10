@@ -35,6 +35,11 @@ export type RunArgs<S extends z.ZodType> = {
   /** Repair a parsed object before the schema check. A throw here is a validation failure. */
   normalize?: (value: unknown) => unknown;
   refId?: string;
+  /**
+   * Follow-up calls for a resume already charged (repair, revision).
+   * The row stays successful for cost, and it does not count as another allowance use.
+   */
+  countsTowardQuota?: boolean;
 };
 
 export type RunResult<T> =
@@ -221,7 +226,9 @@ async function recordCall<T>(
   durationMs: number,
 ): Promise<void> {
   const success = outcome.ok;
-  const wantsBonus = success && args.usedBonusCredit === true && args.userId !== null;
+  const exempt = args.countsTowardQuota === false;
+  const wantsBonus =
+    success && !exempt && args.usedBonusCredit === true && args.userId !== null;
   const write = () =>
     db.$transaction(async (tx) => {
       let usedBonusCredit = false;
@@ -248,6 +255,7 @@ async function recordCall<T>(
         // Still mark the row so the call does not also consume the plan allowance.
         if (!usedBonusCredit) usedBonusCredit = true;
       }
+      if (exempt) usedBonusCredit = true;
       await tx.aiCall.create({
         data: {
           userId: args.userId,

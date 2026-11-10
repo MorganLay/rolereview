@@ -23,6 +23,7 @@ import { saveResumeContent } from "@/features/tailor/actions";
 import { saveSummaryVariant } from "@/features/library/wording-actions";
 import {
   formatSavedTime,
+  restoreSourceBullets,
   resumeSkills,
   type ResumeWorkspaceData,
 } from "@/features/tailor/content";
@@ -539,6 +540,11 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         onEditBlur={(bulletId) => onEditBlur(entry.ref, bulletId)}
         onMove={(bulletId, direction) => moveBullet(entry.ref, bulletId, direction)}
         onRewrite={(bulletId, text) => setBulletText(entry.ref, bulletId, text)}
+        onRestore={(bulletId) =>
+          updateContent((current) =>
+            restoreSourceBullets(current, entry.ref, bulletId, workspace.snapshot),
+          )
+        }
         requirements={workspace.requirements}
       />
     );
@@ -988,6 +994,7 @@ function EntryBlock({
   onEditBlur,
   onMove,
   onRewrite,
+  onRestore,
   requirements,
 }: {
   entry: ContentEntry;
@@ -1008,6 +1015,7 @@ function EntryBlock({
   onEditBlur: (bulletId: string) => void;
   onMove: (bulletId: string, direction: Direction) => void;
   onRewrite: (bulletId: string, text: string) => void;
+  onRestore: (bulletId: string) => void;
   requirements: readonly Requirement[];
 }) {
   const title = facts.title.trim() || copy.untitled;
@@ -1079,6 +1087,7 @@ function EntryBlock({
               onEditBlur={() => onEditBlur(bullet.id)}
               onMove={(direction) => onMove(bullet.id, direction)}
               onRewrite={(text) => onRewrite(bullet.id, text)}
+              onRestore={() => onRestore(bullet.id)}
               requirements={requirements}
             />
           ))}
@@ -1109,6 +1118,7 @@ function BulletRow({
   onEditBlur,
   onMove,
   onRewrite,
+  onRestore,
   requirements,
 }: {
   bullet: ContentBullet;
@@ -1131,6 +1141,7 @@ function BulletRow({
   onEditBlur: () => void;
   onMove: (direction: Direction) => void;
   onRewrite: (text: string) => void;
+  onRestore: () => void;
   requirements: readonly Requirement[];
 }) {
   const fieldId = useId();
@@ -1230,6 +1241,7 @@ function BulletRow({
           review={review}
           readOnly={readOnly}
           onRewrite={onRewrite}
+          onRestore={onRestore}
         />
       )}
     </li>
@@ -1242,17 +1254,19 @@ function RewriteCompare({
   review,
   readOnly,
   onRewrite,
+  onRestore,
 }: {
   bullet: ContentBullet;
   sources: readonly { ref: string; text: string }[];
   review: ReturnType<typeof bulletReview>;
   readOnly: boolean;
   onRewrite: (text: string) => void;
+  onRestore: () => void;
 }) {
   if (review.state === "none") return null;
   const original = review.original;
   const tailored = review.tailored ?? "";
-  const tooLong = sources.length > 1 && original.length > 400;
+  const combined = sources.length > 1;
   const summary =
     review.state === "applied"
       ? copy.whyChange
@@ -1311,13 +1325,13 @@ function RewriteCompare({
           {tailored}
         </p>
       ) : null}
-      {readOnly || tooLong ? null : (
+      {readOnly ? null : (
         <div className="mt-1 flex flex-wrap gap-3">
           {review.state === "applied" || review.state === "edited" ? (
             <button
               type="button"
               className="text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-              onClick={() => onRewrite(original)}
+              onClick={() => (combined ? onRestore() : onRewrite(original))}
             >
               {copy.restoreOriginal}
             </button>
