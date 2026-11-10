@@ -20,6 +20,7 @@ import {
   unsupportedClaim,
 } from "./grounding";
 import { chooseEducationKeepers } from "./identity";
+import { experienceGroups, type ExperienceGroup } from "./stints";
 import { NOT_ASSESSED_NOTE, RESUME_LIMITS } from "./schemas";
 import type {
   EditorialPlan,
@@ -74,8 +75,6 @@ export type GuardResult = {
   reverts: number;
   issues: GuardIssue[];
 };
-
-type SnapshotEntry = LibrarySnapshot["entries"][number];
 
 export function validateTailorOutput(
   output: TailorOutput,
@@ -185,7 +184,8 @@ function cleanSummary(
 
   if (!dropped) return { text, reverts: 0 };
   issues.push({ code: "G12", ref: "summary" });
-  if (kept.length > 0) return { text: kept.join(" "), reverts: 1 };
+  const fragment = kept.length === 1 && /^(also|and|additionally)\b/i.test(kept[0]?.trim() ?? "");
+  if (kept.length > 0 && !fragment) return { text: kept.join(" "), reverts: 1 };
   return { text: snapshot.profile.summary?.trim() ?? "", reverts: 1 };
 }
 
@@ -241,6 +241,7 @@ function cleanEntries(
   issues: GuardIssue[],
 ): { entries: ValidatedTailorOutput["entries"]; reverts: number } {
   const byRef = new Map(snapshot.entries.map((entry) => [entry.ref, entry]));
+  const groups = experienceGroups(snapshot.entries, snapshot.takenAt);
   const seen = new Set<string>();
   const cleaned: ValidatedTailorOutput["entries"] = [];
   let reverts = 0;
@@ -256,7 +257,7 @@ function cleanEntries(
       continue;
     }
     seen.add(entry.ref);
-    const bullets = cleanBullets(entry.bullets, snapshotEntry, issues);
+    const bullets = cleanBullets(entry.bullets, sourcesFor(entry.ref, snapshot, groups), issues);
     reverts += bullets.reverts;
     cleaned.push({ ref: entry.ref, bullets: bullets.bullets });
   }
@@ -316,14 +317,26 @@ const MAX_SOURCES = 5;
 /** One source may be split into this many lines. */
 const MAX_SPLITS = 2;
 
+function sourcesFor(
+  entryRef: string,
+  snapshot: LibrarySnapshot,
+  groups: readonly ExperienceGroup[],
+): Map<string, string> {
+  const group = groups.find((item) => item.members.includes(entryRef));
+  const members = new Set(group?.members ?? [entryRef]);
+  const sources = new Map<string, string>();
+  for (const entry of snapshot.entries) {
+    if (!members.has(entry.ref)) continue;
+    for (const bullet of entry.bullets) sources.set(bullet.ref, bullet.text);
+  }
+  return sources;
+}
+
 function cleanBullets(
   bullets: readonly TailorBullet[],
-  snapshotEntry: SnapshotEntry,
+  owned: ReadonlyMap<string, string>,
   issues: GuardIssue[],
 ): { bullets: ValidatedBullet[]; reverts: number } {
-  const owned = new Map(
-    snapshotEntry.bullets.map((bullet) => [bullet.ref, bullet.text]),
-  );
   const pending: ValidatedBullet[] = [];
   const seenMulti = new Set<string>();
   const singles = new Map<string, string[]>();

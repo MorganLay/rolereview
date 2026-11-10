@@ -115,11 +115,9 @@ describe("scenario resume composition", () => {
     const at = (ref: string) => order.indexOf(ref);
     expect(at("E_role")).toBeGreaterThanOrEqual(0);
     expect(at("E_gorseline")).toBeGreaterThanOrEqual(0);
-    expect(at("E_creek")).toBeGreaterThanOrEqual(0);
+    expect(at("E_creek")).toBe(-1);
+    expect(at("E_cnn")).toBe(-1);
     expect(at("E_def")).toBe(-1);
-    expect(at("E_role")).toBeLessThan(at("E_cnn"));
-    expect(at("E_gorseline")).toBeLessThan(at("E_cnn"));
-    expect(at("E_creek")).toBeLessThan(at("E_cnn"));
     expect(content.sectionOrder?.indexOf("PROJECT")).toBeLessThan(
       content.sectionOrder?.indexOf("EXPERIENCE") ?? 0,
     );

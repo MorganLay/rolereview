@@ -2342,6 +2342,14 @@ export const strings = {
         omittedHeading: "Left off",
         oneOmitted: (label: string) => `${label} was not selected for this version.`,
         manyOmitted: (names: string) => `${names} were not selected for this version.`,
+        combinedOne: (label: string) =>
+          `${label} is another record of a role already on this version. Its facts are used there.`,
+        combinedMany: (names: string) =>
+          `${names} are other records of roles already on this version. Their facts are used there.`,
+        pageBudget:
+          "Some evidence was left off to fit the page. Turn a line back on if it matters more than what is included.",
+        pageOverflow:
+          "This version is still longer than the page length. Turn a line off, or choose two pages.",
         omittedMore: (names: string, rest: number) =>
           `${names} were not selected for this version, along with ${rest} more.`,
         bulletsOmitted: (count: number) =>

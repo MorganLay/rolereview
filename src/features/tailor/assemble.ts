@@ -10,6 +10,7 @@ import type { LibrarySnapshot } from "@/features/library/schemas";
 
 import type { Composition } from "./compose";
 import { sameWording } from "./grounding";
+import { groupMembers } from "./stints";
 import { specificReason } from "./review";
 import { resumeSectionOrder } from "./resume-shape";
 import { RESUME_LIMITS, ResumeContent } from "./schemas";
@@ -62,7 +63,7 @@ export function assembleResumeContent(
   const entries: ContentEntry[] = [];
   for (const kind of resumeSectionOrder(composition?.sectionOrder)) {
     for (const selected of selectedByKind[kind]) {
-      entries.push(selectedEntry(selected, createId, notes));
+      entries.push(selectedEntry(selected, snapshot, createId, notes));
     }
     for (const snapshotEntry of snapshot.entries) {
       if (snapshotEntry.kind !== kind || selectedRefs.has(snapshotEntry.ref)) {
@@ -92,18 +93,24 @@ export function assembleResumeContent(
 
 function selectedEntry(
   selected: Selected,
+  snapshot: LibrarySnapshot,
   createId: () => string,
   notes: ReadonlyMap<string, BulletNote>,
 ): ContentEntry {
   const chosen = new Set<string>();
   const bullets: ContentBullet[] = [];
-
-  const sourceText = new Map(
-    selected.snapshot.bullets.map((bullet) => [bullet.ref, bullet.text]),
+  const members = new Set(
+    groupMembers(snapshot.entries, snapshot.takenAt, selected.snapshot.ref),
   );
-  const sourceId = new Map(
-    selected.snapshot.bullets.map((bullet) => [bullet.ref, bullet.id]),
-  );
+  const sourceText = new Map<string, string>();
+  const sourceId = new Map<string, string>();
+  for (const entry of snapshot.entries) {
+    if (!members.has(entry.ref)) continue;
+    for (const bullet of entry.bullets) {
+      sourceText.set(bullet.ref, bullet.text);
+      sourceId.set(bullet.ref, bullet.id);
+    }
+  }
   for (const bullet of selected.validated.bullets) {
     if (bullet.sourceRefs.length === 0) continue;
     for (const ref of bullet.sourceRefs) chosen.add(ref);

@@ -200,9 +200,17 @@ describe("evidence-backed developer resume", () => {
       analysis: analystAnalysis(),
       length: 1,
     });
-    const kept = composition.output.entries.map((entry) => entry.ref);
-    expect(kept).toContain("E_cra");
-    expect(kept).toContain("E_cra2");
+    const kept = composition.output.entries.filter((entry) => entry.ref === "E_cra" || entry.ref === "E_cra2");
+    expect(kept.map((entry) => entry.ref)).toEqual(["E_cra"]);
+    const text = kept[0]?.bullets.map((bullet) => bullet.text).join(" ") ?? "";
+    expect(text).toContain("SQL");
+    expect(text).toContain("VBA");
+    expect(composition.review).toContainEqual({
+      code: "ENTRY_EXCLUDED",
+      severity: "note",
+      ref: "E_cra2",
+      reason: "same_role",
+    });
   });
 
   it("revises a selected line that hides job-relevant evidence", () => {
@@ -402,5 +410,283 @@ describe("job-specific priority", () => {
       targets.map((target) => target.entryRef),
     );
     expect(kept.accepted).not.toContain("E_cra");
+  });
+});
+
+describe("one heading for one role", () => {
+  it("keeps a bullet that cites two records of the same internship", () => {
+    const snapshot = hootsuiteSnapshot();
+    const intern = snapshot.entries.find((entry) => entry.ref === "E_def");
+    if (!intern) throw new Error("missing internship");
+    snapshot.entries.push({
+      ...intern,
+      ref: "E_def2",
+      id: "entry-def-2",
+      organization: "Defhacks.co",
+      bullets: [
+        {
+          ref: "E_def2.B1",
+          id: "b-def2",
+          text: "Participated in code reviews and resolved bugs found during testing.",
+        },
+      ],
+    });
+    const drafted = developerDraft();
+    const role = drafted.entries.find((entry) => entry.ref === "E_def");
+    if (!role?.bullets[0]) throw new Error("missing draft");
+    role.bullets[0] = {
+      sourceRefs: ["E_def.B3", "E_def2.B1"],
+      text: "Participated in code reviews and resolved bugs found during testing.",
+    };
+    const checked = validateTailorOutput(drafted, snapshot, developerAnalysis());
+    expect(checked.issues.some((issue) => issue.code === "G3")).toBe(false);
+    const bullet = checked.output.entries
+      .find((entry) => entry.ref === "E_def")
+      ?.bullets.find((item) => item.sourceRefs.includes("E_def2.B1"));
+    expect(bullet?.sourceRefs).toEqual(["E_def.B3", "E_def2.B1"]);
+
+    const composition = composeResume({
+      output: checked.output,
+      snapshot,
+      analysis: developerAnalysis(),
+      length: 1,
+    });
+    expect(composition.output.entries.some((entry) => entry.ref === "E_def2")).toBe(false);
+    const nextId = ids();
+    const content = assembleResumeContent(composition.output, snapshot, nextId, new Map(), composition);
+    const heading = content.entries.find((entry) => entry.ref === "E_def");
+    const combined = heading?.bullets.find((item) => item.sourceRefs.includes("E_def2.B1"));
+    if (!combined) throw new Error("missing combined bullet");
+    const restored = restoreSourceBullets(content, "E_def", combined.id, snapshot, nextId);
+    const lines =
+      restored.entries.find((entry) => entry.ref === "E_def")?.bullets.filter((item) => item.included) ??
+      [];
+    const refs = lines.map((item) => item.sourceRefs[0]);
+    const review = refs.indexOf("E_def.B3");
+    const bugs = refs.indexOf("E_def2.B1");
+    expect(review).toBeGreaterThanOrEqual(0);
+    expect(bugs).toBe(review + 1);
+    expect(lines[review]?.text).toBe("Used GitHub pull requests and participated in code reviews.");
+    expect(lines[bugs]?.text).toBe(
+      "Participated in code reviews and resolved bugs found during testing.",
+    );
+    const saved = applyResumeEdit({
+      stored: content,
+      incoming: restored,
+      snapshot,
+      aiOutput: composition.output,
+    });
+    expect(saved.ok).toBe(true);
+  });
+
+  it("leaves off a project that repeats evidence already shown", () => {
+    const snapshot = hootsuiteSnapshot();
+    snapshot.entries.push({
+      ref: "E_covid",
+      id: "entry-covid",
+      kind: "PROJECT",
+      title: "COVID-19 radiograph classifier",
+      organization: null,
+      location: null,
+      startDate: "2020-09",
+      endDate: "2020-12",
+      isCurrent: false,
+      url: null,
+      bullets: [
+        {
+          ref: "E_covid.B1",
+          id: "b-covid",
+          text: "Trained a Python and TensorFlow model that classified radiographs at 95% accuracy.",
+        },
+      ],
+    });
+    const drafted = developerDraft();
+    drafted.entries.push({
+      ref: "E_covid",
+      bullets: [
+        {
+          sourceRefs: ["E_covid.B1"],
+          text: "Trained a Python and TensorFlow model that classified radiographs at 95% accuracy.",
+        },
+      ],
+    });
+    const composition = composeResume({
+      output: validateTailorOutput(drafted, snapshot, developerAnalysis()).output,
+      snapshot,
+      analysis: developerAnalysis(),
+      length: 1,
+    });
+    const refs = composition.output.entries.map((entry) => entry.ref);
+    expect(refs).toContain("E_role");
+    expect(refs).not.toContain("E_covid");
+    expect(refs).not.toContain("E_creek");
+  });
+
+  it("drops an authentication line that restates one already kept", () => {
+    const snapshot = hootsuiteSnapshot();
+    const intern = snapshot.entries.find((entry) => entry.ref === "E_def");
+    if (!intern) throw new Error("missing internship");
+    snapshot.entries.push({
+      ...intern,
+      ref: "E_def2",
+      id: "entry-def-2",
+      organization: "Defhacks.co",
+      bullets: [
+        {
+          ref: "E_def2.B1",
+          id: "b-def2",
+          text: "Implemented the integration of user authentication mechanisms using OAuth2.0.",
+        },
+      ],
+    });
+    const drafted = developerDraft();
+    drafted.entries.push({
+      ref: "E_def2",
+      bullets: [
+        {
+          sourceRefs: ["E_def2.B1"],
+          text: "Implemented the integration of user authentication mechanisms using OAuth2.0.",
+        },
+      ],
+    });
+    const composition = composeResume({
+      output: validateTailorOutput(drafted, snapshot, developerAnalysis()).output,
+      snapshot,
+      analysis: developerAnalysis(),
+      length: 1,
+    });
+    const heading = composition.output.entries.find((entry) => entry.ref === "E_def");
+    const text = heading?.bullets.map((bullet) => bullet.text).join(" ") ?? "";
+    expect(composition.output.entries.some((entry) => entry.ref === "E_def2")).toBe(false);
+    expect(text.match(/oauth/gi)?.length ?? 0).toBe(1);
+  });
+
+  it("leaves off a project that is still being designed when a shipped project is selected", () => {
+    const snapshot = hootsuiteSnapshot();
+    snapshot.entries.push({
+      ref: "E_plan",
+      id: "entry-plan",
+      kind: "PROJECT",
+      title: "Gorseline",
+      organization: null,
+      location: null,
+      startDate: "2026-01",
+      endDate: null,
+      isCurrent: true,
+      url: null,
+      bullets: [
+        {
+          ref: "E_plan.B1",
+          id: "b-plan",
+          text: "Designing a multi-tenant booking platform and managing implementation tasks.",
+        },
+      ],
+    });
+    const drafted = developerDraft();
+    drafted.entries.push({
+      ref: "E_plan",
+      bullets: [
+        {
+          sourceRefs: ["E_plan.B1"],
+          text: "Designing a multi-tenant booking platform and managing implementation tasks.",
+        },
+      ],
+    });
+    const composition = composeResume({
+      output: validateTailorOutput(drafted, snapshot, developerAnalysis()).output,
+      snapshot,
+      analysis: developerAnalysis(),
+      length: 1,
+    });
+    const refs = composition.output.entries.map((entry) => entry.ref);
+    expect(refs).toContain("E_role");
+    expect(refs).not.toContain("E_plan");
+    const role = composition.output.entries.find((entry) => entry.ref === "E_role");
+    expect(role?.bullets.some((bullet) => /built a live full-stack/i.test(bullet.text))).toBe(true);
+  });
+
+  it("uses the shipped project instead of a classifier the model selected", () => {
+    const snapshot = hootsuiteSnapshot();
+    snapshot.entries.push({
+      ref: "E_covid",
+      id: "entry-covid",
+      kind: "PROJECT",
+      title: "COVID-19 radiograph classifier",
+      organization: null,
+      location: null,
+      startDate: "2020-09",
+      endDate: "2020-12",
+      isCurrent: false,
+      url: null,
+      bullets: [
+        {
+          ref: "E_covid.B1",
+          id: "b-covid",
+          text: "Implemented and tested a convolutional neural network in Python and TensorFlow, achieving 95% accuracy.",
+        },
+      ],
+    });
+    const drafted = developerDraft();
+    drafted.entries = drafted.entries.filter((entry) => entry.ref !== "E_role");
+    drafted.entries.push({
+      ref: "E_covid",
+      bullets: [
+        {
+          sourceRefs: ["E_covid.B1"],
+          text: "Implemented and tested a convolutional neural network in Python and TensorFlow, achieving 95% accuracy.",
+        },
+      ],
+    });
+    const composition = composeResume({
+      output: validateTailorOutput(drafted, snapshot, developerAnalysis()).output,
+      snapshot,
+      analysis: developerAnalysis(),
+      length: 1,
+    });
+    const refs = composition.output.entries.map((entry) => entry.ref);
+    expect(refs).toContain("E_role");
+    expect(refs).not.toContain("E_covid");
+  });
+
+  it("keeps the shipped project when the model also selected a classifier", () => {
+    const snapshot = hootsuiteSnapshot();
+    snapshot.entries.push({
+      ref: "E_covid",
+      id: "entry-covid",
+      kind: "PROJECT",
+      title: "COVID-19 radiograph classifier",
+      organization: null,
+      location: null,
+      startDate: "2020-09",
+      endDate: "2020-12",
+      isCurrent: false,
+      url: null,
+      bullets: [
+        {
+          ref: "E_covid.B1",
+          id: "b-covid",
+          text: "Implemented and tested a convolutional neural network in Python and TensorFlow, achieving 95% accuracy.",
+        },
+      ],
+    });
+    const drafted = developerDraft();
+    drafted.entries.push({
+      ref: "E_covid",
+      bullets: [
+        {
+          sourceRefs: ["E_covid.B1"],
+          text: "Implemented and tested a convolutional neural network in Python and TensorFlow, achieving 95% accuracy.",
+        },
+      ],
+    });
+    const composition = composeResume({
+      output: validateTailorOutput(drafted, snapshot, developerAnalysis()).output,
+      snapshot,
+      analysis: developerAnalysis(),
+      length: 1,
+    });
+    const refs = composition.output.entries.map((entry) => entry.ref);
+    expect(refs).toContain("E_role");
+    expect(refs).not.toContain("E_covid");
   });
 });

@@ -11,6 +11,7 @@ import type { LibrarySnapshot } from "@/features/library/schemas";
 import type { ResumeTemplateId } from "@/lib/pdf/template";
 
 import { sameWording } from "./grounding";
+import { groupMembers, libraryBulletInGroup } from "./stints";
 import { resumeSectionOrder } from "./resume-shape";
 import {
   RESUME_LIMITS,
@@ -115,9 +116,11 @@ export function restoreSourceBullets(
       const index = entry.bullets.findIndex((bullet) => bullet.id === bulletId);
       const bullet = entry.bullets[index];
       if (!bullet) return entry;
-      const ordered = snapshotEntry.bullets.filter((source) =>
-        bullet.sourceRefs.includes(source.ref),
-      );
+      const members = new Set(groupMembers(snapshot.entries, snapshot.takenAt, entryRef));
+      const ordered = snapshot.entries
+        .filter((item) => members.has(item.ref))
+        .flatMap((item) => item.bullets)
+        .filter((source) => bullet.sourceRefs.includes(source.ref));
       if (ordered.length <= 1) {
         const text = clipLine(ordered[0]?.text ?? bullet.originalText ?? bullet.text);
         return {
@@ -201,6 +204,7 @@ export function applyResumeEdit(input: {
         storedEntry,
         incomingEntry,
         snapshotEntry,
+        input.snapshot,
         ai,
         input.aiOutput !== null,
       );
@@ -272,6 +276,7 @@ function restoredSplit(
   stored: readonly ContentBullet[],
   incoming: readonly ContentBullet[],
   snapshotEntry: SnapshotEntry,
+  snapshot: LibrarySnapshot,
 ): { createdIds: string[] } | null {
   const storedIds = new Set(stored.map((bullet) => bullet.id));
   const incomingIds = new Set(incoming.map((bullet) => bullet.id));
@@ -289,7 +294,7 @@ function restoredSplit(
     if (bullet.sourceRefs.length !== 1) return null;
     const ref = bullet.sourceRefs[0];
     if (!ref || !expected.has(ref) || seen.has(ref)) return null;
-    if (!snapshotEntry.bullets.some((item) => item.ref === ref)) return null;
+    if (!libraryBulletInGroup(snapshot, snapshotEntry.ref, ref)) return null;
     seen.add(ref);
   }
   for (const ref of expected) {
@@ -308,12 +313,11 @@ function restoredSplit(
 
 function restoredBullet(
   incoming: ContentBullet,
-  snapshotEntry: SnapshotEntry,
+  snapshot: LibrarySnapshot,
+  entryRef: string,
 ): ContentBullet | null {
   const ref = incoming.sourceRefs.length === 1 ? incoming.sourceRefs[0] : undefined;
-  const library = ref
-    ? snapshotEntry.bullets.find((bullet) => bullet.ref === ref)
-    : undefined;
+  const library = ref ? libraryBulletInGroup(snapshot, entryRef, ref) : undefined;
   if (!library) return null;
   const text = incoming.text.trim();
   if (text.length === 0 || text.length > RESUME_LIMITS.bullet) return null;
@@ -339,6 +343,7 @@ function buildEntry(
   storedEntry: ContentEntry,
   incomingEntry: ContentEntry,
   snapshotEntry: SnapshotEntry,
+  snapshot: LibrarySnapshot,
   ai: Map<string, Map<string, AiBullet>>,
   hasAiOutput: boolean,
 ): { ok: true; entry: ContentEntry } | { ok: false; issue: ResumeEditIssue } {
@@ -347,7 +352,7 @@ function buildEntry(
     if (storedBullets.has(bullet.id)) return { ok: false, issue: "bullets" };
     storedBullets.set(bullet.id, bullet);
   }
-  const split = restoredSplit(storedEntry.bullets, incomingEntry.bullets, snapshotEntry);
+  const split = restoredSplit(storedEntry.bullets, incomingEntry.bullets, snapshotEntry, snapshot);
   if (!split && incomingEntry.bullets.length !== storedBullets.size) {
     return { ok: false, issue: "bullets" };
   }
@@ -363,7 +368,7 @@ function buildEntry(
       if (text.length === 0 || text.length > RESUME_LIMITS.bullet) {
         return { ok: false, issue: "bulletText" };
       }
-      const built = restoredBullet(incoming, snapshotEntry);
+      const built = restoredBullet(incoming, snapshot, snapshotEntry.ref);
       if (!built) return { ok: false, issue: "sources" };
       bullets.push(built);
       continue;
@@ -379,9 +384,11 @@ function buildEntry(
     const sourceRefs = stored.sourceRefs;
     const firstRef = sourceRefs[0];
     const originalBullet = firstRef
-      ? snapshotEntry.bullets.find((bullet) => bullet.ref === firstRef)
+      ? libraryBulletInGroup(snapshot, snapshotEntry.ref, firstRef)
       : undefined;
-    if (!originalBullet) return { ok: false, issue: "sources" };
+    if (!originalBullet || sourceRefs.some((ref) => !libraryBulletInGroup(snapshot, snapshotEntry.ref, ref))) {
+      return { ok: false, issue: "sources" };
+    }
 
     const original = clipLine(originalBullet.text);
     const aiBullet = ai.get(snapshotEntry.ref)?.get(sourceKey(sourceRefs));

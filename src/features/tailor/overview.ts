@@ -120,6 +120,12 @@ export function tailoringOverview(input: {
       rewritten,
       omittedEntries,
       omittedBullets: omittedBullets.length,
+      combinedRefs: new Set(
+        (input.content.review ?? [])
+          .filter((item) => item.reason === "same_role")
+          .map((item) => item.ref),
+      ),
+      pageNote: pageNote(input.content),
       reverted,
     }),
   };
@@ -204,6 +210,8 @@ function decisions(input: {
   rewritten: BulletFact[];
   omittedEntries: EntryFact[];
   omittedBullets: number;
+  combinedRefs: ReadonlySet<string>;
+  pageNote: string;
   reverted: BulletFact[];
 }): OverviewDecision[] {
   const items: OverviewDecision[] = [];
@@ -253,7 +261,7 @@ function decisions(input: {
     items.push({
       id: "omitted",
       heading: copy.omittedHeading,
-      body: omittedBody(input.omittedEntries, input.omittedBullets),
+      body: omittedBody(input.omittedEntries, input.omittedBullets, input.combinedRefs, input.pageNote),
       links: input.omittedEntries.slice(0, MAX_NAMED).map(entryLink),
     });
   }
@@ -293,15 +301,40 @@ function citedRequirement(entry: EntryFact): string {
   return "";
 }
 
-function omittedBody(entries: EntryFact[], bullets: number): string {
+function pageNote(content: ResumeContent): string {
+  const reasons = new Set((content.review ?? []).map((item) => item.reason));
+  if (reasons.has("page_overflow")) return copy.pageOverflow;
+  if (reasons.has("page_budget")) return copy.pageBudget;
+  return "";
+}
+
+function omittedBody(
+  entries: EntryFact[],
+  bullets: number,
+  combinedRefs: ReadonlySet<string>,
+  page: string,
+): string {
+  const combined = entries.filter((entry) => combinedRefs.has(entry.ref));
+  const other = entries.filter((entry) => !combinedRefs.has(entry.ref));
+  const sentences = [
+    namedOmission(other, false),
+    namedOmission(combined, true),
+    bullets > 0 ? copy.bulletsOmitted(bullets) : "",
+    page,
+  ];
+  return sentences.filter((part) => part.length > 0).join(" ");
+}
+
+function namedOmission(entries: EntryFact[], combined: boolean): string {
   const shown = entries.slice(0, MAX_NAMED).map((entry) => entry.label);
   const rest = entries.length - shown.length;
-  let sentence = "";
-  if (shown.length === 1 && rest === 0) sentence = copy.oneOmitted(shown[0] ?? "");
-  else if (shown.length > 0 && rest === 0) sentence = copy.manyOmitted(joinAnd(shown));
-  else if (shown.length > 0) sentence = copy.omittedMore(joinAnd(shown), rest);
-  const extra = bullets > 0 ? copy.bulletsOmitted(bullets) : "";
-  return [sentence, extra].filter((part) => part.length > 0).join(" ");
+  if (shown.length === 0) return "";
+  if (combined) {
+    return shown.length === 1 ? copy.combinedOne(shown[0] ?? "") : copy.combinedMany(joinAnd(shown));
+  }
+  if (shown.length === 1 && rest === 0) return copy.oneOmitted(shown[0] ?? "");
+  if (rest === 0) return copy.manyOmitted(joinAnd(shown));
+  return copy.omittedMore(joinAnd(shown), rest);
 }
 
 function groupRewrites(bullets: BulletFact[]): { body: string; link: OverviewLink }[] {

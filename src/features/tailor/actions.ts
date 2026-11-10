@@ -26,6 +26,8 @@ import {
   ReviseSchema,
 } from "@/lib/ai/prompts/tailor-revise";
 import { buildContent, OutputSchema, SYSTEM } from "@/lib/ai/prompts/tailor";
+import { enforcePageBudget } from "@/features/tailor/page-fit";
+import { sameRoleText } from "@/features/tailor/stints";
 import { runStructured } from "@/lib/ai/run";
 import { requireUserForAction } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -148,6 +150,7 @@ export async function tailorResume(
         length: options.length,
         emphasis: options.emphasis ?? null,
         variantsText: variantPrompt(serialized.snapshot, savedWordings),
+        sameRole: sameRoleText(serialized.snapshot.entries, serialized.snapshot.takenAt),
       }),
       schema: OutputSchema,
       refId: resumeId,
@@ -296,11 +299,12 @@ export async function tailorResume(
     const previousAi = previous
       ? ValidatedTailorOutput.safeParse(previous.aiOutput)
       : null;
-    const content = preserveUserEdits(
+    const edited = preserveUserEdits(
       assembled,
       previousContent?.success ? previousContent.data : null,
       previousAi?.success ? previousAi.data : null,
     );
+    const content = await enforcePageBudget(edited, serialized.snapshot, options.length);
     const report = scoreMatch(analysis.data, guard.output.requirementMatches);
     const saved = await db.$transaction(async (tx) => {
       const updated = await tx.tailoredResume.updateMany({

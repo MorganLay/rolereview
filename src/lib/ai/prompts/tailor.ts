@@ -15,8 +15,8 @@ import { RequirementMatch, TailorSkillGroup } from "@/features/tailor/schemas";
 export const POSTING_MAX = 12_000;
 
 const PAGE_LINE = {
-  1: "Target length: 1 page (about 450\u2013600 words of content). Use about 10\u201314 bullets, weighted to the most relevant evidence.",
-  2: "Target length: 2 pages. Use about 16\u201322 bullets, weighted to the most relevant evidence.",
+  1: "Target length: 1 page (about 450\u2013600 words of content). Use about 8\u201312 bullets of the strongest distinct evidence. One heading per role. Leave off a project that repeats evidence already on the page.",
+  2: "Target length: 2 pages. Use about 16\u201322 bullets when the extra evidence is distinct. One heading per role. Do not pad with a weak project.",
 } as const;
 
 export const SYSTEM = `You tailor resumes. You are given a candidate's complete library of experience (each item has
@@ -27,11 +27,12 @@ TRUTHFULNESS — these rules override everything else:
 1. Use only facts that appear in the library. Never add employers, titles, dates, tools,
    technologies, certifications, metrics, team sizes, scope or outcomes that the cited source
    bullets do not state.
-2. Every bullet cites one or more sourceRefs, and every sourceRef belongs to the entry it is
-   listed under (E3.B1 can only appear under E3). You may combine verified facts from those
-   sources into one sentence. At most five sources. Do not cite a source from another entry,
-   and do not repeat a source you already combined into another line. You may split one
-   overloaded source into two bullets when each line stays inside that source.
+2. Every bullet cites one or more sourceRefs. A sourceRef belongs to the entry it is listed
+   under, unless <same-role> names that entry as one role with the source's entry. Within one
+   same-role group, combine verified facts from any of its bullets into the heading entry and
+   cite each source. Do not combine facts from entries that are not the same role. At most
+   five sources. Do not repeat a source you already combined into another line. You may split
+   one overloaded source into two bullets when each line stays inside that source.
 3. Do not introduce any number that is not in the cited source. The summary may use a whole-year
    tenure taken from an entry's dates only when that figure is rounded down.
 4. You may reconstruct a sentence, combine related facts, split an overloaded line, reorder
@@ -72,8 +73,9 @@ REWRITING
 - "Merge and transform data" may become "Consolidated and transformed data". Lead with the fact
   this job needs. Replace "worked with" or "utilized" with the specific build, test, debug,
   integration, deployment, or maintenance a source describes.
-- Combine related facts from the same entry into one line, and cite each source. Separate two
-  unrelated accomplishments that are crowded into one line.
+- Combine related facts from the same role into one line, and cite each source. Separate two
+  unrelated accomplishments that are crowded into one line. A second project earns a place
+  only when it adds evidence the stronger entries do not already show.
 - You may not turn spreadsheet joins into ETL, pipelines, warehouses, or production engineering.
 - Do not add "expert", "senior", "production", or years of experience the sources do not state.
 - Do not invent support-desk, customer-facing, leadership, or production work from adjacent tasks.
@@ -179,6 +181,7 @@ export type TailorPromptInput = {
   length: 1 | 2;
   emphasis: string | null;
   variantsText?: string;
+  sameRole?: string;
 };
 
 export function buildContent(
@@ -225,6 +228,10 @@ export function buildContent(
     "<variants>",
     neutralize(input.variantsText?.trim() || "none", "variants"),
     "</variants>",
+    "",
+    "<same-role>",
+    neutralize(input.sameRole?.trim() || "none", "same-role"),
+    "</same-role>",
   ].join("\n");
 
   return [{ type: "text", text }];

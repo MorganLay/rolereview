@@ -9,8 +9,11 @@ import { ENTRY_KINDS, type LibrarySnapshot } from "@/features/library/schemas";
 import type { JobAnalysis } from "@/features/jobs/schemas";
 import { KNOWN_TERMS } from "@/features/library/strength";
 
+import { requirementTerms } from "./coverage";
+import { sameWording } from "./grounding";
 import { chooseEducationKeepers, canonicalUrl, classifyLink } from "./identity";
 import { termAppears, normalizeMatchText } from "./keywords";
+import { experienceGroups, groupMembers } from "./stints";
 import type { EntryKind } from "./resume-shape";
 import { resumeSectionOrder } from "./resume-shape";
 import type {
@@ -97,19 +100,26 @@ export function composeResume(input: {
   );
   const duplicateRefs = new Set(education.drop.map((item) => item.ref));
   for (const ref of duplicateRefs) selected.delete(ref);
-  const sameRole = dropSameStints(selected, byRef, input.snapshot.takenAt, terms);
+  const musts = mustHaveTerms(input.analysis);
+  const sameRole = foldGroups(selected, input.snapshot, byRef);
+  absorbGroupFacts(selected, input.snapshot, byRef, musts, input.analysis.keywords);
 
   const droppedRelevance = new Set<string>();
   let added = 0;
   for (const entry of ranked(input.snapshot.entries, terms, input.snapshot.takenAt)) {
     if (entry.kind !== "PROJECT" || selected.has(entry.ref) || added >= 3) continue;
-    if (stintAlreadySelected(entry, selected, byRef, input.snapshot.takenAt, terms)) continue;
+    if (groupAlreadySelected(entry, selected, input.snapshot)) continue;
     const scored = scoreBullets(entry, terms);
     const best = scored[0];
     if (!best || best.score < 4 || !best.handsOn || best.academic) continue;
     const weakestExperience = weakestSelectedExperience(selected, byRef, terms, input.snapshot.takenAt);
     if (weakestExperience !== null && best.score < weakestExperience + 2) continue;
-    if (entryOverlap(entry, terms) < 1) continue;
+    const projectCount = countKind(selected, byRef, "PROJECT");
+    if (projectCount === 0) {
+      if (entryOverlap(entry, terms) < 1) continue;
+    } else if (!addsEvidence(entry, coveredBlob(selected, byRef), input.length === 1 ? musts : [...musts, ...input.analysis.keywords])) {
+      continue;
+    }
     const chosen = scored.filter((item) => item.handsOn && !item.academic).slice(0, 4);
     selected.set(entry.ref, {
       ref: entry.ref,
@@ -122,9 +132,14 @@ export function composeResume(input: {
   let addedRoles = 0;
   for (const entry of ranked(input.snapshot.entries, terms, input.snapshot.takenAt)) {
     if (entry.kind !== "EXPERIENCE" || selected.has(entry.ref) || addedRoles >= 2) continue;
-    if (stintAlreadySelected(entry, selected, byRef, input.snapshot.takenAt, terms)) continue;
+    if (groupAlreadySelected(entry, selected, input.snapshot)) continue;
     if (entryScore(entry, terms, input.snapshot.takenAt) < STRONG_SCORE) continue;
-    if (entryOverlap(entry, terms) < 1) continue;
+    const roleCount = countKind(selected, byRef, "EXPERIENCE");
+    if (roleCount === 0) {
+      if (entryOverlap(entry, terms) < 1) continue;
+    } else if (!addsEvidence(entry, coveredBlob(selected, byRef), musts)) {
+      continue;
+    }
     const chosen = scoreBullets(entry, terms)
       .filter((item) => !item.academic && item.score >= 2)
       .slice(0, 4);
@@ -136,6 +151,11 @@ export function composeResume(input: {
     });
     addedRoles += 1;
   }
+  const replaced = replaceWeakProject(selected, byRef, input.snapshot, terms);
+  const covered = new Set([
+    ...replaced,
+    ...pruneProjects(selected, byRef, input.snapshot, musts, input.analysis.keywords, input.length, terms),
+  ]);
 
   for (const entry of input.snapshot.entries) {
     if (entry.kind !== "EXPERIENCE" || entry.isCurrent || !selected.has(entry.ref)) continue;
@@ -156,9 +176,14 @@ export function composeResume(input: {
   for (const row of rankedSelected) {
     const entry = byRef.get(row.ref);
     if (!entry) continue;
-    row.bullets = preferBullets(entry, row.bullets, terms, review);
+    row.bullets = preferBullets(withGroupBullets(entry, input.snapshot), row.bullets, terms, review);
   }
-  trimBudget(rankedSelected, byRef, terms, input.snapshot.takenAt, input.length, review);
+  if (roleIsTechnical(input.analysis)) {
+    addPracticedProjectBullets(rankedSelected, byRef, input.snapshot, terms);
+    capPeripheralExperience(rankedSelected, byRef, terms);
+  }
+  trimBudget(rankedSelected, byRef, terms, input.snapshot, input.length, musts, review);
+  const pageBudget = dropEmpty(selected);
 
   const experienceOrder = input.output.entries
     .filter((entry) => byRef.get(entry.ref)?.kind === "EXPERIENCE")
@@ -212,13 +237,30 @@ export function composeResume(input: {
       ? "same_degree"
       : sameRole.has(entry.ref)
         ? "same_role"
-        : droppedRelevance.has(entry.ref)
-          ? "lower_relevance"
-          : missing
-            ? "missing_source"
-            : "not_selected";
-    review.push({ code: "ENTRY_EXCLUDED", severity: "note", ref: entry.ref, reason });
-    if (entry.kind === "EXPERIENCE" && entry.isCurrent && !missing) {
+        : covered.has(entry.ref)
+          ? "covered"
+          : pageBudget.has(entry.ref)
+            ? "page_budget"
+            : droppedRelevance.has(entry.ref)
+              ? "lower_relevance"
+              : missing
+                ? "missing_source"
+                : "not_selected";
+    review.push({
+      code: "ENTRY_EXCLUDED",
+      severity: reason === "page_budget" ? "warning" : "note",
+      ref: entry.ref,
+      reason,
+    });
+    if (sameRole.has(entry.ref)) {
+      review.push({
+        code: "DUPLICATE_CONSOLIDATED",
+        severity: "note",
+        ref: entry.ref,
+        reason: "same_role",
+      });
+    }
+    if (entry.kind === "EXPERIENCE" && entry.isCurrent && !missing && reason !== "same_role") {
       review.push({
         code: "CURRENT_ROLE_OMITTED",
         severity: "warning",
@@ -274,132 +316,415 @@ export function composeResume(input: {
   };
 }
 
-/**
- * Two records of one job. Same employer, or the same project title, and overlapping dates.
- * "Def Hacks" and "Defhacks.co" are one employer. Different years at one employer stay separate.
- */
-function dropSameStints(
+/** One heading per verified group. Sibling records stay in the library, off the page. */
+function foldGroups(
+  selected: Map<string, Working>,
+  snapshot: LibrarySnapshot,
+  byRef: ReadonlyMap<string, SnapshotEntry>,
+): Set<string> {
+  const hidden = new Set<string>();
+  for (const group of experienceGroups(snapshot.entries, snapshot.takenAt)) {
+    const present = group.members.filter((ref) => selected.has(ref));
+    if (present.length === 0) continue;
+    const heading = byRef.has(group.canonical) ? group.canonical : present[0];
+    if (!heading) continue;
+    const row = selected.get(heading) ?? {
+      ref: heading,
+      origin: present.some((ref) => selected.get(ref)?.origin === "model") ? "model" : "prioritized",
+      bullets: [],
+    };
+    for (const ref of present) {
+      if (ref === heading) continue;
+      const other = selected.get(ref);
+      if (other) row.bullets.push(...other.bullets);
+      selected.delete(ref);
+      hidden.add(ref);
+    }
+    row.bullets = distinctFacts(row.bullets);
+    selected.set(heading, row);
+  }
+  return hidden;
+}
+
+function absorbGroupFacts(
+  selected: Map<string, Working>,
+  snapshot: LibrarySnapshot,
+  byRef: ReadonlyMap<string, SnapshotEntry>,
+  musts: readonly string[],
+  keywords: readonly string[],
+): void {
+  const terms = [...musts, ...keywords];
+  for (const row of selected.values()) {
+    const entry = byRef.get(row.ref);
+    if (!entry) continue;
+    const members = groupMembers(snapshot.entries, snapshot.takenAt, row.ref);
+    if (members.length < 2) continue;
+    const cited = new Set(row.bullets.flatMap((bullet) => bullet.sourceRefs));
+    const fromSibling = [...cited].some((ref) => !entry.bullets.some((bullet) => bullet.ref === ref));
+    const candidates: SnapshotBullet[] = [];
+    for (const ref of members) {
+      if (ref === row.ref && !fromSibling) continue;
+      const sibling = byRef.get(ref);
+      if (!sibling) continue;
+      for (const bullet of sibling.bullets) {
+        if (cited.has(bullet.ref)) continue;
+        if (row.bullets.some((kept) => sameFact(kept.text, bullet.text))) continue;
+        candidates.push(bullet);
+      }
+    }
+    const covered = row.bullets.map((bullet) => bullet.text).join(" ");
+    const rankedFacts = candidates
+      .map((bullet) => ({
+        bullet,
+        added: addedTerms(bullet.text, covered, terms).length + (newKnownTool(bullet.text, covered) ? 2 : 0),
+      }))
+      .filter((item) => item.added > 0 || uniqueNumber(item.bullet.text, covered))
+      .sort((left, right) => right.added - left.added)
+      .slice(0, 3);
+    for (const item of rankedFacts) {
+      row.bullets.push(libraryBullet(item.bullet));
+    }
+    row.bullets = distinctFacts(row.bullets);
+  }
+}
+
+function replaceWeakProject(
   selected: Map<string, Working>,
   byRef: ReadonlyMap<string, SnapshotEntry>,
-  takenAt: string,
+  snapshot: LibrarySnapshot,
+  terms: readonly string[],
+): Set<string> {
+  const replaced = new Set<string>();
+  const library = snapshot.entries.filter((entry) => entry.kind === "PROJECT" && practicedProject(entry));
+  const best = [...library].sort(
+    (left, right) => jobProjectRank(right, terms) - jobProjectRank(left, terms),
+  )[0];
+  if (!best) return replaced;
+  const current = [...selected.keys()]
+    .map((ref) => byRef.get(ref))
+    .filter((entry): entry is SnapshotEntry => entry?.kind === "PROJECT");
+  if (current.length === 0 || current.some((entry) => entry.ref === best.ref)) return replaced;
+  const weakest = [...current].sort((left, right) => jobProjectRank(left, terms) - jobProjectRank(right, terms))[0];
+  if (!weakest || jobProjectRank(best, terms) <= jobProjectRank(weakest, terms)) return replaced;
+  const bullets = scoreBullets(best, terms)
+    .filter((item) => item.handsOn && !item.academic)
+    .slice(0, 2);
+  if (bullets.length === 0) return replaced;
+  selected.delete(weakest.ref);
+  replaced.add(weakest.ref);
+  selected.set(best.ref, {
+    ref: best.ref,
+    origin: "prioritized",
+    bullets: bullets.map((item) => libraryBullet(item.bullet)),
+  });
+  return replaced;
+}
+
+function jobProjectRank(entry: SnapshotEntry, terms: readonly string[]): number {
+  const blob = entryBlob(entry);
+  const tools = knownTerms(blob);
+  let postingTools = 0;
+  for (const term of terms) {
+    const needle = normalizeMatchText(term);
+    if (needle.length < 3 || !tools.has(needle)) continue;
+    postingTools += 1;
+  }
+  return postingTools * 5 + tools.size + (entry.isCurrent ? 3 : 0);
+}
+
+function pruneProjects(
+  selected: Map<string, Working>,
+  byRef: ReadonlyMap<string, SnapshotEntry>,
+  snapshot: LibrarySnapshot,
+  musts: readonly string[],
+  keywords: readonly string[],
+  length: 1 | 2,
   terms: readonly string[],
 ): Set<string> {
   const dropped = new Set<string>();
-  const refs = [...selected.keys()];
-  for (let i = 0; i < refs.length; i += 1) {
-    for (let j = i + 1; j < refs.length; j += 1) {
-      const leftRef = refs[i];
-      const rightRef = refs[j];
-      if (!leftRef || !rightRef || dropped.has(leftRef) || dropped.has(rightRef)) continue;
-      const left = byRef.get(leftRef);
-      const right = byRef.get(rightRef);
-      const leftRow = selected.get(leftRef);
-      const rightRow = selected.get(rightRef);
-      if (!left || !right || !leftRow || !rightRow || !sameStint(left, right, takenAt)) continue;
-      const loser = richerStint(leftRow, rightRow, left, right);
-      const loserEntry = loser === left.ref ? left : right;
-      const winnerEntry = loser === left.ref ? right : left;
-      if (addsJobTerm(loserEntry, winnerEntry, terms)) continue;
-      dropped.add(loser);
-      selected.delete(loser);
+  const projects = [...selected.values()]
+    .map((row) => byRef.get(row.ref))
+    .filter((entry): entry is SnapshotEntry => entry?.kind === "PROJECT")
+    .sort((left, right) => jobProjectRank(right, terms) - jobProjectRank(left, terms));
+  if (projects.length <= 1) return dropped;
+    const kept: SnapshotEntry[] = [];
+    let covered = coveredBlob(selected, byRef, "EXPERIENCE");
+    for (const project of projects) {
+      const extraTerms = length === 1 ? musts : [...musts, ...keywords];
+      const practiced = practicedProject(project);
+      const earns =
+        (kept.length === 0 ||
+          addsEvidence(project, covered, extraTerms) ||
+          (length === 2 && kept.length < 3 && addsEvidence(project, covered, keywords))) &&
+        (practiced || !kept.some(practicedProject));
+      if (!earns) {
+      selected.delete(project.ref);
+      dropped.add(project.ref);
+      continue;
     }
+    kept.push(project);
+    covered = `${covered}\n${entryBlob(project)}`;
   }
   return dropped;
 }
 
-function stintAlreadySelected(
+function groupAlreadySelected(
   entry: SnapshotEntry,
   selected: ReadonlyMap<string, Working>,
-  byRef: ReadonlyMap<string, SnapshotEntry>,
-  takenAt: string,
-  terms: readonly string[],
+  snapshot: LibrarySnapshot,
 ): boolean {
+  const members = new Set(groupMembers(snapshot.entries, snapshot.takenAt, entry.ref));
   for (const ref of selected.keys()) {
-    const other = byRef.get(ref);
-    if (!other || !sameStint(entry, other, takenAt)) continue;
-    if (addsJobTerm(entry, other, terms)) return false;
-    return true;
+    if (members.has(ref)) return true;
   }
   return false;
 }
 
-function comparableText(text: string): string {
-  return normalizeMatchText(text).replace(/\.+(?![a-z0-9])/g, " ");
+function countKind(
+  selected: ReadonlyMap<string, Working>,
+  byRef: ReadonlyMap<string, SnapshotEntry>,
+  kind: SnapshotEntry["kind"],
+): number {
+  let count = 0;
+  for (const ref of selected.keys()) {
+    if (byRef.get(ref)?.kind === kind) count += 1;
+  }
+  return count;
 }
 
-function addsJobTerm(
-  entry: SnapshotEntry,
-  other: SnapshotEntry,
-  terms: readonly string[],
-): boolean {
-  const entryText = comparableText(entry.bullets.map((bullet) => bullet.text).join("\n"));
-  const otherText = comparableText(other.bullets.map((bullet) => bullet.text).join("\n"));
-  return terms.some((term) => {
-    const needle = normalizeMatchText(term);
-    return needle.length >= 3 && termAppears(entryText, needle) && !termAppears(otherText, needle);
-  });
-}
-
-function sameStint(left: SnapshotEntry, right: SnapshotEntry, takenAt: string): boolean {
-  if (left.kind !== right.kind) return false;
-  if (left.kind === "EDUCATION" || left.kind === "CERTIFICATION") return false;
-  if (stintKey(left) !== stintKey(right)) return false;
-  return datesOverlap(left, right, takenAt);
-}
-
-function stintKey(entry: SnapshotEntry): string {
-  const org = orgKey(entry.organization ?? "");
-  const label = org.length >= 4 ? org : orgKey(entry.title);
-  return `${entry.kind}:${label}`;
-}
-
-function orgKey(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/\.(com|co|ca|io|org|net)\b/g, "")
-    .replace(/[^a-z0-9]/g, "");
-}
-
-function datesOverlap(left: SnapshotEntry, right: SnapshotEntry, takenAt: string): boolean {
-  const a = span(left, takenAt);
-  const b = span(right, takenAt);
-  if (!a || !b) return true;
-  return a.start <= b.end && b.start <= a.end;
-}
-
-function span(
-  entry: SnapshotEntry,
-  takenAt: string,
-): { start: number; end: number } | null {
-  const start = monthIndex(entry.startDate);
-  if (start === null) return null;
-  const end = entry.isCurrent
-    ? monthIndex(takenAt.slice(0, 7)) ?? start
-    : monthIndex(entry.endDate) ?? start;
-  return { start, end: Math.max(start, end) };
-}
-
-function monthIndex(value: string | null): number | null {
-  if (!value) return null;
-  const parsed = parseResumeDate(value);
-  if (!parsed) return null;
-  return parsed.year * 12 + (parsed.month ?? 1);
-}
-
-/** The ref to drop. Keep the record that already carries more of the role. */
-function richerStint(
-  left: Working,
-  right: Working,
-  leftEntry: SnapshotEntry,
-  rightEntry: SnapshotEntry,
+function coveredBlob(
+  selected: ReadonlyMap<string, Working>,
+  byRef: ReadonlyMap<string, SnapshotEntry>,
+  kind?: SnapshotEntry["kind"],
 ): string {
-  if (left.bullets.length !== right.bullets.length) {
-    return left.bullets.length > right.bullets.length ? right.ref : left.ref;
+  const parts: string[] = [];
+  for (const ref of selected.keys()) {
+    const entry = byRef.get(ref);
+    if (!entry || (kind && entry.kind !== kind)) continue;
+    parts.push(entryBlob(entry));
   }
-  if (leftEntry.bullets.length !== rightEntry.bullets.length) {
-    return leftEntry.bullets.length > rightEntry.bullets.length ? right.ref : left.ref;
+  return parts.join("\n");
+}
+
+function entryBlob(entry: SnapshotEntry): string {
+  return [entry.title, entry.organization ?? "", ...entry.bullets.map((bullet) => bullet.text)].join(" ");
+}
+
+function addsEvidence(entry: SnapshotEntry, covered: string, terms: readonly string[]): boolean {
+  return addedTerms(entryBlob(entry), covered, terms).length > 0;
+}
+
+function addedTerms(text: string, covered: string, terms: readonly string[]): string[] {
+  const haystack = normalizeMatchText(text);
+  const already = normalizeMatchText(covered);
+  const found: string[] = [];
+  for (const term of terms) {
+    const needle = normalizeMatchText(term);
+    if (needle.length < 3 || !termAppears(haystack, needle) || termAppears(already, needle)) continue;
+    found.push(needle);
   }
-  return right.ref;
+  return found;
+}
+
+function newKnownTool(text: string, covered: string): boolean {
+  const present = knownTerms(covered);
+  for (const term of knownTerms(text)) {
+    if (!present.has(term)) return true;
+  }
+  return false;
+}
+
+function uniqueNumber(text: string, covered: string): boolean {
+  const numbers = text.match(/\d+(?:\.\d+)?/g) ?? [];
+  return numbers.some((value) => !covered.includes(value));
+}
+
+function withGroupBullets(entry: SnapshotEntry, snapshot: LibrarySnapshot): SnapshotEntry {
+  const members = new Set(groupMembers(snapshot.entries, snapshot.takenAt, entry.ref));
+  if (members.size === 1) return entry;
+  const bullets = snapshot.entries
+    .filter((item) => members.has(item.ref))
+    .flatMap((item) => item.bullets);
+  return { ...entry, bullets };
+}
+
+function distinctFacts(bullets: readonly ValidatedBullet[]): ValidatedBullet[] {
+  const kept: ValidatedBullet[] = [];
+  for (const bullet of bullets) {
+    const index = kept.findIndex((prior) => sameFact(prior.text, bullet.text));
+    if (index === -1) {
+      kept.push({ ...bullet, sourceRefs: [...bullet.sourceRefs] });
+      continue;
+    }
+    const prior = kept[index];
+    if (!prior) continue;
+    const preferIncoming = factTokens(bullet.text).size > factTokens(prior.text).size;
+    const chosen = preferIncoming ? bullet : prior;
+    kept[index] = {
+      ...chosen,
+      text: chosen.text,
+      sourceRefs: mergeRefs(prior.sourceRefs, bullet.sourceRefs),
+    };
+  }
+  return kept;
+}
+
+function sameFact(left: string, right: string): boolean {
+  if (sameWording(left, right)) return true;
+  if (tokenJaccard(left, right) >= 0.72) return numbersMatch(left, right);
+  if (subsumed(left, right) || subsumed(right, left)) return true;
+  return restatesKnownFacts(left, right) || restatesKnownFacts(right, left);
+}
+
+/** The same tools and outcome, with different filler words. A new tool or number stays. */
+function restatesKnownFacts(inner: string, outer: string): boolean {
+  const innerTerms = knownTerms(inner);
+  const outerTerms = knownTerms(outer);
+  if (innerTerms.size === 0) return false;
+  for (const term of innerTerms) {
+    if (!outerTerms.has(term)) return false;
+  }
+  const innerNumbers = inner.match(/\d+(?:\.\d+)?/g) ?? [];
+  return innerNumbers.every((value) => outer.includes(value));
+}
+
+function knownTerms(text: string): Set<string> {
+  const haystack = normalizeMatchText(text)
+    .replace(/\boauth\s*2(?:\.0)?\b/g, "oauth")
+    .replace(/\boauth2\b/g, "oauth");
+  const found = new Set<string>();
+  for (const term of [...KNOWN_TERMS, "oauth", "authentication", "firebase"]) {
+    if (term.length < 3 || !termAppears(haystack, term)) continue;
+    found.add(term);
+  }
+  return found;
+}
+
+function capPeripheralExperience(
+  rows: readonly Working[],
+  byRef: ReadonlyMap<string, SnapshotEntry>,
+  terms: readonly string[],
+): void {
+  const ranks = rows
+    .map((row) => byRef.get(row.ref))
+    .filter((entry): entry is SnapshotEntry => entry?.kind === "EXPERIENCE")
+    .map((entry) => jobProjectRank(entry, terms));
+  const best = Math.max(0, ...ranks);
+  for (const row of rows) {
+    const entry = byRef.get(row.ref);
+    if (!entry || entry.kind !== "EXPERIENCE" || row.bullets.length <= 2) continue;
+    if (jobProjectRank(entry, terms) >= best) continue;
+    const ranked = [...row.bullets].sort(
+      (left, right) => addedTerms(right.text, "", terms).length - addedTerms(left.text, "", terms).length,
+    );
+    row.bullets = ranked.slice(0, 2);
+  }
+}
+
+function practicedProject(entry: SnapshotEntry): boolean {
+  return entry.bullets.some((bullet) => HANDS_ON.test(bullet.text) && !ACADEMIC.test(bullet.text));
+}
+
+function projectStrength(entry: SnapshotEntry, terms: readonly string[], takenAt: string): number {
+  return (practicedProject(entry) ? 100 : 0) + entryScore(entry, terms, takenAt);
+}
+
+function addPracticedProjectBullets(
+  rows: readonly Working[],
+  byRef: ReadonlyMap<string, SnapshotEntry>,
+  snapshot: LibrarySnapshot,
+  terms: readonly string[],
+): void {
+  const projects = rows.filter((row) => byRef.get(row.ref)?.kind === "PROJECT");
+  const lead = [...projects].sort((left, right) => {
+    const leftEntry = byRef.get(left.ref);
+    const rightEntry = byRef.get(right.ref);
+    if (!leftEntry || !rightEntry) return 0;
+    return projectStrength(rightEntry, terms, snapshot.takenAt) - projectStrength(leftEntry, terms, snapshot.takenAt);
+  })[0];
+  const entry = lead ? byRef.get(lead.ref) : undefined;
+  if (!lead || !entry) return;
+  const scored = scoreBullets(withGroupBullets(entry, snapshot), terms).filter(
+    (item) => item.handsOn && !item.academic,
+  );
+  for (const item of scored) {
+    if (lead.bullets.length >= 3) break;
+    if (lead.bullets.some((bullet) => bullet.sourceRefs.includes(item.bullet.ref) || sameFact(bullet.text, item.bullet.text))) {
+      continue;
+    }
+    const present = lead.bullets.map((bullet) => bullet.text).join(" ");
+    const adds = [...knownTerms(item.bullet.text)].some((term) => !knownTerms(present).has(term));
+    if (!adds) continue;
+    lead.bullets.unshift(libraryBullet(item.bullet));
+  }
+}
+
+function numbersMatch(left: string, right: string): boolean {
+  const leftNumbers = left.match(/\d+(?:\.\d+)?/g) ?? [];
+  const rightNumbers = right.match(/\d+(?:\.\d+)?/g) ?? [];
+  return (
+    leftNumbers.every((value) => right.includes(value)) &&
+    rightNumbers.every((value) => left.includes(value))
+  );
+}
+
+function mergeRefs(left: readonly string[], right: readonly string[]): string[] {
+  const refs = [...left];
+  for (const ref of right) {
+    if (!refs.includes(ref) && refs.length < 5) refs.push(ref);
+  }
+  return refs;
+}
+
+/** True when every meaningful token of `inner` already appears in `outer`. */
+function subsumed(outer: string, inner: string): boolean {
+  const outerTokens = factTokens(outer);
+  const innerTokens = factTokens(inner);
+  if (innerTokens.size < 4 || innerTokens.size > outerTokens.size) return false;
+  for (const token of innerTokens) {
+    if (!outerTokens.has(token)) return false;
+  }
+  const innerNumbers = inner.match(/\d+(?:\.\d+)?/g) ?? [];
+  return innerNumbers.every((value) => outer.includes(value));
+}
+
+function tokenJaccard(left: string, right: string): number {
+  const a = factTokens(left);
+  const b = factTokens(right);
+  if (a.size < 4 || b.size < 4) return 0;
+  let shared = 0;
+  for (const token of a) {
+    if (b.has(token)) shared += 1;
+  }
+  const union = a.size + b.size - shared;
+  return union === 0 ? 0 : shared / union;
+}
+
+function factTokens(text: string): Set<string> {
+  return new Set(
+    normalizeMatchText(text)
+      .split(" ")
+      .filter((token) => token.length > 2 && !TERM_STOP.has(token)),
+  );
+}
+
+function mustHaveTerms(analysis: JobAnalysis): string[] {
+  const terms: string[] = [];
+  for (const requirement of analysis.requirements) {
+    if (requirement.importance !== "must") continue;
+    terms.push(...requirementTerms(requirement, analysis.keywords));
+  }
+  return [...new Set(terms.map((term) => term.trim()).filter((term) => term.length >= 3))];
+}
+
+function dropEmpty(selected: Map<string, Working>): Set<string> {
+  const dropped = new Set<string>();
+  for (const [ref, row] of selected) {
+    if (row.bullets.length > 0) continue;
+    selected.delete(ref);
+    dropped.add(ref);
+  }
+  return dropped;
 }
 
 function projectsBeforeExperience(): EntryKind[] {
@@ -466,25 +791,29 @@ function preferBullets(
   return chosen.map((item) => item.bullet);
 }
 
+const LINE_BUDGET = { 1: 40, 2: 84 } as const;
+
 function trimBudget(
   rows: readonly Working[],
   byRef: ReadonlyMap<string, SnapshotEntry>,
   terms: readonly string[],
-  takenAt: string,
+  snapshot: LibrarySnapshot,
   length: 1 | 2,
+  musts: readonly string[],
   review: ResumeReviewItem[],
 ): void {
   const budget = BULLET_BUDGET[length];
-  const ranked = rows.map((row) => ({
-    row,
-    relevance: (() => {
-      const entry = byRef.get(row.ref);
-      return entry ? entryScore(entry, terms, takenAt) : 0;
-    })(),
-    scores: scoreMap(byRef.get(row.ref), terms),
-  }));
+  const lineBudget = LINE_BUDGET[length];
+  const ranked = rows.map((row) => {
+    const entry = byRef.get(row.ref);
+    return {
+      row,
+      relevance: entry ? entryScore(entry, terms, snapshot.takenAt) : 0,
+      scores: scoreMap(entry ? withGroupBullets(entry, snapshot) : undefined, terms),
+    };
+  });
   const total = () => ranked.reduce((sum, item) => sum + item.row.bullets.length, 0);
-  const dropOne = (strongOnly: boolean): boolean => {
+  const dropOne = (strongOnly: boolean, reason = "space"): boolean => {
     const candidates = ranked
       .flatMap((item) =>
         item.row.bullets.map((bullet, index) => ({
@@ -509,8 +838,34 @@ function trimBudget(
     pick.item.row.bullets = pick.item.row.bullets.filter((_, index) => index !== pick.index);
     const ref = removed?.sourceRefs[0];
     if (ref) {
-      review.push({ code: "BULLET_PREFERENCE", severity: "note", ref, reason: "space" });
+      const remaining = ranked.flatMap((item) => item.row.bullets.map((bullet) => bullet.text)).join(" ");
+      const critical =
+        removed !== undefined &&
+        musts.some((term) => {
+          const needle = normalizeMatchText(term);
+          return (
+            needle.length >= 3 &&
+            termAppears(removed.text, needle) &&
+            !termAppears(remaining, needle)
+          );
+        });
+      review.push({
+        code: "BULLET_PREFERENCE",
+        severity: critical ? "warning" : "note",
+        ref,
+        reason,
+      });
     }
+    return true;
+  };
+  const dropExtraProject = (): boolean => {
+    const projects = ranked.filter(
+      (item) => byRef.get(item.row.ref)?.kind === "PROJECT" && item.row.bullets.length > 0,
+    );
+    if (projects.length <= 1) return false;
+    const weakest = [...projects].sort((left, right) => left.relevance - right.relevance)[0];
+    if (!weakest) return false;
+    weakest.row.bullets = [];
     return true;
   };
   let guard = 0;
@@ -518,6 +873,22 @@ function trimBudget(
     if (!dropOne(false) && !dropOne(true)) break;
     guard += 1;
   }
+  while (estimatedLines(ranked) > lineBudget && guard < 80) {
+    if (!dropOne(false, "page_budget") && !dropOne(true, "page_budget") && !dropExtraProject()) break;
+    guard += 1;
+  }
+}
+
+function estimatedLines(rows: readonly { row: Working }[]): number {
+  let lines = 10;
+  for (const item of rows) {
+    if (item.row.bullets.length === 0) continue;
+    lines += 3;
+    for (const bullet of item.row.bullets) {
+      lines += Math.max(1, Math.ceil(bullet.text.length / 88));
+    }
+  }
+  return lines;
 }
 
 function scoreMap(
