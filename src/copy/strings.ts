@@ -1796,7 +1796,7 @@ export const strings = {
       grounded: "Grounded in your experience library",
       emphasisTooLong: "Emphasis can be at most 200 characters.",
       tailoring: "Tailoring your resume",
-      tailoringHint: "This usually takes 20–60 seconds.",
+      tailoringHint: "This usually takes under a minute. A line that fails a check can take a little longer.",
       stages: [
         "Reading your library and this posting.",
         "Choosing the strongest experience.",
@@ -2293,12 +2293,85 @@ export const strings = {
       sourceFrom: (title: string) => `From ${title}`,
       sourceEmpty: "No source text for this bullet.",
       restored: "Restored original",
+      rewrittenMark: "Rewritten",
+      overview: {
+        thisRole: "this role",
+        title: "Tailoring overview",
+        expand: "Show the editorial decisions",
+        collapse: "Hide the editorial decisions",
+        noFurther: "No further editorial notes for this version.",
+        libraryKept: (role: string) => `This version keeps your library wording for ${role}.`,
+        summaryFor: (role: string) => `The summary was rewritten for ${role}`,
+        rewrittenFor: (role: string, count: number) =>
+          count === 1 ? `1 bullet was rewritten for ${role}` : `${count} bullets were rewritten for ${role}`,
+        wordingKept: (role: string) => `Your wording was kept for ${role}`,
+        leads: (label: string) => `${label} leads the experience`,
+        projectIncluded: (title: string) => `${title} is included`,
+        projectsCount: (count: number) => `${count} projects are included`,
+        summaryMetric: "Summary rewritten",
+        rewrittenMetric: (count: number) =>
+          count === 1 ? "1 bullet rewritten" : `${count} bullets rewritten`,
+        projectsMetric: (count: number) => (count === 1 ? "1 project" : `${count} projects`),
+        retainedMetric: (count: number) =>
+          count === 1 ? "1 kept as written" : `${count} kept as written`,
+        omittedMetric: (count: number) => (count === 1 ? "1 omitted" : `${count} omitted`),
+        omittedBulletsMetric: (count: number) =>
+          count === 1 ? "1 bullet omitted" : `${count} bullets omitted`,
+        summaryHeading: "Summary",
+        summaryReplaced: (role: string) => `Rewritten for ${role}, in place of your usual summary.`,
+        summaryWritten: (role: string) => `A summary was written for ${role} from your library.`,
+        summaryLink: "Summary",
+        experienceHeading: "Experience",
+        experienceLeads: (label: string) => `${label} is the experience this version leads with.`,
+        experienceAlso: (label: string, other: string) =>
+          `${label} is first. ${other} also stays on the page.`,
+        experienceFirst: (label: string, others: string) =>
+          `${label} is first. ${others} also stay on the page.`,
+        rewritesHeading: "Rewrites",
+        rewrittenIn: (count: number, label: string) =>
+          count === 1
+            ? `1 bullet in ${label} was rewritten.`
+            : `${count} bullets in ${label} were rewritten.`,
+        tiedTo: (requirement: string) => `Tied to ${requirement}.`,
+        rewriteUnspecified: "Rewritten from the library bullet.",
+        projectsHeading: "Projects",
+        projectSelected: (title: string) => `${title} was selected from your projects.`,
+        projectsSelected: (names: string) => `${names} were selected from your projects.`,
+        projectTied: (title: string, requirement: string) =>
+          `${title} includes a line tied to ${requirement}.`,
+        omittedHeading: "Left off",
+        oneOmitted: (label: string) => `${label} was not selected for this version.`,
+        manyOmitted: (names: string) => `${names} were not selected for this version.`,
+        omittedMore: (names: string, rest: number) =>
+          `${names} were not selected for this version, along with ${rest} more.`,
+        bulletsOmitted: (count: number) =>
+          count === 1
+            ? "1 bullet on the included roles was left off."
+            : `${count} bullets on the included roles were left off.`,
+        revertsHeading: "Library wording",
+        reverts: (count: number) =>
+          count === 1
+            ? "1 line kept your library wording because the rewrite was not supported."
+            : `${count} lines kept your library wording because the rewrite was not supported.`,
+        revertedLink: "Kept line",
+      },
+      whyChange: "Why this change?",
+      tailoredWording: "Tailored wording",
+      yourEdit: "Your edit",
+      whatChanged: "What changed",
+      whyChanged: "Why",
+      tailoredWhy: "Why the tailored wording differs",
+      evidenceLabel: "Evidence",
+      because: "Requirements",
+      restoreOriginal: "Restore original",
+      useTailored: "Use tailored wording",
+      editedNote: "You edited this bullet. The note from tailoring does not describe this wording.",
       rewriteShow: "Compare with original",
       rewriteKept: "Original kept",
       rewriteOriginal: "Original",
-      rewriteSuggestion: "Suggestion",
-      rewriteKeep: "Keep original",
-      rewriteUse: "Use suggestion",
+      rewriteSuggestion: "Tailored",
+      rewriteKeep: "Restore original",
+      rewriteUse: "Use tailored wording",
       rewriteNote: "Rephrased to emphasize the facts in this bullet that match the role.",
       rewriteMerged: "Combined cited bullets from this role, without adding facts.",
       addSkill: "Add a skill",
@@ -2352,10 +2425,15 @@ export const strings = {
       tabsLabel: "Resume sections",
       panelLabel: "Match",
       states: {
-        in_resume: "In this resume",
-        in_library: "In your library, not in this resume",
+        in_resume: "Met",
+        in_library: "Not on this resume",
         needs_review: "Needs review",
-        no_evidence: "No evidence found",
+        no_evidence: "Not demonstrated",
+      },
+      stateHint: {
+        in_library: "Your library has related evidence that this resume leaves out.",
+        needs_review: "Related experience does not fully demonstrate this requirement.",
+        no_evidence: "Your library does not demonstrate this. Rewriting will not add it.",
       },
       includeFor: (text: string) => `Include in this resume: ${text}`,
       howScored: "How this is scored",

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 
+import { WorkProgress } from "@/components/shell/work-progress";
 import { Button } from "@/components/ui/button";
 import { openUpgradeModal } from "@/components/shell/upgrade-store";
 import { strings } from "@/copy/strings";
@@ -43,18 +44,9 @@ export function DocumentsTab({
   const inflight = useRef(0);
   const [open, setOpen] = useState(false);
   const [tailoring, setTailoring] = useState(false);
-  const [stage, setStage] = useState(0);
   const [ratingId, setRatingId] = useState<string | null>(null);
   const [ratings, setRatings] = useState<Record<string, 1 | -1 | null>>({});
   const showProgress = tailoring || documents.pending;
-
-  useEffect(() => {
-    if (!showProgress) return;
-    const id = window.setInterval(() => {
-      setStage((current) => (current + 1) % copy.stages.length);
-    }, 8000);
-    return () => window.clearInterval(id);
-  }, [showProgress]);
 
   async function onConfirm(input: { length: 1 | 2; emphasis: string }) {
     if (documents.tailorsLeft <= 0 && inflight.current === 0) {
@@ -65,7 +57,6 @@ export function DocumentsTab({
     inflight.current += 1;
     setOpen(false);
     setTailoring(true);
-    setStage(0);
     try {
       const result = await tailorResume({
         jobId,
@@ -131,21 +122,7 @@ export function DocumentsTab({
         {copy.title}
       </h2>
       {showProgress ? (
-        <div aria-live="polite" aria-busy="true" role="status" className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-ink">{copy.tailoring}</p>
-          <p className="text-sm text-slate">{copy.tailoringHint}</p>
-          <ol className="grid gap-1">
-            {copy.stages.map((line, index) => (
-              <li
-                key={line}
-                className={index === stage ? "text-sm text-ink" : "text-sm text-slate"}
-                aria-current={index === stage ? "step" : undefined}
-              >
-                {line}
-              </li>
-            ))}
-          </ol>
-        </div>
+        <WorkProgress title={copy.tailoring} hint={copy.tailoringHint} stages={copy.stages} />
       ) : (
         <div className="flex flex-col items-start gap-2">
           {reasons.map((reason) => (

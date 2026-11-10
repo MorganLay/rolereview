@@ -1,7 +1,7 @@
 /**
  * Fabrication guard for a tailored resume.
  * docs/05-AI.md → The fabrication guard.
- * Pure: G1–G17 clean the model output before anything is saved.
+ * Pure: G1–G18 clean the model output before anything is saved.
  */
 
 import type { LibrarySnapshot } from "@/features/library/schemas";
@@ -16,8 +16,10 @@ import {
   requirementOverstated,
   unsupportedClaim,
 } from "./grounding";
+import { chooseEducationKeepers } from "./identity";
 import { NOT_ASSESSED_NOTE, RESUME_LIMITS } from "./schemas";
 import type {
+  EditorialPlan,
   GuardRequirementMatch,
   RequirementMatch,
   TailorBullet,
@@ -51,6 +53,7 @@ export const GUARD_CODES = [
   "G15",
   "G16",
   "G17",
+  "G18",
 ] as const;
 
 export type GuardCode = (typeof GUARD_CODES)[number];
@@ -87,9 +90,11 @@ export function validateTailorOutput(
     issues,
   );
   const summary = cleanSummary(output.summary, snapshot, issues);
+  const plan = clipPlan(output.plan);
   return {
     output: {
       summary: summary.text,
+      ...(plan ? { plan } : {}),
       entries: entries.entries,
       skills,
       requirementMatches,
@@ -97,6 +102,26 @@ export function validateTailorOutput(
     reverts: entries.reverts + summary.reverts,
     issues,
   };
+}
+
+function clipPlan(plan: EditorialPlan | undefined): EditorialPlan | undefined {
+  if (!plan) return undefined;
+  const narrative = clip(plan.narrative, 400);
+  const priorities = plan.priorities
+    .map((item) => clip(item.trim(), 120))
+    .filter((item) => item.length > 0)
+    .slice(0, 4);
+  const gaps = plan.gaps
+    .map((item) => clip(item.trim(), 80))
+    .filter((item) => item.length > 0)
+    .slice(0, 4);
+  if (narrative.length === 0 && priorities.length === 0 && gaps.length === 0) return undefined;
+  return { narrative, priorities, gaps };
+}
+
+function clip(value: string, max: number): string {
+  const text = value.replace(/\s+/g, " ").trim();
+  return text.length > max ? text.slice(0, max) : text;
 }
 
 function cleanSummary(
@@ -201,15 +226,33 @@ function cleanEntries(
     cleaned.push({ ref: entry.ref, bullets: bullets.bullets });
   }
 
-  for (const snapshotEntry of snapshot.entries) {
-    if (snapshotEntry.kind !== "EDUCATION" || seen.has(snapshotEntry.ref)) {
-      continue;
-    }
-    cleaned.push({ ref: snapshotEntry.ref, bullets: [] });
-    issues.push({ code: "G11", ref: snapshotEntry.ref });
-  }
+  return { entries: consolidateEducation(cleaned, snapshot, issues), reverts };
+}
 
-  return { entries: cleaned, reverts };
+/**
+ * One row per degree. A second record of the same credential is G18, not a second G11.
+ * A distinct omitted degree is still appended with no bullets.
+ */
+function consolidateEducation(
+  entries: ValidatedTailorOutput["entries"],
+  snapshot: LibrarySnapshot,
+  issues: GuardIssue[],
+): ValidatedTailorOutput["entries"] {
+  const counts = new Map(entries.map((entry) => [entry.ref, entry.bullets.length]));
+  const decision = chooseEducationKeepers(snapshot.entries, counts);
+  const drop = new Set(decision.drop.map((item) => item.ref));
+  const kept = entries.filter((entry) => {
+    if (!drop.has(entry.ref)) return true;
+    issues.push({ code: "G18", ref: entry.ref });
+    return false;
+  });
+  const present = new Set(kept.map((entry) => entry.ref));
+  for (const ref of decision.keep) {
+    if (present.has(ref)) continue;
+    kept.push({ ref, bullets: [] });
+    issues.push({ code: "G11", ref });
+  }
+  return kept;
 }
 
 function dropRedundant(

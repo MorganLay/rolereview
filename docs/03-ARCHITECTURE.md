@@ -179,8 +179,8 @@ tailorResume({ jobId, length, emphasis, targetProfileId? })
   5 quota = checkQuota(user, "TAILOR") → QUOTA_EXCEEDED       6 PENDING tailored resume for job < 5 min → CONFLICT
   7 create TailoredResume PENDING (version n+1, options, librarySnapshot)
   8 serializeLibrary → text + refMap   9 runStructured(TAILOR, usedBonusCredit = quota.useBonus)
- 10 validateTailorOutput  11 assembleResumeContent  12 scoreMatch
- 13 update TailoredResume READY + JobEvent(RESUME_TAILORED) (+ milestone check in 1.1)   14 revalidate, return { resumeId }
+ 10 validateTailorOutput (one repair pass may follow)  11 composeResume  12 assembleResumeContent  13 scoreMatch
+ 14 update TailoredResume READY + JobEvent(RESUME_TAILORED) (+ milestone check in 1.1)   15 revalidate, return { resumeId }
  on error after 7: TailoredResume FAILED (error code), return AI_FAILED
 ```
 Cover letters follow the same shape (`features/letters/actions.ts`).

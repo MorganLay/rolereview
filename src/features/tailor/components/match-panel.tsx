@@ -131,6 +131,9 @@ export function MatchPanel({
                     </span>
                   </div>
                   <p className="text-sm break-words text-ink">{requirement.text}</p>
+                  {!pending && placement.state !== "in_resume" ? (
+                    <p className="text-xs text-slate">{copy.stateHint[placement.state]}</p>
+                  ) : null}
                   {!pending && verdict.note ? (
                     <p className="text-sm break-words text-slate">{verdict.note}</p>
                   ) : null}

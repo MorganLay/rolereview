@@ -20,7 +20,9 @@ import { fail, ok, type ActionResult } from "@/lib/result";
 
 import {
   ANALYSIS_STALE_MS,
+  applicationUrlFromPosting,
   canRetryAnalysis,
+  normalizeAnalyzeOutput,
   postProcessAnalyze,
   prefillFromAnalysis,
   type JobDetailColumns,
@@ -77,7 +79,7 @@ export async function createJob(
     deadline,
   });
 
-  return analyzeAndSave(user, jobId, data.rawText, blankColumns(), quota);
+  return analyzeAndSave(user, jobId, data.rawText, blankColumns(), data.url, quota);
 }
 
 /** Run analysis again on a FAILED job, or one stuck PENDING for 5 minutes. */
@@ -132,6 +134,7 @@ export async function retryAnalysis(
     existing.id,
     existing.rawText,
     columnsFrom(existing),
+    existing.url,
     quota,
   );
 }
@@ -142,6 +145,7 @@ const jobColumns = {
   company: true,
   location: true,
   rawText: true,
+  url: true,
   workMode: true,
   employmentType: true,
   salaryMin: true,
@@ -249,6 +253,7 @@ async function analyzeAndSave(
   jobId: string,
   rawText: string,
   current: JobDetailColumns,
+  currentUrl: string | null,
   quota: QuotaDecision,
 ): Promise<ActionResult<JobWriteResult>> {
   const result = await runStructured({
@@ -258,6 +263,7 @@ async function analyzeAndSave(
     system: SYSTEM,
     content: buildContent(rawText),
     schema: OutputSchema,
+    normalize: normalizeAnalyzeOutput,
     refId: jobId,
   });
   if (!result.ok) {
@@ -268,8 +274,9 @@ async function analyzeAndSave(
 
   let analysis: JobAnalysis;
   try {
-    analysis = postProcessAnalyze(result.data);
+    analysis = postProcessAnalyze(result.data, rawText);
   } catch {
+    logAnalysisStage("extraction", user.id, jobId);
     await releaseUnsavedAnalysis(user.id, jobId);
     await markAnalysisFailed(user.id, jobId);
     revalidateJob(jobId);
@@ -277,12 +284,13 @@ async function analyzeAndSave(
   }
 
   try {
-    const saved = await saveAnalysis(user.id, jobId, current, analysis);
+    const saved = await saveAnalysis(user.id, jobId, current, currentUrl, rawText, analysis);
     if (!saved) {
       await releaseUnsavedAnalysis(user.id, jobId);
       return fail("NOT_FOUND");
     }
   } catch {
+    logAnalysisStage("persistence", user.id, jobId);
     await releaseUnsavedAnalysis(user.id, jobId);
     await markAnalysisFailed(user.id, jobId).catch(() => undefined);
     revalidateJob(jobId);
@@ -297,15 +305,19 @@ async function saveAnalysis(
   userId: string,
   jobId: string,
   current: JobDetailColumns,
+  currentUrl: string | null,
+  rawText: string,
   analysis: JobAnalysis,
 ): Promise<boolean> {
   const patch = prefillFromAnalysis(current, analysis);
+  const url = currentUrl === null ? applicationUrlFromPosting(rawText) : null;
   const written = await db.job.updateMany({
     where: { id: jobId, userId },
     data: {
       analysisStatus: "READY",
       analysis: toJson(analysis),
       ...patch,
+      ...(url ? { url } : {}),
     },
   });
   if (written.count > 0 && patch.company) {
@@ -319,6 +331,14 @@ async function markAnalysisFailed(userId: string, jobId: string): Promise<void> 
     where: { id: jobId, userId },
     data: { analysisStatus: "FAILED" },
   });
+}
+
+function logAnalysisStage(
+  stage: "extraction" | "persistence",
+  userId: string,
+  jobId: string,
+): void {
+  console.info(JSON.stringify({ event: "job.analysis", stage, userId, jobId }));
 }
 
 function toJson(analysis: JobAnalysis): Prisma.InputJsonValue {

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 
+import { WorkProgress } from "@/components/shell/work-progress";
 import { Button } from "@/components/ui/button";
 import { openUpgradeModal } from "@/components/shell/upgrade-store";
 import { strings } from "@/copy/strings";
@@ -33,18 +34,9 @@ export function LettersSection({
   const inflight = useRef(0);
   const [open, setOpen] = useState(false);
   const [writing, setWriting] = useState(false);
-  const [stage, setStage] = useState(0);
   const [ratingId, setRatingId] = useState<string | null>(null);
   const [ratings, setRatings] = useState<Record<string, 1 | -1 | null>>({});
   const showProgress = writing || letters.pending;
-
-  useEffect(() => {
-    if (!showProgress) return;
-    const id = window.setInterval(() => {
-      setStage((current) => (current + 1) % copy.stages.length);
-    }, 8000);
-    return () => window.clearInterval(id);
-  }, [showProgress]);
 
   async function onConfirm(input: LetterDraft) {
     if (letters.lettersLeft <= 0 && inflight.current === 0) {
@@ -55,7 +47,6 @@ export function LettersSection({
     inflight.current += 1;
     setOpen(false);
     setWriting(true);
-    setStage(0);
     try {
       const result = await writeCoverLetter({
         jobId,
@@ -124,21 +115,7 @@ export function LettersSection({
         {copy.title}
       </h2>
       {showProgress ? (
-        <div aria-live="polite" aria-busy="true" role="status" className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-ink">{copy.writing}</p>
-          <p className="text-sm text-slate">{copy.writingHint}</p>
-          <ol className="grid gap-1">
-            {copy.stages.map((line, index) => (
-              <li
-                key={line}
-                className={index === stage ? "text-sm text-ink" : "text-sm text-slate"}
-                aria-current={index === stage ? "step" : undefined}
-              >
-                {line}
-              </li>
-            ))}
-          </ol>
-        </div>
+        <WorkProgress title={copy.writing} hint={copy.writingHint} stages={copy.stages} />
       ) : (
         <div className="flex flex-col items-start gap-2">
           {reasons.map((reason) => (

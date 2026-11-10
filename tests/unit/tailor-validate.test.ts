@@ -677,6 +677,24 @@ describe("validateTailorOutput", () => {
     expect(result.output.entries[0]?.bullets[0]?.text).toContain("PostgreSQL");
   });
 
+  it("G13 reverts a rewrite that calls an unfinished project deployed", () => {
+    const snapshot = withBulletText("E2.B1", "The booking bot is not deployed.");
+    const output = tailorOutput();
+    const bullet = output.entries.find((entry) => entry.ref === "E2")?.bullets[0];
+    if (!bullet) throw new Error("missing bullet");
+    bullet.text = "Deployed the booking bot.";
+
+    const result = guard(output, snapshot);
+
+    expect(result.output.entries.find((entry) => entry.ref === "E2")?.bullets[0]?.reverted).toBe(
+      true,
+    );
+    expect(result.output.entries.find((entry) => entry.ref === "E2")?.bullets[0]?.text).toContain(
+      "not deployed",
+    );
+    expect(result.issues).toContainEqual({ code: "G13", ref: "E2.B1" });
+  });
+
   it("G14 drops a later bullet that repeats an earlier one", () => {
     const line = "Maintained 14 reports for a 20-person team.";
     const snapshot = withBulletText("E1.B1", line);

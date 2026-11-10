@@ -16,7 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { strings } from "@/copy/strings";
 import { formatResumeDateRange } from "@/features/library/dates";
 import { StrengthMeter } from "@/features/library/components/strength-meter";
-import { ENTRY_KINDS, type LibrarySnapshot } from "@/features/library/schemas";
+import { type LibrarySnapshot } from "@/features/library/schemas";
+import { resumeContactLinks, resumeSectionOrder } from "@/features/tailor/resume-shape";
+import type { Requirement } from "@/features/jobs/schemas";
 import { saveResumeContent } from "@/features/tailor/actions";
 import { saveSummaryVariant } from "@/features/library/wording-actions";
 import {
@@ -31,6 +33,8 @@ import {
   SKILLS_SECTION_ID,
 } from "@/features/tailor/evidence";
 import { includeEvidence } from "@/features/tailor/requirement-state";
+import { tailoringOverview } from "@/features/tailor/overview";
+import { bulletReview, wordDiff } from "@/features/tailor/review";
 import {
   RESUME_LIMITS,
   type ContentBullet,
@@ -50,6 +54,7 @@ import {
 } from "../workspace-nav";
 import { resumeTemplateLabel } from "../template-label";
 import { ExcludedGroup } from "./excluded-group";
+import { TailoringOverviewPanel } from "./tailoring-overview";
 import { MatchPanel } from "./match-panel";
 import { SectionJump } from "./section-jump";
 import { ExportAppliedDialog, ResumeExportBar, useResumeExport } from "./resume-export-bar";
@@ -534,13 +539,14 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         onEditBlur={(bulletId) => onEditBlur(entry.ref, bulletId)}
         onMove={(bulletId, direction) => moveBullet(entry.ref, bulletId, direction)}
         onRewrite={(bulletId, text) => setBulletText(entry.ref, bulletId, text)}
+        requirements={workspace.requirements}
       />
     );
   }
 
   const jumpTargets = sectionJumpTargets({
     summary: { id: SUMMARY_SECTION_ID, label: copy.summary },
-    sections: ENTRY_KINDS.map((kind) => ({
+    sections: resumeSectionOrder(content.sectionOrder).map((kind) => ({
       id: entrySectionId(kind),
       label: entryCopy.kinds[kind].title,
       count: content.entries.filter(
@@ -634,10 +640,10 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         </div>
       ) : null}
 
-      <div className="min-w-0 lg:grid lg:grid-cols-5 lg:items-start lg:gap-8">
+      <div className="min-w-0 lg:grid lg:grid-cols-5 lg:items-start lg:gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)]">
         <div
           className={cn(
-            "flex min-w-0 flex-col lg:col-span-3",
+            "flex min-w-0 flex-col lg:col-span-3 xl:col-span-1",
             templateId === "compact" ? "gap-4" : "gap-6",
             !previewing && tab !== "resume" && "max-lg:hidden",
           )}
@@ -647,7 +653,21 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
       ) : (
       <>
       <SectionJump label={copy.jumpLabel} targets={jumpTargets} onJump={jumpTo} />
-      <ProfileHeader profile={workspace.snapshot.profile} templateId={templateId} />
+      <TailoringOverviewPanel
+        resumeId={workspace.resumeId}
+        overview={tailoringOverview({
+          jobTitle: workspace.jobTitle,
+          content,
+          snapshot: workspace.snapshot,
+          requirements: workspace.requirements,
+        })}
+        onOpen={showEvidence}
+      />
+      <ProfileHeader
+        profile={workspace.snapshot.profile}
+        links={resumeContactLinks(content, workspace.snapshot.profile)}
+        templateId={templateId}
+      />
 
       <section
         id={SUMMARY_SECTION_ID}
@@ -735,7 +755,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         )}
       </section>
 
-      {ENTRY_KINDS.map((kind) => {
+      {resumeSectionOrder(content.sectionOrder).map((kind) => {
         const entries = content.entries.filter(
           (entry) => entry.kind === kind && snapshotByRef.has(entry.ref),
         );
@@ -855,7 +875,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         <aside
           aria-label={copy.panelLabel}
           className={cn(
-            "lg:sticky lg:top-20 lg:col-span-2 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto",
+            "lg:sticky lg:top-20 lg:col-span-2 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto xl:col-span-1",
             tab !== "match" && "max-lg:hidden",
           )}
         >
@@ -888,9 +908,11 @@ function sectionHeading(templateId: ResumeTemplateId): string {
 
 function ProfileHeader({
   profile,
+  links,
   templateId,
 }: {
   profile: LibrarySnapshot["profile"];
+  links: { label: string; url: string }[];
   templateId: ResumeTemplateId;
 }) {
   const name = profile.fullName?.trim() || null;
@@ -927,9 +949,9 @@ function ProfileHeader({
       {contact.length > 0 ? (
         <p className="mt-3 text-sm break-words text-ink">{contact.join(" · ")}</p>
       ) : null}
-      {profile.links.length > 0 ? (
+      {links.length > 0 ? (
         <ul className={inlineLinks ? "mt-2 flex flex-wrap gap-x-3 gap-y-1" : "mt-2 grid gap-1"}>
-          {profile.links.map((link) => (
+          {links.map((link) => (
             <li key={`${link.label}-${link.url}`}>
               <a
                 href={link.url}
@@ -966,6 +988,7 @@ function EntryBlock({
   onEditBlur,
   onMove,
   onRewrite,
+  requirements,
 }: {
   entry: ContentEntry;
   facts: SnapshotEntry;
@@ -985,6 +1008,7 @@ function EntryBlock({
   onEditBlur: (bulletId: string) => void;
   onMove: (bulletId: string, direction: Direction) => void;
   onRewrite: (bulletId: string, text: string) => void;
+  requirements: readonly Requirement[];
 }) {
   const title = facts.title.trim() || copy.untitled;
   const place = [facts.organization, facts.location]
@@ -1055,6 +1079,7 @@ function EntryBlock({
               onEditBlur={() => onEditBlur(bullet.id)}
               onMove={(direction) => onMove(bullet.id, direction)}
               onRewrite={(text) => onRewrite(bullet.id, text)}
+              requirements={requirements}
             />
           ))}
         </ul>
@@ -1084,6 +1109,7 @@ function BulletRow({
   onEditBlur,
   onMove,
   onRewrite,
+  requirements,
 }: {
   bullet: ContentBullet;
   facts: SnapshotEntry;
@@ -1105,11 +1131,13 @@ function BulletRow({
   onEditBlur: () => void;
   onMove: (direction: Direction) => void;
   onRewrite: (text: string) => void;
+  requirements: readonly Requirement[];
 }) {
   const fieldId = useId();
   const sources = bullet.sourceRefs
     .map((ref) => facts.bullets.find((item) => item.ref === ref))
     .filter((item): item is SnapshotEntry["bullets"][number] => item !== undefined);
+  const review = bulletReview(bullet, sources[0]?.text ?? "", requirements);
 
   return (
     <li
@@ -1162,6 +1190,9 @@ function BulletRow({
           )}
         </div>
         {editing ? null : <StrengthMeter text={bullet.text} skills={skills} />}
+        {editing || review.state !== "applied" ? null : (
+          <span className="text-xs text-pine">{copy.rewrittenMark}</span>
+        )}
         <SourceButton title={facts.title.trim() || copy.untitled} sources={sources} />
         {editing || readOnly ? null : (
           <RowActions
@@ -1193,7 +1224,13 @@ function BulletRow({
         </p>
       )}
       {editing ? null : (
-        <RewriteCompare bullet={bullet} sources={sources} readOnly={readOnly} onRewrite={onRewrite} />
+        <RewriteCompare
+          bullet={bullet}
+          sources={sources}
+          review={review}
+          readOnly={readOnly}
+          onRewrite={onRewrite}
+        />
       )}
     </li>
   );
@@ -1202,83 +1239,128 @@ function BulletRow({
 function RewriteCompare({
   bullet,
   sources,
+  review,
   readOnly,
   onRewrite,
 }: {
   bullet: ContentBullet;
   sources: readonly { ref: string; text: string }[];
+  review: ReturnType<typeof bulletReview>;
   readOnly: boolean;
   onRewrite: (text: string) => void;
 }) {
-  const joined = sources
-    .map((source) => source.text.trim())
-    .filter((source) => source.length > 0)
-    .join("\n");
-  const original = (
-    sources.length > 1 ? joined : (bullet.originalText ?? sources[0]?.text ?? "")
-  ).trim();
-  const current = bullet.text.trim();
-  const suggestion = (
-    bullet.suggestion ??
-    (!bullet.edited && !bullet.reverted && current !== original ? current : "")
-  ).trim();
-  if (original.length === 0 || suggestion.length === 0 || suggestion === original) return null;
-  const showingOriginal = current === original;
-  const note = bullet.suggestionNote?.trim() || copy.rewriteNote;
+  if (review.state === "none") return null;
+  const original = review.original;
+  const tailored = review.tailored ?? "";
   const tooLong = sources.length > 1 && original.length > 400;
+  const summary =
+    review.state === "applied"
+      ? copy.whyChange
+      : review.state === "restored"
+        ? copy.tailoredWording
+        : copy.yourEdit;
+  const showWhy = review.state !== "edited" && review.why;
+  const whyLabel = review.state === "restored" ? copy.tailoredWhy : copy.whyChanged;
 
   return (
     <details className="max-w-prose text-xs text-slate">
       <summary className="cursor-pointer text-pine focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
-        {showingOriginal ? copy.rewriteKept : copy.rewriteShow}
+        {summary}
       </summary>
+      {review.state === "edited" ? <p className="mt-1">{copy.editedNote}</p> : null}
       {sources.length > 1 ? (
         <ul className="mt-1 grid gap-1">
           {sources.map((source) => (
             <li key={source.ref} className="whitespace-pre-wrap">
-              <span className="font-medium text-ink">{copy.rewriteOriginal}. </span>
+              <span className="font-medium text-ink">{copy.evidenceLabel}. </span>
               {source.text}
             </li>
           ))}
         </ul>
-      ) : (
+      ) : null}
+      {review.state === "applied" && sources.length <= 1 ? (
+        <WordChange before={original} after={bullet.text.trim()} />
+      ) : null}
+      {review.state !== "edited" && review.what ? (
         <p className="mt-1 whitespace-pre-wrap">
-          <span className="font-medium text-ink">{copy.rewriteOriginal}. </span>
+          <span className="font-medium text-ink">{copy.whatChanged}. </span>
+          {review.what}
+        </p>
+      ) : null}
+      {showWhy ? (
+        <p className="mt-1 whitespace-pre-wrap">
+          <span className="font-medium text-ink">{whyLabel}. </span>
+          {review.why}
+        </p>
+      ) : null}
+      {review.requirements.length > 0 ? (
+        <p className="mt-1 whitespace-pre-wrap">
+          <span className="font-medium text-ink">{copy.because}. </span>
+          {review.requirements.join("; ")}
+        </p>
+      ) : null}
+      {sources.length > 1 ? null : (
+        <p className="mt-1 whitespace-pre-wrap">
+          <span className="font-medium text-ink">{copy.evidenceLabel}. </span>
           {original}
         </p>
       )}
-      {sources.length > 1 ? (
-        <p className="mt-1">{strings.library.assist.sourcesNote}</p>
-      ) : null}
-      {showingOriginal ? (
+      {review.state !== "applied" && tailored.length > 0 ? (
         <p className="mt-1 whitespace-pre-wrap">
-          <span className="font-medium text-ink">{copy.rewriteSuggestion}. </span>
-          {suggestion}
+          <span className="font-medium text-ink">{copy.tailoredWording}. </span>
+          {tailored}
         </p>
       ) : null}
-      <p className="mt-1">{note}</p>
       {readOnly || tooLong ? null : (
-        <div className="mt-1">
-          {showingOriginal ? (
-            <button
-              type="button"
-              className="text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-              onClick={() => onRewrite(suggestion)}
-            >
-              {copy.rewriteUse}
-            </button>
-          ) : (
+        <div className="mt-1 flex flex-wrap gap-3">
+          {review.state === "applied" || review.state === "edited" ? (
             <button
               type="button"
               className="text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
               onClick={() => onRewrite(original)}
             >
-              {copy.rewriteKeep}
+              {copy.restoreOriginal}
             </button>
-          )}
+          ) : null}
+          {review.state !== "applied" && tailored.length > 0 ? (
+            <button
+              type="button"
+              className="text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              onClick={() => onRewrite(tailored)}
+            >
+              {copy.useTailored}
+            </button>
+          ) : null}
         </div>
       )}
     </details>
+  );
+}
+
+function WordChange({ before, after }: { before: string; after: string }) {
+  const parts = wordDiff(before, after);
+  if (parts.length === 0) return null;
+  return (
+    <p className="mt-1 whitespace-pre-wrap">
+      {parts.map((part, index) => {
+        const text = index === 0 ? part.text : ` ${part.text}`;
+        if (part.kind === "same") {
+          return <span key={index}>{text}</span>;
+        }
+        if (part.kind === "remove") {
+          return (
+            <del key={index} className="text-slate">
+              {text}
+            </del>
+          );
+        }
+        return (
+          <ins key={index} className="bg-pine-50 text-ink no-underline">
+            {text}
+          </ins>
+        );
+      })}
+    </p>
   );
 }
 

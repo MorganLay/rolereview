@@ -43,20 +43,34 @@ TRUTHFULNESS — these rules override everything else:
 6. Do not describe academic, personal, or coursework use of a tool as production experience.
 
 OBJECTIVE
-Produce the strongest truthful resume for this posting. Prefer a directly supported accomplishment
-over a keyword overlap. Transferable evidence is partial, not met. Leave unsupported requirements
-out. Selecting relevant bullets is not enough. Rewrite a bullet when the wording can be clearer or
-more relevant without adding facts. Leave a bullet unchanged when the original is already specific
-and stronger. Do not change a line only to swap a synonym.
+Produce a finished resume, not a list of suggestions. The bullet text you return is the wording
+on the resume. Prefer a directly supported accomplishment over a keyword overlap. Transferable
+evidence is partial, not met. Leave unsupported requirements out. Leave a bullet unchanged when
+the original is already specific and stronger. Do not change a line only to swap a synonym.
+Do not optimize for how many lines change.
+
+PLAN
+Before the bullets, fill plan from the library and this posting together:
+- narrative: one sentence naming only work the library supports. This is the story the resume tells.
+- priorities: up to 4 short phrases taken from the requirements that this resume will emphasize.
+- gaps: up to 4 requirement ids the library does not demonstrate. Do not paper over these.
+Then select, order, and rewrite so the resume carries out that plan. The same library for two
+different jobs should emphasize different evidence. Omit bullets that would repeat each other.
+A project earns a place only when it supports the narrative.
 
 REWRITING
-- Keep every tool, employer, metric, date, scope, and outcome inside the cited bullets.
-- You may emphasize the relevant half of a bullet and use precise verbs the source supports
-  ("merge" and "transform" may become "consolidated and transformed").
+- Keep every tool, employer, metric, date, scope, and outcome inside the cited bullet.
+- You may change the sentence when that makes the relevant fact clearer. "Merge and transform
+  data" may become "Consolidated and transformed data". You may lead with the half that this
+  job needs and drop a clause that does not.
 - You may not turn spreadsheet joins into ETL, pipelines, warehouses, or production engineering.
-- Do not add "expert", "senior", "production", or years of experience the sources do not state.
-- One idea per bullet. Do not repeat the same achievement under another entry.
-- Cite one source only. Each saved bullet stays its own line.
+- Do not add "expert", "senior", "production", or years of experience the source does not state.
+- Do not invent support-desk, customer-facing, leadership, or production work from adjacent tasks.
+- One idea per bullet. Cite one source only. Each saved bullet stays its own line.
+- what: one clause naming the editorial change, or empty when the text is unchanged.
+  why: the requirement or responsibility that motivated a real change, or empty when unchanged.
+  Name that requirement. Do not say "ATS", "impactful", "stronger keywords", or "better aligned".
+  requirementIds: the requirement ids that motivated a change, or [] when unchanged.
 
 APPROVED WORDING
 The library may include saved variants for a bullet. For each bullet choose one:
@@ -103,6 +117,11 @@ MATCH REPORT
 /** Loose model output. Limits are applied by the guard, not this schema. */
 export const OutputSchema = z.object({
   summary: z.string(),
+  plan: z.object({
+    narrative: z.string(),
+    priorities: z.array(z.string()),
+    gaps: z.array(z.string()),
+  }),
   entries: z.array(
     z.object({
       ref: z.string(),
@@ -112,7 +131,9 @@ export const OutputSchema = z.object({
           text: z.string(),
           variantId: z.string().nullable(),
           choice: z.enum(["variant", "canonical", "rewrite"]),
+          what: z.string(),
           why: z.string(),
+          requirementIds: z.array(z.string()),
         }),
       ),
     }),

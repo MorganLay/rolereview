@@ -65,6 +65,8 @@ describe("assembleResumeContent", () => {
         originalText: "Cut prep time from 2 days to 3 hours.",
         suggestion: null,
         suggestionNote: null,
+        changeWhat: null,
+        requirementIds: [],
       },
       {
         id: "id-2",
@@ -77,6 +79,8 @@ describe("assembleResumeContent", () => {
         originalText: "Built and maintained 14 reports for a 20-person team.",
         suggestion: null,
         suggestionNote: null,
+        changeWhat: null,
+        requirementIds: [],
       },
     ]);
     expect(content.entries[1]?.bullets[0]).toMatchObject({

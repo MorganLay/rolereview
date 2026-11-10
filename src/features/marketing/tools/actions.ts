@@ -69,7 +69,7 @@ export async function checkKeywordCoverage(
 
   let analysis;
   try {
-    analysis = postProcessAnalyze(result.data);
+    analysis = postProcessAnalyze(result.data, parsed.data.posting);
   } catch {
     return fail("AI_FAILED");
   }

@@ -261,7 +261,7 @@ export const JobAnalysis = z.object({
   keywords: z.array(z.string()),
 });
 ```
-Analysis pre-fills the Job columns (`workMode`, `employmentType`, `salary*`, `referenceNumber`); the user can override them.
+Analysis pre-fills empty `title`, `company`, `location`, `url`, `workMode`, `employmentType`, `salary*`, and `referenceNumber`. A value the user has set stays. A blank URL is filled from a link in the posting. An optional model value outside the schema is emptied, and the rest of the analysis is kept. `salary.currency` is a 3-letter code or null. A stated amount with no named currency is CAD when the role is in Canada. See `docs/05-AI.md` → ANALYZE.
 
 ### `TailoredResume.options` / `CoverLetter.options` → `features/tailor/schemas.ts`, `features/letters/schemas.ts`
 
@@ -308,6 +308,8 @@ export const ContentBullet = z.object({
   originalText: z.string().max(400).nullable().default(null),
   suggestion: z.string().max(400).nullable().default(null),
   suggestionNote: z.string().max(200).nullable().default(null),
+  changeWhat: z.string().max(200).nullable().default(null), // what the rewrite changed; null on older resumes
+  requirementIds: z.array(z.string()).default([]),         // requirement ids that motivated the change
   sourceIds: z.array(z.string()).optional(), // stable Bullet ids; older resumes omit this
 });
 export const ContentEntry = z.object({
@@ -320,9 +322,21 @@ export const ResumeContent = z.object({
   summary: z.object({ text: z.string().max(800), included: z.boolean() }),
   entries: z.array(ContentEntry),
   skills: z.array(z.object({ category: z.string().nullable(), names: z.array(z.string()) })),
+  sectionOrder: z.array(EntryKindEnum).optional(),             // omitted on resumes saved before composition
+  contacts: z.array(z.object({
+    label: z.string().max(40), url: z.string().max(300),
+    kind: z.enum(["github", "linkedin", "portfolio", "other"]),
+    reason: z.string().max(80),
+  })).max(8).optional(),
+  review: z.array(z.object({
+    code: z.enum(["CURRENT_ROLE_OMITTED", "DUPLICATE_CONSOLIDATED", "ORDER_ADJUSTED", "SECTION_ORDER", "BULLET_PREFERENCE", "CONTACT_SELECTED", "CONTACT_EXCLUDED", "ENTRY_INCLUDED", "ENTRY_EXCLUDED", "SKILL_EVIDENCE"]),
+    severity: z.enum(["warning", "note"]),
+    ref: z.string().max(80),
+    reason: z.string().max(80),
+  })).max(80).optional(),
 });
 ```
-Render order: Summary → Experience → Projects → Education → Certifications → Volunteer → Other → Skills. G12 may drop summary sentences whose tenure or numbers are not supported, or replace the summary with the library default.
+Render order follows `sectionOrder` when the resume has one: Experience, then Projects, then Education, Certifications, Volunteer, and Other, unless the strongest hands-on project clearly outranks the strongest included role, in which case Projects come first. Employment inside Experience stays chronological. Older resumes omit `sectionOrder` and use that default order. Header links follow `contacts` when the resume has them (GitHub, LinkedIn, portfolio, and the same verified set). Older resumes omit `contacts` and show every profile link. `review` records why an entry, skill, or link was included, excluded, or reordered. A current role that was not selected is a warning there, and the entry stays available to turn on. G12 may drop summary sentences whose tenure or numbers are not supported, or replace the summary with the library default.
 
 ### `TailoredResume.matchReport` (MatchReport)
 
@@ -337,7 +351,7 @@ export const MatchReport = z.object({
 });
 ```
 
-`unassessed` means the model returned no verdict for that requirement. A row saved earlier may say `missing` with the note "Not assessed." Readers treat that note as `unassessed`. The match panel does not display this verdict directly. It recomputes In this resume / In your library, not in this resume / Needs review / No evidence found from the resume on screen (`05-AI.md` → Requirement states).
+`unassessed` means the model returned no verdict for that requirement. A row saved earlier may say `missing` with the note "Not assessed." Readers treat that note as `unassessed`. The match panel does not display this verdict directly. It recomputes Met / Not on this resume / Needs review / Not demonstrated from the resume on screen (`05-AI.md` → Requirement states). Met means the requirement is shown in this resume. Not on this resume means the library has evidence the resume left out. Not demonstrated means the library does not support it, and the panel does not offer a rewrite for that gap.
 
 `score` is null when the posting has no requirements, and when every requirement is unassessed. An unassessed requirement is left out of the score. A null score shows as an em dash on the jobs list. The number stays the one stored at tailoring time.
 

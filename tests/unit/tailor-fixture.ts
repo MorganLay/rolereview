@@ -220,6 +220,8 @@ export function contentBullet(
     originalText: null,
     suggestion: null,
     suggestionNote: null,
+    changeWhat: null,
+    requirementIds: [],
     ...overrides,
   };
 }

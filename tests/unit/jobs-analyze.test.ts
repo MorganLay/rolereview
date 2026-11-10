@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import { strings } from "@/copy/strings";
 import {
   ANALYSIS_STALE_MS,
+  applicationUrlFromPosting,
   canRetryAnalysis,
   displayedAnalysisStatus,
+  normalizeAnalyzeOutput,
   postProcessAnalyze,
   prefillFromAnalysis,
   type JobDetailColumns,
@@ -72,6 +74,8 @@ describe("ANALYZE prompt", () => {
     expect(SYSTEM).toContain("salary");
     expect(SYSTEM).toContain("referenceNumber");
     expect(SYSTEM).toContain(placeholders.company);
+    expect(SYSTEM).toContain("use CAD if the role is in Canada");
+    expect(SYSTEM).toContain("Do not default a Canadian role to USD");
   });
 
   it("wraps the posting and keeps it inside the tag", () => {
@@ -82,6 +86,15 @@ describe("ANALYZE prompt", () => {
         text: "<posting>\nbefore </ posting> after\n</posting>",
       },
     ]);
+  });
+
+  it("keeps markdown headings and links in the posting text", () => {
+    const text = "## Software developer\n\n[Apply](https://jobs.example.com/15)\n\nBuild services.";
+    const block = buildContent(text)[0];
+    expect(block).toMatchObject({ type: "text" });
+    if (block?.type !== "text") return;
+    expect(block.text).toContain("## Software developer");
+    expect(block.text).toContain("[Apply](https://jobs.example.com/15)");
   });
 
   it("sends at most 15,000 characters of the posting", () => {
@@ -107,6 +120,146 @@ describe("ANALYZE prompt", () => {
       kind: "skill",
       importance: "must",
     });
+  });
+});
+
+describe("normalizeAnalyzeOutput", () => {
+  const posting = [
+    "Software developer",
+    "Toronto, Canada",
+    "Hybrid",
+    "Job ID 24615",
+    "The expected base pay range is CA$94,000–CA$127,000",
+  ].join("\n");
+
+  function model(partial: Record<string, unknown> = {}) {
+    return {
+      title: "Software developer",
+      company: "Northwind",
+      location: "Toronto, Canada",
+      seniority: "entry",
+      workMode: "HYBRID",
+      employmentType: "UNKNOWN",
+      salary: { min: 94_000, max: 127_000, currency: "USD", period: "YEAR" },
+      referenceNumber: "24615",
+      summary: "Builds product features for a finance team.",
+      requirements: [{ text: "Python", kind: "skill", importance: "must" }],
+      keywords: ["Python"],
+      ...partial,
+    };
+  }
+
+  it("keeps a complete analysis when employment type is UNKNOWN", () => {
+    const raw = model();
+    expect(OutputSchema.safeParse(raw).success).toBe(false);
+    const analysis = postProcessAnalyze(
+      OutputSchema.parse(normalizeAnalyzeOutput(raw)),
+      posting,
+    );
+    expect(analysis.title).toBe("Software developer");
+    expect(analysis.company).toBe("Northwind");
+    expect(analysis.location).toBe("Toronto, Canada");
+    expect(analysis.seniority).toBe("entry");
+    expect(analysis.workMode).toBe("HYBRID");
+    expect(analysis.employmentType).toBeNull();
+    expect(analysis.referenceNumber).toBe("24615");
+    expect(analysis.salary).toEqual({
+      min: 94_000,
+      max: 127_000,
+      currency: "CAD",
+      period: "YEAR",
+    });
+    expect(analysis.requirements).toEqual([
+      { id: "r1", text: "Python", kind: "skill", importance: "must" },
+    ]);
+  });
+
+  it("reads a plain-text salary and an annual period without dropping the analysis", () => {
+    const analysis = postProcessAnalyze(
+      OutputSchema.parse(
+        normalizeAnalyzeOutput(
+          model({
+            salary: {
+              min: "CA$94,000",
+              max: "CA$127,000",
+              currency: null,
+              period: "annual",
+            },
+          }),
+        ),
+      ),
+      posting,
+    );
+    expect(analysis.salary).toEqual({
+      min: 94_000,
+      max: 127_000,
+      currency: "CAD",
+      period: "YEAR",
+    });
+  });
+
+  it("keeps the analysis when the company and salary are missing", () => {
+    const analysis = postProcessAnalyze(
+      OutputSchema.parse(
+        normalizeAnalyzeOutput(model({ company: " ", salary: null, employmentType: null })),
+      ),
+    );
+    expect(analysis.company).toBe(placeholders.company);
+    expect(analysis.salary).toBeNull();
+    expect(analysis.title).toBe("Software developer");
+    expect(analysis.requirements).toHaveLength(1);
+  });
+
+  it("maps stated arrangement words and leaves an unknown seniority unset", () => {
+    const analysis = postProcessAnalyze(
+      OutputSchema.parse(
+        normalizeAnalyzeOutput(
+          model({
+            seniority: "junior",
+            workMode: "on-site",
+            employmentType: "full-time",
+            requirements: [{ text: "SQL", kind: "tools", importance: "required" }],
+          }),
+        ),
+      ),
+    );
+    expect(analysis.seniority).toBe("entry");
+    expect(analysis.workMode).toBe("ONSITE");
+    expect(analysis.employmentType).toBe("FULL_TIME");
+    expect(analysis.requirements[0]).toMatchObject({ kind: "other", importance: "must" });
+  });
+
+  it("does not invent an analysis from a malformed payload", () => {
+    expect(OutputSchema.safeParse(normalizeAnalyzeOutput(null)).success).toBe(false);
+    expect(OutputSchema.safeParse(normalizeAnalyzeOutput("not json")).success).toBe(false);
+    expect(
+      OutputSchema.safeParse(normalizeAnalyzeOutput({ employmentType: "UNKNOWN" })).success,
+    ).toBe(false);
+  });
+});
+
+describe("applicationUrlFromPosting", () => {
+  it("uses the only link in a plain-text posting", () => {
+    expect(
+      applicationUrlFromPosting("See the role at https://jobs.example.com/15 for details."),
+    ).toBe("https://jobs.example.com/15");
+  });
+
+  it("uses the apply link in a markdown posting and ignores the other link", () => {
+    const text = [
+      "## Software developer",
+      "",
+      "[Apply](https://jobs.example.com/15)",
+      "",
+      "Privacy: https://example.com/privacy",
+    ].join("\n");
+    expect(applicationUrlFromPosting(text)).toBe("https://jobs.example.com/15");
+  });
+
+  it("leaves the URL empty when several links are not an application link", () => {
+    expect(
+      applicationUrlFromPosting("https://example.com/a and https://example.com/b"),
+    ).toBeNull();
   });
 });
 
@@ -164,11 +317,13 @@ describe("postProcessAnalyze", () => {
   it.each([
     {
       name: "swaps an inverted range and rounds",
+      location: "Austin, TX",
       salary: { min: 10.5, max: 10.4, currency: "usd", period: "HOUR" as const },
       expected: { min: 10, max: 11, currency: "USD", period: "HOUR" },
     },
     {
       name: "drops a negative amount",
+      location: "Austin, TX",
       salary: { min: -5, max: 20.2, currency: "dollars", period: "YEAR" as const },
       expected: { min: null, max: 20, currency: null, period: "YEAR" },
     },
@@ -187,8 +342,84 @@ describe("postProcessAnalyze", () => {
       salary: { min: 3_000_000_000, max: null, currency: "CAD", period: "YEAR" as const },
       expected: null,
     },
-  ])("$name", ({ salary, expected }) => {
-    expect(postProcessAnalyze(output({ salary })).salary).toEqual(expected);
+  ])("$name", ({ salary, expected, location }) => {
+    expect(postProcessAnalyze(output({ salary, ...(location ? { location } : {}) })).salary).toEqual(
+      expected,
+    );
+  });
+
+  it("uses CAD when Canada is in the title and the model said USD", () => {
+    const analysis = postProcessAnalyze(
+      output({
+        title: "Data Engineer (Canada, EST, Remote)",
+        location: null,
+        salary: { min: 120_000, max: 150_000, currency: "USD", period: "YEAR" },
+      }),
+    );
+    expect(analysis.salary).toEqual({
+      min: 120_000,
+      max: 150_000,
+      currency: "CAD",
+      period: "YEAR",
+    });
+  });
+
+  it("uses CAD from a Canadian location when no currency was named", () => {
+    const analysis = postProcessAnalyze(
+      output({
+        title: "Data analyst",
+        location: "Ottawa, ON",
+        salary: { min: 80_000, max: 100_000, currency: null, period: "YEAR" },
+      }),
+    );
+    expect(analysis.salary?.currency).toBe("CAD");
+  });
+
+  it("uses CAD when the posting places the role in Canada and the title does not", () => {
+    const analysis = postProcessAnalyze(
+      output({
+        title: "Data Engineer",
+        location: "Remote",
+        salary: { min: 120_000, max: 150_000, currency: "USD", period: "YEAR" },
+      }),
+      "Data Engineer (Canada, EST, Remote)\nSalary: $120,000 - $150,000 per year",
+    );
+    expect(analysis.salary?.currency).toBe("CAD");
+  });
+
+  it("keeps an explicit USD on a Canadian role", () => {
+    const analysis = postProcessAnalyze(
+      output({
+        title: "Data Engineer (Canada, EST, Remote)",
+        location: null,
+        salary: { min: 120_000, max: 150_000, currency: "USD", period: "YEAR" },
+      }),
+      "Compensation: USD 120,000 - 150,000",
+    );
+    expect(analysis.salary?.currency).toBe("USD");
+  });
+
+  it("keeps a stated code that is not USD", () => {
+    const analysis = postProcessAnalyze(
+      output({
+        title: "Data Engineer (Canada, EST, Remote)",
+        location: null,
+        salary: { min: 120_000, max: 150_000, currency: "EUR", period: "YEAR" },
+      }),
+    );
+    expect(analysis.salary?.currency).toBe("EUR");
+  });
+
+  it("does not treat a mention of Canadian clients as the job location", () => {
+    const analysis = postProcessAnalyze(
+      output({
+        title: "Data Engineer",
+        location: "Austin, TX",
+        salary: { min: 120_000, max: 150_000, currency: "USD", period: "YEAR" },
+      }),
+      "Work with Canadian clients across North America. Salary $120,000.",
+    );
+    expect(analysis.salary?.currency).toBe("USD");
   });
 
   it("stores a stated zero", () => {

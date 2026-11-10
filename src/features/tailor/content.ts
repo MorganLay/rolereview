@@ -5,10 +5,11 @@
  */
 
 import type { Requirement } from "@/features/jobs/schemas";
-import { ENTRY_KINDS, type LibrarySnapshot } from "@/features/library/schemas";
+import type { LibrarySnapshot } from "@/features/library/schemas";
 import type { ResumeTemplateId } from "@/lib/pdf/template";
 
 import { sameWording } from "./grounding";
+import { resumeSectionOrder } from "./resume-shape";
 import {
   RESUME_LIMITS,
   type ContentBullet,
@@ -114,7 +115,7 @@ export function applyResumeEdit(input: {
   const ai = indexAi(input.aiOutput);
   const entries: ContentEntry[] = [];
 
-  for (const kind of ENTRY_KINDS) {
+  for (const kind of resumeSectionOrder(input.stored.sectionOrder)) {
     for (const storedEntry of input.stored.entries) {
       const snapshotEntry = snapshotEntries.get(storedEntry.ref);
       if (!snapshotEntry || snapshotEntry.kind !== kind) continue;
@@ -144,6 +145,9 @@ export function applyResumeEdit(input: {
       summary: { text: summary, included: input.incoming.summary.included },
       entries,
       skills,
+      ...(input.stored.sectionOrder ? { sectionOrder: input.stored.sectionOrder } : {}),
+      ...(input.stored.contacts ? { contacts: input.stored.contacts } : {}),
+      ...(input.stored.review ? { review: input.stored.review } : {}),
     },
   };
 }
@@ -244,6 +248,8 @@ function buildEntry(
       originalText: stored.originalText ?? original,
       suggestion: stored.suggestion,
       suggestionNote: stored.suggestionNote,
+      changeWhat: stored.changeWhat ?? null,
+      requirementIds: stored.requirementIds ? [...stored.requirementIds] : [],
     });
   }
 

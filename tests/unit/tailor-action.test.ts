@@ -229,6 +229,40 @@ describe("tailorResume", () => {
     expect(runStructured.mock.calls[0]?.[0].content[0].text).not.toContain("450\u2013600");
   });
 
+  it("keeps a grounded repair and does not spend a second credit", async () => {
+    runStructured
+      .mockResolvedValueOnce({
+        ok: true,
+        data: modelOutput("Built production ETL pipelines."),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        data: {
+          bullets: [
+            {
+              sourceRef: "E1.B1",
+              text: "Maintained 14 reports for the team.",
+              what: "Drops the tool the source does not name.",
+              why: "The posting's reporting work is what the source shows.",
+            },
+          ],
+        },
+      });
+
+    const result = await tailorResume({ jobId, length: 1 });
+
+    expect(result.ok).toBe(true);
+    const saved = txUpdate.mock.calls[0]?.[0].data;
+    const bullet = saved.content.entries
+      .flatMap((entry: { bullets: { text: string; included: boolean; suggestionNote: string | null }[] }) => entry.bullets)
+      .find((item: { text: string; included: boolean }) => item.included);
+    expect(bullet.text).toBe("Maintained 14 reports for the team.");
+    expect(bullet.suggestionNote).toContain("reporting");
+    expect(saved.guardReverts).toBe(0);
+    expect(runStructured).toHaveBeenCalledTimes(2);
+    expect(runStructured.mock.calls[1]?.[0].usedBonusCredit).toBe(false);
+  });
+
   it("returns CONFLICT while a tailor for this job is still running", async () => {
     txFindFirst.mockResolvedValue({ id: "pending-resume" });
 

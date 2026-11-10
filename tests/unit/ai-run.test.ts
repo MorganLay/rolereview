@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-const { parse, aiCallCreate, bonusFindMany, bonusUpdateMany } = vi.hoisted(() => ({
-  parse: vi.fn(),
+const { create, aiCallCreate, bonusFindMany, bonusUpdateMany } = vi.hoisted(() => ({
+  create: vi.fn(),
   aiCallCreate: vi.fn(),
   bonusFindMany: vi.fn(),
   bonusUpdateMany: vi.fn(),
 }));
 
 vi.mock("@/lib/ai/client", () => ({
-  getAnthropic: () => ({ messages: { parse } }),
+  getAnthropic: () => ({ messages: { create } }),
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -37,13 +37,17 @@ const baseArgs = {
 
 function message(partial: {
   stop_reason: string | null;
-  parsed_output: unknown;
+  parsed_output?: unknown;
+  text?: string;
   input_tokens?: number;
   output_tokens?: number;
 }) {
+  const text =
+    partial.text ??
+    (partial.parsed_output === undefined ? "" : JSON.stringify(partial.parsed_output));
   return {
     stop_reason: partial.stop_reason,
-    parsed_output: partial.parsed_output,
+    content: [{ type: "text" as const, text }],
     usage: {
       input_tokens: partial.input_tokens ?? 100,
       output_tokens: partial.output_tokens ?? 20,
@@ -56,7 +60,7 @@ function message(partial: {
 
 describe("runStructured", () => {
   beforeEach(() => {
-    parse.mockReset();
+    create.mockReset();
     aiCallCreate.mockReset();
     bonusFindMany.mockReset();
     bonusUpdateMany.mockReset();
@@ -71,14 +75,14 @@ describe("runStructured", () => {
   });
 
   it("returns parsed data and logs a successful call without a bonus credit", async () => {
-    parse.mockResolvedValue(
+    create.mockResolvedValue(
       message({ stop_reason: "end_turn", parsed_output: { title: "Analyst" } }),
     );
 
     const result = await runStructured(baseArgs);
 
     expect(result).toEqual({ ok: true, data: { title: "Analyst" } });
-    expect(parse).toHaveBeenCalledWith(
+    expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "claude-haiku-5-5",
         max_tokens: 4000,
@@ -107,7 +111,7 @@ describe("runStructured", () => {
   });
 
   it("maps refusal and does not spend a bonus credit", async () => {
-    parse.mockResolvedValue(
+    create.mockResolvedValue(
       message({ stop_reason: "refusal", parsed_output: null, input_tokens: 50, output_tokens: 10 }),
     );
 
@@ -127,7 +131,7 @@ describe("runStructured", () => {
   });
 
   it("maps max_tokens to AI_TRUNCATED", async () => {
-    parse.mockResolvedValue(
+    create.mockResolvedValue(
       message({ stop_reason: "max_tokens", parsed_output: { title: "Partial" } }),
     );
 
@@ -139,10 +143,13 @@ describe("runStructured", () => {
     });
   });
 
-  it("maps a thrown SDK error and a null parse to AI_FAILED", async () => {
-    parse.mockRejectedValue(new Error("overloaded"));
-    const thrown = await runStructured(baseArgs);
+  it("maps a thrown SDK error and a bad response to AI_FAILED", async () => {
+    create.mockRejectedValue(
+      Object.assign(new Error("overloaded"), { status: 529, error: { type: "overloaded_error" } }),
+    );
+    const thrown = await runStructured({ ...baseArgs, usedBonusCredit: true });
     expect(thrown).toEqual({ ok: false, code: "AI_FAILED" });
+    expect(bonusUpdateMany).not.toHaveBeenCalled();
     expect(aiCallCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         success: false,
@@ -153,18 +160,62 @@ describe("runStructured", () => {
         usedBonusCredit: false,
       }),
     });
+    expect(lastLog()).toContain('"stage":"provider"');
+    expect(lastLog()).toContain('"status":529');
+    expect(lastLog()).toContain('"errorType":"overloaded_error"');
+    expect(lastLog()).not.toContain("Office assistant");
 
-    parse.mockResolvedValue(message({ stop_reason: "end_turn", parsed_output: null }));
-    const empty = await runStructured(baseArgs);
-    expect(empty).toEqual({ ok: false, code: "AI_FAILED" });
+    create.mockResolvedValue(
+      message({ stop_reason: "end_turn", text: "not-json", input_tokens: 12, output_tokens: 3 }),
+    );
+    const malformed = await runStructured({ ...baseArgs, usedBonusCredit: true });
+    expect(malformed).toEqual({ ok: false, code: "AI_FAILED" });
+    expect(bonusUpdateMany).not.toHaveBeenCalled();
+    expect(aiCallCreate).toHaveBeenLastCalledWith({
+      data: expect.objectContaining({
+        success: false,
+        errorCode: "AI_FAILED",
+        inputTokens: 12,
+        outputTokens: 3,
+        usedBonusCredit: false,
+      }),
+    });
+    expect(lastLog()).toContain('"stage":"validation"');
+    expect(lastLog()).toContain('"code":"json"');
+    expect(lastLog()).not.toContain("not-json");
 
-    parse.mockResolvedValue(message({ stop_reason: "end_turn", parsed_output: { title: 4 } }));
+    create.mockResolvedValue(message({ stop_reason: "end_turn", parsed_output: { title: 4 } }));
     const invalid = await runStructured(baseArgs);
     expect(invalid).toEqual({ ok: false, code: "AI_FAILED" });
+    expect(lastLog()).toContain('"path":"title"');
+    expect(lastLog()).not.toContain("Office assistant");
+  });
+
+  it("repairs optional fields before the schema check", async () => {
+    create.mockResolvedValue(
+      message({
+        stop_reason: "end_turn",
+        parsed_output: { title: "Analyst", employmentType: "UNKNOWN" },
+      }),
+    );
+
+    const result = await runStructured({
+      ...baseArgs,
+      normalize: (value) => {
+        if (!value || typeof value !== "object") return value;
+        const record = value as { title?: unknown };
+        return { title: record.title };
+      },
+    });
+
+    expect(result).toEqual({ ok: true, data: { title: "Analyst" } });
+    expect(aiCallCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ success: true, inputTokens: 100, outputTokens: 20 }),
+    });
   });
 
   it("decrements the chosen bonus credit on success", async () => {
-    parse.mockResolvedValue(
+    create.mockResolvedValue(
       message({ stop_reason: "end_turn", parsed_output: { title: "Analyst" } }),
     );
     bonusFindMany.mockResolvedValue([
@@ -190,7 +241,7 @@ describe("runStructured", () => {
   });
 
   it("still marks usedBonusCredit when the credit row is already gone", async () => {
-    parse.mockResolvedValue(
+    create.mockResolvedValue(
       message({ stop_reason: "end_turn", parsed_output: { title: "Analyst" } }),
     );
     bonusFindMany.mockResolvedValue([]);
@@ -204,7 +255,7 @@ describe("runStructured", () => {
   });
 
   it("allows an anonymous FREE_TOOL call", async () => {
-    parse.mockResolvedValue(
+    create.mockResolvedValue(
       message({ stop_reason: "end_turn", parsed_output: { title: "Analyst" } }),
     );
 
@@ -216,7 +267,7 @@ describe("runStructured", () => {
     });
 
     expect(result.ok).toBe(true);
-    expect(parse).toHaveBeenCalledWith(
+    expect(create).toHaveBeenCalledWith(
       expect.objectContaining({ model: "claude-haiku-5-5", max_tokens: 4000 }),
     );
     expect(aiCallCreate).toHaveBeenCalledWith({
@@ -236,6 +287,11 @@ describe("runStructured", () => {
     await expect(
       runStructured({ ...baseArgs, kind: "FREE_TOOL", userId: "user-1" }),
     ).rejects.toThrow(/anonymous/);
-    expect(parse).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
   });
 });
+
+function lastLog(): string {
+  const calls = vi.mocked(console.info).mock.calls;
+  return String(calls[calls.length - 1]?.[0] ?? "");
+}

@@ -55,6 +55,13 @@ export const TailorBullet = z.object({
   text: z.string(),
 });
 
+/** Resume-level plan from the model. Stored, not shown. It can overstate. */
+export const EditorialPlan = z.object({
+  narrative: z.string(),
+  priorities: z.array(z.string()),
+  gaps: z.array(z.string()),
+});
+
 export const TailorSkillGroup = z.object({
   category: z.string().nullable(),
   refs: z.array(z.string()),
@@ -74,6 +81,7 @@ export const GuardRequirementMatch = RequirementMatch.extend({
 
 export const TailorOutput = z.object({
   summary: z.string(),
+  plan: EditorialPlan.optional(),
   entries: z.array(
     z.object({
       ref: z.string(),
@@ -111,6 +119,10 @@ export const ContentBullet = z.object({
   suggestion: z.string().max(RESUME_LIMITS.bullet).nullable().default(null),
   /** Why the suggestion differs from the library bullet. */
   suggestionNote: z.string().max(RESUME_LIMITS.note).nullable().default(null),
+  /** What the edit changed. Null when the line was not rewritten, or the note was vague. */
+  changeWhat: z.string().max(RESUME_LIMITS.note).nullable().default(null),
+  /** Requirement ids that motivated a rewrite. Empty on older resumes. */
+  requirementIds: z.array(z.string()).default([]),
   /** Stable library bullet ids. Empty on resumes saved before wording variants. */
   sourceIds: z.array(z.string()).optional(),
 });
@@ -129,6 +141,34 @@ export const ResumeSkillGroup = z.object({
   names: z.array(z.string()),
 });
 
+/** Why a composed resume included, excluded, or reordered something. Refs only. */
+export const RESUME_REVIEW_CODES = [
+  "CURRENT_ROLE_OMITTED",
+  "DUPLICATE_CONSOLIDATED",
+  "ORDER_ADJUSTED",
+  "SECTION_ORDER",
+  "BULLET_PREFERENCE",
+  "CONTACT_SELECTED",
+  "CONTACT_EXCLUDED",
+  "ENTRY_INCLUDED",
+  "ENTRY_EXCLUDED",
+  "SKILL_EVIDENCE",
+] as const;
+
+export const ResumeReviewItem = z.object({
+  code: z.enum(RESUME_REVIEW_CODES),
+  severity: z.enum(["warning", "note"]),
+  ref: z.string().max(80),
+  reason: z.string().max(80),
+});
+
+export const ResumeContact = z.object({
+  label: z.string().max(40),
+  url: z.string().max(300),
+  kind: z.enum(["github", "linkedin", "portfolio", "other"]),
+  reason: z.string().max(80),
+});
+
 export const ResumeContent = z.object({
   schemaVersion: z.literal(1),
   summary: z.object({
@@ -137,6 +177,12 @@ export const ResumeContent = z.object({
   }),
   entries: z.array(ContentEntry),
   skills: z.array(ResumeSkillGroup),
+  /** Omitted on resumes saved before composition. Experience, Projects, Education, and the rest. */
+  sectionOrder: z.array(EntryKindEnum).optional(),
+  /** Omitted on older resumes, which keep every profile link. */
+  contacts: z.array(ResumeContact).max(8).optional(),
+  /** Selection, exclusion, and ordering notes. Omitted on older resumes. */
+  review: z.array(ResumeReviewItem).max(80).optional(),
 });
 
 export const saveResumeContentSchema = z.object({
@@ -182,6 +228,7 @@ export const MatchReport = z.object({
   score: z.number().int().min(0).max(100).nullable(),
 });
 
+export type EditorialPlan = z.infer<typeof EditorialPlan>;
 export type TailorBullet = z.infer<typeof TailorBullet>;
 export type TailorSkillGroup = z.infer<typeof TailorSkillGroup>;
 export type StoredVerdict = z.infer<typeof StoredVerdict>;
@@ -193,5 +240,7 @@ export type ValidatedTailorOutput = z.infer<typeof ValidatedTailorOutput>;
 export type ContentBullet = z.infer<typeof ContentBullet>;
 export type ContentEntry = z.infer<typeof ContentEntry>;
 export type ResumeContent = z.infer<typeof ResumeContent>;
+export type ResumeReviewItem = z.infer<typeof ResumeReviewItem>;
+export type ResumeContact = z.infer<typeof ResumeContact>;
 export type RequirementVerdict = z.infer<typeof RequirementVerdict>;
 export type MatchReport = z.infer<typeof MatchReport>;

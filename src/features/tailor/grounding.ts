@@ -39,6 +39,16 @@ const OVERCLAIM = [
   "senior",
 ] as const;
 
+/** Kinds of work a rewrite must not invent from a nearby task. */
+const INVENTED_WORK = [
+  "help desk",
+  "helpdesk",
+  "service desk",
+  "customer support",
+  "on-call",
+  "on call",
+] as const;
+
 const STOP = new Set([
   "a",
   "an",
@@ -163,9 +173,13 @@ export function unsupportedClaim(
   const evidence = sources.join("\n");
   if (sources.length === 0) return "source";
   if (sources.some((source) => sameWording(text, source))) return null;
+  if (unsupportedDeployment(text, evidence)) return "deployed";
 
   for (const phrase of lexiconPhrases(text)) {
     if (!supported(phrase, evidence)) return phrase;
+  }
+  for (const phrase of INVENTED_WORK) {
+    if (mentions(text, phrase) && !mentions(evidence, phrase)) return phrase;
   }
   for (const word of OVERCLAIM) {
     if (mentions(text, word) && !mentions(evidence, word)) return word;
@@ -215,6 +229,9 @@ export function requirementOverstated(input: {
   ) {
     return true;
   }
+  for (const phrase of INVENTED_WORK) {
+    if (mentions(input.requirement, phrase) && !mentions(input.evidence, phrase)) return true;
+  }
   return false;
 }
 
@@ -251,6 +268,27 @@ export function evidenceText(
     if (wanted.has(skill.ref)) parts.push(skill.name);
   }
   return parts.join("\n");
+}
+
+/**
+ * "Deployed" is unsupported when the source never says the work shipped.
+ * "Not deployed" does not license the rewrite to drop the negation.
+ */
+function unsupportedDeployment(text: string, evidence: string): boolean {
+  return positivelyDeploys(text) && !positivelyDeploys(evidence);
+}
+
+function positivelyDeploys(text: string): boolean {
+  for (const sentence of text.split(/(?<=[.!?])\s+|\n+/)) {
+    const match = /\bdeploy(?:ed|ing|s)?\b/i.exec(sentence);
+    if (!match || match.index === undefined) continue;
+    const before = sentence.slice(0, match.index);
+    if (/\b(?:not|never|no|isn'?t|wasn'?t|aren'?t|weren'?t|without|yet)\b/i.test(before)) {
+      continue;
+    }
+    return true;
+  }
+  return false;
 }
 
 function supported(token: string, evidence: string): boolean {

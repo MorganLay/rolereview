@@ -15,12 +15,20 @@ export type SavedWording = {
   reason: string | null;
 };
 
+export type BulletNote = {
+  what: string;
+  why: string;
+  requirementIds: string[];
+};
+
 export type ModelBullet = {
   sourceRefs: readonly string[];
   text: string;
   variantId?: string | null;
   choice?: string | null;
+  what?: string | null;
   why?: string | null;
+  requirementIds?: readonly string[] | null;
 };
 
 type ModelEntry = {
@@ -30,6 +38,7 @@ type ModelEntry = {
 
 export type ModelTailor = {
   summary: string;
+  plan?: TailorOutput["plan"];
   entries: readonly ModelEntry[];
   skills: TailorOutput["skills"];
   requirementMatches: TailorOutput["requirementMatches"];
@@ -65,7 +74,7 @@ export function preferSavedWording(
   output: ModelTailor,
   variants: readonly SavedWording[],
   snapshot: LibrarySnapshot,
-): { output: TailorOutput; why: Map<string, string> } {
+): { output: TailorOutput; why: Map<string, BulletNote> } {
   const byId = new Map(variants.map((variant) => [variant.id, variant]));
   const bulletId = new Map<string, string>();
   const sourceText = new Map<string, string>();
@@ -75,21 +84,20 @@ export function preferSavedWording(
       sourceText.set(bullet.ref, bullet.text);
     }
   }
-  const why = new Map<string, string>();
+  const why = new Map<string, BulletNote>();
   const entries = output.entries.map((entry) => ({
     ref: entry.ref,
     bullets: entry.bullets.map((bullet) => {
-      const text = chosenText(bullet, byId, bulletId, sourceText);
-      const reason = bullet.why?.trim() ?? "";
-      if (reason.length > 0 && text !== null) {
-        why.set(sourceKey(bullet.sourceRefs), clip(reason, 200));
-      }
-      return { sourceRefs: [...bullet.sourceRefs], text: text ?? bullet.text };
+      const chosen = chosenText(bullet, byId, bulletId, sourceText);
+      const note = bulletNote(bullet);
+      if (note) why.set(sourceKey(bullet.sourceRefs), note);
+      return { sourceRefs: [...bullet.sourceRefs], text: chosen ?? bullet.text };
     }),
   }));
   return {
     output: {
       summary: output.summary,
+      ...(output.plan ? { plan: output.plan } : {}),
       entries,
       skills: output.skills.map((group) => ({
         category: group.category,
@@ -98,6 +106,22 @@ export function preferSavedWording(
       requirementMatches: output.requirementMatches.map((match) => ({ ...match })),
     },
     why,
+  };
+}
+
+function bulletNote(bullet: ModelBullet): BulletNote | null {
+  const what = bullet.what?.trim() ?? "";
+  const why = bullet.why?.trim() ?? "";
+  const requirementIds = (bullet.requirementIds ?? [])
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0)
+    .slice(0, 8)
+    .map((id) => clip(id, 40));
+  if (what.length === 0 && why.length === 0 && requirementIds.length === 0) return null;
+  return {
+    what: clip(what, 200),
+    why: clip(why, 200),
+    requirementIds,
   };
 }
 

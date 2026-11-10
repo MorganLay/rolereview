@@ -261,7 +261,7 @@ async function runPair(input: {
 
   let analysis: JobAnalysis;
   try {
-    analysis = postProcessAnalyze(analyzed.data);
+    analysis = postProcessAnalyze(analyzed.data, input.posting.text);
   } catch {
     return finish(input.outDir, {
       ...base,

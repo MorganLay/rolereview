@@ -6,7 +6,8 @@
 
 import { strings } from "@/copy/strings";
 import { formatResumeDateRange } from "@/features/library/dates";
-import { ENTRY_KINDS, type LibrarySnapshot } from "@/features/library/schemas";
+import type { LibrarySnapshot } from "@/features/library/schemas";
+import { resumeContactLinks, resumeSectionOrder } from "@/features/tailor/resume-shape";
 import { groupedSkillLines } from "@/features/tailor/skill-groups";
 import type { ContentEntry, ResumeContent } from "@/features/tailor/schemas";
 
@@ -60,7 +61,7 @@ export function resumePdfModel(
 
   const byRef = new Map(snapshot.entries.map((entry) => [entry.ref, entry]));
   const sections: ResumePdfSection[] = [];
-  for (const kind of ENTRY_KINDS) {
+  for (const kind of resumeSectionOrder(content.sectionOrder)) {
     const entries = content.entries
       .filter((entry) => entry.kind === kind && entry.included)
       .map((entry) => entryBlock(entry, byRef.get(entry.ref)))
@@ -73,7 +74,9 @@ export function resumePdfModel(
     name: clean(profile.fullName),
     headline: clean(profile.headline),
     contact: contact.length > 0 ? contact : null,
-    links: profile.links.map(linkLine).filter((line) => line !== null),
+    links: resumeContactLinks(content, profile)
+      .map(linkLine)
+      .filter((line) => line !== null),
     summary: content.summary.included ? clean(content.summary.text) : null,
     sections,
     skills: skillLines(content),

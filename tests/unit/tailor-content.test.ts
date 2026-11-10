@@ -76,6 +76,52 @@ describe("applyResumeEdit", () => {
     expect(stored.entries.map((entry) => entry.ref)).toEqual(["E1", "E4", "E2", "E3", "E5"]);
   });
 
+  it("keeps a project-first section order and the stored review", () => {
+    const { snapshot, aiOutput, stored, incoming } = tailored();
+    const sectionOrder = [
+      "PROJECT",
+      "EXPERIENCE",
+      "EDUCATION",
+      "CERTIFICATION",
+      "VOLUNTEER",
+      "OTHER",
+    ] as const;
+    const review = [
+      {
+        code: "SECTION_ORDER" as const,
+        severity: "note" as const,
+        ref: "sections",
+        reason: "projects_lead",
+      },
+    ];
+    const contacts = [
+      {
+        label: "GitHub",
+        url: "https://github.com/morgan-example",
+        kind: "github" as const,
+        reason: "verified_profile",
+      },
+    ];
+    const result = applyResumeEdit({
+      stored: { ...stored, sectionOrder: [...sectionOrder], review, contacts },
+      incoming: {
+        ...incoming,
+        sectionOrder: ["EXPERIENCE", "PROJECT", "EDUCATION", "CERTIFICATION", "VOLUNTEER", "OTHER"],
+        review: [],
+        contacts: [],
+      },
+      snapshot,
+      aiOutput,
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.content.entries[0]?.ref).toBe("E2");
+    expect(result.content.sectionOrder).toEqual([...sectionOrder]);
+    expect(result.content.review).toEqual(review);
+    expect(result.content.contacts).toEqual(contacts);
+  });
+
   it("reorders bullets inside an entry and leaves source refs on the stored bullet", () => {
     const { snapshot, aiOutput, stored, incoming } = tailored();
     const entry = incoming.entries.find((item) => item.ref === "E1");
@@ -273,6 +319,8 @@ describe("applyResumeEdit", () => {
       originalText: null,
       suggestion: null,
       suggestionNote: null,
+      changeWhat: null,
+      requirementIds: [],
     });
     expect(applyResumeEdit(added)).toMatchObject({ ok: false, issue: "bullets" });
 

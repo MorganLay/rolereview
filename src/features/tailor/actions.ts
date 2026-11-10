@@ -15,6 +15,11 @@ import type { Library } from "@/features/library/types";
 import { JobAnalysis } from "@/features/jobs/schemas";
 import { Prisma } from "@/generated/prisma/client";
 import type { JobStatus } from "@/generated/prisma/enums";
+import {
+  buildRepairContent,
+  REPAIR_SYSTEM,
+  RepairSchema,
+} from "@/lib/ai/prompts/tailor-repair";
 import { buildContent, OutputSchema, SYSTEM } from "@/lib/ai/prompts/tailor";
 import { runStructured } from "@/lib/ai/run";
 import { requireUserForAction } from "@/lib/auth";
@@ -22,6 +27,14 @@ import { db } from "@/lib/db";
 import { fail, ok, type ActionResult } from "@/lib/result";
 
 import { assembleResumeContent } from "./assemble";
+import { composeResume } from "./compose";
+import {
+  applyAcceptedRepairs,
+  countRevertedBullets,
+  mergeRepair,
+  repairTargets,
+  withRepairNotes,
+} from "./repair";
 import { preferSavedWording, variantPrompt } from "./variants";
 import { applyResumeEdit, preserveUserEdits } from "./content";
 import { TAILOR_STALE_MS } from "./status";
@@ -135,17 +148,75 @@ export async function tailorResume(
     }
 
     const prepared = preferSavedWording(result.data, savedWordings, serialized.snapshot);
-    const guard = validateTailorOutput(
+    let guard = validateTailorOutput(
       prepared.output,
       serialized.snapshot,
       analysis.data,
     );
+    let notes = prepared.why;
+    const targets = repairTargets(prepared.output, guard, serialized.snapshot);
+    if (targets.length > 0) {
+      try {
+        const repair = await runStructured({
+          kind: "TAILOR",
+          userId: user.id,
+          usedBonusCredit: false,
+          system: REPAIR_SYSTEM,
+          content: buildRepairContent({
+            title: job.title,
+            company: job.company,
+            requirements: analysis.data.requirements,
+            targets,
+          }),
+          schema: RepairSchema,
+          refId: resumeId,
+        });
+        const parsed = repair.ok ? RepairSchema.safeParse(repair.data) : null;
+        if (parsed?.success) {
+          const merged = mergeRepair(prepared.output, parsed.data.bullets, targets);
+          const second = validateTailorOutput(
+            merged,
+            serialized.snapshot,
+            analysis.data,
+          );
+          const chosen = applyAcceptedRepairs(guard.output, second.output, targets);
+          if (chosen.accepted.length > 0) {
+            const summaryReverts = Math.max(
+              0,
+              guard.reverts - countRevertedBullets(guard.output),
+            );
+            const accepted = new Set(chosen.accepted);
+            guard = {
+              output: chosen.output,
+              reverts: summaryReverts + countRevertedBullets(chosen.output),
+              issues: guard.issues.filter(
+                (issue) =>
+                  !(
+                    accepted.has(issue.ref) &&
+                    (issue.code === "G4" || issue.code === "G13" || issue.code === "G16")
+                  ),
+              ),
+            };
+            notes = withRepairNotes(notes, parsed.data.bullets, chosen.accepted);
+          }
+        }
+      } catch {
+        // The first guarded resume still stands.
+      }
+    }
     logGuard(user.id, resumeId, guard.reverts, guard.issues);
+    const composition = composeResume({
+      output: guard.output,
+      snapshot: serialized.snapshot,
+      analysis: analysis.data,
+      length: options.length,
+    });
     const assembled = assembleResumeContent(
-      guard.output,
+      composition.output,
       serialized.snapshot,
       nanoid,
-      prepared.why,
+      notes,
+      composition,
     );
     const previous = await db.tailoredResume.findFirst({
       where: {

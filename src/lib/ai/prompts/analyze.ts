@@ -19,7 +19,7 @@ export const SYSTEM = `You analyse job postings for a resume-tailoring app. Extr
 - summary: 1–2 plain sentences describing the role.
 - requirements: 5–20 distinct, concrete requirements. Split compound lines ("React and TypeScript" → two requirements). importance "must" for required/minimum qualifications, "nice" for preferred/asset/bonus. Skip generic filler ("team player", "fast-paced environment") unless it is the only requirement of its kind.
 - keywords: 10–30 terms an applicant-tracking system would match: tools, technologies, methods, certifications, domain terms. Use the exact spelling from the posting.
-- workMode, employmentType, salary (min/max/currency/period), referenceNumber (requisition / competition / selection process number): only if stated; otherwise UNKNOWN / null. Never estimate salary.`;
+- workMode, employmentType, salary (min/max/currency/period), referenceNumber (requisition / competition / selection process number): only if stated; otherwise UNKNOWN / null. Never estimate a salary amount. When an amount is stated and no currency is named, use CAD if the role is in Canada and USD if the role is in the United States; otherwise null. Do not default a Canadian role to USD.`;
 
 export const ANALYZE_INPUT_MAX = 15_000;
 

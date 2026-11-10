@@ -185,6 +185,18 @@
     }
   }
 
+  @keyframes work-progress-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(0.65);
+      opacity: 0.45;
+    }
+  }
+
   @media (prefers-reduced-motion: no-preference) {
     .import-read-bar {
       animation: import-read-slide 1.6s ease-in-out infinite;
@@ -192,6 +204,10 @@
 
     .import-read-arc {
       animation: import-read-spin 0.9s linear infinite;
+    }
+
+    .work-progress-dot {
+      animation: work-progress-pulse 1.4s ease-in-out infinite;
     }
   }
 

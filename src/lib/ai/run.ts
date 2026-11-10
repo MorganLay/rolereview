@@ -32,6 +32,8 @@ export type RunArgs<S extends z.ZodType> = {
   system: string;
   content: Anthropic.ContentBlockParam[];
   schema: S;
+  /** Repair a parsed object before the schema check. A throw here is a validation failure. */
+  normalize?: (value: unknown) => unknown;
   refId?: string;
 };
 
@@ -54,11 +56,16 @@ export async function runStructured<S extends z.ZodType>(
   const started = Date.now();
   let usage: TokenUsage = EMPTY_USAGE;
   let outcome: RunResult<z.infer<S>>;
+  let stage: "ok" | "provider" | "validation" = "provider";
+  let issues: { path: string; code: string }[] = [];
   let status: number | null = null;
   let errorType: string | null = null;
 
   try {
-    const message = await client.messages.parse({
+    // create(), not parse(). The SDK parser throws away the message when one
+    // field fails Zod, so a usable analysis was logged as a provider failure
+    // with no tokens.
+    const message = await client.messages.create({
       model: task.model,
       max_tokens: task.maxTokens,
       system: args.system,
@@ -69,9 +76,18 @@ export async function runStructured<S extends z.ZodType>(
       },
     });
     usage = tokenUsageFromApi(message.usage);
-    outcome = classify(message.stop_reason, message.parsed_output, args.schema);
+    const read = readStructured(
+      message.stop_reason,
+      outputText(message),
+      args.schema,
+      args.normalize,
+    );
+    outcome = read.outcome;
+    stage = read.stage;
+    issues = read.issues;
   } catch (error) {
     outcome = { ok: false, code: "AI_FAILED" };
+    stage = "provider";
     status = httpStatus(error);
     errorType = apiErrorType(error);
   }
@@ -85,6 +101,8 @@ export async function runStructured<S extends z.ZodType>(
       userId: args.userId,
       refId: args.refId ?? null,
       code: outcome.ok ? null : outcome.code,
+      stage,
+      ...(issues.length === 0 ? {} : { issues }),
       ...(status === null ? {} : { status }),
       ...(errorType === null ? {} : { errorType }),
       inputTokens: usage.inputTokens,
@@ -135,16 +153,64 @@ function outputFormat(schema: z.ZodType) {
   }
 }
 
-function classify<S extends z.ZodType>(
+function outputText(message: Anthropic.Message): string {
+  for (const block of message.content) {
+    if (block.type === "text") return block.text;
+  }
+  return "";
+}
+
+function readStructured<S extends z.ZodType>(
   stopReason: string | null,
-  parsedOutput: unknown,
+  text: string,
   schema: S,
-): RunResult<z.infer<S>> {
-  if (stopReason === "refusal") return { ok: false, code: "AI_REFUSED" };
-  if (stopReason === "max_tokens") return { ok: false, code: "AI_TRUNCATED" };
-  const parsed = schema.safeParse(parsedOutput);
-  if (!parsed.success) return { ok: false, code: "AI_FAILED" };
-  return { ok: true, data: parsed.data };
+  normalize?: (value: unknown) => unknown,
+): {
+  outcome: RunResult<z.infer<S>>;
+  stage: "ok" | "provider" | "validation";
+  issues: { path: string; code: string }[];
+} {
+  if (stopReason === "refusal") {
+    return { outcome: { ok: false, code: "AI_REFUSED" }, stage: "provider", issues: [] };
+  }
+  if (stopReason === "max_tokens") {
+    return { outcome: { ok: false, code: "AI_TRUNCATED" }, stage: "validation", issues: [] };
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return {
+      outcome: { ok: false, code: "AI_FAILED" },
+      stage: "validation",
+      issues: [{ path: "$", code: "json" }],
+    };
+  }
+  const value = applyNormalize(normalize, parsed);
+  const checked = schema.safeParse(value);
+  if (!checked.success) {
+    return {
+      outcome: { ok: false, code: "AI_FAILED" },
+      stage: "validation",
+      issues: checked.error.issues.slice(0, 8).map((issue) => ({
+        path: issue.path.join(".") || "$",
+        code: issue.code,
+      })),
+    };
+  }
+  return { outcome: { ok: true, data: checked.data }, stage: "ok", issues: [] };
+}
+
+function applyNormalize(
+  normalize: ((value: unknown) => unknown) | undefined,
+  value: unknown,
+): unknown {
+  if (!normalize) return value;
+  try {
+    return normalize(value);
+  } catch {
+    return value;
+  }
 }
 
 async function recordCall<T>(

@@ -6,11 +6,14 @@
 
 import { nanoid } from "nanoid";
 
-import { strings } from "@/copy/strings";
-import { ENTRY_KINDS, type LibrarySnapshot } from "@/features/library/schemas";
+import type { LibrarySnapshot } from "@/features/library/schemas";
 
+import type { Composition } from "./compose";
 import { sameWording } from "./grounding";
+import { specificReason } from "./review";
+import { resumeSectionOrder } from "./resume-shape";
 import { RESUME_LIMITS, ResumeContent } from "./schemas";
+import type { BulletNote } from "./variants";
 import type {
   ContentBullet,
   ContentEntry,
@@ -31,7 +34,8 @@ export function assembleResumeContent(
   validated: ValidatedTailorOutput,
   snapshot: LibrarySnapshot,
   createId: () => string = nanoid,
-  notes: ReadonlyMap<string, string> = new Map(),
+  notes: ReadonlyMap<string, BulletNote> = new Map(),
+  composition?: Composition,
 ): ResumeContentData {
   const byRef = new Map(snapshot.entries.map((entry) => [entry.ref, entry]));
   const selectedRefs = new Set<string>();
@@ -56,7 +60,7 @@ export function assembleResumeContent(
   }
 
   const entries: ContentEntry[] = [];
-  for (const kind of ENTRY_KINDS) {
+  for (const kind of resumeSectionOrder(composition?.sectionOrder)) {
     for (const selected of selectedByKind[kind]) {
       entries.push(selectedEntry(selected, createId, notes));
     }
@@ -76,13 +80,20 @@ export function assembleResumeContent(
     },
     entries,
     skills: skillGroups(validated.skills, snapshot),
+    ...(composition
+      ? {
+          sectionOrder: composition.sectionOrder,
+          contacts: composition.contacts,
+          review: composition.review,
+        }
+      : {}),
   });
 }
 
 function selectedEntry(
   selected: Selected,
   createId: () => string,
-  notes: ReadonlyMap<string, string>,
+  notes: ReadonlyMap<string, BulletNote>,
 ): ContentEntry {
   const chosen = new Set<string>();
   const bullets: ContentBullet[] = [];
@@ -96,8 +107,8 @@ function selectedEntry(
   for (const bullet of selected.validated.bullets) {
     if (bullet.sourceRefs.length !== 1) continue;
     for (const ref of bullet.sourceRefs) chosen.add(ref);
-    const why = notes.get(sourceKey(bullet.sourceRefs)) ?? null;
-    bullets.push(contentBullet(bullet, sourceText, sourceId, createId, why));
+    const note = notes.get(sourceKey(bullet.sourceRefs)) ?? null;
+    bullets.push(contentBullet(bullet, sourceText, sourceId, createId, note));
   }
 
   for (const original of selected.snapshot.bullets) {
@@ -119,14 +130,15 @@ function contentBullet(
   sourceText: ReadonlyMap<string, string>,
   sourceId: ReadonlyMap<string, string>,
   createId: () => string,
-  why: string | null = null,
+  note: BulletNote | null = null,
 ): ContentBullet {
   const text = clip(bullet.text, RESUME_LIMITS.bullet);
   const first = bullet.sourceRefs[0];
-  const original = first ? sourceText.get(first) ?? text : text;
+  const original = first ? (sourceText.get(first) ?? text) : text;
   const originalText = clip(original, RESUME_LIMITS.bullet);
   const changed = !bullet.reverted && !sameWording(text, originalText);
-  const note = why?.trim() || rewriteNote(bullet.sourceRefs.length);
+  const why = specificReason(note?.why);
+  const what = specificReason(note?.what);
   return {
     id: createId(),
     text,
@@ -137,7 +149,9 @@ function contentBullet(
     edited: false,
     originalText,
     suggestion: changed ? text : null,
-    suggestionNote: changed ? clip(note, RESUME_LIMITS.note) : null,
+    suggestionNote: changed ? why : null,
+    changeWhat: changed ? what : null,
+    requirementIds: changed ? (note?.requirementIds ?? []).slice(0, 8) : [],
   };
 }
 
@@ -160,6 +174,8 @@ function libraryBullet(
     originalText,
     suggestion: null,
     suggestionNote: null,
+    changeWhat: null,
+    requirementIds: [],
   };
 }
 
@@ -177,12 +193,6 @@ function idsFor(
     if (id) ids.push(id);
   }
   return ids;
-}
-
-function rewriteNote(sources: number): string {
-  return sources > 1
-    ? strings.jobs.workspace.rewriteMerged
-    : strings.jobs.workspace.rewriteNote;
 }
 
 function unselectedEntry(

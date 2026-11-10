@@ -53,6 +53,7 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 import { strings } from "@/copy/strings";
+import { normalizeAnalyzeOutput } from "@/features/jobs/analyze";
 import { createJob, retryAnalysis } from "@/features/jobs/actions";
 import { deadlineReminderTitle } from "@/features/tracking/reminders";
 import type { AnalyzeOutput } from "@/lib/ai/prompts/analyze";
@@ -157,13 +158,93 @@ describe("createJob", () => {
       where: { id: jobId, userId: user.id },
       data: { analysisStatus: "FAILED" },
     });
+    expect(jobCreate).toHaveBeenCalledTimes(1);
+    expect(releaseUnsavedAnalysis).not.toHaveBeenCalled();
     expect(runStructured).toHaveBeenCalledWith(
       expect.objectContaining({
         kind: "ANALYZE",
         userId: user.id,
         refId: jobId,
+        normalize: normalizeAnalyzeOutput,
       }),
     );
+  });
+
+  it("analyzes a plain-text description when every optional field is blank", async () => {
+    const rawText = posting("Hybrid role in Toronto. Job ID 15. Pay is CA$90,000–CA$110,000.");
+    runStructured.mockResolvedValue({ ok: true, data: analyzed() });
+    const result = await createJob({
+      rawText,
+      url: "",
+      deadline: "",
+      source: null,
+      priority: null,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      data: { jobId, analysisStatus: "READY" },
+    });
+    expect(jobCreate).toHaveBeenCalledTimes(1);
+    expect(jobCreate.mock.calls[0]?.[0].data.rawText).toBe(rawText);
+    expect(jobCreate.mock.calls[0]?.[0].data.url).toBeNull();
+    expect(jobUpdateMany).toHaveBeenCalledWith({
+      where: { id: jobId, userId: user.id },
+      data: expect.objectContaining({
+        analysisStatus: "READY",
+        title: "Data analyst",
+        company: "Acme",
+        location: "Ottawa",
+      }),
+    });
+    expect(jobUpdateMany.mock.calls[0]?.[0].data.url).toBeUndefined();
+    expect(releaseUnsavedAnalysis).not.toHaveBeenCalled();
+  });
+
+  it("keeps markdown and fills a blank URL from the apply link", async () => {
+    const rawText = posting(
+      "\n## Software developer\n\n[Apply](https://jobs.example.com/15)\n\nhttps://example.com/privacy",
+    );
+    runStructured.mockResolvedValue({ ok: true, data: analyzed() });
+    const result = await createJob(input({ rawText, url: "" }));
+
+    expect(result).toEqual({
+      ok: true,
+      data: { jobId, analysisStatus: "READY" },
+    });
+    expect(jobCreate).toHaveBeenCalledTimes(1);
+    expect(jobCreate.mock.calls[0]?.[0].data.rawText).toContain("## Software developer");
+    expect(jobUpdateMany.mock.calls[0]?.[0].data.url).toBe("https://jobs.example.com/15");
+  });
+
+  it("keeps a URL the user typed", async () => {
+    runStructured.mockResolvedValue({ ok: true, data: analyzed() });
+    await createJob(
+      input({
+        rawText: posting("[Apply](https://jobs.example.com/15)"),
+        url: "https://example.com/mine",
+      }),
+    );
+    expect(jobCreate.mock.calls[0]?.[0].data.url).toBe("https://example.com/mine");
+    expect(jobUpdateMany.mock.calls[0]?.[0].data.url).toBeUndefined();
+  });
+
+  it("saves the job when the model omits the company and salary", async () => {
+    runStructured.mockResolvedValue({
+      ok: true,
+      data: analyzed({ company: " ", salary: null }),
+    });
+    const result = await createJob(input());
+    expect(result).toEqual({
+      ok: true,
+      data: { jobId, analysisStatus: "READY" },
+    });
+    const saved = jobUpdateMany.mock.calls[0]?.[0].data;
+    expect(saved.analysisStatus).toBe("READY");
+    expect(saved.company).toBeUndefined();
+    expect(saved.salaryMin).toBeUndefined();
+    expect(saved.title).toBe("Data analyst");
+    expect(jobCreate).toHaveBeenCalledTimes(1);
   });
 
   it("fills unset columns from a successful analysis", async () => {
@@ -207,6 +288,7 @@ describe("createJob", () => {
   });
 
   it("releases the charge when the model output cannot be saved", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
     runStructured.mockResolvedValue({
       ok: true,
       data: {
@@ -225,6 +307,25 @@ describe("createJob", () => {
       data: { analysisStatus: "FAILED" },
     });
     expect(runStructured).toHaveBeenCalledTimes(1);
+    expect(jobCreate).toHaveBeenCalledTimes(1);
+    expect(String(info.mock.calls[0]?.[0])).toContain('"stage":"extraction"');
+    info.mockRestore();
+  });
+
+  it("releases the charge when the analysis cannot be stored", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    runStructured.mockResolvedValue({ ok: true, data: analyzed() });
+    jobUpdateMany.mockRejectedValueOnce(new Error("db down"));
+    const result = await createJob(input());
+    expect(result).toEqual({
+      ok: true,
+      data: { jobId, analysisStatus: "FAILED" },
+    });
+    expect(jobCreate).toHaveBeenCalledTimes(1);
+    expect(releaseUnsavedAnalysis).toHaveBeenCalledWith(user.id, jobId);
+    expect(String(info.mock.calls[0]?.[0])).toContain('"stage":"persistence"');
+    expect(String(info.mock.calls[0]?.[0])).not.toContain("db down");
+    info.mockRestore();
   });
 });
 
@@ -284,5 +385,46 @@ describe("retryAnalysis", () => {
     expect(saved.company).toBe("Acme");
     expect(saved.referenceNumber).toBe("REF-9");
     expect(releaseUnsavedAnalysis).toHaveBeenCalledWith(user.id, jobId);
+    expect(jobCreate).not.toHaveBeenCalled();
+  });
+
+  it("retries the same failed job and does not insert another", async () => {
+    runStructured.mockResolvedValueOnce({ ok: false, code: "AI_FAILED" });
+    const created = await createJob(input());
+    expect(created).toEqual({
+      ok: true,
+      data: { jobId, analysisStatus: "FAILED" },
+    });
+    expect(jobCreate).toHaveBeenCalledTimes(1);
+    expect(releaseUnsavedAnalysis).not.toHaveBeenCalled();
+
+    jobFindFirst.mockResolvedValue({
+      ...failedJob,
+      url: null,
+      rawText: posting("[Apply](https://jobs.example.com/15)"),
+    });
+    runStructured.mockResolvedValueOnce({ ok: true, data: analyzed() });
+    const retried = await retryAnalysis({ jobId });
+    expect(retried).toEqual({
+      ok: true,
+      data: { jobId, analysisStatus: "READY" },
+    });
+    expect(jobCreate).toHaveBeenCalledTimes(1);
+    expect(releaseUnsavedAnalysis).toHaveBeenCalledTimes(1);
+    const saved = jobUpdateMany.mock.calls.at(-1)?.[0].data;
+    expect(saved.url).toBe("https://jobs.example.com/15");
+    expect(saved.title).toBeUndefined();
+  });
+
+  it("does not replace a URL saved on the job before retry", async () => {
+    jobFindFirst.mockResolvedValue({
+      ...failedJob,
+      url: "https://example.com/mine",
+      rawText: posting("[Apply](https://jobs.example.com/15)"),
+    });
+    runStructured.mockResolvedValue({ ok: true, data: analyzed() });
+    await retryAnalysis({ jobId });
+    expect(jobUpdateMany.mock.calls.at(-1)?.[0].data.url).toBeUndefined();
+    expect(jobCreate).not.toHaveBeenCalled();
   });
 });

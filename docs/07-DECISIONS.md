@@ -54,7 +54,7 @@ Contradicts the quality positioning, risks users' accounts on job boards.
 - Consequences: the next task is TR.1. The public launch still waits for the formal beta, TQ.14, and TQ.15.
 
 **D-29 — Requirement states are computed from the current resume** · Accepted 2026-10-25
-The AI's verdict at tailoring time is an input, not the answer. The match panel shows In this resume / In your library, not in this resume / Needs review / No evidence found, recomputed as the user edits. The score explains its basis and never implies a hiring probability.
+The AI's verdict at tailoring time is an input, not the answer. The match panel shows Met / Not on this resume / Needs review / Not demonstrated, recomputed as the user edits. Not on this resume is evidence left off the page. Not demonstrated is a gap in the library, and the panel does not offer a rewrite for it. The score explains its basis and never implies a hiring probability.
 
 **D-30 — Submitted versions are frozen** · Accepted 2026-10-25
 Marking a resume or letter as submitted locks it (`submittedAt`); changes go into a new version via Create revision. The record of what was sent must not drift.

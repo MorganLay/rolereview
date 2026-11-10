@@ -74,7 +74,45 @@ describe("preferSavedWording", () => {
     expect(prepared.output.entries[0]?.bullets[0]?.text).toBe(
       "Maintained 14 SQL reports for a 20-person team.",
     );
-    expect(prepared.why.get("E1.B1")).toContain("SQL reporting");
+    expect(prepared.why.get("E1.B1")?.why).toContain("SQL reporting");
     expect(variantPrompt(snapshot, [])).toBe("none");
+  });
+
+  it("keeps a rewrite explanation when the line is not a saved variant", () => {
+    const snapshot = librarySnapshot();
+    const output = tailorOutput();
+    const prepared = preferSavedWording(
+      {
+        ...output,
+        entries: output.entries.map((entry, index) =>
+          index === 0
+            ? {
+                ...entry,
+                bullets: entry.bullets.map((item, bulletIndex) =>
+                  bulletIndex === 0
+                    ? {
+                        ...item,
+                        text: "Maintained 14 reports for a 20-person processing team.",
+                        choice: "rewrite",
+                        variantId: null,
+                        what: "Names the team the source already gives.",
+                        why: "The posting asks for reporting that a team uses.",
+                        requirementIds: ["r1"],
+                      }
+                    : item,
+                ),
+              }
+            : entry,
+        ),
+      },
+      [],
+      snapshot,
+    );
+    expect(prepared.output.entries[0]?.bullets[0]?.text).toContain("processing team");
+    expect(prepared.why.get("E1.B1")).toMatchObject({
+      what: "Names the team the source already gives.",
+      why: "The posting asks for reporting that a team uses.",
+      requirementIds: ["r1"],
+    });
   });
 });

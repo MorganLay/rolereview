@@ -165,7 +165,7 @@ async function runPair(
 
   let analysis: JobAnalysis;
   try {
-    analysis = postProcessAnalyze(analyzed.data);
+    analysis = postProcessAnalyze(analyzed.data, pair.postingText);
   } catch {
     throw new DemoStop("ANALYZE VALIDATION");
   }

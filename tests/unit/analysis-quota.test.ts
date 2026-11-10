@@ -26,7 +26,7 @@ const calls: CallRow[] = [];
 const credits: CreditRow[] = [];
 let nextId = 0;
 
-const { parse } = vi.hoisted(() => ({ parse: vi.fn() }));
+const { create } = vi.hoisted(() => ({ create: vi.fn() }));
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !(value instanceof Date);
@@ -75,7 +75,7 @@ function applyData(row: Record<string, unknown>, data: Record<string, unknown>) 
 }
 
 vi.mock("@/lib/ai/client", () => ({
-  getAnthropic: () => ({ messages: { parse } }),
+  getAnthropic: () => ({ messages: { create } }),
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -164,7 +164,7 @@ const baseArgs = {
 function message() {
   return {
     stop_reason: "end_turn",
-    parsed_output: { title: "Analyst" },
+    content: [{ type: "text" as const, text: JSON.stringify({ title: "Analyst" }) }],
     usage: {
       input_tokens: 100,
       output_tokens: 20,
@@ -185,14 +185,14 @@ describe("analysis quota", () => {
     calls.length = 0;
     credits.length = 0;
     nextId = 0;
-    parse.mockReset();
+    create.mockReset();
     vi.spyOn(console, "info").mockImplementation(() => {});
   });
 
   it("counts two successful analyses as 2 used and one failure as no extra use", async () => {
-    parse.mockResolvedValueOnce(message());
-    parse.mockResolvedValueOnce(message());
-    parse.mockRejectedValueOnce(new Error("overloaded"));
+    create.mockResolvedValueOnce(message());
+    create.mockResolvedValueOnce(message());
+    create.mockRejectedValueOnce(new Error("overloaded"));
 
     await runStructured(baseArgs);
     await runStructured({ ...baseArgs, refId: "job-2" });
@@ -205,7 +205,7 @@ describe("analysis quota", () => {
   });
 
   it("drops a saved-looking charge when the analysis is released, then counts the retry once", async () => {
-    parse.mockResolvedValue(message());
+    create.mockResolvedValue(message());
     await runStructured({ ...baseArgs, refId: "job-9" });
     expect(await usedToday()).toBe(1);
 
@@ -227,7 +227,7 @@ describe("analysis quota", () => {
       expiresAt: null,
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
     });
-    parse.mockResolvedValue(message());
+    create.mockResolvedValue(message());
     await runStructured({ ...baseArgs, refId: "job-4", usedBonusCredit: true });
     expect(credits[0]?.remaining).toBe(0);
     expect(await usedToday()).toBe(0);

@@ -126,6 +126,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-11-09 Tailoring:** A tailor now saves a finished resume. Rewritten bullets are already the page wording, with a specific why when one was recorded. A vague note is dropped. One repair call can replace a line the guard reverted, and it does not take a second credit. The library is not written. The match labels are Met, Not on this resume, Needs review, and Not demonstrated. Live `npm run evals` was not re-run.
 - **2026-11-09 Getting started:** The four-step checklist stays until a library entry, a job, a ready resume, and an export are done. It uses the same card as the search dashboard. Finishing the steps shows the success line and replaces the checklist with that dashboard.
 - **2026-11-09 Dashboard:** The page leads with a new job or the library, then continue-where-you-left-off for a resume still being written or a Saved job. An applied job is not asked to review its resume. Needs your attention is reminders, deadlines, interviews, and offers. Recent applications is one row per job. The Jobs toolbar no longer repeats New job; the header and the empty board still have it.
 - **2026-11-09 Header New job:** The header has New job before the reminders bell. It opens a blank posting form. The Jobs toolbar does not repeat it.
