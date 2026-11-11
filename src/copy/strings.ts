@@ -1,3 +1,5 @@
+import { privacyCopy } from "./privacy";
+
 /**
  * UI copy. Voice: plain, specific, encouraging — docs/10-BRAND.md.
  * Product vocabulary — docs/01-PRODUCT.md.
@@ -630,75 +632,7 @@ export const strings = {
         "Notes on what’s in the product. A date is when the note was published, not a launch date.",
       empty: "No notes yet.",
     },
-    privacy: {
-      metaTitle: "Privacy",
-      metaDescription:
-        "What RoleRefine stores, who processes it, and how to ask for a copy or deletion.",
-      title: "Privacy",
-      updated: "Updated October 23, 2026",
-      note: "This page says what RoleRefine does with your information, in plain language. It is not a legal opinion.",
-      contactLabel: "Contact",
-      sections: [
-        {
-          heading: "Who we are",
-          paragraphs: [
-            "RoleRefine is operated from Ottawa, Ontario, Canada. There is no public mailbox yet.",
-          ],
-        },
-        {
-          heading: "What we store",
-          paragraphs: [
-            "When you sign in, we store the email address from that sign-in and the profile you choose to add: name, headline, phone, location, links, and a summary.",
-            "We store your experience library, the jobs you add, and the history of each application: status, interviews, contacts, reminders, and offers. We store the tailored resumes and cover letters made from your library.",
-            "We store your timezone, whether you want reminder and weekly emails, and, if you opt in, the time and the exact wording of that marketing consent.",
-          ],
-        },
-        {
-          heading: "Files",
-          paragraphs: [
-            "A resume file you upload is read in memory so the text can be pulled out. The file is not kept. What you save becomes library entries.",
-          ],
-        },
-        {
-          heading: "AI",
-          paragraphs: [
-            "Tailoring, cover letters, job analysis, and resume import send the text needed for that step to Anthropic’s API (Claude). Anthropic’s commercial terms, checked on October 23, 2026, say Anthropic may not train models on that content. Anthropic’s privacy notice says API inputs and outputs are deleted within 30 days, except when a longer keep is required for their usage policy or the law.",
-            "We keep the resume or letter that results, in your account. Our usage log stores the kind of call, token counts, and an estimated cost. It does not store the prompt or the resume text.",
-          ],
-        },
-        {
-          heading: "Payments",
-          paragraphs: [
-            "Stripe processes subscriptions. We store the plan, the billing interval, and the subscription status Stripe sends us. We do not store your card number.",
-          ],
-        },
-        {
-          heading: "Analytics",
-          paragraphs: [
-            "Product analytics use PostHog in cookieless mode. Events carry ids, counts, and categories. They do not carry your email, your resume, or a job posting.",
-          ],
-        },
-        {
-          heading: "Email",
-          paragraphs: [
-            "Sign-in links are sent by the sign-in provider. Account email, including the welcome note, is sent by Resend. Product updates go out only after you tick the consent box. We keep the time and the exact words you agreed to.",
-            "Each message links to your email preferences. A street address or PO box is included when one is on file. A home address is not required.",
-          ],
-        },
-        {
-          heading: "Cookies",
-          paragraphs: [
-            "Sign-in uses a session cookie. A separate cookie remembers how you first arrived, for 30 days. Analytics does not set a tracking cookie.",
-          ],
-        },
-        {
-          heading: "Export and delete",
-          paragraphs: [
-            "Signed in, open Settings → Data. Export downloads a JSON file of your account. Delete asks you to type DELETE, cancels a Stripe subscription, removes the account, and signs you out. Feedback you sent, and a testimonial you submitted, stay without a link to the account. The name you chose for a testimonial stays on that note.",
-          ],
-        },
-      ],
-    },
+    privacy: privacyCopy,
     terms: {
       metaTitle: "Terms",
       metaDescription:
