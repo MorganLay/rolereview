@@ -1,3 +1,5 @@
+import { privacyCopy } from "./privacy";
+
 /**
  * UI copy. Voice: plain, specific, encouraging — docs/10-BRAND.md.
  * Product vocabulary — docs/01-PRODUCT.md.
@@ -413,6 +415,7 @@ export const strings = {
       shareLabel: "Your invite link",
       inviteHint: "Invite 3 friends for early beta access.",
     },
+    privacy: privacyCopy,
   },
   signIn: {
     title: "Sign in",
