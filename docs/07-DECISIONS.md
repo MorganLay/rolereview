@@ -113,6 +113,6 @@ Keeps the final pipeline stage for analytics while hiding the card.
 | Q-1 | Name clearance | "RoleRefine" (D-27) | CIPO + USPTO search, domains, handles before T2.1. Fallbacks if blocked: Threadline, then re-run the same checks. |
 | Q-3 | Dark mode at launch | Light by default, dark toggle in the app | Marketing site light only. |
 | Q-4 | Google sign-in at launch | Yes | Needs a Google Cloud OAuth client. |
-| Q-5 | Supabase region | Canada if offered | Privacy story for Canadian users. |
+| Q-5 | Supabase region | Canada (ca-central-1) | Production database address resolves to AWS ca-central-1, checked November 11, 2026. Vercel functions are `iad1` (Washington, D.C.), so the app is not Canadian-only. |
 | Q-6 | Free trial of Pro? | No (generous Free tier + 14-day refund instead) | Revisit if conversion < 2%. |
 | Q-7 | Founding discount size | Not offered (D-33) | Checkout charges the list price. The coupon is not applied. |

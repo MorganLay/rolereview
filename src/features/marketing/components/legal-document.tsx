@@ -46,19 +46,6 @@ export function LegalDocument({
   );
 }
 
-export function PrivacyPage() {
-  const copy = strings.marketing.privacy;
-  return (
-    <LegalDocument
-      title={copy.title}
-      updated={copy.updated}
-      note={copy.note}
-      contactLabel={copy.contactLabel}
-      sections={copy.sections}
-    />
-  );
-}
-
 export function TermsPage() {
   const copy = strings.marketing.terms;
   return (
