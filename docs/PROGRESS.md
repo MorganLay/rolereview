@@ -122,6 +122,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-11-11 Privacy policy:** `/privacy` now describes the live flows: production database in AWS ca-central-1, Vercel functions in `iad1`, Anthropic commercial API terms checked the same day, PostHog click tracking left on, and deletion that leaves Stripe, feedback, testimonials, the send log, and waitlist emails. No public privacy mailbox and no mailing address are published. Terms were left as they were.
 - **2026-11-07 Inbox updates:** Nothing reads Gmail or another linked mailbox, and nothing updates a job from employer mail. That assistant is logged in `docs/Feedback.md`. Not a task yet.
 - **2026-11-07 Default apply-by date:** New job leaves Deadline empty, so no reminder is created. A 7-day default, with the reminder still 3 days before, and a Preferences control for that default, is logged in `docs/Feedback.md`. Not a task yet.
 - **2026-11-07 Plan & billing copy:** On a Pro account the renewal explanation is one dense paragraph under the price buttons, and the usage notes sit tight against the bars. Logged in `docs/Feedback.md`. Not a task yet.
