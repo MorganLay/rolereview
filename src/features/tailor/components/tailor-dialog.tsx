@@ -15,12 +15,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { strings } from "@/copy/strings";
-import { EMPHASIS_MAX } from "@/features/tailor/schemas";
+import { EMPHASIS_MAX, type ResumeLengthChoice } from "@/features/tailor/schemas";
 import { cn } from "@/lib/utils";
 
 const copy = strings.jobs.documents;
 
-const LENGTHS = [1, 2] as const;
+const LENGTHS = ["auto", 1, 2] as const satisfies readonly ResumeLengthChoice[];
 
 export function TailorDialog({
   open,
@@ -29,16 +29,16 @@ export function TailorDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (input: { length: 1 | 2; emphasis: string }) => Promise<void>;
+  onConfirm: (input: { length: ResumeLengthChoice; emphasis: string }) => Promise<void>;
 }) {
   const formId = useId();
-  const [length, setLength] = useState<1 | 2>(1);
+  const [length, setLength] = useState<ResumeLengthChoice>("auto");
   const [emphasis, setEmphasis] = useState("");
   const [wasOpen, setWasOpen] = useState(false);
 
   if (open && !wasOpen) {
     setWasOpen(true);
-    setLength(1);
+    setLength("auto");
     setEmphasis("");
   } else if (!open && wasOpen) {
     setWasOpen(false);
@@ -68,14 +68,17 @@ export function TailorDialog({
             <legend className="text-sm font-medium text-foreground">
               {copy.lengthLabel}
             </legend>
-            <div className="grid grid-cols-2 gap-1 rounded-lg border border-line bg-paper p-1 dark:bg-ink-bg">
+            <div
+              className="grid grid-cols-3 gap-1 rounded-lg border border-line bg-paper p-1 dark:bg-ink-bg"
+              aria-describedby={`${formId}-length-hint`}
+            >
               {LENGTHS.map((value) => {
                 const selected = length === value;
                 return (
                   <label
                     key={value}
                     className={cn(
-                      "flex h-8 cursor-pointer items-center justify-center rounded-md text-sm font-medium transition-colors",
+                      "flex h-9 cursor-pointer items-center justify-center rounded-md px-1 text-center text-sm font-medium transition-colors",
                       "has-[:focus-visible]:relative has-[:focus-visible]:z-10 has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50",
                       selected
                         ? "bg-primary text-primary-foreground"
@@ -90,11 +93,14 @@ export function TailorDialog({
                       onChange={() => setLength(value)}
                       className="sr-only"
                     />
-                    {value === 1 ? copy.length1 : copy.length2}
+                    {value === "auto" ? copy.lengthAuto : value === 1 ? copy.length1 : copy.length2}
                   </label>
                 );
               })}
             </div>
+            <p id={`${formId}-length-hint`} className="text-xs leading-relaxed text-muted-foreground">
+              {copy.lengthAutoHint}
+            </p>
           </fieldset>
           <div className="grid gap-2">
             <Label htmlFor={`${formId}-emphasis`} className="w-full justify-between">

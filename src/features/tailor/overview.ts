@@ -137,6 +137,7 @@ export function tailoringOverview(input: {
       shorter:
         input.content.pageLimit === 2 &&
         (input.content.review ?? []).some((item) => item.reason === "within_ceiling"),
+      automatic: automaticLength(input.content),
     }),
   };
 }
@@ -246,6 +247,7 @@ function decisions(input: {
   gaps: string[];
   conflicts: number;
   shorter: boolean;
+  automatic: "one" | "two" | "sparse" | null;
 }): OverviewDecision[] {
   const items: OverviewDecision[] = [];
   if (input.summaryUpdated) {
@@ -325,7 +327,28 @@ function decisions(input: {
       links: [],
     });
   }
-  if (input.shorter) {
+  if (input.automatic === "one") {
+    items.push({
+      id: "length",
+      heading: copy.lengthHeading,
+      body: copy.autoOnePage,
+      links: [],
+    });
+  } else if (input.automatic === "two") {
+    items.push({
+      id: "length",
+      heading: copy.lengthHeading,
+      body: copy.autoTwoPages,
+      links: [],
+    });
+  } else if (input.automatic === "sparse") {
+    items.push({
+      id: "length",
+      heading: copy.lengthHeading,
+      body: copy.autoKeptSparse,
+      links: [],
+    });
+  } else if (input.shorter) {
     items.push({
       id: "length",
       heading: copy.lengthHeading,
@@ -356,6 +379,14 @@ function citedRequirement(entry: EntryFact): string {
     if (requirement) return clip(requirement, REQUIREMENT_MAX);
   }
   return "";
+}
+
+function automaticLength(content: ResumeContent): "one" | "two" | "sparse" | null {
+  const reasons = new Set((content.review ?? []).map((item) => item.reason));
+  if (reasons.has("auto_one_page")) return "one";
+  if (reasons.has("auto_kept_sparse")) return "sparse";
+  if (reasons.has("auto_two_pages")) return "two";
+  return null;
 }
 
 function pageNote(content: ResumeContent): string {

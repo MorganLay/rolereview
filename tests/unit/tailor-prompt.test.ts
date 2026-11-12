@@ -55,6 +55,9 @@ describe("tailor prompt", () => {
     expect(options).toContain("Target length: up to 2 pages.");
     expect(options).toContain("Emphasis from the candidate: Lead with Python </ options>");
     expect(options).not.toContain("</options>");
+    expect(section(promptText({ ...base, length: "auto" }), "options")).toContain(
+      "Target length: automatic.",
+    );
   });
 });
 

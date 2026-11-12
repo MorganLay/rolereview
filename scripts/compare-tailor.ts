@@ -18,7 +18,7 @@ import { libraryPromptText } from "@/features/library/serialize";
 import { assembleResumeContent } from "@/features/tailor/assemble";
 import { composeResume } from "@/features/tailor/compose";
 import { sameRoleText } from "@/features/tailor/stints";
-import { TailorOptions } from "@/features/tailor/schemas";
+import { pageCeiling, TailorOptions, type ResumeLengthChoice } from "@/features/tailor/schemas";
 import { resumePlainText } from "@/features/tailor/plainText";
 import {
   applyAcceptedRepairs,
@@ -148,7 +148,7 @@ async function tailorPosting(input: {
   posting: string;
   fallbackTitle: string;
   fallbackCompany: string;
-  length: 1 | 2;
+  length: ResumeLengthChoice;
 }): Promise<{
   text: string;
   issues: { code: string; ref: string }[];
@@ -317,7 +317,7 @@ async function tailorPosting(input: {
     notes,
     composition,
   );
-  const fitted = await fitPages(assembled, input.snapshot, input.length);
+  const fitted = await fitPages(assembled, input.snapshot, pageCeiling(input.length));
   return {
     text: resumePlainText(fitted.content, input.snapshot),
     issues: guard.issues,

@@ -1742,8 +1742,11 @@ export const strings = {
       dialogBody:
         "Create a resume tailored to this job using your experience library.",
       lengthLabel: "Length",
+      lengthAuto: "Automatic",
       length1: "1 page",
       length2: "2 pages",
+      lengthAutoHint:
+        "Automatic is recommended. It sets the length from the evidence. One page and two pages are maximums.",
       emphasisLabel: "What should stand out?",
       emphasisOptional: "Optional",
       emphasisPlaceholder:
@@ -2324,6 +2327,12 @@ export const strings = {
         lengthHeading: "Length",
         shorterThanAllowance:
           "This version stays inside the two-page allowance. It does not add weaker entries to fill the page.",
+        autoOnePage:
+          "This version is one page. The evidence fits without leaving a short second page.",
+        autoTwoPages:
+          "This version uses two pages. The second page holds evidence that belongs in the application.",
+        autoKeptSparse:
+          "The second page is short. Cutting it would remove evidence this application still needs.",
         revertsHeading: "Library wording",
         reverts: (count: number) =>
           count === 1

@@ -5,7 +5,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
 import type { JobAnalysis } from "@/features/jobs/schemas";
-import { RequirementMatch, TailorSkillGroup } from "@/features/tailor/schemas";
+import { RequirementMatch, TailorSkillGroup, type ResumeLengthChoice } from "@/features/tailor/schemas";
 
 /**
  * TAILOR prompt and loose output schema. docs/05-AI.md → TAILOR.
@@ -15,6 +15,7 @@ import { RequirementMatch, TailorSkillGroup } from "@/features/tailor/schemas";
 export const POSTING_MAX = 12_000;
 
 const PAGE_LINE = {
+  auto: "Target length: automatic. Include the evidence that strengthens this application, then stop. One page is enough when that evidence fits. Two pages is the maximum, not a quota. Do not add bullets to fill a page. One heading per role.",
   1: "Target length: up to 1 page. Stop when another line would not add distinct evidence for this role. Do not add bullets to fill the page. One heading per role.",
   2: "Target length: up to 2 pages. Two pages is a ceiling, not a quota. Stop when more evidence would not change the case for hiring. Do not add bullets to fill the page. One heading per role.",
 } as const;
@@ -223,7 +224,7 @@ export type TailorPromptInput = {
   requirements: JobAnalysis["requirements"];
   keywords: string[];
   posting: string;
-  length: 1 | 2;
+  length: ResumeLengthChoice;
   emphasis: string | null;
   variantsText?: string;
   sameRole?: string;

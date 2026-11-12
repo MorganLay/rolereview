@@ -29,7 +29,7 @@ import {
   ReviseSchema,
 } from "@/lib/ai/prompts/tailor-revise";
 import { buildContent, normalizeTailorOutput, OutputSchema, SYSTEM } from "@/lib/ai/prompts/tailor";
-import { enforcePageBudget } from "@/features/tailor/page-fit";
+import { settlePageLength } from "@/features/tailor/page-fit";
 import { lineageText } from "@/features/tailor/canonical";
 import { sameRoleText } from "@/features/tailor/stints";
 import { runStructured } from "@/lib/ai/run";
@@ -384,7 +384,7 @@ export async function tailorResume(
       previousContent?.success ? previousContent.data : null,
       previousAi?.success ? previousAi.data : null,
     );
-    const content = await enforcePageBudget(edited, serialized.snapshot, options.length);
+    const content = await settlePageLength(edited, serialized.snapshot, options.length);
     const report = scoreMatch(analysis.data, guard.output.requirementMatches);
     const saved = await db.$transaction(async (tx) => {
       const updated = await tx.tailoredResume.updateMany({

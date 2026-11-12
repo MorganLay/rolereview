@@ -20,12 +20,14 @@ import { jobHeadline } from "./presentation";
 import { groupMembers } from "./stints";
 import type { EntryKind } from "./resume-shape";
 import { resumeSectionOrder } from "./resume-shape";
-import type {
-  EditorialPlan,
-  ResumeContact,
-  ResumeReviewItem,
-  ValidatedBullet,
-  ValidatedTailorOutput,
+import {
+  pageCeiling,
+  type EditorialPlan,
+  type ResumeContact,
+  type ResumeLengthChoice,
+  type ResumeReviewItem,
+  type ValidatedBullet,
+  type ValidatedTailorOutput,
 } from "./schemas";
 
 type SnapshotEntry = LibrarySnapshot["entries"][number];
@@ -87,9 +89,10 @@ export function composeResume(input: {
   output: ValidatedTailorOutput;
   snapshot: LibrarySnapshot;
   analysis: JobAnalysis;
-  length: 1 | 2;
+  length: ResumeLengthChoice;
   confirmations?: readonly CareerConfirmation[];
 }): Composition {
+  const ceiling = pageCeiling(input.length);
   const byRef = new Map(input.snapshot.entries.map((entry) => [entry.ref, entry]));
   const terms = targetTerms(input.analysis);
   const review: ResumeReviewItem[] = [];
@@ -141,7 +144,7 @@ export function composeResume(input: {
       const projectCount = countKind(selected, byRef, "PROJECT");
       if (projectCount === 0) {
         if (entryOverlap(entry, terms) < 1) continue;
-      } else if (!addsEvidence(entry, coveredBlob(selected, byRef), input.length === 1 ? musts : [...musts, ...input.analysis.keywords])) {
+      } else if (!addsEvidence(entry, coveredBlob(selected, byRef), ceiling === 1 ? musts : [...musts, ...input.analysis.keywords])) {
         continue;
       }
       const chosen = scored.filter((item) => item.handsOn && !item.academic).slice(0, 4);
@@ -178,7 +181,7 @@ export function composeResume(input: {
     const replaced = replaceWeakProject(selected, byRef, input.snapshot, terms);
     covered = new Set([
       ...replaced,
-      ...pruneProjects(selected, byRef, input.snapshot, musts, input.analysis.keywords, input.length, terms),
+      ...pruneProjects(selected, byRef, input.snapshot, musts, input.analysis.keywords, ceiling, terms),
     ]);
 
     for (const entry of input.snapshot.entries) {
@@ -238,7 +241,7 @@ export function composeResume(input: {
     byRef,
     terms,
     input.snapshot,
-    input.length,
+    ceiling,
     musts,
     review,
     directed ? strategyWeights(input.output.plan, input.snapshot, selected, confirmed) : undefined,
@@ -449,7 +452,7 @@ export function composeResume(input: {
     presentation,
     stints: career.stints.map((stint) => ({ canonical: stint.canonical, members: stint.members })),
     headline,
-    pageLimit: input.length,
+    pageLimit: ceiling,
   };
 }
 

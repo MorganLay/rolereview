@@ -267,7 +267,7 @@ Analysis pre-fills empty `title`, `company`, `location`, `url`, `workMode`, `emp
 
 ```ts
 export const TailorOptions = z.object({
-  length: z.union([z.literal(1), z.literal(2)]).default(1),
+  length: z.union([z.literal("auto"), z.literal(1), z.literal(2)]).default("auto"),
   emphasis: z.string().trim().max(200).optional(),
   targetProfileId: z.string().uuid().optional(),               // R1.1
 });
@@ -341,7 +341,7 @@ export const ResumeContent = z.object({
     reason: z.string().max(80),
   })).max(80).optional(),
   headline: z.string().max(120).nullable().optional(), // omitted on older resumes, which show the profile headline
-  pageLimit: z.union([z.literal(1), z.literal(2)]).optional(),
+  pageLimit: z.union([z.literal(1), z.literal(2)]).optional(), // resolved ceiling. Automatic stores the length it kept.
 });
 ```
 `plan` is present when the tailor returned a strategy. It holds hiringFor, positioning, narrative, priorities, qualification weights, evidence rows (`ref`, `use`, `bullets`, `because`), gaps, and closeCall. Older resumes omit it. The overview names included entries marked `lead`. It does not show the narrative.

@@ -3,7 +3,7 @@ import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
-import type { EditorialPlan } from "@/features/tailor/schemas";
+import type { EditorialPlan, ResumeLengthChoice } from "@/features/tailor/schemas";
 import type { EditorialDoubt, LibraryExcerpt, RevisionTarget } from "@/features/tailor/revise";
 
 /**
@@ -146,7 +146,7 @@ export const EditorialSchema = z.object({
 export function buildEditorialContent(input: {
   title: string;
   company: string;
-  length: 1 | 2;
+  length: ResumeLengthChoice;
   strategy: EditorialPlan;
   doubts: readonly EditorialDoubt[];
   draft: readonly { ref: string; bullets: readonly { sourceRefs: readonly string[]; text: string }[] }[];
@@ -188,7 +188,7 @@ export function buildEditorialContent(input: {
     .join("\n");
   const text = [
     `<job>`,
-    neutralize(`Title: ${oneLine(input.title)} | Company: ${oneLine(input.company)} | Pages: ${input.length}`, "job"),
+    neutralize(`Title: ${oneLine(input.title)} | Company: ${oneLine(input.company)} | Pages: ${input.length === "auto" ? "automatic, maximum 2" : input.length}`, "job"),
     `</job>`,
     "",
     `<strategy>`,

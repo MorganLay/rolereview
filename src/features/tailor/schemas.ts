@@ -15,8 +15,18 @@ export const RESUME_LIMITS = {
 /** Optional emphasis on the tailor dialog. docs/04-DATA-MODEL.md → TailorOptions. */
 export const EMPHASIS_MAX = 200;
 
+/** Automatic chooses 1 or 2 after render. 1 and 2 are maximums. */
+export const ResumeLengthChoice = z.union([z.literal("auto"), z.literal(1), z.literal(2)]);
+
+export type ResumeLengthChoice = z.infer<typeof ResumeLengthChoice>;
+
+/** The hard page cap. Automatic still cannot exceed two pages. */
+export function pageCeiling(length: ResumeLengthChoice): 1 | 2 {
+  return length === 1 ? 1 : 2;
+}
+
 export const TailorOptions = z.object({
-  length: z.union([z.literal(1), z.literal(2)]).default(1),
+  length: ResumeLengthChoice.default("auto"),
   emphasis: z
     .string()
     .trim()
@@ -27,7 +37,7 @@ export const TailorOptions = z.object({
 
 export const tailorResumeSchema = z.object({
   jobId: z.uuid(),
-  length: z.union([z.literal(1), z.literal(2)]).default(1),
+  length: ResumeLengthChoice.default("auto"),
   emphasis: z
     .string()
     .trim()
