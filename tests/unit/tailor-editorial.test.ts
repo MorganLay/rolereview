@@ -1,380 +1,365 @@
+import mammoth from "mammoth";
 import { describe, expect, it } from "vitest";
 
-import type { Requirement } from "@/features/jobs/schemas";
-import type { LibrarySnapshot } from "@/features/library/schemas";
 import { assembleResumeContent } from "@/features/tailor/assemble";
+import { canonicalizeCareer } from "@/features/tailor/canonical";
 import { applyResumeEdit, preserveUserEdits } from "@/features/tailor/content";
-import {
-  applyAcceptedRepairs,
-  mergeRepair,
-  repairTargets,
-} from "@/features/tailor/repair";
+import { composeResume } from "@/features/tailor/compose";
+import { resumePlainText } from "@/features/tailor/plainText";
+import { resumeQuality } from "@/features/tailor/quality";
+import { ResumeContent } from "@/features/tailor/schemas";
 import { tailoringOverview } from "@/features/tailor/overview";
-import { bulletReview, tailorDigest, wordDiff } from "@/features/tailor/review";
-import type { TailorOutput } from "@/features/tailor/schemas";
 import { validateTailorOutput } from "@/features/tailor/validate";
-import type { BulletNote } from "@/features/tailor/variants";
+import type { LibrarySnapshot } from "@/features/library/schemas";
+import { renderResumeDocx } from "@/lib/docx/resume";
+import { fitResumePdf } from "@/lib/pdf/render";
+import { resumePdfLines, resumePdfModel } from "@/lib/pdf/model";
 
-import { jobAnalysis, librarySnapshot } from "./tailor-fixture";
-
-const EXCEL =
-  "Merge and transform data across multiple sources in Excel using key-based joins; investigate and resolve discrepancies to ensure integrity and consistency of reporting outputs.";
-const EXCEL_REWRITE =
-  "Consolidated and transformed multi-source datasets using Excel and key-based joins, resolving data discrepancies to improve reporting accuracy and data reliability.";
+import {
+  dataEngineerAnalysis,
+  defHacksConfirmation,
+  editorialSnapshot,
+  intuitAnalysis,
+  intuitOutput,
+  retailAnalysis,
+  retailOutput,
+  stuffedDataOutput,
+} from "./tailor-editorial-fixture";
 
 function ids() {
   let next = 1;
   return () => `id-${next++}`;
 }
 
-function analystLibrary(): LibrarySnapshot {
-  const snapshot = librarySnapshot();
-  const entry = snapshot.entries[0];
-  if (!entry) throw new Error("missing entry");
-  entry.bullets[0] = {
-    ref: "E1.B1",
-    id: "b1",
-    text: EXCEL,
-  };
-  return snapshot;
+function composeCase(
+  output: ReturnType<typeof stuffedDataOutput>,
+  analysis: ReturnType<typeof dataEngineerAnalysis>,
+  confirmations = [defHacksConfirmation],
+) {
+  const snapshot = editorialSnapshot();
+  const guard = validateTailorOutput(output, snapshot, analysis);
+  const composition = composeResume({
+    output: guard.output,
+    snapshot,
+    analysis,
+    length: 2,
+    confirmations,
+  });
+  const content = assembleResumeContent(composition.output, snapshot, ids(), new Map(), composition);
+  return { snapshot, guard, composition, content };
 }
 
-function outputFor(snapshot: LibrarySnapshot, bullets: TailorOutput["entries"][number]["bullets"]): TailorOutput {
-  return {
-    summary: "Reporting analyst who consolidates multi-source data in Excel and writes Python tools.",
-    entries: [
-      { ref: "E1", bullets },
-      {
-        ref: "E2",
-        bullets: [{ sourceRefs: ["E2.B1"], text: "Wrote a Python bot that booked rooms." }],
-      },
-      { ref: "E3", bullets: [] },
-      { ref: "E5", bullets: [] },
-    ],
-    skills: [{ category: "Languages", refs: ["S1", "S2"] }],
-    requirementMatches: [],
-  };
+function included(content: ReturnType<typeof assembleResumeContent>, ref: string) {
+  return content.entries.find((entry) => entry.ref === ref && entry.included);
 }
 
-describe("autonomous tailoring", () => {
-  it("applies a grounded rewrite and leaves the library bullet unchanged", () => {
-    const snapshot = analystLibrary();
-    const before = snapshot.entries[0]?.bullets[0]?.text;
-    const notes = new Map<string, BulletNote>([
-      [
-        "E1.B1",
-        {
-          what: "Leads with consolidation and drops the trailing clause.",
-          why: "The posting asks for data transformation and reporting accuracy.",
-          requirementIds: ["r-transform"],
-        },
-      ],
-    ]);
-    const requirements: Requirement[] = [
-      {
-        id: "r-transform",
-        text: "Transform data from more than one source",
-        kind: "experience",
-        importance: "must",
-      },
-    ];
-    const guard = validateTailorOutput(
-      outputFor(snapshot, [{ sourceRefs: ["E1.B1"], text: EXCEL_REWRITE }]),
-      snapshot,
-      jobAnalysis(requirements),
-    );
-    const content = assembleResumeContent(guard.output, snapshot, ids(), notes);
-    const bullet = content.entries[0]?.bullets[0];
+describe("editorial scenarios", () => {
+  it("builds one data-engineering resume from duplicate and irrelevant records", async () => {
+    const { snapshot, guard, content } = composeCase(stuffedDataOutput(), dataEngineerAnalysis());
+    const text = resumePlainText(content, snapshot);
+    const cra = included(content, "E_cra");
+    const craBullets = cra?.bullets.filter((bullet) => bullet.included) ?? [];
 
-    expect(guard.reverts).toBe(0);
-    expect(bullet?.text).toBe(EXCEL_REWRITE);
-    expect(bullet?.suggestion).toBe(EXCEL_REWRITE);
-    expect(bullet?.originalText).toBe(EXCEL);
-    expect(bullet?.suggestionNote).toContain("data transformation");
-    expect(bullet?.changeWhat).toContain("consolidation");
-    expect(snapshot.entries[0]?.bullets[0]?.text).toBe(before);
-    expect(bulletReview(bullet!, EXCEL, requirements)).toMatchObject({
-      state: "applied",
-      requirements: ["Transform data from more than one source"],
-    });
-  });
-
-  it("reverts an ETL claim and can accept a later grounded repair", () => {
-    const snapshot = analystLibrary();
-    const requirements: Requirement[] = [
-      {
-        id: "r-etl",
-        text: "5 years of production ETL",
-        kind: "experience",
-        importance: "must",
-      },
-    ];
-    const before: TailorOutput = {
-      ...outputFor(snapshot, [
-        {
-          sourceRefs: ["E1.B1"],
-          text: "Built production ETL pipelines in Spark for enterprise reporting.",
-        },
-      ]),
-      requirementMatches: [
-        {
-          requirementId: "r-etl",
-          verdict: "met",
-          evidenceRefs: ["E1.B1"],
-          note: "The spreadsheet work covers ETL.",
-        },
-      ],
-    };
-    const guard = validateTailorOutput(before, snapshot, jobAnalysis(requirements));
-    const targets = repairTargets(before, guard, snapshot);
-    expect(guard.output.entries[0]?.bullets[0]?.text).toBe(EXCEL);
-    expect(guard.output.entries[0]?.bullets[0]?.reverted).toBe(true);
-    expect(guard.output.requirementMatches[0]?.verdict).toBe("partial");
-    expect(targets.map((target) => target.sourceRef)).toEqual(["E1.B1"]);
-
-    const repaired = mergeRepair(
-      before,
-      [{ sourceRef: "E1.B1", text: EXCEL_REWRITE, what: "Keeps Excel.", why: "Transformation only." }],
-      targets,
-    );
-    const second = validateTailorOutput(repaired, snapshot, jobAnalysis(requirements));
-    const chosen = applyAcceptedRepairs(guard.output, second.output, targets);
-    expect(chosen.accepted).toEqual(["E1.B1"]);
-    expect(chosen.output.entries[0]?.bullets[0]?.text).toBe(EXCEL_REWRITE);
-    expect(chosen.output.entries[0]?.bullets[0]?.reverted).toBe(false);
-
-    const stillFalse = validateTailorOutput(
-      mergeRepair(
-        before,
-        [
-          {
-            sourceRef: "E1.B1",
-            text: "Owned production ETL pipelines.",
-            what: "Says ETL.",
-            why: "The posting asks for ETL.",
-          },
-        ],
-        targets,
-      ),
-      snapshot,
-      jobAnalysis(requirements),
-    );
-    const rejected = applyAcceptedRepairs(guard.output, stillFalse.output, targets);
-    expect(rejected.accepted).toEqual([]);
-    expect(rejected.output.entries[0]?.bullets[0]?.text).toBe(EXCEL);
-  });
-
-  it("keeps a close role specific without rewriting a line that is already exact", () => {
-    const snapshot = librarySnapshot();
-    const source = snapshot.entries[0]?.bullets[0]?.text ?? "";
-    const guard = validateTailorOutput(
-      outputFor(snapshot, [{ sourceRefs: ["E1.B1"], text: source }]),
-      snapshot,
-      jobAnalysis([
-        { id: "r1", text: "Maintain operational reports", kind: "experience", importance: "must" },
-      ]),
-    );
-    const content = assembleResumeContent(guard.output, snapshot, ids());
-    const bullet = content.entries[0]?.bullets[0];
-    expect(bullet?.text).toBe(source);
-    expect(bullet?.suggestion).toBeNull();
-    expect(bulletReview(bullet!, source).state).toBe("none");
-  });
-
-  it("does not turn reporting into a support desk for a weak match", () => {
-    const snapshot = analystLibrary();
-    const requirements: Requirement[] = [
-      { id: "r-desk", text: "Help desk and ticketing", kind: "experience", importance: "must" },
-      { id: "r-years", text: "3 years of customer support", kind: "experience", importance: "must" },
-    ];
-    const guard = validateTailorOutput(
-      {
-        ...outputFor(snapshot, [
-          {
-            sourceRefs: ["E1.B1"],
-            text: "Provided customer support on the help desk and closed 12 tickets a week.",
-          },
-        ]),
-        summary: "Technology support specialist with 5 years on a service desk.",
-        requirementMatches: [
-          {
-            requirementId: "r-desk",
-            verdict: "met",
-            evidenceRefs: ["E1.B1"],
-            note: "Reporting users are a help desk.",
-          },
-          {
-            requirementId: "r-years",
-            verdict: "met",
-            evidenceRefs: ["E1.B1"],
-            note: "The role implies support.",
-          },
-        ],
-      },
-      snapshot,
-      jobAnalysis(requirements),
-    );
-    const bullet = guard.output.entries[0]?.bullets[0];
-    expect(bullet?.reverted).toBe(true);
-    expect(bullet?.text).toBe(EXCEL);
-    expect(bullet?.text.toLowerCase()).not.toContain("help desk");
-    expect(guard.output.requirementMatches.every((match) => match.verdict !== "met")).toBe(true);
-    expect(guard.output.summary.toLowerCase()).not.toContain("5 years");
-  });
-
-  it("hides a stale explanation after a manual edit and keeps the source", () => {
-    const snapshot = analystLibrary();
-    const requirements: Requirement[] = [
-      {
-        id: "r-transform",
-        text: "Transform data from more than one source",
-        kind: "experience",
-        importance: "must",
-      },
-    ];
-    const notes = new Map<string, BulletNote>([
-      [
-        "E1.B1",
-        {
-          what: "Leads with consolidation.",
-          why: "The posting asks for data transformation.",
-          requirementIds: ["r-transform"],
-        },
-      ],
-    ]);
-    const guard = validateTailorOutput(
-      outputFor(snapshot, [{ sourceRefs: ["E1.B1"], text: EXCEL_REWRITE }]),
-      snapshot,
-      jobAnalysis(requirements),
-    );
-    const stored = assembleResumeContent(guard.output, snapshot, ids(), notes);
-    const incoming = structuredClone(stored);
-    const target = incoming.entries[0]?.bullets[0];
-    if (!target) throw new Error("missing bullet");
-    target.text = "Joined Excel tables and checked the figures by hand.";
+    expect(included(content, "E_cra_long")).toBeUndefined();
+    expect(cra?.displayTitle).toBe("Junior Program Officer");
+    expect(cra?.displayOrganization).toBe("Canada Revenue Agency");
+    expect(text).toContain("Junior Program Officer");
+    expect(text).not.toContain("Special Business Returns Processing");
+    expect(craBullets.filter((bullet) => bullet.text.includes("20"))).toHaveLength(1);
+    expect(craBullets.some((bullet) => bullet.sourceRefs.includes("E_cra.B2"))).toBe(true);
+    expect(craBullets.some((bullet) => bullet.sourceRefs.includes("E_cra_long.B2"))).toBe(true);
+    expect(cra?.evidenceEntryRefs).toContain("E_cra_long");
+    const edited = structuredClone(content);
+    const kept = edited.entries
+      .find((entry) => entry.ref === "E_cra")
+      ?.bullets.find((bullet) => bullet.sourceRefs.includes("E_cra_long.B2"));
+    if (kept) kept.text = "Kept the special-returns reconciliation line.";
     const saved = applyResumeEdit({
-      stored,
-      incoming,
+      stored: content,
+      incoming: edited,
       snapshot,
       aiOutput: guard.output,
     });
-    if (!saved.ok) throw new Error(saved.issue);
-    const bullet = saved.content.entries[0]?.bullets[0];
-    expect(bullet?.sourceRefs).toEqual(["E1.B1"]);
-    expect(bullet?.suggestion).toBe(EXCEL_REWRITE);
-    expect(bulletReview(bullet!, EXCEL, requirements)).toMatchObject({
-      state: "edited",
-      why: null,
-      what: null,
-    });
+    expect(saved.ok).toBe(true);
+    if (saved.ok) {
+      expect(saved.content.headline).toBe(content.headline);
+      expect(
+        saved.content.entries
+          .find((entry) => entry.ref === "E_cra")
+          ?.bullets.some((bullet) => bullet.text.startsWith("Kept the special-returns")),
+      ).toBe(true);
+    }
+    expect(text.toLowerCase()).not.toContain("etl");
+    expect(text.toLowerCase()).not.toContain("erp");
+    expect(guard.reverts).toBeGreaterThan(0);
 
-    const restored = { ...bullet!, text: EXCEL };
-    expect(bulletReview(restored, EXCEL, requirements).state).toBe("restored");
-    const again = { ...bullet!, text: EXCEL_REWRITE };
-    expect(bulletReview(again, EXCEL, requirements).state).toBe("applied");
-  });
+    expect(included(content, "E_def_copy")).toBeUndefined();
+    expect(included(content, "E_def")?.displayStart).toBe("2020-03");
+    expect(included(content, "E_def")?.displayEnd).toBe("2021-03");
+    expect(text).toContain("Mar 2020 \u2013 Mar 2021");
 
-  it("keeps a manual edit on the next tailor", () => {
-    const snapshot = analystLibrary();
-    const guard = validateTailorOutput(
-      outputFor(snapshot, [{ sourceRefs: ["E1.B1"], text: EXCEL_REWRITE }]),
-      snapshot,
-      jobAnalysis(),
-    );
-    const previous = assembleResumeContent(guard.output, snapshot, ids());
-    const edited = previous.entries[0]?.bullets[0];
-    if (!edited) throw new Error("missing bullet");
-    edited.text = "Checked Excel joins by hand.";
-    edited.edited = true;
-    const next = assembleResumeContent(
-      validateTailorOutput(
-        outputFor(snapshot, [
-          {
-            sourceRefs: ["E1.B1"],
-            text: "Consolidated Excel data with key-based joins.",
-          },
-        ]),
-        snapshot,
-        jobAnalysis(),
-      ).output,
-      snapshot,
-      ids(),
-    );
-    const kept = preserveUserEdits(next, previous, guard.output);
-    expect(kept.entries[0]?.bullets[0]?.text).toBe("Checked Excel joins by hand.");
-    expect(snapshot.entries[0]?.bullets[0]?.text).toBe(EXCEL);
-  });
+    expect(included(content, "E_lcbo")).toBeUndefined();
+    expect(included(content, "E_py")).toBeDefined();
+    expect(included(content, "E_role")?.displayTitle).toBe("RoleRefine");
+    expect(text).toContain("RoleRefine");
+    expect(text).not.toContain("Creator, Product Owner");
+    expect(included(content, "E_forge")).toBeUndefined();
+    expect(included(content, "E_jobwise")).toBeUndefined();
+    expect(text).not.toContain("Google Maps");
 
-  it("counts the finished resume without inventing a percentage", () => {
-    const snapshot = analystLibrary();
-    const requirements: Requirement[] = [
-      {
-        id: "r-transform",
-        text: "Transform data from more than one source",
-        kind: "experience",
-        importance: "must",
-      },
-      {
-        id: "r-sql",
-        text: "SQL",
-        kind: "skill",
-        importance: "must",
-      },
-    ];
-    const guard = validateTailorOutput(
-      {
-        ...outputFor(snapshot, [{ sourceRefs: ["E1.B1"], text: EXCEL_REWRITE }]),
-        requirementMatches: [
-          {
-            requirementId: "r-transform",
-            verdict: "met",
-            evidenceRefs: ["E1.B1"],
-            note: "Excel joins transform data.",
-          },
-          {
-            requirementId: "r-sql",
-            verdict: "partial",
-            evidenceRefs: ["S2"],
-            note: "SQL is a skill, not shown in the bullet.",
-          },
-        ],
-      },
-      snapshot,
-      jobAnalysis(requirements),
-    );
-    const content = assembleResumeContent(guard.output, snapshot, ids());
-    const digest = tailorDigest({
-      content,
-      snapshot,
-      requirements,
-      verdicts: guard.output.requirementMatches,
-      keywords: ["Excel", "SQL"],
-    });
-    expect(digest.rewritten).toBeGreaterThan(0);
-    expect(digest.summaryUpdated).toBe(true);
+    const quality = resumeQuality(content, snapshot);
+    expect(quality.duplicateEmployers).toBe(0);
+    expect(quality.awkwardHeadings).toBe(0);
+    expect(quality.repeatedQuantities).toBe(0);
+    expect(quality.includedBullets).toBeLessThan(16);
+    expect(content.headline).toBe("Reporting and reconciliation");
+    expect(content.pageLimit).toBe(2);
+    expect(content.headline).not.toBe(snapshot.profile.headline);
+
+    const model = resumePdfModel(content, snapshot);
+    const lines = resumePdfLines(model);
+    expect(resumePlainText(content, snapshot).split("\n")).toEqual(lines);
+    const docx = await mammoth.extractRawText({ buffer: await renderResumeDocx(model) });
+    expect(docx.value).toContain("RoleRefine");
+    expect(docx.value).toContain("Junior Program Officer");
+    expect(docx.value).not.toContain("Creator, Product Owner");
+    const fit = await fitResumePdf(model, "classic");
+    expect(fit.pageCount).toBeLessThanOrEqual(2);
+    expect(fit.pageCount).toBe(1);
+
     const overview = tailoringOverview({
       jobTitle: "Data Engineer",
       content,
       snapshot,
-      requirements,
+      requirements: dataEngineerAnalysis().requirements,
     });
-    expect(overview.strategy.startsWith("The summary was rewritten for Data Engineer")).toBe(true);
-    expect(overview.strategy).not.toContain("%");
-    const text = JSON.stringify(overview);
-    expect(text).toContain("Rewritten from the library bullet.");
-    expect(text).not.toMatch(/need review|not demonstrated|match score/i);
+    expect(overview.decisions.some((item) => item.id === "length")).toBe(true);
+    expect(overview.decisions.some((item) => item.body.includes("ETL") || item.id === "gaps")).toBe(true);
   });
 
-  it("highlights words that were added or removed", () => {
-    const parts = wordDiff(
-      "Merge and transform data in Excel.",
-      "Consolidated and transformed data in Excel.",
+  it("tells a different story for a software role and keeps retail when the job is retail", () => {
+    const data = composeCase(stuffedDataOutput(), dataEngineerAnalysis());
+    const software = composeCase(intuitOutput(), intuitAnalysis());
+    const retail = composeCase(retailOutput(), retailAnalysis());
+
+    const dataRole = included(data.content, "E_role")?.bullets.filter((bullet) => bullet.included).length ?? 0;
+    const softwareRole =
+      included(software.content, "E_role")?.bullets.filter((bullet) => bullet.included).length ?? 0;
+    expect(softwareRole).toBeGreaterThan(dataRole);
+    expect(software.content.headline).toBe("Application developer");
+    expect(software.content.headline).not.toBe(data.content.headline);
+    expect(included(software.content, "E_lcbo")).toBeUndefined();
+    expect(included(software.content, "E_def_copy")).toBeUndefined();
+    expect(included(software.content, "E_forge")).toBeUndefined();
+    expect(included(software.content, "E_jobwise")).toBeDefined();
+    expect(resumePlainText(software.content, software.snapshot).toLowerCase()).not.toContain("etl");
+
+    expect(included(retail.content, "E_lcbo")).toBeDefined();
+    expect(included(retail.content, "E_cra")).toBeUndefined();
+    expect(resumeQuality(software.content, software.snapshot).duplicateEmployers).toBe(0);
+  });
+
+  it("keeps distinct evidence from duplicate imports and leaves a promotion split", () => {
+    const snapshot = duplicateSnapshot();
+    const analysis = dataEngineerAnalysis();
+    analysis.requirements = [
+      { id: "r1", text: "Reconcile ledger files", kind: "experience", importance: "must" },
+    ];
+    analysis.keywords = ["ledger", "reconcile"];
+    const output: ReturnType<typeof stuffedDataOutput> = {
+      summary: "Analyst who reconciles files.",
+      plan: {
+        narrative: "Two uploads describe one analyst role.",
+        priorities: ["ledger"],
+        gaps: [],
+        headline: "Ledger reconciliation",
+        evidence: [
+          { ref: "E_a", use: "lead", bullets: 3, because: "The two uploads are one stint and both facts belong on it." },
+          { ref: "E_junior", use: "support", bullets: 1, because: "The earlier title is a separate job." },
+          { ref: "E_senior", use: "support", bullets: 1, because: "The promotion is not the same stint as the junior title." },
+        ],
+        closeCall: false,
+      },
+      entries: [
+        {
+          ref: "E_a",
+          bullets: [
+            { sourceRefs: ["E_a.B1"], text: "Reconciled 12 weekly ledger files." },
+            { sourceRefs: ["E_b.B2"], text: "Closed the month-end ledger." },
+          ],
+        },
+        {
+          ref: "E_b",
+          bullets: [{ sourceRefs: ["E_b.B1"], text: "Reconciled 12 weekly ledger files by hand." }],
+        },
+        {
+          ref: "E_junior",
+          bullets: [{ sourceRefs: ["E_junior.B1"], text: "Filed junior case notes." }],
+        },
+        {
+          ref: "E_senior",
+          bullets: [{ sourceRefs: ["E_senior.B1"], text: "Reviewed senior case notes." }],
+        },
+      ],
+      skills: [],
+      requirementMatches: [
+        {
+          requirementId: "r1",
+          verdict: "partial",
+          evidenceRefs: ["E_a.B1"],
+          note: "The analyst role reconciles a ledger.",
+        },
+      ],
+    };
+    const without = validateTailorOutput(output, snapshot, analysis);
+    const open = composeResume({
+      output: without.output,
+      snapshot,
+      analysis,
+      length: 1,
+    });
+    expect(open.output.entries.map((entry) => entry.ref)).toEqual(
+      expect.arrayContaining(["E_a", "E_b"]),
     );
-    expect(parts.some((part) => part.kind === "add" && part.text.includes("Consolidated"))).toBe(
-      true,
+    expect(open.review).toEqual(
+      expect.arrayContaining([expect.objectContaining({ reason: "unresolved_dates" })]),
     );
-    expect(parts.some((part) => part.kind === "remove" && part.text.includes("Merge"))).toBe(
-      true,
+
+    const guard = validateTailorOutput(output, snapshot, analysis, [["E_a", "E_b"]]);
+    const composition = composeResume({
+      output: guard.output,
+      snapshot,
+      analysis,
+      length: 1,
+      confirmations: [{ members: ["E_a", "E_b"], startDate: "2019-01", endDate: "2019-06" }],
+    });
+    const refs = composition.output.entries.map((entry) => entry.ref);
+    const analystRefs = refs.filter((ref) => ref === "E_a" || ref === "E_b");
+    expect(analystRefs).toHaveLength(1);
+    const analyst = composition.output.entries.find(
+      (entry) => entry.ref === "E_a" || entry.ref === "E_b",
+    );
+    const texts = analyst?.bullets.map((bullet) => bullet.text) ?? [];
+    expect(texts.some((text) => text.includes("month-end"))).toBe(true);
+    expect(texts.filter((text) => text.includes("12"))).toHaveLength(1);
+    expect(refs).toEqual(expect.arrayContaining(["E_junior", "E_senior"]));
+    const rejected = canonicalizeCareer(snapshot.entries, snapshot.takenAt, [
+      { members: ["E_junior", "E_senior"], title: "Software Engineer" },
+    ]);
+    expect(rejected.rejected).toEqual([["E_junior", "E_senior"]]);
+    expect(rejected.stints.some((stint) => stint.members.includes("E_junior") && stint.members.includes("E_senior"))).toBe(
+      false,
     );
   });
+
+  it("keeps an older saved resume readable and does not overwrite an edit", () => {
+    const older = ResumeContent.parse({
+      schemaVersion: 1,
+      summary: { text: "Kept summary.", included: true },
+      entries: [
+        {
+          ref: "E1",
+          kind: "EXPERIENCE",
+          included: true,
+          bullets: [
+            {
+              id: "b1",
+              text: "Original line.",
+              included: true,
+              sourceRefs: ["E1.B1"],
+              reverted: false,
+              edited: false,
+            },
+          ],
+        },
+      ],
+      skills: [],
+    });
+    expect(older.headline).toBeUndefined();
+    expect(older.entries[0]?.displayTitle).toBeUndefined();
+
+    const { content, snapshot } = composeCase(stuffedDataOutput(), dataEngineerAnalysis());
+    const previous = {
+      ...content,
+      entries: content.entries.map((entry) => ({
+        ...entry,
+        bullets: entry.bullets.map((bullet) =>
+          bullet.sourceRefs.includes("E_py.B1")
+            ? { ...bullet, text: "Edited Python line.", edited: true }
+            : bullet,
+        ),
+      })),
+    };
+    const again = composeCase(stuffedDataOutput(), dataEngineerAnalysis()).content;
+    const kept = preserveUserEdits(again, previous, null);
+    const python = kept.entries
+      .flatMap((entry) => entry.bullets)
+      .find((bullet) => bullet.sourceRefs.includes("E_py.B1") && bullet.included);
+    expect(python?.text).toBe("Edited Python line.");
+    expect(resumePdfModel(older, snapshot).headline).toBe("Software developer");
+  });
 });
+
+function duplicateSnapshot(): LibrarySnapshot {
+  const base = editorialSnapshot();
+  return {
+    ...base,
+    entries: [
+      {
+        ref: "E_a",
+        id: "E_a",
+        kind: "EXPERIENCE",
+        title: "Analyst",
+        organization: "Northwind",
+        location: null,
+        startDate: "2019-01",
+        endDate: "2019-06",
+        isCurrent: false,
+        url: null,
+        bullets: [{ ref: "E_a.B1", id: "E_a.B1", text: "Reconciled 12 weekly ledger files." }],
+      },
+      {
+        ref: "E_b",
+        id: "E_b",
+        kind: "EXPERIENCE",
+        title: "Analyst",
+        organization: "Northwind",
+        location: null,
+        startDate: "2020-01",
+        endDate: "2020-06",
+        isCurrent: false,
+        url: null,
+        bullets: [
+          { ref: "E_b.B1", id: "E_b.B1", text: "Reconciled 12 weekly ledger files by hand." },
+          { ref: "E_b.B2", id: "E_b.B2", text: "Closed the month-end ledger." },
+        ],
+      },
+      {
+        ref: "E_junior",
+        id: "E_junior",
+        kind: "EXPERIENCE",
+        title: "Junior Software Engineer",
+        organization: "Northwind",
+        location: null,
+        startDate: "2021-01",
+        endDate: "2021-12",
+        isCurrent: false,
+        url: null,
+        bullets: [{ ref: "E_junior.B1", id: "E_junior.B1", text: "Filed junior case notes." }],
+      },
+      {
+        ref: "E_senior",
+        id: "E_senior",
+        kind: "EXPERIENCE",
+        title: "Senior Software Engineer",
+        organization: "Northwind",
+        location: null,
+        startDate: "2022-01",
+        endDate: null,
+        isCurrent: true,
+        url: null,
+        bullets: [{ ref: "E_senior.B1", id: "E_senior.B1", text: "Reviewed senior case notes." }],
+      },
+    ],
+  };
+}

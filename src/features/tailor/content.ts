@@ -228,6 +228,9 @@ export function applyResumeEdit(input: {
       ...(input.stored.sectionOrder ? { sectionOrder: input.stored.sectionOrder } : {}),
       ...(input.stored.contacts ? { contacts: input.stored.contacts } : {}),
       ...(input.stored.review ? { review: input.stored.review } : {}),
+      ...(input.stored.plan ? { plan: input.stored.plan } : {}),
+      ...(input.stored.headline !== undefined ? { headline: input.stored.headline } : {}),
+      ...(input.stored.pageLimit ? { pageLimit: input.stored.pageLimit } : {}),
     },
   };
 }
@@ -277,6 +280,7 @@ function restoredSplit(
   incoming: readonly ContentBullet[],
   snapshotEntry: SnapshotEntry,
   snapshot: LibrarySnapshot,
+  extraEntries: readonly string[] | undefined,
 ): { createdIds: string[] } | null {
   const storedIds = new Set(stored.map((bullet) => bullet.id));
   const incomingIds = new Set(incoming.map((bullet) => bullet.id));
@@ -294,7 +298,7 @@ function restoredSplit(
     if (bullet.sourceRefs.length !== 1) return null;
     const ref = bullet.sourceRefs[0];
     if (!ref || !expected.has(ref) || seen.has(ref)) return null;
-    if (!libraryBulletInGroup(snapshot, snapshotEntry.ref, ref)) return null;
+    if (!sourceOwned(snapshot, snapshotEntry.ref, ref, extraEntries)) return null;
     seen.add(ref);
   }
   for (const ref of expected) {
@@ -315,9 +319,10 @@ function restoredBullet(
   incoming: ContentBullet,
   snapshot: LibrarySnapshot,
   entryRef: string,
+  extraEntries: readonly string[] | undefined,
 ): ContentBullet | null {
   const ref = incoming.sourceRefs.length === 1 ? incoming.sourceRefs[0] : undefined;
-  const library = ref ? libraryBulletInGroup(snapshot, entryRef, ref) : undefined;
+  const library = ref ? citedBullet(snapshot, entryRef, ref, extraEntries) : undefined;
   if (!library) return null;
   const text = incoming.text.trim();
   if (text.length === 0 || text.length > RESUME_LIMITS.bullet) return null;
@@ -339,6 +344,31 @@ function restoredBullet(
   };
 }
 
+function citedBullet(
+  snapshot: LibrarySnapshot,
+  entryRef: string,
+  bulletRef: string,
+  extraEntries: readonly string[] | undefined,
+) {
+  const grouped = libraryBulletInGroup(snapshot, entryRef, bulletRef);
+  if (grouped) return grouped;
+  for (const ref of extraEntries ?? []) {
+    const entry = snapshot.entries.find((item) => item.ref === ref);
+    const bullet = entry?.bullets.find((item) => item.ref === bulletRef);
+    if (bullet) return bullet;
+  }
+  return undefined;
+}
+
+function sourceOwned(
+  snapshot: LibrarySnapshot,
+  entryRef: string,
+  bulletRef: string,
+  extraEntries: readonly string[] | undefined,
+): boolean {
+  return citedBullet(snapshot, entryRef, bulletRef, extraEntries) !== undefined;
+}
+
 function buildEntry(
   storedEntry: ContentEntry,
   incomingEntry: ContentEntry,
@@ -352,7 +382,13 @@ function buildEntry(
     if (storedBullets.has(bullet.id)) return { ok: false, issue: "bullets" };
     storedBullets.set(bullet.id, bullet);
   }
-  const split = restoredSplit(storedEntry.bullets, incomingEntry.bullets, snapshotEntry, snapshot);
+  const split = restoredSplit(
+    storedEntry.bullets,
+    incomingEntry.bullets,
+    snapshotEntry,
+    snapshot,
+    storedEntry.evidenceEntryRefs,
+  );
   if (!split && incomingEntry.bullets.length !== storedBullets.size) {
     return { ok: false, issue: "bullets" };
   }
@@ -368,7 +404,7 @@ function buildEntry(
       if (text.length === 0 || text.length > RESUME_LIMITS.bullet) {
         return { ok: false, issue: "bulletText" };
       }
-      const built = restoredBullet(incoming, snapshot, snapshotEntry.ref);
+      const built = restoredBullet(incoming, snapshot, snapshotEntry.ref, storedEntry.evidenceEntryRefs);
       if (!built) return { ok: false, issue: "sources" };
       bullets.push(built);
       continue;
@@ -386,7 +422,7 @@ function buildEntry(
     const originalBullet = firstRef
       ? libraryBulletInGroup(snapshot, snapshotEntry.ref, firstRef)
       : undefined;
-    if (!originalBullet || sourceRefs.some((ref) => !libraryBulletInGroup(snapshot, snapshotEntry.ref, ref))) {
+    if (!originalBullet || sourceRefs.some((ref) => !sourceOwned(snapshot, snapshotEntry.ref, ref, storedEntry.evidenceEntryRefs))) {
       return { ok: false, issue: "sources" };
     }
 
@@ -423,6 +459,14 @@ function buildEntry(
       kind: snapshotEntry.kind,
       included: incomingEntry.included,
       entryId: snapshotEntry.id,
+      ...(storedEntry.displayTitle !== undefined ? { displayTitle: storedEntry.displayTitle } : {}),
+      ...(storedEntry.displayOrganization !== undefined
+        ? { displayOrganization: storedEntry.displayOrganization }
+        : {}),
+      ...(storedEntry.displayStart !== undefined ? { displayStart: storedEntry.displayStart } : {}),
+      ...(storedEntry.displayEnd !== undefined ? { displayEnd: storedEntry.displayEnd } : {}),
+      ...(storedEntry.displayCurrent !== undefined ? { displayCurrent: storedEntry.displayCurrent } : {}),
+      ...(storedEntry.evidenceEntryRefs ? { evidenceEntryRefs: [...storedEntry.evidenceEntryRefs] } : {}),
       bullets,
     },
   };

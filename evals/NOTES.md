@@ -99,3 +99,7 @@ The five pairs are a shuffle of the filenames, seeded from that timestamp, first
 Two bullets drop a second sentence that is in the source and does not help the application: the shop did not deploy the inventory app, and the cash drawer was short twice in 2025. What remains is still in the source. Those omissions are not new claims.
 
 Revert average is under 0.5. The Birchlane tenure and the "worked directly with product squads" line are the fabrications to fix in the prompt before a prompt change merges.
+
+### 2026-11-12 editorial architecture
+
+The tailor prompt now treats page length as a ceiling and asks for a job-specific headline. Live `npm run evals` was not run: it spends the seed account's tailor quota and calls the model. The deterministic harness in `tests/unit/tailor-editorial.test.ts` compares a data-engineering resume, a software resume, and a retail resume from one fictional library. That path adds no model call. A coherent plan still uses one TAILOR call. Repair and revision are unchanged and still run only when the existing route says so.

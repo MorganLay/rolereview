@@ -20,7 +20,10 @@ v2 stores resumes as blobs, has trust-the-client auth, local uploads, Puppeteer,
 Competitors all have them, they share the library/job/guard machinery, and they make Pro worth paying for. Still built **after** the resume walking skeleton (Phase 9), so resumes come first as before.
 
 **D-14 — The AI can't change titles, employers, or dates** · Accepted
-Content entries store only a `ref`; header data is joined from the snapshot at render time.
+The library row stays as imported. A resume version may store a display heading and dates resolved from those rows (the shared title, the spelled-out employer, or a user confirmation). The model does not invent a title, employer, or date. Older resumes omit the display fields and still read the snapshot. Null means the records disagree and nothing is chosen for them.
+
+**D-35 — The editorial plan chooses the resume** · Accepted 2026-11-12
+Canonical evidence says what may be claimed. `plan` says what should be claimed for this job. The printed resume says how it appears. Composition may reject an unsafe choice, fold one stint, and stop at the page ceiling. It does not put back an entry the plan left off, and it does not add lines to fill a page. A second model review runs only through the existing repair or revision route.
 
 **D-15 — Tracking is free forever; AI actions and pro outputs are paid** · Accepted
 The tracker costs almost nothing to run, brings people back daily, and competes with free spreadsheets and Teal's free tracker. Monetise tailored resumes, letters, interview prep kits, DOCX, extra templates, and insights.
@@ -51,7 +54,7 @@ Contradicts the quality positioning, risks users' accounts on job boards.
 **D-34 — Library and tailoring before the formal beta** · Accepted 2026-11-09
 - Context: T13.5a was next. The library judges a bullet and does not rewrite it. Friends can use the live site while that is improved. D-23 and D-28 keep the rest of Release 1.1 closed until 1.0 ships.
 - Choice: Defer T13.5a. Do not mark it done. Phase R refines the library and the tailor that already exist, starting with TR.1. A library rewrite counts against the bullet-coach allowance already in `plans.ts`. The Phase 17 coach (three suggestions, and a placeholder that blocks save) stays in 1.1. Notes from ongoing use still go in `docs/Feedback.md`.
-- Consequences: the next task is TR.1. The public launch still waits for the formal beta, TQ.14, and TQ.15.
+- Consequences: the next task is TR.1. The public launch still waits for the formal beta, TQ.14, and TQ.15. Updated 2026-11-11: TR.1 and the wording store have shipped. The next task is TR.2. The formal beta still waits until Phase R is done.
 
 **D-29 — Requirement states are computed from the current resume** · Accepted 2026-10-25
 The AI's verdict at tailoring time is an input, not the answer. The match panel shows Met / Not on this resume / Needs review / Not demonstrated, recomputed as the user edits. Not on this resume is evidence left off the page. Not demonstrated is a gap in the library, and the panel does not offer a rewrite for it. The score explains its basis and never implies a hiring probability.

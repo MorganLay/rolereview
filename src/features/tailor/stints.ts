@@ -49,6 +49,7 @@ export type ExperienceGroup = {
 export function experienceGroups(
   entries: readonly SnapshotEntry[],
   takenAt: string,
+  confirmed: readonly (readonly string[])[] = [],
 ): ExperienceGroup[] {
   const eligible = entries.filter(
     (entry) => entry.kind === "EXPERIENCE" || entry.kind === "PROJECT" || entry.kind === "VOLUNTEER",
@@ -74,6 +75,17 @@ export function experienceGroups(
       if (!left || !right || !sameExperience(left, right, takenAt)) continue;
       unite(left.ref, right.ref);
     }
+  }
+
+  const byRef = new Map(eligible.map((entry) => [entry.ref, entry]));
+  for (const members of confirmed) {
+    const rows = members
+      .map((ref) => byRef.get(ref))
+      .filter((entry): entry is SnapshotEntry => entry !== undefined);
+    const head = rows[0];
+    if (!head || rows.length < 2) continue;
+    if (!rows.every((row) => recordsCompatible(head, row))) continue;
+    for (const row of rows.slice(1)) unite(head.ref, row.ref);
   }
 
   const buckets = new Map<string, SnapshotEntry[]>();
@@ -102,8 +114,11 @@ export function groupMembers(
   entries: readonly SnapshotEntry[],
   takenAt: string,
   ref: string,
+  confirmed: readonly (readonly string[])[] = [],
 ): string[] {
-  const group = experienceGroups(entries, takenAt).find((item) => item.members.includes(ref));
+  const group = experienceGroups(entries, takenAt, confirmed).find((item) =>
+    item.members.includes(ref),
+  );
   return group?.members ?? [ref];
 }
 
@@ -146,17 +161,59 @@ function sameExperience(left: SnapshotEntry, right: SnapshotEntry, takenAt: stri
 }
 
 function sameEmployment(left: SnapshotEntry, right: SnapshotEntry, takenAt: string): boolean {
-  const orgLeft = orgKey(left.organization);
-  const orgRight = orgKey(right.organization);
-  if (orgLeft.length < 4 || orgLeft !== orgRight) return false;
+  if (!employersMatch(left.organization, right.organization)) return false;
   if (!titlesCompatible(left.title, right.title)) return false;
   return datesAllow(left, right, takenAt, oneSidedLevel(left.title, right.title));
+}
+
+/** Same employer, including an acronym of the longer name. A shared word is not enough. */
+export function employersMatch(
+  left: string | null | undefined,
+  right: string | null | undefined,
+): boolean {
+  const a = orgKey(left);
+  const b = orgKey(right);
+  if (a.length >= 3 && a === b) return true;
+  const leftInitials = initials(left);
+  const rightInitials = initials(right);
+  if (a.length >= 3 && a.length <= 6 && leftInitials.length === 0 && a === rightInitials) return true;
+  if (b.length >= 3 && b.length <= 6 && rightInitials.length === 0 && b === leftInitials) return true;
+  return false;
+}
+
+function initials(value: string | null | undefined): string {
+  const words = (value ?? "")
+    .toLowerCase()
+    .replace(/\.(com|co|ca|io|org|net|ai)\b/g, " ")
+    .replace(/\b(inc|llc|ltd|corp|corporation|company|the|of|and|for)\b/g, " ")
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 1);
+  if (words.length < 2) return "";
+  const letters = words.map((word) => word[0] ?? "").join("");
+  return letters.length >= 3 ? letters : "";
+}
+
+/** A confirmed pair may disagree on dates. A different level or employer stays apart. */
+export function recordsCompatible(left: SnapshotEntry, right: SnapshotEntry): boolean {
+  if (left.ref === right.ref) return true;
+  if (left.kind !== right.kind) return false;
+  if (left.kind === "PROJECT") {
+    return nearTitle(left.title, right.title) || titlesCompatible(left.title, right.title);
+  }
+  return employersMatch(left.organization, right.organization) && titlesCompatible(left.title, right.title);
 }
 
 function sameProject(left: SnapshotEntry, right: SnapshotEntry, takenAt: string): boolean {
   const orgLeft = orgKey(left.organization);
   const orgRight = orgKey(right.organization);
-  if (orgLeft.length > 0 && orgRight.length > 0 && orgLeft !== orgRight) return false;
+  if (
+    orgLeft.length > 0 &&
+    orgRight.length > 0 &&
+    orgLeft !== orgRight &&
+    !employersMatch(left.organization, right.organization)
+  ) {
+    return false;
+  }
   const near = nearTitle(left.title, right.title);
   const titles = titlesCompatible(left.title, right.title);
   if (!near && !titles) return false;
@@ -249,7 +306,7 @@ export function orgKey(value: string | null | undefined): string {
   if (!value) return "";
   return value
     .toLowerCase()
-    .replace(/\.(com|co|ca|io|org|net)\b/g, "")
+    .replace(/\.(com|co|ca|io|org|net|ai)\b/g, "")
     .replace(/\b(inc|llc|ltd|corp|corporation|company)\b/g, "")
     .replace(/[^a-z0-9]/g, "");
 }

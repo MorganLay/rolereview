@@ -55,11 +55,36 @@ export const TailorBullet = z.object({
   text: z.string(),
 });
 
-/** Resume-level plan from the model. Stored, not shown. It can overstate. */
+/** How one library entry should contribute. The model decides this per job. */
+export const StrategyUse = z.enum(["lead", "support", "omit"]);
+
+export const StrategyEvidence = z.object({
+  ref: z.string(),
+  use: StrategyUse,
+  bullets: z.number(),
+  because: z.string(),
+});
+
+export const StrategyQualification = z.object({
+  requirementId: z.string(),
+  weight: z.enum(["mandatory", "differentiating", "secondary"]),
+});
+
+/**
+ * Resume-level strategy from the model. Stored with the resume.
+ * It can overstate; the guard still checks every claim that is printed.
+ */
 export const EditorialPlan = z.object({
   narrative: z.string(),
   priorities: z.array(z.string()),
   gaps: z.array(z.string()),
+  hiringFor: z.string().optional(),
+  positioning: z.string().optional(),
+  qualifications: z.array(StrategyQualification).optional(),
+  evidence: z.array(StrategyEvidence).optional(),
+  closeCall: z.boolean().optional(),
+  /** Job-specific line under the name. Empty or omitted on older plans. */
+  headline: z.string().optional(),
 });
 
 export const TailorSkillGroup = z.object({
@@ -133,6 +158,17 @@ export const ContentEntry = z.object({
   included: z.boolean(),
   /** Stable library entry id. Absent on resumes saved before wording variants. */
   entryId: z.string().optional(),
+  /**
+   * Resume-only heading. Omitted on older resumes, which use the library row.
+   * Null means the fact is unresolved and must not be invented.
+   */
+  displayTitle: z.string().max(120).nullable().optional(),
+  displayOrganization: z.string().max(120).nullable().optional(),
+  displayStart: z.string().max(10).nullable().optional(),
+  displayEnd: z.string().max(10).nullable().optional(),
+  displayCurrent: z.boolean().optional(),
+  /** Other library entries whose bullets may be cited on this consolidated row. */
+  evidenceEntryRefs: z.array(z.string()).max(8).optional(),
   bullets: z.array(ContentBullet),
 });
 
@@ -153,6 +189,7 @@ export const RESUME_REVIEW_CODES = [
   "ENTRY_INCLUDED",
   "ENTRY_EXCLUDED",
   "SKILL_EVIDENCE",
+  "PRESENTATION",
 ] as const;
 
 export const ResumeReviewItem = z.object({
@@ -183,6 +220,15 @@ export const ResumeContent = z.object({
   contacts: z.array(ResumeContact).max(8).optional(),
   /** Selection, exclusion, and ordering notes. Omitted on older resumes. */
   review: z.array(ResumeReviewItem).max(80).optional(),
+  /** Job-specific strategy. Omitted on resumes saved before it existed. */
+  plan: EditorialPlan.optional(),
+  /**
+   * Line under the name for this version. Null hides the profile headline.
+   * Omitted on older resumes, which still show the profile headline.
+   */
+  headline: z.string().max(120).nullable().optional(),
+  /** Page ceiling this version was composed for. Omitted on older resumes. */
+  pageLimit: z.union([z.literal(1), z.literal(2)]).optional(),
 });
 
 export const saveResumeContentSchema = z.object({
@@ -228,6 +274,8 @@ export const MatchReport = z.object({
   score: z.number().int().min(0).max(100).nullable(),
 });
 
+export type StrategyUse = z.infer<typeof StrategyUse>;
+export type StrategyEvidence = z.infer<typeof StrategyEvidence>;
 export type EditorialPlan = z.infer<typeof EditorialPlan>;
 export type TailorBullet = z.infer<typeof TailorBullet>;
 export type TailorSkillGroup = z.infer<typeof TailorSkillGroup>;

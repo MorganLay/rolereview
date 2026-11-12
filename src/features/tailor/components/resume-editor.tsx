@@ -35,6 +35,7 @@ import {
 } from "@/features/tailor/evidence";
 import { includeEvidence } from "@/features/tailor/requirement-state";
 import { tailoringOverview } from "@/features/tailor/overview";
+import { shownEntry, shownHeadline } from "@/features/tailor/presentation";
 import { bulletReview, wordDiff } from "@/features/tailor/review";
 import {
   RESUME_LIMITS,
@@ -675,6 +676,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
       />
       <ProfileHeader
         profile={workspace.snapshot.profile}
+        headline={shownHeadline(content, workspace.snapshot.profile)}
         links={resumeContactLinks(content, workspace.snapshot.profile)}
         templateId={templateId}
       />
@@ -918,10 +920,12 @@ function sectionHeading(templateId: ResumeTemplateId): string {
 
 function ProfileHeader({
   profile,
+  headline,
   links,
   templateId,
 }: {
   profile: LibrarySnapshot["profile"];
+  headline: string | null;
   links: { label: string; url: string }[];
   templateId: ResumeTemplateId;
 }) {
@@ -945,8 +949,8 @@ function ProfileHeader({
           >
             {name ?? profileCopy.emptyName}
           </h2>
-          {profile.headline?.trim() ? (
-            <p className="mt-1 text-sm text-slate">{profile.headline.trim()}</p>
+          {headline ? (
+            <p className="mt-1 text-sm text-slate">{headline}</p>
           ) : null}
         </div>
         <Link
@@ -1024,15 +1028,16 @@ function EntryBlock({
   onRestore: (bulletId: string) => void;
   requirements: readonly Requirement[];
 }) {
-  const title = facts.title.trim() || copy.untitled;
-  const place = [facts.organization, facts.location]
+  const shown = shownEntry(entry, facts);
+  const title = shown.title.trim() || copy.untitled;
+  const place = [shown.organization, shown.location]
     .map((part) => part?.trim() ?? "")
     .filter((part) => part.length > 0)
     .join(" · ");
   const dates = formatResumeDateRange(
-    facts.startDate,
-    facts.endDate,
-    facts.isCurrent,
+    shown.startDate,
+    shown.endDate,
+    shown.isCurrent,
     entryCopy.present,
   );
   const url = httpUrl(facts.url);

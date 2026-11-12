@@ -313,9 +313,15 @@ export const ContentBullet = z.object({
   sourceIds: z.array(z.string()).optional(), // stable Bullet ids; older resumes omit this
 });
 export const ContentEntry = z.object({
-  ref: z.string(),             // title/org/dates come from librarySnapshot — never stored here (D-14)
+  ref: z.string(),             // library ref. Optional display* fields override the snapshot heading for this version only.
   kind: EntryKindEnum, included: z.boolean(), bullets: z.array(ContentBullet),
   entryId: z.string().optional(), // stable Entry id
+  displayTitle: z.string().max(120).nullable().optional(),
+  displayOrganization: z.string().max(120).nullable().optional(),
+  displayStart: z.string().max(10).nullable().optional(),
+  displayEnd: z.string().max(10).nullable().optional(),
+  displayCurrent: z.boolean().optional(),
+  evidenceEntryRefs: z.array(z.string()).max(8).optional(), // other library entries cited by this row
 });
 export const ResumeContent = z.object({
   schemaVersion: z.literal(1),
@@ -329,13 +335,17 @@ export const ResumeContent = z.object({
     reason: z.string().max(80),
   })).max(8).optional(),
   review: z.array(z.object({
-    code: z.enum(["CURRENT_ROLE_OMITTED", "DUPLICATE_CONSOLIDATED", "ORDER_ADJUSTED", "SECTION_ORDER", "BULLET_PREFERENCE", "CONTACT_SELECTED", "CONTACT_EXCLUDED", "ENTRY_INCLUDED", "ENTRY_EXCLUDED", "SKILL_EVIDENCE"]),
+    code: z.enum(["CURRENT_ROLE_OMITTED", "DUPLICATE_CONSOLIDATED", "ORDER_ADJUSTED", "SECTION_ORDER", "BULLET_PREFERENCE", "CONTACT_SELECTED", "CONTACT_EXCLUDED", "ENTRY_INCLUDED", "ENTRY_EXCLUDED", "SKILL_EVIDENCE", "PRESENTATION"]),
     severity: z.enum(["warning", "note"]),
     ref: z.string().max(80),
     reason: z.string().max(80),
   })).max(80).optional(),
+  headline: z.string().max(120).nullable().optional(), // omitted on older resumes, which show the profile headline
+  pageLimit: z.union([z.literal(1), z.literal(2)]).optional(),
 });
 ```
+`plan` is present when the tailor returned a strategy. It holds hiringFor, positioning, narrative, priorities, qualification weights, evidence rows (`ref`, `use`, `bullets`, `because`), gaps, and closeCall. Older resumes omit it. The overview names included entries marked `lead`. It does not show the narrative.
+
 Render order follows `sectionOrder` when the resume has one: Experience, then Projects, then Education, Certifications, Volunteer, and Other, unless the strongest hands-on project clearly outranks the strongest included role, in which case Projects come first. Employment inside Experience stays chronological. Older resumes omit `sectionOrder` and use that default order. Header links follow `contacts` when the resume has them (GitHub, LinkedIn, portfolio, and the same verified set). Older resumes omit `contacts` and show every profile link. `review` records why an entry, skill, or link was included, excluded, or reordered. A current role that was not selected is a warning there, and the entry stays available to turn on. G12 may drop summary sentences whose tenure or numbers are not supported, or replace the summary with the library default.
 
 ### `TailoredResume.matchReport` (MatchReport)

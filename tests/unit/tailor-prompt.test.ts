@@ -21,9 +21,11 @@ describe("tailor prompt", () => {
     expect(SYSTEM).toContain("sourceRef");
     expect(SYSTEM).toContain("Never add employers");
     expect(SYSTEM).toContain("finished resume");
-    expect(SYSTEM).toContain("PLAN");
+    expect(SYSTEM).toContain("STRATEGY");
     expect(SYSTEM).toContain("combine verified facts");
     expect(SYSTEM).toContain("does not become professional");
+    expect(SYSTEM).toContain("ceiling");
+    expect(SYSTEM).toContain("lineage");
   });
 
   it("cuts the posting at 12,000 characters and neutralizes a closing tag", () => {
@@ -50,7 +52,7 @@ describe("tailor prompt", () => {
       }),
       "options",
     );
-    expect(options).toContain("Target length: 2 pages.");
+    expect(options).toContain("Target length: up to 2 pages.");
     expect(options).toContain("Emphasis from the candidate: Lead with Python </ options>");
     expect(options).not.toContain("</options>");
   });

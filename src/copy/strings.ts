@@ -93,6 +93,14 @@ export const strings = {
       specific: (tier: string) =>
         `If a skill or tool belongs here, name it to reach ${tier}.`,
     },
+    questions: {
+      thisLine: "this line",
+      tool: "which tool or method did you use",
+      deliverable: "what did you deliver",
+      outcome: "do you have a count, size, or time you can add",
+      lead: (subject: string, asks: string) =>
+        `About ${subject}: ${asks}? Only add facts you already have.`,
+    },
     examples: {
       verb: "Led the weekly release and shipped it for the team that owned it.",
       metric: "Led the weekly release and cut failed deploys by [a number you have].",
@@ -1345,7 +1353,12 @@ export const strings = {
       dateHint: "Year, or year and month, such as 2019 or 2019-06.",
       modeLabel: "How to save",
       append: "Append",
-      appendHint: "Add the checked items to your library.",
+      appendHint:
+        "Add the checked items. A role that matches one already in your library keeps that record and gains only the new bullets.",
+      matchesRole: (title: string, organization: string) =>
+        organization
+          ? `This matches ${title} at ${organization}. Saving adds new bullets there and leaves the bullets you already have.`
+          : `This matches ${title}. Saving adds new bullets there and leaves the bullets you already have.`,
       replace: "Replace everything",
       replaceHint:
         "Delete the roles, projects, and skills already in your library, then save only what you leave checked.",
@@ -1367,6 +1380,7 @@ export const strings = {
         bullets: number;
         skills: number;
         skippedSkills: number;
+        mergedRoles: number;
         profile: boolean;
       }) => {
         const sentences: string[] = [];
@@ -1382,6 +1396,13 @@ export const strings = {
           bits.push(countPhrase(input.skills, "skill", "skills"));
         }
         if (bits.length > 0) sentences.push(`Saved ${joinAnd(bits)}.`);
+        if (input.mergedRoles === 1) {
+          sentences.push("Added new bullets to 1 role you already have.");
+        } else if (input.mergedRoles > 1) {
+          sentences.push(
+            `Added new bullets to ${input.mergedRoles} roles you already have.`,
+          );
+        }
         if (input.skippedSkills === 1) {
           sentences.push("1 skill was already in your library.");
         } else if (input.skippedSkills > 1) {
@@ -1422,6 +1443,7 @@ export const strings = {
         organization: "Shortened an organization name to fit.",
         entryLocation: "Shortened an entry location to fit.",
         nothing: "Nothing on this resume could be placed. Try pasting the text.",
+        keptLevel: "Kept a level the resume stated on a skill, such as basic or coursework.",
       },
     },
     health: {
@@ -2235,6 +2257,7 @@ export const strings = {
         collapse: "Hide the editorial decisions",
         noFurther: "No further editorial notes for this version.",
         libraryKept: (role: string) => `This version keeps your library wording for ${role}.`,
+        emphasized: (names: string) => `The emphasis for this application is ${names}.`,
         summaryFor: (role: string) => `The summary was rewritten for ${role}`,
         rewrittenFor: (role: string, count: number) =>
           count === 1 ? `1 bullet was rewritten for ${role}` : `${count} bullets were rewritten for ${role}`,
@@ -2290,6 +2313,17 @@ export const strings = {
           count === 1
             ? "1 bullet on the included roles was left off."
             : `${count} bullets on the included roles were left off.`,
+        gapsHeading: "Not claimed",
+        gapsBody: (items: string) =>
+          `The library does not support ${items}. Those requirements are left off this version.`,
+        conflictsHeading: "Confirm a fact",
+        conflictsBody: (count: number) =>
+          count === 1
+            ? "One role has two records that disagree. This version does not pick the conflicting fact."
+            : `${count} roles have records that disagree. This version does not pick the conflicting facts.`,
+        lengthHeading: "Length",
+        shorterThanAllowance:
+          "This version stays inside the two-page allowance. It does not add weaker entries to fill the page.",
         revertsHeading: "Library wording",
         reverts: (count: number) =>
           count === 1

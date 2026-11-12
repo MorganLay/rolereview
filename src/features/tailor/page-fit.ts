@@ -36,22 +36,36 @@ export async function enforcePageBudget(
 }
 
 function excludeLowest(content: ResumeContent): ResumeContent | null {
-  const included = content.entries.filter((entry) => entry.included);
-  const projects = included.filter((entry) => entry.kind === "PROJECT");
-  const extraProject = projects.length > 1 ? projects[projects.length - 1] : undefined;
-  if (extraProject) {
-    const bullet = lastIncluded(extraProject);
-    if (bullet) return turnOff(content, extraProject.ref, bullet.id);
+  const ranked = content.entries
+    .filter((entry) => entry.included && entry.kind !== "EDUCATION")
+    .map((entry) => ({
+      entry,
+      weight: entryWeight(content, entry.ref),
+      count: entry.bullets.filter((bullet) => bullet.included).length,
+    }))
+    .filter((item) => item.count > 0);
+  if (ranked.length === 0) return null;
+  const weights = new Set(ranked.map((item) => item.weight));
+  let pick = ranked[0];
+  if (weights.size > 1) {
+    pick = [...ranked].sort((left, right) => left.weight - right.weight || left.count - right.count)[0];
+  } else {
+    const crowded = [...ranked].sort((left, right) => right.count - left.count)[0];
+    if (crowded && crowded.count > 1) pick = crowded;
+    else pick = ranked.length > 1 ? ranked[ranked.length - 1] : undefined;
   }
-  const crowded = included
-    .map((entry) => ({ entry, count: entry.bullets.filter((bullet) => bullet.included).length }))
-    .filter((item) => item.count > 1)
-    .sort((left, right) => right.count - left.count)[0];
-  if (crowded) {
-    const bullet = lastIncluded(crowded.entry);
-    if (bullet) return turnOff(content, crowded.entry.ref, bullet.id);
-  }
-  return null;
+  if (!pick) return null;
+  const bullet = lastIncluded(pick.entry);
+  if (!bullet) return null;
+  return turnOff(content, pick.entry.ref, bullet.id);
+}
+
+function entryWeight(content: ResumeContent, ref: string): number {
+  const matches = (content.plan?.evidence ?? []).filter((row) => row.ref === ref);
+  if (matches.length === 0) return 1;
+  return Math.max(
+    ...matches.map((row) => (row.use === "lead" ? 3 : row.use === "support" ? 2 : 0)),
+  );
 }
 
 function lastIncluded(entry: ContentEntry): ContentBullet | undefined {

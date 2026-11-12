@@ -1,8 +1,8 @@
 /**
  * Tailoring overview for the resume workspace.
  * Counts and reasons come from the resume on screen, the library snapshot,
- * and requirement ids that exist on the job analysis. The model's plan
- * narrative is not used.
+ * and requirement ids that exist on the job analysis. A stored strategy
+ * can name which included entries carry the emphasis. Its narrative is not shown.
  */
 
 import { strings } from "@/copy/strings";
@@ -10,7 +10,9 @@ import type { Requirement } from "@/features/jobs/schemas";
 import type { LibrarySnapshot } from "@/features/library/schemas";
 
 import { bulletElementId, entryElementId } from "./evidence";
+import { groupMembers } from "./stints";
 import { sameWording } from "./grounding";
+import { shownEntry } from "./presentation";
 import { bulletReview, type BulletReview } from "./review";
 import type { ContentBullet, ResumeContent } from "./schemas";
 import { SUMMARY_SECTION_ID } from "./workspace-nav";
@@ -98,6 +100,7 @@ export function tailoringOverview(input: {
     rewritten: rewritten.length,
     lead,
     projects,
+    emphasis: emphasisLabel(input.content, entries, input.snapshot),
   });
 
   return {
@@ -127,6 +130,13 @@ export function tailoringOverview(input: {
       ),
       pageNote: pageNote(input.content),
       reverted,
+      gaps: (input.content.plan?.gaps ?? []).map((gap) => gap.trim()).filter((gap) => gap.length > 0).slice(0, 3),
+      conflicts: (input.content.review ?? []).filter(
+        (item) => item.reason === "fact_conflict" || item.reason === "unresolved_dates",
+      ).length,
+      shorter:
+        input.content.pageLimit === 2 &&
+        (input.content.review ?? []).some((item) => item.reason === "within_ceiling"),
     }),
   };
 }
@@ -137,18 +147,38 @@ function strategyText(input: {
   rewritten: number;
   lead: EntryFact | null;
   projects: EntryFact[];
+  emphasis: string;
 }): string {
   const selection = selectionClause(input.lead, input.projects);
+  let body: string;
   if (!input.summaryUpdated && input.rewritten === 0 && selection.length === 0) {
-    return copy.libraryKept(input.role);
+    body = copy.libraryKept(input.role);
+  } else {
+    const opening = input.summaryUpdated
+      ? copy.summaryFor(input.role)
+      : input.rewritten > 0
+        ? copy.rewrittenFor(input.role, input.rewritten)
+        : copy.wordingKept(input.role);
+    body = selection.length === 0 ? `${opening}.` : `${opening}. ${sentence(selection)}`;
   }
-  const opening = input.summaryUpdated
-    ? copy.summaryFor(input.role)
-    : input.rewritten > 0
-      ? copy.rewrittenFor(input.role, input.rewritten)
-      : copy.wordingKept(input.role);
-  if (selection.length === 0) return `${opening}.`;
-  return `${opening}. ${sentence(selection)}`;
+  if (input.emphasis.length === 0) return body;
+  return `${copy.emphasized(input.emphasis)} ${body}`;
+}
+
+function emphasisLabel(
+  content: ResumeContent,
+  entries: readonly EntryFact[],
+  snapshot: LibrarySnapshot,
+): string {
+  const leads = (content.plan?.evidence ?? []).filter((row) => row.use === "lead").map((row) => row.ref);
+  if (leads.length === 0) return "";
+  const shown = entries.filter((entry) => {
+    if (!entry.included) return false;
+    if (leads.includes(entry.ref)) return true;
+    const members = groupMembers(snapshot.entries, snapshot.takenAt, entry.ref);
+    return members.some((ref) => leads.includes(ref));
+  });
+  return joinAnd(shown.map((entry) => entry.label));
 }
 
 function selectionClause(lead: EntryFact | null, projects: EntryFact[]): string {
@@ -213,6 +243,9 @@ function decisions(input: {
   combinedRefs: ReadonlySet<string>;
   pageNote: string;
   reverted: BulletFact[];
+  gaps: string[];
+  conflicts: number;
+  shorter: boolean;
 }): OverviewDecision[] {
   const items: OverviewDecision[] = [];
   if (input.summaryUpdated) {
@@ -274,6 +307,30 @@ function decisions(input: {
         label: clip(bullet.review.original, 48) || copy.revertedLink,
         elementId: bullet.elementId,
       })),
+    });
+  }
+  if (input.gaps.length > 0) {
+    items.push({
+      id: "gaps",
+      heading: copy.gapsHeading,
+      body: copy.gapsBody(joinAnd(input.gaps.map((gap) => clip(gap, REQUIREMENT_MAX)))),
+      links: [],
+    });
+  }
+  if (input.conflicts > 0) {
+    items.push({
+      id: "conflicts",
+      heading: copy.conflictsHeading,
+      body: copy.conflictsBody(input.conflicts),
+      links: [],
+    });
+  }
+  if (input.shorter) {
+    items.push({
+      id: "length",
+      heading: copy.lengthHeading,
+      body: copy.shorterThanAllowance,
+      links: [],
     });
   }
   return items;
@@ -376,7 +433,8 @@ function entryFacts(
   return content.entries.flatMap((entry) => {
     const source = byRef.get(entry.ref);
     if (!source) return [];
-    const label = entryLabel(source.title, source.organization);
+    const shown = shownEntry(entry, source);
+    const label = entryLabel(shown.title, shown.organization);
     return [
       {
         ref: entry.ref,

@@ -143,4 +143,48 @@ describe("experience identity", () => {
     ]);
     expect(groups).toEqual([["P1", "P2"]]);
   });
+
+  it("treats an acronym as the same employer and keeps a dated gap apart", () => {
+    const groups = grouped([
+      entry({
+        ref: "E1",
+        kind: "EXPERIENCE",
+        title: "Junior Program Officer",
+        organization: "Canada Revenue Agency",
+        startDate: "2023-11",
+        endDate: null,
+        isCurrent: true,
+      }),
+      entry({
+        ref: "E2",
+        kind: "EXPERIENCE",
+        title: "Junior Program Officer, Special Business Returns Processing",
+        organization: "CRA",
+        startDate: "2023-11",
+        endDate: null,
+        isCurrent: true,
+      }),
+      entry({
+        ref: "E3",
+        kind: "EXPERIENCE",
+        title: "Full-Stack Developer Intern",
+        organization: "Def Hacks",
+        startDate: "2020-03",
+        endDate: "2020-06",
+        isCurrent: false,
+      }),
+      entry({
+        ref: "E4",
+        kind: "EXPERIENCE",
+        title: "Full-Stack Developer Intern",
+        organization: "Defhacks.co",
+        startDate: "2021-01",
+        endDate: "2021-03",
+        isCurrent: false,
+      }),
+    ]);
+    expect(groups).toContainEqual(["E1", "E2"]);
+    expect(groups.flat()).not.toContain("E3");
+    expect(groups.flat()).not.toContain("E4");
+  });
 });

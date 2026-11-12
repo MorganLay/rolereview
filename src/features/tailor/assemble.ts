@@ -1,7 +1,7 @@
 /**
  * Turns a guarded tailor result into the editable resume.
  * docs/05-AI.md → Assembling the editable resume.
- * Titles, employers, and dates stay on the snapshot (D-14).
+ * Titles and dates come from the snapshot unless this version stores a resolved display heading.
  */
 
 import { nanoid } from "nanoid";
@@ -63,7 +63,7 @@ export function assembleResumeContent(
   const entries: ContentEntry[] = [];
   for (const kind of resumeSectionOrder(composition?.sectionOrder)) {
     for (const selected of selectedByKind[kind]) {
-      entries.push(selectedEntry(selected, snapshot, createId, notes));
+      entries.push(selectedEntry(selected, snapshot, createId, notes, composition));
     }
     for (const snapshotEntry of snapshot.entries) {
       if (snapshotEntry.kind !== kind || selectedRefs.has(snapshotEntry.ref)) {
@@ -86,8 +86,11 @@ export function assembleResumeContent(
           sectionOrder: composition.sectionOrder,
           contacts: composition.contacts,
           review: composition.review,
+          headline: composition.headline,
+          pageLimit: composition.pageLimit,
         }
       : {}),
+    ...(validated.plan ? { plan: validated.plan } : {}),
   });
 }
 
@@ -96,12 +99,11 @@ function selectedEntry(
   snapshot: LibrarySnapshot,
   createId: () => string,
   notes: ReadonlyMap<string, BulletNote>,
+  composition: Composition | undefined,
 ): ContentEntry {
   const chosen = new Set<string>();
   const bullets: ContentBullet[] = [];
-  const members = new Set(
-    groupMembers(snapshot.entries, snapshot.takenAt, selected.snapshot.ref),
-  );
+  const members = new Set(memberRefs(snapshot, selected.snapshot.ref, composition));
   const sourceText = new Map<string, string>();
   const sourceId = new Map<string, string>();
   for (const entry of snapshot.entries) {
@@ -123,11 +125,24 @@ function selectedEntry(
     bullets.push(libraryBullet(original.text, [original.ref], false, createId, [original.id]));
   }
 
+  const display = composition?.presentation[selected.snapshot.ref];
+  const stint = composition?.stints.find((item) => item.members.includes(selected.snapshot.ref));
+  const evidenceEntryRefs = stint?.members.filter((ref) => ref !== selected.snapshot.ref) ?? [];
   return {
     ref: selected.snapshot.ref,
     kind: selected.snapshot.kind,
     included: true,
     entryId: selected.snapshot.id,
+    ...(display
+      ? {
+          displayTitle: display.displayTitle,
+          displayOrganization: display.displayOrganization,
+          displayStart: display.displayStart,
+          displayEnd: display.displayEnd,
+          displayCurrent: display.displayCurrent,
+        }
+      : {}),
+    ...(evidenceEntryRefs.length > 0 ? { evidenceEntryRefs } : {}),
     bullets,
   };
 }
@@ -186,6 +201,16 @@ function libraryBullet(
     changeWhat: null,
     requirementIds: [],
   };
+}
+
+function memberRefs(
+  snapshot: LibrarySnapshot,
+  ref: string,
+  composition: Composition | undefined,
+): string[] {
+  const stint = composition?.stints.find((item) => item.members.includes(ref));
+  if (stint) return stint.members;
+  return groupMembers(snapshot.entries, snapshot.takenAt, ref);
 }
 
 function sourceKey(refs: readonly string[]): string {
