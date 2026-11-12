@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { strings } from "@/copy/strings";
 import { StrengthMeter } from "@/features/library/components/strength-meter";
+import { guidanceQuestion } from "@/features/library/guidance";
 import { bulletStrength } from "@/features/library/strength";
 import { CtaLink } from "@/features/marketing/components/cta-link";
 import { captureBrowserEvent } from "@/lib/analytics-browser";
@@ -86,6 +87,7 @@ function BulletResults({ result }: { result: CheckedBullets }) {
               </div>
               {strength.fixes.length > 0 ? (
                 <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate">
+                  {guidanceQuestion(bullet) ? <li>{guidanceQuestion(bullet)}</li> : null}
                   {strength.fixes.map((fix) => (
                     <li key={fix}>{fix}</li>
                   ))}

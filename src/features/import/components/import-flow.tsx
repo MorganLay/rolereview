@@ -20,6 +20,7 @@ import {
   IMPORT_LIMITS,
   PDF_MIME,
 } from "../schemas";
+import type { ImportRoleHint } from "../commit";
 import { bulletsBlockingQuickSave } from "../confirm";
 import { ImportConfirm } from "./import-confirm";
 import {
@@ -36,6 +37,7 @@ type ImportFlowProps = {
   libraryHasContent: boolean;
   importsLeft: number;
   email: string;
+  roles: ImportRoleHint[];
 };
 
 type Source = "file" | "text";
@@ -47,6 +49,7 @@ export function ImportFlow({
   libraryHasContent,
   importsLeft: importsLeftProp,
   email,
+  roles,
 }: ImportFlowProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("upload");
@@ -315,6 +318,7 @@ export function ImportFlow({
           setDraft={updateDraft}
           email={email}
           libraryHasContent={libraryHasContent}
+          roles={roles}
           fields={fields}
           formError={formError}
           pending={pending}

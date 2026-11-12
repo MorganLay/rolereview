@@ -2,6 +2,7 @@
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { strings } from "@/copy/strings";
+import { guidanceQuestion } from "@/features/library/guidance";
 import { bulletStrength, filledSegments, type BulletRole } from "@/features/library/strength";
 import { cn } from "@/lib/utils";
 
@@ -16,9 +17,10 @@ const SEGMENTS = 5;
 
 export function StrengthMeter({ text, skills, role = "accomplishment" }: StrengthMeterProps) {
   const result = bulletStrength(text, skills, role);
+  const question = result.fixes.length > 0 ? guidanceQuestion(text) : null;
   const filled = filledSegments(result.tier);
   const label = copy[result.tier];
-  const detail = result.fixes.length > 0 ? result.fixes.join(" ") : copy.excellentNote;
+  const detail = [question, ...result.fixes].filter((line) => line).join(" ") || copy.excellentNote;
   const quiet = result.tier === "strong" || result.tier === "excellent";
 
   return (
@@ -58,6 +60,7 @@ export function StrengthMeter({ text, skills, role = "accomplishment" }: Strengt
         {role === "record" ? <p>{copy.recordNote}</p> : null}
         {result.fixes.length > 0 ? (
           <ul className="grid gap-1">
+            {question ? <li>{question}</li> : null}
             {result.fixes.map((fix) => (
               <li key={fix}>{fix}</li>
             ))}

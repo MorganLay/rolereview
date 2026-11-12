@@ -276,20 +276,173 @@ describe("planImportCommit", () => {
       { name: "TypeScript", nameKey: "typescript", category: "languages", sortOrder: 0 },
     ]);
   });
+
+  it("adds new bullets to the same role instead of creating a second copy", () => {
+    const vague = "Responsible for updating maps and making sure information is right.";
+    const measured = "Maintained 18,400 water and stormwater asset features in ArcGIS Pro.";
+    const plan = planImportCommit({
+      mode: "append",
+      profile: null,
+      entries: [
+        {
+          ...kept,
+          title: "GIS Analyst",
+          organization: "Maplehaven Regional Services",
+          startDate: "2023-09",
+          bullets: [{ text: measured }, { text: vague }],
+        },
+        {
+          ...kept,
+          title: "GIS Technician",
+          organization: "Cedar Ridge Environmental",
+          startDate: "2021-06",
+          endDate: "2023-08",
+          isCurrent: false,
+          bullets: [{ text: "Collected more than 600 GPS observations." }],
+        },
+      ],
+      skills: [
+        { name: "ArcGIS Pro", category: "Tools" },
+        { name: "ArcGIS Dashboards", category: "Tools" },
+      ],
+      existing: existing({
+        maxSortByKind: { ...emptySortByKind(), EXPERIENCE: 1, EDUCATION: 0 },
+        skillNameKeys: ["arcgis pro"],
+        skillCategories: ["Tools"],
+        maxSkillSort: 0,
+        entries: [
+          {
+            id: "role-analyst",
+            kind: "EXPERIENCE",
+            title: "GIS Analyst",
+            organization: "Maplehaven Regional Services",
+            startDate: "2023-09",
+            endDate: null,
+            bullets: [
+              { text: vague, sortOrder: 0 },
+              { text: "Used ArcGIS Pro, SQL and Python for GIS data tasks.", sortOrder: 1 },
+            ],
+          },
+          {
+            id: "role-tech",
+            kind: "EXPERIENCE",
+            title: "GIS Technician",
+            organization: "Cedar Ridge Environmental",
+            startDate: "2021-06",
+            endDate: "2023-08",
+            bullets: [{ text: "Worked with GPS equipment and field data.", sortOrder: 0 }],
+          },
+        ],
+      }),
+    });
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(plan.plan.entries).toEqual([]);
+    expect(plan.plan.mergedRoles).toBe(2);
+    expect(plan.plan.bulletUpdates).toEqual([
+      { entryId: "role-analyst", bullets: [{ text: measured, sortOrder: 2 }] },
+      {
+        entryId: "role-tech",
+        bullets: [{ text: "Collected more than 600 GPS observations.", sortOrder: 1 }],
+      },
+    ]);
+    expect(plan.plan.skippedSkills).toBe(1);
+    expect(plan.plan.skills.map((skill) => skill.name)).toEqual(["ArcGIS Dashboards"]);
+  });
+
+  it("does not merge a role at a different employer", () => {
+    const plan = planImportCommit({
+      mode: "append",
+      profile: null,
+      entries: [{ ...kept, organization: "Other Co", bullets: [{ text: "A new line here." }] }],
+      skills: [],
+      existing: existing({
+        entries: [
+          {
+            id: "role-1",
+            kind: "EXPERIENCE",
+            title: "Engineer",
+            organization: "Acme",
+            startDate: "2020-01",
+            endDate: null,
+            bullets: [{ text: "First line.", sortOrder: 0 }],
+          },
+        ],
+      }),
+    });
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(plan.plan.entries).toHaveLength(1);
+    expect(plan.plan.mergedRoles).toBe(0);
+  });
+
+  it("puts a stated level on a skill that was saved as the bare tool", () => {
+    const plan = planImportCommit({
+      mode: "append",
+      profile: null,
+      entries: [],
+      skills: [{ name: "basic FME", category: "Tools" }],
+      existing: existing({
+        skillNameKeys: ["fme"],
+        skillCategories: ["Tools"],
+        maxSkillSort: 0,
+        skills: [{ id: "skill-fme", name: "FME", nameKey: "fme" }],
+      }),
+    });
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(plan.plan.skills).toEqual([]);
+    expect(plan.plan.skillUpdates).toEqual([
+      { id: "skill-fme", name: "basic FME", nameKey: "basic fme" },
+    ]);
+  });
 });
 
 describe("import save summary", () => {
   it("names only what was saved", () => {
     expect(
-      saved({ entries: 4, bullets: 11, skills: 6, skippedSkills: 2, profile: true }),
+      saved({
+        entries: 4,
+        bullets: 11,
+        skills: 6,
+        skippedSkills: 2,
+        mergedRoles: 0,
+        profile: true,
+      }),
     ).toBe(
       "Updated your profile. Saved 4 entries, 11 bullets, and 6 skills. 2 skills were already in your library.",
     );
     expect(
-      saved({ entries: 1, bullets: 1, skills: 0, skippedSkills: 1, profile: false }),
+      saved({
+        entries: 1,
+        bullets: 1,
+        skills: 0,
+        skippedSkills: 1,
+        mergedRoles: 0,
+        profile: false,
+      }),
     ).toBe("Saved 1 entry and 1 bullet. 1 skill was already in your library.");
     expect(
-      saved({ entries: 0, bullets: 0, skills: 0, skippedSkills: 0, profile: true }),
+      saved({
+        entries: 0,
+        bullets: 3,
+        skills: 0,
+        skippedSkills: 0,
+        mergedRoles: 2,
+        profile: false,
+      }),
+    ).toBe(
+      "Saved 3 bullets. Added new bullets to 2 roles you already have.",
+    );
+    expect(
+      saved({
+        entries: 0,
+        bullets: 0,
+        skills: 0,
+        skippedSkills: 0,
+        mergedRoles: 0,
+        profile: true,
+      }),
     ).toBe("Updated your profile.");
   });
 });

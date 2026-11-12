@@ -49,6 +49,7 @@ export type CommitImportResult = {
   bullets: number;
   skills: number;
   skippedSkills: number;
+  mergedRoles: number;
   profile: boolean;
 };
 
@@ -71,8 +72,19 @@ export async function commitImport(
     where: { id: user.id },
     select: {
       onboardingCompletedAt: true,
-      entries: { select: { kind: true, sortOrder: true } },
-      skills: { select: { nameKey: true, category: true, sortOrder: true } },
+      entries: {
+        select: {
+          id: true,
+          kind: true,
+          title: true,
+          organization: true,
+          startDate: true,
+          endDate: true,
+          sortOrder: true,
+          bullets: { select: { text: true, sortOrder: true } },
+        },
+      },
+      skills: { select: { id: true, name: true, nameKey: true, category: true, sortOrder: true } },
     },
   });
   if (!row) return fail("NOT_FOUND");
@@ -96,6 +108,12 @@ export async function commitImport(
       maxSkillSort,
       skillNameKeys: row.skills.map((skill) => skill.nameKey),
       skillCategories: row.skills.map((skill) => skill.category),
+      skills: row.skills.map((skill) => ({
+        id: skill.id,
+        name: skill.name,
+        nameKey: skill.nameKey,
+      })),
+      entries: row.entries,
     },
   });
   if (!planned.ok) {
@@ -158,10 +176,37 @@ export async function commitImport(
           })),
         });
       }
+      for (const update of plan.skillUpdates) {
+        const renamed = await tx.skill.updateMany({
+          where: { id: update.id, userId: user.id },
+          data: { name: update.name, nameKey: update.nameKey },
+        });
+        if (renamed.count === 0) throw new Error("SKILL_MISSING");
+      }
+      for (const update of plan.bulletUpdates) {
+        const owned = await tx.entry.findFirst({
+          where: { id: update.entryId, userId: user.id },
+          select: { id: true },
+        });
+        if (!owned) throw new Error("ENTRY_MISSING");
+        await tx.bullet.createMany({
+          data: update.bullets.map((bullet) => ({
+            userId: user.id,
+            entryId: owned.id,
+            text: bullet.text,
+            sortOrder: bullet.sortOrder,
+          })),
+        });
+      }
     });
   } catch (error) {
     if (isUniqueViolation(error)) return fail("CONFLICT");
-    if (error instanceof Error && error.message === "USER_MISSING") {
+    if (
+      error instanceof Error &&
+      (error.message === "USER_MISSING" ||
+        error.message === "ENTRY_MISSING" ||
+        error.message === "SKILL_MISSING")
+    ) {
       return fail("NOT_FOUND");
     }
     throw error;
@@ -170,16 +215,16 @@ export async function commitImport(
   revalidatePath("/library");
   revalidatePath("/dashboard");
 
-  const bullets = plan.entries.reduce(
-    (sum, entry) => sum + entry.bullets.length,
-    0,
-  );
+  const bullets =
+    plan.entries.reduce((sum, entry) => sum + entry.bullets.length, 0) +
+    plan.bulletUpdates.reduce((sum, update) => sum + update.bullets.length, 0);
   return ok({
     redirectTo: row.onboardingCompletedAt === null ? "/dashboard" : "/library",
     entries: plan.entries.length,
     bullets,
     skills: plan.skills.length,
     skippedSkills: plan.skippedSkills,
+    mergedRoles: plan.mergedRoles,
     profile: plan.profile !== null,
   });
 }

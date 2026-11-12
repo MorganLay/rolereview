@@ -92,6 +92,7 @@ describe("formatResumeDate", () => {
       "Nov 2023 – Present",
     );
     expect(formatResumeDateRange("2019", null, false, "Present")).toBe("2019");
+    expect(formatResumeDateRange("2025", "2025", false, "Present")).toBe("2025");
     expect(formatResumeDateRange(null, null, false, "Present")).toBeNull();
   });
 });

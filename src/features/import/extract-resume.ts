@@ -7,6 +7,7 @@ import { buildContent, OutputSchema, SYSTEM } from "@/lib/ai/prompts/import";
 import { runStructured } from "@/lib/ai/run";
 import { fail, ok, type ActionFailure, type ActionResult } from "@/lib/result";
 
+import { visibleFileText } from "../library/skill-qualifier";
 import {
   classifyUpload,
   extractDocxText,
@@ -41,11 +42,11 @@ export async function extractResumeForUser(
     schema: OutputSchema,
   });
   if (!result.ok) return fail("AI_FAILED");
-  return ok(postProcessImport(result.data));
+  return ok(postProcessImport(result.data, prepared.sourceText));
 }
 
 async function prepareContent(request: ExtractRequest): Promise<
-  | { ok: true; content: ReturnType<typeof buildContent> }
+  | { ok: true; content: ReturnType<typeof buildContent>; sourceText: string }
   | { ok: false; result: ActionFailure }
 > {
   if (request.source === "text") {
@@ -57,7 +58,7 @@ async function prepareContent(request: ExtractRequest): Promise<
     if (bounds === "long") {
       return { ok: false, result: fail("VALIDATION", { text: [errors.textLong] }) };
     }
-    return { ok: true, content: buildContent({ kind: "text", text }) };
+    return { ok: true, content: buildContent({ kind: "text", text }), sourceText: text };
   }
 
   if (request.file.size === 0) {
@@ -86,6 +87,7 @@ async function prepareContent(request: ExtractRequest): Promise<
         kind: "pdf",
         base64: Buffer.from(bytes).toString("base64"),
       }),
+      sourceText: visibleFileText(bytes),
     };
   }
 
@@ -101,5 +103,5 @@ async function prepareContent(request: ExtractRequest): Promise<
   if (bounds === "long") {
     return { ok: false, result: fail("VALIDATION", { file: [errors.textLong] }) };
   }
-  return { ok: true, content: buildContent({ kind: "text", text }) };
+  return { ok: true, content: buildContent({ kind: "text", text }), sourceText: text };
 }
