@@ -10,6 +10,7 @@ import { requirementCoverage, requirementTerms } from "./coverage";
 import { sameWording } from "./grounding";
 import { normalizeMatchText, termAppears } from "./keywords";
 import type { BulletNote } from "./variants";
+import { groupMembers } from "./stints";
 import type { TailorOutput, ValidatedBullet, ValidatedTailorOutput } from "./schemas";
 
 const MAX_ENTRIES = 3;
@@ -26,6 +27,24 @@ export type RevisionTarget = {
   requirementIds: string[];
   unused: RevisionSource[];
   current: { sourceRefs: string[]; text: string }[];
+};
+
+export type EditorialDoubt = {
+  code: "lead_missing" | "lead_thin" | "support_crowds" | "close_call";
+  ref: string;
+};
+
+export type RevisionRoute =
+  | { kind: "editorial"; doubts: EditorialDoubt[]; targets: RevisionTarget[] }
+  | { kind: "entries"; targets: RevisionTarget[] }
+  | { kind: "none" };
+
+export type LibraryExcerpt = {
+  ref: string;
+  title: string;
+  organization: string | null;
+  kind: string;
+  bullets: { ref: string; text: string }[];
 };
 
 export type RevisionEntry = {
@@ -91,6 +110,137 @@ export function revisionTargets(input: {
       unused: target.unused.slice(0, 4),
       current: currentBullets(input.output, target.entryRef),
     }));
+}
+
+/** One editorial call when a strategy exists and the draft does not carry it out. */
+export function revisionRoute(input: {
+  output: ValidatedTailorOutput;
+  snapshot: LibrarySnapshot;
+  analysis: JobAnalysis;
+}): RevisionRoute {
+  const doubts = editorialDoubts(input);
+  const targets = revisionTargets(input);
+  const directed = (input.output.plan?.evidence?.length ?? 0) > 0;
+  if (directed && (doubts.length > 0 || targets.length > 0)) {
+    return { kind: "editorial", doubts, targets };
+  }
+  if (targets.length > 0) return { kind: "entries", targets };
+  return { kind: "none" };
+}
+
+/**
+ * The draft disagrees with its own strategy. Keyword overlap is not a doubt.
+ * A strategy that was never returned produces none.
+ */
+export function editorialDoubts(input: {
+  output: ValidatedTailorOutput;
+  snapshot: LibrarySnapshot;
+}): EditorialDoubt[] {
+  const evidence = input.output.plan?.evidence ?? [];
+  if (evidence.length === 0) return [];
+  const doubts: EditorialDoubt[] = [];
+  const selected = new Map(input.output.entries.map((entry) => [entry.ref, entry]));
+  for (const row of evidence) {
+    if (row.use !== "lead") continue;
+    const heading = selectedHeading(row.ref, input.snapshot, selected);
+    if (!heading) {
+      doubts.push({ code: "lead_missing", ref: row.ref });
+      continue;
+    }
+    const unused = unusedSources(heading.ref, input.output, input.snapshot);
+    if (row.bullets >= 2 && heading.bullets.length < row.bullets && unused > 0) {
+      doubts.push({ code: "lead_thin", ref: heading.ref });
+    }
+  }
+  const leadBullets = maxBullets(evidence, "lead", input.snapshot, selected);
+  for (const row of evidence) {
+    if (row.use !== "support") continue;
+    const heading = selectedHeading(row.ref, input.snapshot, selected);
+    if (!heading || leadBullets === 0) continue;
+    if (heading.bullets.length >= leadBullets + 2) {
+      doubts.push({ code: "support_crowds", ref: heading.ref });
+    }
+  }
+  if (input.output.plan?.closeCall === true) doubts.push({ code: "close_call", ref: "strategy" });
+  const seen = new Set<string>();
+  return doubts.filter((doubt) => {
+    const key = `${doubt.code}:${doubt.ref}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 6);
+}
+
+export function editorialLibrary(input: {
+  output: ValidatedTailorOutput;
+  snapshot: LibrarySnapshot;
+  targets?: readonly RevisionTarget[];
+}): LibraryExcerpt[] {
+  const byRef = new Map(input.snapshot.entries.map((entry) => [entry.ref, entry]));
+  const ordered: string[] = [];
+  const push = (ref: string) => {
+    if (!byRef.has(ref) || ordered.includes(ref)) return;
+    ordered.push(ref);
+  };
+  for (const row of input.output.plan?.evidence ?? []) {
+    if (row.use === "lead") push(row.ref);
+  }
+  for (const target of input.targets ?? []) push(target.entryRef);
+  for (const row of input.output.plan?.evidence ?? []) push(row.ref);
+  for (const entry of input.output.entries) push(entry.ref);
+  const excerpts: LibraryExcerpt[] = [];
+  for (const ref of ordered) {
+    if (excerpts.length >= 8) break;
+    const entry = byRef.get(ref);
+    if (!entry) continue;
+    const bullets: LibraryExcerpt["bullets"] = [];
+    for (const memberRef of groupMembers(input.snapshot.entries, input.snapshot.takenAt, ref)) {
+      const member = byRef.get(memberRef);
+      if (!member) continue;
+      for (const bullet of member.bullets) {
+        if (bullets.length >= 6) break;
+        bullets.push({ ref: bullet.ref, text: bullet.text });
+      }
+    }
+    excerpts.push({
+      ref,
+      title: entry.title,
+      organization: entry.organization,
+      kind: entry.kind,
+      bullets,
+    });
+  }
+  return excerpts;
+}
+
+export function acceptEditorial(
+  first: ValidatedTailorOutput,
+  second: ValidatedTailorOutput,
+): { output: ValidatedTailorOutput; accepted: boolean } {
+  if (second.entries.length === 0) return { output: first, accepted: false };
+  if (second.entries.some((entry) => entry.bullets.some((bullet) => bullet.reverted))) {
+    return { output: first, accepted: false };
+  }
+  if (second.entries.every((entry) => entry.bullets.length === 0)) {
+    return { output: first, accepted: false };
+  }
+  const sameSummary = first.summary === second.summary;
+  const sameEntries =
+    first.entries.length === second.entries.length &&
+    first.entries.every((entry, index) => {
+      const other = second.entries[index];
+      return other !== undefined && entry.ref === other.ref && sameBullets(entry.bullets, other.bullets);
+    });
+  if (sameSummary && sameEntries) return { output: first, accepted: false };
+  return {
+    output: {
+      ...first,
+      summary: second.summary,
+      entries: second.entries,
+      plan: second.plan ?? first.plan,
+    },
+    accepted: true,
+  };
 }
 
 export function allowedRefs(target: RevisionTarget): Set<string> {
@@ -211,6 +361,33 @@ export function acceptRevision(
     entries.push(revised);
   }
   return { output: { ...first, entries }, accepted };
+}
+
+export function notesForEditorial(
+  notes: ReadonlyMap<string, BulletNote>,
+  entries: readonly {
+    bullets: readonly {
+      sourceRefs: readonly string[];
+      what: string;
+      why: string;
+      requirementIds: readonly string[];
+    }[];
+  }[],
+): Map<string, BulletNote> {
+  const next = new Map(notes);
+  for (const entry of entries) {
+    for (const bullet of entry.bullets) {
+      const what = clip(bullet.what);
+      const why = clip(bullet.why);
+      const requirementIds = bullet.requirementIds
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0)
+        .slice(0, 8);
+      if (what.length === 0 && why.length === 0 && requirementIds.length === 0) continue;
+      next.set(sourceKey(bullet.sourceRefs), { what, why, requirementIds });
+    }
+  }
+  return next;
 }
 
 export function notesForAccepted(
@@ -364,6 +541,51 @@ function currentBullets(
     sourceRefs: [...bullet.sourceRefs],
     text: bullet.text,
   }));
+}
+
+function selectedHeading(
+  ref: string,
+  snapshot: LibrarySnapshot,
+  selected: ReadonlyMap<string, ValidatedTailorOutput["entries"][number]>,
+): ValidatedTailorOutput["entries"][number] | undefined {
+  for (const member of groupMembers(snapshot.entries, snapshot.takenAt, ref)) {
+    const heading = selected.get(member);
+    if (heading) return heading;
+  }
+  return undefined;
+}
+
+function unusedSources(
+  entryRef: string,
+  output: ValidatedTailorOutput,
+  snapshot: LibrarySnapshot,
+): number {
+  const cited = citedRefs(output);
+  let unused = 0;
+  const byRef = new Map(snapshot.entries.map((entry) => [entry.ref, entry]));
+  for (const memberRef of groupMembers(snapshot.entries, snapshot.takenAt, entryRef)) {
+    const member = byRef.get(memberRef);
+    if (!member) continue;
+    for (const bullet of member.bullets) {
+      if (!cited.has(bullet.ref)) unused += 1;
+    }
+  }
+  return unused;
+}
+
+function maxBullets(
+  evidence: NonNullable<ValidatedTailorOutput["plan"]>["evidence"],
+  use: "lead" | "support",
+  snapshot: LibrarySnapshot,
+  selected: ReadonlyMap<string, ValidatedTailorOutput["entries"][number]>,
+): number {
+  let max = 0;
+  for (const row of evidence ?? []) {
+    if (row.use !== use) continue;
+    const heading = selectedHeading(row.ref, snapshot, selected);
+    if (heading && heading.bullets.length > max) max = heading.bullets.length;
+  }
+  return max;
 }
 
 function citedRefs(output: ValidatedTailorOutput): Set<string> {

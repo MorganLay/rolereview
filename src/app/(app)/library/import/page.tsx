@@ -31,6 +31,7 @@ export default async function LibraryImportPage() {
         libraryHasContent={page.libraryHasContent}
         importsLeft={page.importsLeft}
         email={page.email}
+        roles={page.roles}
       />
     </div>
   );

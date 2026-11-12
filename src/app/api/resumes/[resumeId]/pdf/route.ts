@@ -4,7 +4,7 @@ import { z } from "zod";
 import { can } from "@/features/billing/entitlements";
 import { LibrarySnapshot } from "@/features/library/schemas";
 import { FIRST_EXPORT_HEADER } from "@/features/tailor/export-prompt";
-import { MatchReport, ResumeContent, TailorOptions } from "@/features/tailor/schemas";
+import { MatchReport, ResumeContent, TailorOptions, pageCeiling } from "@/features/tailor/schemas";
 import { requireUser } from "@/lib/auth";
 import { captureServerEvent } from "@/lib/analytics";
 import { db } from "@/lib/db";
@@ -57,8 +57,14 @@ export async function GET(
   const preview = new URL(request.url).searchParams.get("preview") === "1";
   const model = resumePdfModel(content.data, snapshot.data);
   const tailor = TailorOptions.safeParse(row.options ?? {});
+  const pages =
+    content.data.pageLimit === 1 || content.data.pageLimit === 2
+      ? content.data.pageLimit
+      : tailor.success
+        ? pageCeiling(tailor.data.length)
+        : 1;
   const fit = await fitResumePdf(model, template, {
-    pages: tailor.success ? tailor.data.length : 1,
+    pages,
     producedAt: row.submittedAt ?? undefined,
   });
   const filename = resumePdfFilename(

@@ -35,6 +35,7 @@ import {
 } from "@/features/tailor/evidence";
 import { includeEvidence } from "@/features/tailor/requirement-state";
 import { tailoringOverview } from "@/features/tailor/overview";
+import { shownEntry, shownHeadline } from "@/features/tailor/presentation";
 import { bulletReview, wordDiff } from "@/features/tailor/review";
 import {
   RESUME_LIMITS,
@@ -123,6 +124,9 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
 
   const snapshotByRef = new Map(
     workspace.snapshot.entries.map((entry) => [entry.ref, entry]),
+  );
+  const libraryBullets = new Map(
+    workspace.snapshot.entries.flatMap((entry) => entry.bullets.map((bullet) => [bullet.ref, bullet] as const)),
   );
   const skillNames = workspace.snapshot.skills.map((skill) => skill.name);
 
@@ -519,6 +523,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
         key={entry.ref}
         entry={entry}
         facts={facts}
+        libraryBullets={libraryBullets}
         skills={skillNames}
         highlighted={highlightId === entryElementId(entry.ref)}
         highlightId={highlightId}
@@ -671,6 +676,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
       />
       <ProfileHeader
         profile={workspace.snapshot.profile}
+        headline={shownHeadline(content, workspace.snapshot.profile)}
         links={resumeContactLinks(content, workspace.snapshot.profile)}
         templateId={templateId}
       />
@@ -914,10 +920,12 @@ function sectionHeading(templateId: ResumeTemplateId): string {
 
 function ProfileHeader({
   profile,
+  headline,
   links,
   templateId,
 }: {
   profile: LibrarySnapshot["profile"];
+  headline: string | null;
   links: { label: string; url: string }[];
   templateId: ResumeTemplateId;
 }) {
@@ -941,8 +949,8 @@ function ProfileHeader({
           >
             {name ?? profileCopy.emptyName}
           </h2>
-          {profile.headline?.trim() ? (
-            <p className="mt-1 text-sm text-slate">{profile.headline.trim()}</p>
+          {headline ? (
+            <p className="mt-1 text-sm text-slate">{headline}</p>
           ) : null}
         </div>
         <Link
@@ -978,6 +986,7 @@ function ProfileHeader({
 function EntryBlock({
   entry,
   facts,
+  libraryBullets,
   skills,
   highlighted,
   highlightId,
@@ -999,6 +1008,7 @@ function EntryBlock({
 }: {
   entry: ContentEntry;
   facts: SnapshotEntry;
+  libraryBullets: ReadonlyMap<string, SnapshotEntry["bullets"][number]>;
   skills: readonly string[];
   highlighted: boolean;
   highlightId: string | null;
@@ -1018,15 +1028,16 @@ function EntryBlock({
   onRestore: (bulletId: string) => void;
   requirements: readonly Requirement[];
 }) {
-  const title = facts.title.trim() || copy.untitled;
-  const place = [facts.organization, facts.location]
+  const shown = shownEntry(entry, facts);
+  const title = shown.title.trim() || copy.untitled;
+  const place = [shown.organization, shown.location]
     .map((part) => part?.trim() ?? "")
     .filter((part) => part.length > 0)
     .join(" · ");
   const dates = formatResumeDateRange(
-    facts.startDate,
-    facts.endDate,
-    facts.isCurrent,
+    shown.startDate,
+    shown.endDate,
+    shown.isCurrent,
     entryCopy.present,
   );
   const url = httpUrl(facts.url);
@@ -1069,6 +1080,7 @@ function EntryBlock({
               key={bullet.id}
               bullet={bullet}
               facts={facts}
+              libraryBullets={libraryBullets}
               skills={skills}
               highlighted={highlightId === bulletElementId(bullet.id)}
               editing={editingId === bullet.id}
@@ -1100,6 +1112,7 @@ function EntryBlock({
 function BulletRow({
   bullet,
   facts,
+  libraryBullets,
   skills,
   highlighted,
   editing,
@@ -1123,6 +1136,7 @@ function BulletRow({
 }: {
   bullet: ContentBullet;
   facts: SnapshotEntry;
+  libraryBullets: ReadonlyMap<string, SnapshotEntry["bullets"][number]>;
   skills: readonly string[];
   highlighted: boolean;
   editing: boolean;
@@ -1146,7 +1160,7 @@ function BulletRow({
 }) {
   const fieldId = useId();
   const sources = bullet.sourceRefs
-    .map((ref) => facts.bullets.find((item) => item.ref === ref))
+    .map((ref) => libraryBullets.get(ref) ?? facts.bullets.find((item) => item.ref === ref))
     .filter((item): item is SnapshotEntry["bullets"][number] => item !== undefined);
   const review = bulletReview(bullet, sources[0]?.text ?? "", requirements);
 

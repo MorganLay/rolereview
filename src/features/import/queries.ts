@@ -4,12 +4,17 @@ import { quotaSnapshot } from "@/features/billing/quota";
 import type { SessionUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
+import type { ImportRoleHint } from "./commit";
+
+export type { ImportRoleHint };
+
 export type ImportPageData = {
   /** True while `onboardingCompletedAt` is still null. */
   onboarding: boolean;
   libraryHasContent: boolean;
   importsLeft: number;
   email: string;
+  roles: ImportRoleHint[];
 };
 
 /** What the import page needs before the client state machine starts. */
@@ -21,6 +26,16 @@ export async function getImportPage(
     select: {
       onboardingCompletedAt: true,
       _count: { select: { entries: true, skills: true } },
+      entries: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          kind: true,
+          title: true,
+          organization: true,
+          startDate: true,
+          endDate: true,
+        },
+      },
     },
   });
   if (!row) return null;
@@ -31,5 +46,6 @@ export async function getImportPage(
     libraryHasContent: row._count.entries > 0 || row._count.skills > 0,
     importsLeft: quota.remaining,
     email: user.email,
+    roles: row.entries,
   };
 }

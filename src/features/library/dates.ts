@@ -79,7 +79,7 @@ export function formatResumeDate(value: string | null): string | null {
   return `${formatMonth(parsed.month)} ${parsed.year}`;
 }
 
-/** "Nov 2023 – Present", "2019 – 2021", or a single date when the other is blank. */
+/** "Nov 2023 – Present", "2019 – 2021", or one date when the other is blank or the labels match. */
 export function formatResumeDateRange(
   start: string | null,
   end: string | null,
@@ -88,7 +88,10 @@ export function formatResumeDateRange(
 ): string | null {
   const startLabel = formatResumeDate(start);
   const endLabel = isCurrent ? presentLabel : formatResumeDate(end);
-  if (startLabel && endLabel) return `${startLabel} – ${endLabel}`;
+  if (startLabel && endLabel) {
+    if (startLabel === endLabel) return startLabel;
+    return `${startLabel} – ${endLabel}`;
+  }
   return startLabel ?? endLabel;
 }
 

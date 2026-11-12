@@ -10,6 +10,7 @@ import { WorkProgress } from "@/components/shell/work-progress";
 import { Button } from "@/components/ui/button";
 import { openUpgradeModal } from "@/components/shell/upgrade-store";
 import { strings } from "@/copy/strings";
+import type { ResumeLengthChoice } from "@/features/tailor/schemas";
 
 import { rateTailoredResume, tailorResume } from "../actions";
 import type { JobDocuments, ResumeVersion } from "../status";
@@ -48,7 +49,7 @@ export function DocumentsTab({
   const [ratings, setRatings] = useState<Record<string, 1 | -1 | null>>({});
   const showProgress = tailoring || documents.pending;
 
-  async function onConfirm(input: { length: 1 | 2; emphasis: string }) {
+  async function onConfirm(input: { length: ResumeLengthChoice; emphasis: string }) {
     if (documents.tailorsLeft <= 0 && inflight.current === 0) {
       setOpen(false);
       openUpgradeModal({ kind: "quota", meter: "TAILOR" });

@@ -22,6 +22,7 @@ const EXTRA_TERMS = [
   "sharepoint",
   "ssas",
   "ssrs",
+  "erp",
 ];
 
 const TECH = new Set<string>([...KNOWN_TERMS, ...EXTRA_TERMS]);
@@ -37,6 +38,7 @@ const OVERCLAIM = [
   "elt",
   "pipeline",
   "senior",
+  "erp",
 ] as const;
 
 /** Kinds of work a rewrite must not invent from a nearby task. */
@@ -265,7 +267,7 @@ export function requirementOverstated(input: {
   for (const phrase of INVENTED_WORK) {
     if (mentions(input.requirement, phrase) && !mentions(input.evidence, phrase)) return true;
   }
-  return false;
+  return knownToolMissing(input.requirement, input.evidence);
 }
 
 /** Whole years of cited EXPERIENCE entries. Projects and education do not count. */
@@ -457,6 +459,31 @@ function firstMatch(text: string, words: readonly string[]): string | null {
   return null;
 }
 
+/** A known tool in the requirement that the cited evidence never names. */
+function knownToolMissing(requirement: string, evidence: string): boolean {
+  const asked = toolsNamed(requirement);
+  if (asked.length === 0) return false;
+  const haystack = normalizeMatchText(evidence);
+  return asked.some((term) => !termAppears(haystack, term));
+}
+
+function toolsNamed(text: string): string[] {
+  const haystack = normalizeMatchText(text);
+  const found: string[] = [];
+  const terms = [...KNOWN_TERMS].filter(toolTerm).sort((left, right) => right.length - left.length);
+  for (const term of terms) {
+    if (!termAppears(haystack, term)) continue;
+    if (found.some((longer) => longer.includes(term))) continue;
+    found.push(term);
+  }
+  return found;
+}
+
+function toolTerm(term: string): boolean {
+  if (term.length >= 3) return true;
+  return /[^a-z0-9]/.test(term);
+}
+
 function mentions(text: string, word: string): boolean {
   const haystack = looseText(text);
   return termAppears(haystack, word) || termAppears(haystack, `${word}s`);
@@ -468,7 +495,7 @@ function looseText(text: string): string {
 }
 
 function lexiconPhrases(text: string): string[] {
-  const haystack = normalizeMatchText(text);
+  const haystack = looseText(text);
   const found: string[] = [];
   for (const term of TECH) {
     if (!term.includes(" ")) continue;

@@ -7,6 +7,7 @@
 import { strings } from "@/copy/strings";
 import { formatResumeDateRange } from "@/features/library/dates";
 import type { LibrarySnapshot } from "@/features/library/schemas";
+import { shownEntry, shownHeadline } from "@/features/tailor/presentation";
 import { resumeContactLinks, resumeSectionOrder } from "@/features/tailor/resume-shape";
 import { groupedSkillLines } from "@/features/tailor/skill-groups";
 import type { ContentEntry, ResumeContent } from "@/features/tailor/schemas";
@@ -72,7 +73,7 @@ export function resumePdfModel(
 
   return {
     name: clean(profile.fullName),
-    headline: clean(profile.headline),
+    headline: shownHeadline(content, profile),
     contact: contact.length > 0 ? contact : null,
     links: resumeContactLinks(content, profile)
       .map(linkLine)
@@ -109,12 +110,12 @@ function entryBlock(
   snapshotEntry: SnapshotEntry | undefined,
 ): ResumePdfEntry | null {
   if (!snapshotEntry) return null;
-  const title = clean(snapshotEntry.title);
-  const dates = dateLabel(snapshotEntry);
-  const detailParts = [
-    clean(snapshotEntry.organization),
-    clean(snapshotEntry.location),
-  ].filter((part) => part !== null);
+  const shown = shownEntry(entry, snapshotEntry);
+  const title = clean(shown.title);
+  const dates = dateLabel(shown);
+  const detailParts = [clean(shown.organization), clean(shown.location)].filter(
+    (part) => part !== null,
+  );
   const metaParts = [...detailParts, dates].filter((part) => part !== null);
   const bullets = entry.bullets
     .filter((bullet) => bullet.included)
@@ -132,7 +133,11 @@ function entryBlock(
   };
 }
 
-function dateLabel(entry: SnapshotEntry): string | null {
+function dateLabel(entry: {
+  startDate: string | null;
+  endDate: string | null;
+  isCurrent: boolean;
+}): string | null {
   return formatResumeDateRange(
     entry.startDate,
     entry.endDate,

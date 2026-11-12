@@ -16,7 +16,7 @@ Rules:
 - Dates: "YYYY-MM" when month and year are known, "YYYY" when only the year is known, otherwise null. "Present"/"Current" → endDate null and isCurrent true.
 - kind: paid roles, internships and contract work → EXPERIENCE; personal/academic/open-source work → PROJECT; degrees/diplomas/courses → EDUCATION; certifications/licences → CERTIFICATION; unpaid community work → VOLUNTEER; anything else → OTHER.
 - Every bullet belongs to exactly one entry, in original order. Paragraph-style descriptions become one bullet per sentence.
-- Skills: include items from any skills section, plus technologies/tools explicitly named in bullets. One skill per item ("React", not "React/Redux" — split those). Use a short category ("Languages", "Frameworks", "Tools", "Cloud", "Data", "Soft skills") or null.
+- Skills: include items from any skills section, plus technologies/tools explicitly named in bullets. One skill per item ("React", not "React/Redux" — split those). Keep a level or context the resume states in the skill name: "basic SQL" stays "basic SQL", and "Excel (coursework)" stays "Excel (coursework)". Do not drop "basic", "familiar", or "(coursework)", and do not upgrade that skill to the bare tool. Use a short category ("Languages", "Frameworks", "Tools", "Cloud", "Data", "Soft skills") or null.
 - profile.headline: the line under the name if present, else null. Do not create one.
 - Add a warning for anything you could not place or were unsure about (e.g. "Dates for 'Acme' were unclear").`;
 

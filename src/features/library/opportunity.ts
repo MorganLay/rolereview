@@ -3,6 +3,7 @@
  * Excellent lines with no material issue get no prompt.
  */
 
+import { guidanceQuestion } from "./guidance";
 import type { BulletRole, BulletStrength, StrengthConcern } from "./strength";
 
 export const IMPROVE_KINDS = ["clarify", "evidence", "detail", "repetition"] as const;
@@ -22,8 +23,9 @@ export type BulletOpportunity = {
 export function bulletOpportunity(
   strength: BulletStrength,
   role: BulletRole = "accomplishment",
+  text = "",
 ): BulletOpportunity {
-  const diagnosis = primaryDiagnosis(strength);
+  const diagnosis = guidanceQuestion(text) ?? primaryDiagnosis(strength);
   if (strength.fixes.length === 0) {
     return { kind: null, diagnosis: null };
   }

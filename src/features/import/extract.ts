@@ -12,6 +12,7 @@ import {
   PROFILE_LIMITS,
   SKILL_LIMITS,
 } from "../library/schemas";
+import { parseSkillQualifier, restoreSkillQualifiers } from "../library/skill-qualifier";
 import { skillNameKey } from "../library/skill-state";
 import {
   DOCX_MIME,
@@ -98,7 +99,7 @@ export async function extractDocxText(bytes: Uint8Array): Promise<string | null>
   }
 }
 
-export function postProcessImport(raw: ImportOutput): ExtractedResume {
+export function postProcessImport(raw: ImportOutput, sourceText = ""): ExtractedResume {
   const warnings: string[] = [];
   for (const warning of raw.warnings) {
     const trimmed = warning.trim();
@@ -108,7 +109,13 @@ export function postProcessImport(raw: ImportOutput): ExtractedResume {
 
   const profile = cleanProfile(raw.profile, warnings);
   const entries = cleanEntries(raw.entries, warnings);
-  const skills = cleanSkills(raw.skills, warnings);
+  const corpus = [
+    sourceText,
+    ...raw.warnings,
+    ...raw.skills.map((skill) => skill.name),
+    ...entries.flatMap((entry) => entry.bullets.map((bullet) => bullet.text)),
+  ].join("\n");
+  const skills = cleanSkills(raw.skills, warnings, corpus);
 
   const placed =
     entries.length > 0 ||
@@ -301,13 +308,20 @@ function cleanBullets(bullets: string[], warnings: string[]): ExtractedBullet[] 
 function cleanSkills(
   skills: ImportOutput["skills"],
   warnings: string[],
+  corpus = "",
 ): ExtractedSkill[] {
   const seen = new Set<string>();
   const cleaned: ExtractedSkill[] = [];
   let droppedLong = false;
   let shortenedCategory = false;
-  for (const skill of skills) {
+  let keptLevel = false;
+  const restored = restoreSkillQualifiers(skills, corpus);
+  for (let index = 0; index < restored.length; index += 1) {
+    const skill = restored[index];
+    const original = skills[index];
+    if (!skill || !original) continue;
     const name = skill.name.trim();
+    if (name !== original.name.trim()) keptLevel = true;
     if (name.length === 0) continue;
     if (name.length > SKILL_LIMITS.name) {
       droppedLong = true;
@@ -322,7 +336,18 @@ function cleanSkills(
   }
   if (droppedLong) warnings.push(copy.warnings.skillLong);
   if (shortenedCategory) warnings.push(copy.warnings.category);
-  return cleaned;
+  if (keptLevel) warnings.push(copy.warnings.keptLevel);
+  const qualifiedTools = new Set(
+    cleaned.flatMap((skill) => {
+      const parsed = parseSkillQualifier(skill.name);
+      return parsed.qualifier ? [skillNameKey(parsed.tool)] : [];
+    }),
+  );
+  return cleaned.filter((skill) => {
+    const parsed = parseSkillQualifier(skill.name);
+    if (parsed.qualifier) return true;
+    return !qualifiedTools.has(skillNameKey(parsed.tool));
+  });
 }
 
 function clampCategory(value: string | null): {

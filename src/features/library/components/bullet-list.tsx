@@ -204,7 +204,7 @@ export function BulletList({
           {visibleBullets.map((bullet, index) => {
             const role = bulletRole(entryKind, bullet.text);
             const strength = bulletStrength(bullet.text, skills, role);
-            const opportunity = bulletOpportunity(strength, role);
+            const opportunity = bulletOpportunity(strength, role, bullet.text);
             const isEditing = editingId === bullet.id;
             const isAssisting = assistId === bullet.id;
             const isFocused = focusSet?.has(bullet.id) ?? false;

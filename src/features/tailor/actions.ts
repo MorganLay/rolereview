@@ -21,11 +21,17 @@ import {
   RepairSchema,
 } from "@/lib/ai/prompts/tailor-repair";
 import {
+  buildEditorialContent,
   buildReviseContent,
+  EDITORIAL_SYSTEM,
+  EditorialSchema,
   REVISE_SYSTEM,
   ReviseSchema,
 } from "@/lib/ai/prompts/tailor-revise";
-import { buildContent, OutputSchema, SYSTEM } from "@/lib/ai/prompts/tailor";
+import { buildContent, normalizeTailorOutput, OutputSchema, SYSTEM } from "@/lib/ai/prompts/tailor";
+import { settlePageLength } from "@/features/tailor/page-fit";
+import { lineageText } from "@/features/tailor/canonical";
+import { sameRoleText } from "@/features/tailor/stints";
 import { runStructured } from "@/lib/ai/run";
 import { requireUserForAction } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -41,10 +47,13 @@ import {
   withRepairNotes,
 } from "./repair";
 import {
+  acceptEditorial,
   acceptRevision,
+  editorialLibrary,
   mergeRevision,
   notesForAccepted,
-  revisionTargets,
+  notesForEditorial,
+  revisionRoute,
 } from "./revise";
 import { preferSavedWording, variantPrompt } from "./variants";
 import { applyResumeEdit, preserveUserEdits } from "./content";
@@ -148,8 +157,11 @@ export async function tailorResume(
         length: options.length,
         emphasis: options.emphasis ?? null,
         variantsText: variantPrompt(serialized.snapshot, savedWordings),
+        sameRole: sameRoleText(serialized.snapshot.entries, serialized.snapshot.takenAt),
+        lineage: lineageText(serialized.snapshot.entries, serialized.snapshot.takenAt),
       }),
       schema: OutputSchema,
+      normalize: normalizeTailorOutput,
       refId: resumeId,
     });
     if (!result.ok) {
@@ -216,12 +228,83 @@ export async function tailorResume(
         // The first guarded resume still stands.
       }
     }
-    const gaps = revisionTargets({
+    const route = revisionRoute({
       output: guard.output,
       snapshot: serialized.snapshot,
       analysis: analysis.data,
     });
-    if (gaps.length > 0) {
+    let editorialApplied = false;
+    if (route.kind === "editorial" && guard.output.plan) {
+      try {
+        const revised = await runStructured({
+          kind: "TAILOR",
+          userId: user.id,
+          usedBonusCredit: false,
+          countsTowardQuota: false,
+          system: EDITORIAL_SYSTEM,
+          content: buildEditorialContent({
+            title: job.title,
+            company: job.company,
+            length: options.length,
+            strategy: guard.output.plan,
+            doubts: route.doubts,
+            draft: guard.output.entries.map((entry) => ({
+              ref: entry.ref,
+              bullets: entry.bullets.map((bullet) => ({
+                sourceRefs: bullet.sourceRefs,
+                text: bullet.text,
+              })),
+            })),
+            library: editorialLibrary({
+              output: guard.output,
+              snapshot: serialized.snapshot,
+              targets: route.targets,
+            }),
+            sameRole: sameRoleText(serialized.snapshot.entries, serialized.snapshot.takenAt),
+          }),
+          schema: EditorialSchema,
+          refId: resumeId,
+        });
+        const parsed = revised.ok ? EditorialSchema.safeParse(revised.data) : null;
+        if (parsed?.success && parsed.data.changed) {
+          const second = validateTailorOutput(
+            {
+              ...guard.output,
+              summary: parsed.data.summary,
+              entries: parsed.data.entries.map((entry) => ({
+                ref: entry.ref,
+                bullets: entry.bullets.map((bullet) => ({
+                  sourceRefs: bullet.sourceRefs,
+                  text: bullet.text,
+                })),
+              })),
+              requirementMatches: guard.output.requirementMatches.map((match) => ({
+                requirementId: match.requirementId,
+                verdict: match.verdict === "unassessed" ? "missing" : match.verdict,
+                evidenceRefs: [...match.evidenceRefs],
+                note: match.note,
+              })),
+            },
+            serialized.snapshot,
+            analysis.data,
+          );
+          const chosen = acceptEditorial(guard.output, second.output);
+          if (chosen.accepted && second.reverts <= guard.reverts) {
+            editorialApplied = true;
+            guard = {
+              output: chosen.output,
+              reverts: second.reverts,
+              issues: second.issues,
+            };
+            notes = notesForEditorial(notes, parsed.data.entries);
+          }
+        }
+      } catch {
+        // The guarded draft still stands.
+      }
+    }
+    if (!editorialApplied && route.kind !== "none" && route.targets.length > 0) {
+      const gaps = route.targets;
       try {
         const revised = await runStructured({
           kind: "TAILOR",
@@ -296,11 +379,12 @@ export async function tailorResume(
     const previousAi = previous
       ? ValidatedTailorOutput.safeParse(previous.aiOutput)
       : null;
-    const content = preserveUserEdits(
+    const edited = preserveUserEdits(
       assembled,
       previousContent?.success ? previousContent.data : null,
       previousAi?.success ? previousAi.data : null,
     );
+    const content = await settlePageLength(edited, serialized.snapshot, options.length);
     const report = scoreMatch(analysis.data, guard.output.requirementMatches);
     const saved = await db.$transaction(async (tx) => {
       const updated = await tx.tailoredResume.updateMany({

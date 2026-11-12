@@ -5,7 +5,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
 import type { JobAnalysis } from "@/features/jobs/schemas";
-import { RequirementMatch, TailorSkillGroup } from "@/features/tailor/schemas";
+import { RequirementMatch, TailorSkillGroup, type ResumeLengthChoice } from "@/features/tailor/schemas";
 
 /**
  * TAILOR prompt and loose output schema. docs/05-AI.md → TAILOR.
@@ -15,8 +15,9 @@ import { RequirementMatch, TailorSkillGroup } from "@/features/tailor/schemas";
 export const POSTING_MAX = 12_000;
 
 const PAGE_LINE = {
-  1: "Target length: 1 page (about 450\u2013600 words of content). Use about 10\u201314 bullets, weighted to the most relevant evidence.",
-  2: "Target length: 2 pages. Use about 16\u201322 bullets, weighted to the most relevant evidence.",
+  auto: "Target length: automatic. Include the evidence that strengthens this application, then stop. One page is enough when that evidence fits. Two pages is the maximum, not a quota. Do not add bullets to fill a page. One heading per role.",
+  1: "Target length: up to 1 page. Stop when another line would not add distinct evidence for this role. Do not add bullets to fill the page. One heading per role.",
+  2: "Target length: up to 2 pages. Two pages is a ceiling, not a quota. Stop when more evidence would not change the case for hiring. Do not add bullets to fill the page. One heading per role.",
 } as const;
 
 export const SYSTEM = `You tailor resumes. You are given a candidate's complete library of experience (each item has
@@ -27,11 +28,12 @@ TRUTHFULNESS — these rules override everything else:
 1. Use only facts that appear in the library. Never add employers, titles, dates, tools,
    technologies, certifications, metrics, team sizes, scope or outcomes that the cited source
    bullets do not state.
-2. Every bullet cites one or more sourceRefs, and every sourceRef belongs to the entry it is
-   listed under (E3.B1 can only appear under E3). You may combine verified facts from those
-   sources into one sentence. At most five sources. Do not cite a source from another entry,
-   and do not repeat a source you already combined into another line. You may split one
-   overloaded source into two bullets when each line stays inside that source.
+2. Every bullet cites one or more sourceRefs. A sourceRef belongs to the entry it is listed
+   under, unless <same-role> names that entry as one role with the source's entry. Within one
+   same-role group, combine verified facts from any of its bullets into the heading entry and
+   cite each source. Do not combine facts from entries that are not the same role. At most
+   five sources. Do not repeat a source you already combined into another line. You may split
+   one overloaded source into two bullets when each line stays inside that source.
 3. Do not introduce any number that is not in the cited source. The summary may use a whole-year
    tenure taken from an entry's dates only when that figure is rounded down.
 4. You may reconstruct a sentence, combine related facts, split an overloaded line, reorder
@@ -55,14 +57,40 @@ evidence is partial, not met. Leave unsupported requirements out. Leave a bullet
 the original is already specific and stronger. Do not change a line only to swap a synonym.
 Do not optimize for how many lines change.
 
-PLAN
-Before the bullets, fill plan from the library and this posting together:
-- narrative: one sentence naming only work the library supports. This is the story the resume tells.
-- priorities: up to 4 short phrases taken from the requirements that this resume will emphasize.
-- gaps: up to 4 requirement ids the library does not demonstrate. Do not paper over these.
-Then select, order, and rewrite so the resume carries out that plan. The same library for two
-different jobs should emphasize different evidence. Omit bullets that would repeat each other.
-A project earns a place only when it supports the narrative.
+STRATEGY
+Before the bullets, fill plan by comparing this posting with the library. This is judgment over
+the evidence, not a keyword count. The same library for two different jobs can rank the same
+entries differently. An example of the kind of comparison, not a rule: for an entry-level
+software role, a deployed product can be stronger engineering evidence than routine reporting,
+while that reporting can still show a result. For a reporting role, the reporting work can lead
+and the product can be secondary. Decide from this posting and these records.
+- hiringFor: what this employer is hiring the candidate to do.
+- positioning: the strongest positioning the library can defend for that work.
+- qualifications: each requirement you will use, with weight mandatory, differentiating, or
+  secondary. A mandatory item the library cannot show belongs in gaps, not here.
+- evidence: the experiences and projects you compared. ref is the heading entry. use is lead,
+  support, or omit. bullets is how many lines that entry should have on this page (0 only when
+  use is omit). because is one sentence saying why this entry outranks or loses to a specific
+  other entry for this job. Include the entries you omit when they were real alternatives.
+  Do not give every entry the same count. A lead may take more lines than a support. Omit an
+  entry that only repeats a qualification a stronger entry already establishes. Keep an entry
+  that is the only evidence for a qualification the posting actually needs. A second project
+  earns a line only when it adds a qualification the selected entries do not already show.
+  Another deployed website is not a new qualification when a selected project already shows
+  the build, the deployment, and the supporting implementation.
+- priorities: up to 4 short phrases from the requirements this resume will emphasize.
+- gaps: the requirement text the library cannot truthfully meet. Use the requirement's words, not its id. Do not paper over these.
+- narrative: one sentence naming only work the library supports.
+- closeCall: true only when an omitted entry could replace a lead and still cover the mandatory
+  qualifications. A clear ranking is false.
+- headline: a short line under the name for this job, or empty. Ground it in the library.
+  Do not repeat the posting title or one past job title. Do not name a tool the library does not.
+Then write the resume so it carries out that strategy. The line counts are a ceiling.
+Order the leads ahead of the supports within a section. Omit bullets that repeat each other.
+A project heading is the project name, not a list of roles such as Creator or Developer.
+Employment keeps the official title. Do not invent a date, and do not write Present alone
+when the record has a start date. Entries in <lineage> are iterations of one product.
+Choose one of them. Do not cite across them as if they were one role.
 
 REWRITING
 - Keep every tool, employer, metric, date, scope, and outcome inside the cited sources.
@@ -72,8 +100,11 @@ REWRITING
 - "Merge and transform data" may become "Consolidated and transformed data". Lead with the fact
   this job needs. Replace "worked with" or "utilized" with the specific build, test, debug,
   integration, deployment, or maintenance a source describes.
-- Combine related facts from the same entry into one line, and cite each source. Separate two
-  unrelated accomplishments that are crowded into one line.
+- Combine related facts from the same role into one line, and cite each source. Separate two
+  unrelated accomplishments that are crowded into one line. A second project earns a place
+  only when it adds evidence the stronger entries do not already show.
+- When sources name a product's features and also name the implementation, the testing, or the
+  deployment, write the implementation. A feature list is not a substitute for that work.
 - You may not turn spreadsheet joins into ETL, pipelines, warehouses, or production engineering.
 - Do not add "expert", "senior", "production", or years of experience the sources do not state.
 - Do not invent support-desk, customer-facing, leadership, or production work from adjacent tasks.
@@ -104,15 +135,14 @@ COVERAGE
   support, and do not mention every keyword.
 
 SELECTION
-- Read the whole library, including projects that are not already on a resume. Give the most
-  relevant, recent, and specific evidence the most space. A relevant project may have more
-  bullets than a less relevant job. A less relevant role may have one bullet or be left off.
-- Do not drop a specific, relevant achievement only to keep every role the same length.
-- Omit repeated and generic lines before you omit a strong one. A recent hands-on project
-  outweighs an older academic project when both relate to the role.
+- Read the whole library, including projects that are not already on a resume. Follow the
+  strategy's entries, order, and line counts. A project may have more bullets than a job, or
+  the reverse, when that is what this posting makes useful.
+- Do not drop a specific achievement the strategy kept only to make every role the same length.
+- Omit repeated and generic lines before you omit a strong one.
 - Always include EDUCATION entries (bullets optional).
-- One page: about 10–14 bullets in total. Two pages: about 16–22. Use the room for stronger
-  evidence. Do not pad.
+- Fit the page length in the options. The length is a ceiling. Stop when another entry or
+  bullet would not make the candidate a stronger match. Do not add lines to fill a page.
 - Order bullets within an entry by relevance to the posting, then by how specific they are.
 - Skills: relevant skill refs only, in the categories that fit (Languages, Data and Analytics,
   Frameworks and Tools, Cloud and Infrastructure, Practices). No empty group. No skill twice.
@@ -144,9 +174,27 @@ MATCH REPORT
 export const OutputSchema = z.object({
   summary: z.string(),
   plan: z.object({
+    hiringFor: z.string(),
+    positioning: z.string(),
     narrative: z.string(),
     priorities: z.array(z.string()),
+    qualifications: z.array(
+      z.object({
+        requirementId: z.string(),
+        weight: z.enum(["mandatory", "differentiating", "secondary"]),
+      }),
+    ),
+    evidence: z.array(
+      z.object({
+        ref: z.string(),
+        use: z.enum(["lead", "support", "omit"]),
+        bullets: z.number(),
+        because: z.string(),
+      }),
+    ),
     gaps: z.array(z.string()),
+    closeCall: z.boolean(),
+    headline: z.string(),
   }),
   entries: z.array(
     z.object({
@@ -176,9 +224,11 @@ export type TailorPromptInput = {
   requirements: JobAnalysis["requirements"];
   keywords: string[];
   posting: string;
-  length: 1 | 2;
+  length: ResumeLengthChoice;
   emphasis: string | null;
   variantsText?: string;
+  sameRole?: string;
+  lineage?: string;
 };
 
 export function buildContent(
@@ -225,6 +275,14 @@ export function buildContent(
     "<variants>",
     neutralize(input.variantsText?.trim() || "none", "variants"),
     "</variants>",
+    "",
+    "<same-role>",
+    neutralize(input.sameRole?.trim() || "none", "same-role"),
+    "</same-role>",
+    "",
+    "<lineage>",
+    neutralize(input.lineage?.trim() || "none", "lineage"),
+    "</lineage>",
   ].join("\n");
 
   return [{ type: "text", text }];
@@ -232,6 +290,17 @@ export function buildContent(
 
 function oneLine(value: string): string {
   return value.replace(/\s+/g, " ").trim();
+}
+
+/** A missing headline stays empty so the rest of a usable plan is kept. */
+export function normalizeTailorOutput(value: unknown): unknown {
+  if (!value || typeof value !== "object") return value;
+  const plan = (value as { plan?: unknown }).plan;
+  if (!plan || typeof plan !== "object") return value;
+  if (typeof (plan as { headline?: unknown }).headline !== "string") {
+    (plan as { headline: string }).headline = "";
+  }
+  return value;
 }
 
 /** Keep user text inside the wrapper if it contains the closing tag. */

@@ -4,6 +4,8 @@
  * Docs/05-AI.md → Evals.
  *
  * npx tsx --conditions=react-server scripts/compare-tailor.ts
+ * Page count needs the Vitest loader, which can render the PDF:
+ * LIVE_TAILOR=1 npx vitest run tests/unit/live-compare.test.ts
  */
 import "dotenv/config";
 
@@ -15,6 +17,8 @@ import { LibrarySnapshot, type LibrarySnapshot as Snapshot } from "@/features/li
 import { libraryPromptText } from "@/features/library/serialize";
 import { assembleResumeContent } from "@/features/tailor/assemble";
 import { composeResume } from "@/features/tailor/compose";
+import { sameRoleText } from "@/features/tailor/stints";
+import { pageCeiling, TailorOptions, type ResumeLengthChoice } from "@/features/tailor/schemas";
 import { resumePlainText } from "@/features/tailor/plainText";
 import {
   applyAcceptedRepairs,
@@ -102,6 +106,7 @@ async function main() {
   console.log("");
 
   const libraryText = libraryPromptText(snapshot);
+  const length = TailorOptions.parse(previous.options).length;
   const hootsuite = await tailorPosting({
     userId: previous.userId,
     snapshot,
@@ -109,6 +114,7 @@ async function main() {
     posting,
     fallbackTitle: previous.job.title,
     fallbackCompany: previous.job.company,
+    length,
   });
   console.log("NEW HOOTSUITE RESUME");
   printRun(hootsuite);
@@ -121,6 +127,7 @@ async function main() {
     posting: ANALYST_POSTING,
     fallbackTitle: "Reporting Analyst",
     fallbackCompany: "Northwind",
+    length,
   });
   console.log("NEW REPORTING ANALYST RESUME");
   printRun(analyst);
@@ -141,12 +148,14 @@ async function tailorPosting(input: {
   posting: string;
   fallbackTitle: string;
   fallbackCompany: string;
+  length: ResumeLengthChoice;
 }): Promise<{
   text: string;
   issues: { code: string; ref: string }[];
   reverts: number;
   calls: CallRow[];
   requirements: string[];
+  pages: number;
 }> {
   const calls: CallRow[] = [];
   const analyzed = await tracked("analyze", (refId) =>
@@ -169,12 +178,13 @@ async function tailorPosting(input: {
       reverts: 0,
       calls,
       requirements: [],
+      pages: 0,
     };
   }
   const analysis = postProcessAnalyze(analyzed.result.data, input.posting);
   const checked = JobAnalysis.safeParse(analysis);
   if (!checked.success) {
-    return { text: "Analysis did not match the schema.", issues: [], reverts: 0, calls, requirements: [] };
+    return { text: "Analysis did not match the schema.", issues: [], reverts: 0, calls, requirements: [], pages: 0 };
   }
 
   const generated = await tracked("generate", (refId) =>
@@ -192,8 +202,9 @@ async function tailorPosting(input: {
         requirements: checked.data.requirements,
         keywords: checked.data.keywords,
         posting: input.posting,
-        length: 1,
+        length: input.length,
         emphasis: null,
+        sameRole: sameRoleText(input.snapshot.entries, input.snapshot.takenAt),
       }),
       schema: TailorSchema,
       refId,
@@ -207,6 +218,7 @@ async function tailorPosting(input: {
       reverts: 0,
       calls,
       requirements: checked.data.requirements.map((item) => item.text),
+      pages: 0,
     };
   }
 
@@ -296,22 +308,39 @@ async function tailorPosting(input: {
     output: guard.output,
     snapshot: input.snapshot,
     analysis: checked.data,
-    length: 1,
+    length: input.length,
   });
-  const content = assembleResumeContent(
+  const assembled = assembleResumeContent(
     composition.output,
     input.snapshot,
     () => randomUUID(),
     notes,
     composition,
   );
+  const fitted = await fitPages(assembled, input.snapshot, pageCeiling(input.length));
   return {
-    text: resumePlainText(content, input.snapshot),
+    text: resumePlainText(fitted.content, input.snapshot),
     issues: guard.issues,
     reverts: guard.reverts,
     calls,
     requirements: checked.data.requirements.map((item) => `[${item.importance}] ${item.text}`),
+    pages: fitted.pages,
   };
+}
+
+async function fitPages(
+  content: Awaited<ReturnType<typeof assembleResumeContent>>,
+  snapshot: Snapshot,
+  pages: 1 | 2,
+): Promise<{ content: Awaited<ReturnType<typeof assembleResumeContent>>; pages: number }> {
+  const [{ enforcePageBudget }, { resumePdfModel }, { fitResumePdf }] = await Promise.all([
+    import("@/features/tailor/page-fit"),
+    import("@/lib/pdf/model"),
+    import("@/lib/pdf/render"),
+  ]);
+  const fitted = await enforcePageBudget(content, snapshot, pages);
+  const fit = await fitResumePdf(resumePdfModel(fitted, snapshot), "classic");
+  return { content: fitted, pages: fit.pageCount };
 }
 
 async function tracked<T>(
@@ -353,13 +382,16 @@ function printRun(run: {
   reverts: number;
   calls: CallRow[];
   requirements: string[];
+  pages: number;
 }) {
   console.log("REQUIREMENTS");
   for (const requirement of run.requirements) console.log(`- ${requirement}`);
   console.log("CALLS");
   for (const row of run.calls) printCall(row);
   const cost = run.calls.reduce((sum, row) => sum + row.costMicros, 0);
-  console.log(`reverts ${run.reverts} issues ${JSON.stringify(run.issues)} costUSD ${(cost / 1_000_000).toFixed(4)}`);
+  console.log(
+    `reverts ${run.reverts} issues ${JSON.stringify(run.issues)} pages ${run.pages} costUSD ${(cost / 1_000_000).toFixed(4)}`,
+  );
   console.log(run.text);
 }
 
@@ -369,8 +401,13 @@ function printCall(row: CallRow) {
   );
 }
 
-void main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : "Comparison failed.";
-  console.error(message);
-  process.exitCode = 1;
-});
+const invokedDirectly = process.argv.some((arg) => arg.includes("compare-tailor.ts"));
+if (invokedDirectly) {
+  void main().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : "Comparison failed.";
+    console.error(message);
+    process.exitCode = 1;
+  });
+}
+
+export { main };

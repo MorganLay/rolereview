@@ -20,6 +20,7 @@ import {
   unsupportedClaim,
 } from "./grounding";
 import { chooseEducationKeepers } from "./identity";
+import { experienceGroups, type ExperienceGroup } from "./stints";
 import { NOT_ASSESSED_NOTE, RESUME_LIMITS } from "./schemas";
 import type {
   EditorialPlan,
@@ -75,16 +76,15 @@ export type GuardResult = {
   issues: GuardIssue[];
 };
 
-type SnapshotEntry = LibrarySnapshot["entries"][number];
-
 export function validateTailorOutput(
   output: TailorOutput,
   snapshot: LibrarySnapshot,
   analysis: JobAnalysis,
+  confirmed: readonly (readonly string[])[] = [],
 ): GuardResult {
   const issues: GuardIssue[] = [];
   const entries = dropRedundant(
-    cleanEntries(output.entries, snapshot, issues),
+    cleanEntries(output.entries, snapshot, issues, confirmed),
     issues,
   );
   const skills = cleanSkills(output.skills, snapshot, issues);
@@ -95,7 +95,7 @@ export function validateTailorOutput(
     issues,
   );
   const summary = cleanSummary(output.summary, snapshot, issues);
-  const plan = clipPlan(output.plan);
+  const plan = clipPlan(output.plan, analysis);
   return {
     output: {
       summary: summary.text,
@@ -109,7 +109,10 @@ export function validateTailorOutput(
   };
 }
 
-function clipPlan(plan: EditorialPlan | undefined): EditorialPlan | undefined {
+function clipPlan(
+  plan: EditorialPlan | undefined,
+  analysis: JobAnalysis,
+): EditorialPlan | undefined {
   if (!plan) return undefined;
   const narrative = clip(plan.narrative, 400);
   const priorities = plan.priorities
@@ -117,11 +120,61 @@ function clipPlan(plan: EditorialPlan | undefined): EditorialPlan | undefined {
     .filter((item) => item.length > 0)
     .slice(0, 4);
   const gaps = plan.gaps
-    .map((item) => clip(item.trim(), 80))
+    .map((item) => gapLabel(item, analysis))
     .filter((item) => item.length > 0)
-    .slice(0, 4);
-  if (narrative.length === 0 && priorities.length === 0 && gaps.length === 0) return undefined;
-  return { narrative, priorities, gaps };
+    .slice(0, 8);
+  const hiringFor = clip(plan.hiringFor ?? "", 200);
+  const positioning = clip(plan.positioning ?? "", 240);
+  const qualifications = (plan.qualifications ?? [])
+    .map((item) => ({
+      requirementId: clip(item.requirementId.trim(), 40),
+      weight: item.weight,
+    }))
+    .filter((item) => item.requirementId.length > 0)
+    .slice(0, 12);
+  const evidence = (plan.evidence ?? [])
+    .map((item) => ({
+      ref: clip(item.ref.trim(), 40),
+      use: item.use,
+      bullets: Math.max(0, Math.min(6, Math.round(item.bullets))),
+      because: clip(item.because.trim(), 240),
+    }))
+    .filter((item) => item.ref.length > 0)
+    .slice(0, 12);
+  if (
+    narrative.length === 0 &&
+    priorities.length === 0 &&
+    gaps.length === 0 &&
+    hiringFor.length === 0 &&
+    positioning.length === 0 &&
+    qualifications.length === 0 &&
+    evidence.length === 0
+  ) {
+    return undefined;
+  }
+  return {
+    narrative,
+    priorities,
+    gaps,
+    ...(hiringFor.length > 0 ? { hiringFor } : {}),
+    ...(positioning.length > 0 ? { positioning } : {}),
+    ...(qualifications.length > 0 ? { qualifications } : {}),
+    ...(evidence.length > 0 ? { evidence } : {}),
+    ...(plan.closeCall === true ? { closeCall: true } : {}),
+    ...(clip(plan.headline ?? "", 120).length > 0 ? { headline: clip(plan.headline ?? "", 120) } : {}),
+  };
+}
+
+/** A gap stored as "r2" is shown as that requirement's text. An unknown id is dropped. */
+function gapLabel(value: string, analysis: JobAnalysis): string {
+  const trimmed = value.trim();
+  if (/^r\d+$/i.test(trimmed)) {
+    const text =
+      analysis.requirements.find((item) => item.id.toLowerCase() === trimmed.toLowerCase())
+        ?.text ?? "";
+    return clip(text, 80);
+  }
+  return clip(trimmed, 80);
 }
 
 /**
@@ -185,7 +238,8 @@ function cleanSummary(
 
   if (!dropped) return { text, reverts: 0 };
   issues.push({ code: "G12", ref: "summary" });
-  if (kept.length > 0) return { text: kept.join(" "), reverts: 1 };
+  const fragment = kept.length === 1 && /^(also|and|additionally)\b/i.test(kept[0]?.trim() ?? "");
+  if (kept.length > 0 && !fragment) return { text: kept.join(" "), reverts: 1 };
   return { text: snapshot.profile.summary?.trim() ?? "", reverts: 1 };
 }
 
@@ -239,8 +293,10 @@ function cleanEntries(
   entries: TailorOutput["entries"],
   snapshot: LibrarySnapshot,
   issues: GuardIssue[],
+  confirmed: readonly (readonly string[])[] = [],
 ): { entries: ValidatedTailorOutput["entries"]; reverts: number } {
   const byRef = new Map(snapshot.entries.map((entry) => [entry.ref, entry]));
+  const groups = experienceGroups(snapshot.entries, snapshot.takenAt, confirmed);
   const seen = new Set<string>();
   const cleaned: ValidatedTailorOutput["entries"] = [];
   let reverts = 0;
@@ -256,7 +312,7 @@ function cleanEntries(
       continue;
     }
     seen.add(entry.ref);
-    const bullets = cleanBullets(entry.bullets, snapshotEntry, issues);
+    const bullets = cleanBullets(entry.bullets, sourcesFor(entry.ref, snapshot, groups), issues);
     reverts += bullets.reverts;
     cleaned.push({ ref: entry.ref, bullets: bullets.bullets });
   }
@@ -316,14 +372,26 @@ const MAX_SOURCES = 5;
 /** One source may be split into this many lines. */
 const MAX_SPLITS = 2;
 
+function sourcesFor(
+  entryRef: string,
+  snapshot: LibrarySnapshot,
+  groups: readonly ExperienceGroup[],
+): Map<string, string> {
+  const group = groups.find((item) => item.members.includes(entryRef));
+  const members = new Set(group?.members ?? [entryRef]);
+  const sources = new Map<string, string>();
+  for (const entry of snapshot.entries) {
+    if (!members.has(entry.ref)) continue;
+    for (const bullet of entry.bullets) sources.set(bullet.ref, bullet.text);
+  }
+  return sources;
+}
+
 function cleanBullets(
   bullets: readonly TailorBullet[],
-  snapshotEntry: SnapshotEntry,
+  owned: ReadonlyMap<string, string>,
   issues: GuardIssue[],
 ): { bullets: ValidatedBullet[]; reverts: number } {
-  const owned = new Map(
-    snapshotEntry.bullets.map((bullet) => [bullet.ref, bullet.text]),
-  );
   const pending: ValidatedBullet[] = [];
   const seenMulti = new Set<string>();
   const singles = new Map<string, string[]>();

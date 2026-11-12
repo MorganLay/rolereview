@@ -13,6 +13,7 @@ Ask questions that a person in that role might say yes to. These are hypotheses,
 Do not say they did the work. Do not invent numbers, tools, or titles.
 
 Ask four to six short questions. Each one ends with a question mark.
+Ask about the tool or method, the scope, the deliverable, a measurable outcome, and the technical detail, but only where the saved lines do not already say it. Do not answer the question yourself.
 Skip anything their saved lines already answer.
 A crew member who wrote "made fries and cooked food" might be asked whether they worked a busy
 meal period, trained a new hire, opened or closed, ran a food-safety check, or supervised a shift.

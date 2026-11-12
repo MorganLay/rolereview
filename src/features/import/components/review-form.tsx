@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { strings } from "@/copy/strings";
+import { sameImportedRecord, type ImportRoleHint } from "../commit";
 import type { EntryKind } from "@/generated/prisma/client";
 import {
   BULLET_LIMITS,
@@ -75,6 +76,7 @@ type ReviewFormProps = {
   setDraft: Dispatch<SetStateAction<ReviewDraft>>;
   email: string;
   libraryHasContent: boolean;
+  roles: readonly ImportRoleHint[];
   fields: FieldErrors;
   formError: string | null;
   pending: boolean;
@@ -98,6 +100,7 @@ export function ReviewForm({
   setDraft,
   email,
   libraryHasContent,
+  roles,
   fields,
   formError,
   pending,
@@ -371,6 +374,18 @@ export function ReviewForm({
             {group.entries.map(({ entry, index }) => {
               const kindCopy = entryCopy.kinds[entry.kind];
               const titleError = fieldMessage(fields, `entries.${index}.title`);
+              const matched =
+                libraryHasContent && draft.mode === "append"
+                  ? roles.find((role) =>
+                      sameImportedRecord(role, {
+                        kind: entry.kind,
+                        title: entry.title,
+                        organization: entry.organization.trim() || null,
+                        startDate: entry.startDate.trim() || null,
+                        endDate: entry.endDate.trim() || null,
+                      }),
+                    )
+                  : undefined;
               return (
                 <article key={entry.key} className="flex flex-col gap-4 rounded-lg border border-line p-4">
                   <IncludeBox
@@ -379,6 +394,11 @@ export function ReviewForm({
                     label={`${copy.include} ${entry.title || kindCopy.title}`}
                     onChange={(included) => patchEntry(index, { included })}
                   />
+                  {matched ? (
+                    <p className="text-sm text-slate">
+                      {copy.matchesRole(matched.title, matched.organization ?? "")}
+                    </p>
+                  ) : null}
                   <div className="grid gap-4 sm:grid-cols-2">
                     <TextField
                       id={`${formId}-entry-${index}-title`}

@@ -203,7 +203,7 @@ describe("tailorResume", () => {
       }),
     );
     const prompt = runStructured.mock.calls[0]?.[0].content[0].text as string;
-    expect(prompt).toContain("Target length: 1 page (about 450\u2013600 words of content).");
+    expect(prompt).toContain("Target length: up to 1 page.");
     expect(prompt).toContain("Emphasis from the candidate: Bring forward reporting");
     expect(prompt).toContain("<library>");
     expect(revalidatePath).toHaveBeenCalledWith(`/jobs/${jobId}`);
@@ -226,7 +226,7 @@ describe("tailorResume", () => {
       .flatMap((entry: { bullets: { text: string; included: boolean }[] }) => entry.bullets)
       .find((item: { text: string; included: boolean }) => item.included);
     expect(bullet.text).toBe("Maintained 14 reports.");
-    expect(runStructured.mock.calls[0]?.[0].content[0].text).toContain("Target length: 2 pages.");
+    expect(runStructured.mock.calls[0]?.[0].content[0].text).toContain("Target length: up to 2 pages.");
     expect(runStructured.mock.calls[0]?.[0].content[0].text).not.toContain("450\u2013600");
   });
 
