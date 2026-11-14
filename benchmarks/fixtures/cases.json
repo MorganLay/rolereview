@@ -1,0 +1,1774 @@
+[
+  {
+    "id": "P001-J001",
+    "candidateId": "P001",
+    "jobId": "J001",
+    "profession": "Electrical and instrumentation engineer",
+    "seniority": "manager",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "factual grounding",
+      "professional terminology"
+    ],
+    "whyCandidate": "Seven roles run from a Tata Steel traineeship through cement-plant E&I leadership to site delivery of a food plant. The record includes an electrical supervisor licence, NEBOSH, SAP PM, and quantified availability and breakdown results. It is hands-on industrial electrical work, not data-center operations.",
+    "whyJob": "Cloudflare's data center operations engineer racks, cables, replaces hardware, and troubleshoots servers and network gear on site. The physical work is real, but the equipment and the employer are a cloud network, not a cement kiln or a 132 kV substation.",
+    "success": "Lead with plant availability, breakdown reduction, commissioning, and the electrical supervisor licence. Describe troubleshooting and maintenance planning in the candidate's own plants. Do not claim data-center racking, server repair, or Cloudflare product experience.",
+    "failureModes": [
+      "Rewriting cement-plant commissioning as data-center build-out",
+      "Dropping the electrical licence because the posting does not name it",
+      "Inventing server, Linux, or network-gear troubleshooting"
+    ],
+    "whyItMatters": "Skilled industrial engineers are often screened out of infrastructure jobs, or padded into them. A useful product has to show the transferable maintenance record without changing the industry.",
+    "includeEvidence": [
+      "plant availability from 84% to 92%",
+      "Electrical Supervisor Licence"
+    ],
+    "avoidClaims": [
+      "data-center server troubleshooting",
+      "Cloudflare network experience"
+    ]
+  },
+  {
+    "id": "P001-J002",
+    "candidateId": "P001",
+    "jobId": "J002",
+    "profession": "Electrical and instrumentation engineer",
+    "seniority": "manager",
+    "fit": "adjacent",
+    "capabilities": [
+      "evidence prioritization",
+      "omitting irrelevant history"
+    ],
+    "whyCandidate": "The same long industrial record includes SAP PM/PS, spares inventory, work instructions, and maintenance plans. Most of the seven roles are site electrical work that a DCIM administrator would not perform.",
+    "whyJob": "The DCIM administrator owns Nlyte work orders and the record of every physical change on Cloudflare's network. Accuracy of asset records matters. Nlyte, Move/Add/Change control, and a global cloud network are not in the resume.",
+    "success": "Emphasize SAP PM, spares inventory, work instructions, and maintenance plans. Leave kiln, wagon-loader, and extrusion-line detail off or in a short earlier-career section. Do not claim Nlyte or data-center inventory administration.",
+    "failureModes": [
+      "Keeping all seven roles at equal length",
+      "Translating SAP PM into Nlyte",
+      "Burying the inventory and work-instruction evidence under project values"
+    ],
+    "whyItMatters": "Long industrial resumes fail when every project stays on the page. They also fail when a familiar system name is swapped for the posting's tool.",
+    "includeEvidence": [
+      "SAP PM/PS",
+      "spares inventory",
+      "work instructions and maintenance plans"
+    ],
+    "avoidClaims": [
+      "Nlyte administration",
+      "global network change control"
+    ]
+  },
+  {
+    "id": "P001-J012",
+    "candidateId": "P001",
+    "jobId": "J012",
+    "profession": "Electrical and instrumentation engineer",
+    "seniority": "manager",
+    "fit": "stretch",
+    "capabilities": [
+      "factual grounding",
+      "credential boundaries"
+    ],
+    "whyCandidate": "The candidate leads electrical installation and holds an electrical supervisor licence, PLC exposure, and SAP PM. Nothing in the record is Kubernetes, Terraform, Ansible, or software reliability.",
+    "whyJob": "GitLab's staff site reliability role designs multi-tenant environment automation with Terraform, Ansible, and Kubernetes. The seniority and the tools are both beyond the resume.",
+    "success": "Refuse the staff SRE framing. A truthful resume stays an electrical and instrumentation record. It must not add infrastructure-as-code, Kubernetes, or staff software leadership. The electrical licence must not be presented as a cloud credential.",
+    "failureModes": [
+      "Mapping PLCs to Kubernetes",
+      "Promoting plant leadership to staff SRE",
+      "Treating the electrical supervisor licence as a cloud certification"
+    ],
+    "whyItMatters": "A stretch posting is where a tailoring product is most tempted to invent a career. Licensing language makes that invention dangerous.",
+    "includeEvidence": [
+      "Electrical Supervisor Licence",
+      "PLC exposure at Tata Steel"
+    ],
+    "avoidClaims": [
+      "Kubernetes",
+      "Terraform",
+      "Ansible",
+      "staff software engineering"
+    ]
+  },
+  {
+    "id": "P002-J004",
+    "candidateId": "P002",
+    "jobId": "J004",
+    "profession": "Military logistics officer",
+    "seniority": "mid",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "professional terminology"
+    ],
+    "whyCandidate": "The record is an Army logistics career: a 2,260-person special operations supply chain, freight across road, sea, and air, SAP, and a parachute sustainment company. The dataset domain label says legal. The jobs do not.",
+    "whyJob": "Cloudflare's logistics operations specialist coordinates delivery of data-center hardware, reverse logistics, and spare parts with vendors. The function matches. The commodity is servers and racks, not military freight.",
+    "success": "Lead with distribution, vendors, inventory, and the SAP-backed freight operation. Keep ranks and unit names accurate. Do not recast special-operations logistics as data-center hardware deployment the resume does not describe.",
+    "failureModes": [
+      "Calling the candidate a lawyer because the dataset domain is legal",
+      "Replacing GATES and ICODES with unnamed data-center systems",
+      "Dropping the scale figures that make the logistics record specific"
+    ],
+    "whyItMatters": "Military logistics is a common civilian transition. The product should translate the function without erasing the service or inventing the new industry.",
+    "includeEvidence": [
+      "multimode freight",
+      "SAP",
+      "inventory control"
+    ],
+    "avoidClaims": [
+      "data-center hardware deployment",
+      "legal practice"
+    ]
+  },
+  {
+    "id": "P002-J005",
+    "candidateId": "P002",
+    "jobId": "J005",
+    "profession": "Military logistics officer",
+    "seniority": "mid",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "seniority"
+    ],
+    "whyCandidate": "The candidate has directed logistics programs and purchasing, at O-4 and as a company logistics manager. The record does not mention server manufacturing, L10 builds, or rack integration.",
+    "whyJob": "The supply-chain program manager connects capacity demand to L10 server supply and L11 rack integration. The posting calls the role a senior individual contributor in hardware supply planning.",
+    "success": "Show program leadership, purchasing, and multi-party freight. State the hardware-manufacturing gap by omission: do not claim L10 or L11 planning. Do not inflate an O-4 logistics command into manufacturing-supply seniority the posting defines differently.",
+    "failureModes": [
+      "Inventing rack-integration experience from the word logistics",
+      "Copying L10 and L11 into the resume",
+      "Dropping the only quantified supply results"
+    ],
+    "whyItMatters": "Adjacent supply-chain titles are where keyword overlap hides a different kind of supply planning.",
+    "includeEvidence": [
+      "purchasing",
+      "freight providers",
+      "program leads"
+    ],
+    "avoidClaims": [
+      "L10 manufacturing",
+      "L11 rack integration"
+    ]
+  },
+  {
+    "id": "P002-J006",
+    "candidateId": "P002",
+    "jobId": "J006",
+    "profession": "Military logistics officer",
+    "seniority": "mid",
+    "fit": "stretch",
+    "capabilities": [
+      "factual grounding",
+      "keyword alignment"
+    ],
+    "whyCandidate": "Compliance work is ITAR/EAR on logistics, plus a Top Secret clearance in the published record. There is no network security, firewall, DDoS, or customer-support engineering.",
+    "whyJob": "Cloudflare's network security engineer supports customers on Magic Transit, DDoS, network firewall, and the web application firewall. The word security appears. The work is product support, not military logistics.",
+    "success": "Do not convert ITAR compliance or a clearance into network-security engineering. A truthful result either keeps the logistics identity or declines the match. Clearance may be stated only as published, not as a security-engineering qualification.",
+    "failureModes": [
+      "Treating ITAR as network security experience",
+      "Adding Cloudflare product names",
+      "Using the clearance to imply a security career"
+    ],
+    "whyItMatters": "Clearance and compliance language is a known way resumes get rewritten into security jobs the person has not done.",
+    "includeEvidence": [
+      "ITAR/EAR compliance on logistics"
+    ],
+    "avoidClaims": [
+      "DDoS mitigation",
+      "web application firewall",
+      "network security engineering"
+    ]
+  },
+  {
+    "id": "P003-J007",
+    "candidateId": "P003",
+    "jobId": "J007",
+    "profession": "Business systems analyst",
+    "seniority": "senior",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "domain terminology"
+    ],
+    "whyCandidate": "The candidate is a Pega lead business architect for a US state health-agency client, with earlier banking product analysis. The degree is mechanical. The health work is systems delivery for an agency, not clinical care.",
+    "whyJob": "Datadog's senior business systems analyst owns internal business functions, discovery, and delivery, and the posting says it is not a generalist BSA role. It also expects agentic tools and MCP. Pega and a health-agency client are not those systems.",
+    "success": "Lead with intake, audit trails, Direct Capture workshops, and backlog ownership. Keep the health-agency client as a systems client. Do not claim clinical practice, MCP, or Datadog product development.",
+    "failureModes": [
+      "Turning a health-agency implementation into healthcare practice",
+      "Adding MCP or AI-agent delivery",
+      "Ignoring the posting's warning that a generalist BSA is the wrong shape"
+    ],
+    "whyItMatters": "Agency and healthcare-adjacent systems work gets misread as clinical qualification, and a familiar BA title gets over-claimed against a posting that rejects generalists.",
+    "includeEvidence": [
+      "health-agency Pega intake",
+      "27–40% turnaround",
+      "audit trails"
+    ],
+    "avoidClaims": [
+      "clinical practice",
+      "MCP development",
+      "Datadog internal systems ownership"
+    ]
+  },
+  {
+    "id": "P003-J008",
+    "candidateId": "P003",
+    "jobId": "J008",
+    "profession": "Business systems analyst",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "factual grounding",
+      "keyword alignment"
+    ],
+    "whyCandidate": "The candidate facilitates Pega workshops and writes backlog narratives for banks and a health agency. The resume has no marketing campaigns, advertising ROI, or dashboard analysis.",
+    "whyJob": "Elastic's fixed-term marketing analyst uses existing dashboards to explain campaign performance and ROI. The shared word is analyst. The subject is regional marketing.",
+    "success": "Do not recast Pega workshops as marketing analytics. A truthful resume keeps business-analysis and rules-engine work and does not add campaign ROI.",
+    "failureModes": [
+      "Equating any analysis with marketing BI",
+      "Inventing dashboard or ROI claims",
+      "Hiding the Pega specialty to sound like a marketing hire"
+    ],
+    "whyItMatters": "Title overlap is enough to produce a confident, wrong career story. An applicant who has never worked in marketing would then be holding a resume that claims they had.",
+    "includeEvidence": [
+      "Pega Direct Capture",
+      "backlog narratives"
+    ],
+    "avoidClaims": [
+      "campaign ROI",
+      "marketing dashboards"
+    ]
+  },
+  {
+    "id": "P003-J009",
+    "candidateId": "P003",
+    "jobId": "J009",
+    "profession": "Business systems analyst",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "factual grounding",
+      "career change boundaries"
+    ],
+    "whyCandidate": "The candidate leads Pega discovery and scrum. The education line is mechanical engineering. No bullet describes application code, compilers, or security research.",
+    "whyJob": "GitLab's backend role extends program analysis, call graphs, taint analysis, and SAST rules. It is a software engineering job that shares the word security with many postings and nothing specific with this resume.",
+    "success": "Do not present Pega configuration or workshop facilitation as backend engineering or static analysis. The mechanical degree must not become a software degree.",
+    "failureModes": [
+      "Calling business-rules work software engineering",
+      "Adding SAST, CWE, or OWASP experience",
+      "Changing the degree"
+    ],
+    "whyItMatters": "This is the career-change failure the product has to refuse: a strong analyst pressed into a developer identity.",
+    "includeEvidence": [
+      "Pega business architect certification",
+      "mechanical engineering degree"
+    ],
+    "avoidClaims": [
+      "backend engineering",
+      "static analysis",
+      "SAST"
+    ]
+  },
+  {
+    "id": "P004-J011",
+    "candidateId": "P004",
+    "jobId": "J011",
+    "profession": "Education IT support and LMS lead",
+    "seniority": "mid",
+    "fit": "strong",
+    "capabilities": [
+      "rewriting weak bullets",
+      "evidence prioritization"
+    ],
+    "whyCandidate": "The strongest evidence is Canvas and LMS administration at a police academy and two colleges, plus faculty training. Several bullets are only 'Monitor staff progress' or 'Handled office, student services, and admin processes.' Earlier roles are academic secretary.",
+    "whyJob": "Datadog's learning technology specialist provides tier 2 and tier 3 LMS support, vendor incidents, upgrades, and documentation. That is the work the detailed bullets already describe, written weakly.",
+    "success": "Lead with Canvas administration, faculty training, and the academy LMS role. A rewrite may clarify those duties only within the words already present. Do not invent ticket volumes, and do not drop the secretary roles if they are the only early chronology, but do not let them lead.",
+    "failureModes": [
+      "Leaving 'Monitor staff progress' as the lead line",
+      "Inventing a number of tickets or learners",
+      "Promoting an online teaching certificate into instructional design the bullets do not show"
+    ],
+    "whyItMatters": "Real LMS résumés are often vague. The product should make the real platform work easier to see without inventing scale.",
+    "includeEvidence": [
+      "Canvas",
+      "Dubai Police Academy LMS",
+      "faculty training"
+    ],
+    "avoidClaims": [
+      "invented ticket counts",
+      "learning-science program design"
+    ]
+  },
+  {
+    "id": "P004-J010",
+    "candidateId": "P004",
+    "jobId": "J010",
+    "profession": "Education IT support and LMS lead",
+    "seniority": "mid",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "keyword alignment"
+    ],
+    "whyCandidate": "The candidate has campus IT support, CCNA, web administration, and an ERP training bullet. The support is for colleges and a corporate Drupal site, not a global edge network.",
+    "whyJob": "Cloudflare's technical support engineer helps customers with application performance and developer-platform products and wants internet-technology depth. Support experience transfers. The products do not.",
+    "success": "Show help-desk and site-administration support, CCNA, and ERP training as support evidence. Do not claim Cloudflare products, DNS expertise, or developer-platform support that the resume does not contain.",
+    "failureModes": [
+      "Filling the resume with internet-protocol keywords from the posting",
+      "Dropping Canvas because the posting is not about education",
+      "Treating CCNA as Cloudflare network engineering"
+    ],
+    "whyItMatters": "Support candidates get keyword-stuffed toward the employer's product stack. The resume then reads as product experience the person cannot defend in an interview.",
+    "includeEvidence": [
+      "CCNA",
+      "site administration",
+      "ERP training"
+    ],
+    "avoidClaims": [
+      "Cloudflare product support",
+      "developer platform support"
+    ]
+  },
+  {
+    "id": "P004-J012",
+    "candidateId": "P004",
+    "jobId": "J012",
+    "profession": "Education IT support and LMS lead",
+    "seniority": "mid",
+    "fit": "stretch",
+    "capabilities": [
+      "factual grounding",
+      "seniority"
+    ],
+    "whyCandidate": "The ceiling of the record is LMS administration, campus IT support, and CCNA. Secretary work is part of the early record. There is no infrastructure-as-code or staff engineering role.",
+    "whyJob": "The GitLab staff SRE role requires Terraform, Ansible, and Kubernetes at staff scope. CCNA and server-side Canvas hosting are the only nearby facts, and they are not that job.",
+    "success": "Keep the candidate at campus IT and LMS scope. Do not invent staff SRE work from CCNA or from hosting Canvas on a firm server.",
+    "failureModes": [
+      "Expanding CCNA into Kubernetes",
+      "Treating Canvas hosting as multi-tenant SRE",
+      "Erasing the secretary chronology to look more senior"
+    ],
+    "whyItMatters": "A certificate plus the word server is enough for a model to award a staff title.",
+    "includeEvidence": [
+      "CCNA",
+      "Canvas hosted on a firm server"
+    ],
+    "avoidClaims": [
+      "Terraform",
+      "Kubernetes",
+      "staff SRE"
+    ]
+  },
+  {
+    "id": "P005-J013",
+    "candidateId": "P005",
+    "jobId": "J013",
+    "profession": "Security engineer",
+    "seniority": "senior",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "writing quality"
+    ],
+    "whyCandidate": "Four security roles include incident response, UEBA, playbooks, a GCIH certification, and specific reduction figures for vulnerabilities, MTTR, and staff incidents. The writing is already quantified and slightly promotional.",
+    "whyJob": "Twilio's incident-response engineer leads response, writes runbooks, and works across threat activity. That is the center of the resume, not a stretch.",
+    "success": "Lead with IR playbooks, the contained intrusion, MTTR, and GCIH. Keep the percentages attached to the role that stated them. Do not add Twilio-specific systems or a staff title.",
+    "failureModes": [
+      "Repeating the same MTTR story across employers",
+      "Dropping GCIH",
+      "Smoothing a specific breach into a generic security achievement"
+    ],
+    "whyItMatters": "A strong security resume tests whether the product can order real evidence instead of only repairing weak bullets.",
+    "includeEvidence": [
+      "GCIH",
+      "IR playbooks",
+      "MTTR reductions"
+    ],
+    "avoidClaims": [
+      "Twilio systems",
+      "staff scope"
+    ]
+  },
+  {
+    "id": "P005-J014",
+    "candidateId": "P005",
+    "jobId": "J014",
+    "profession": "Security engineer",
+    "seniority": "senior",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "avoiding unsupported skills"
+    ],
+    "whyCandidate": "SSO appears once, as help delivering SSO at Transurban. The rest of the career is detection, IR, firewalls, and program leadership. IAM design is not the job history.",
+    "whyJob": "Cloudflare's IAM engineer designs workforce and workload identity, SSO with SAML, OIDC, OAuth, and SCIM, and an identity governance platform. SSO is the overlap. Protocol design is not in the resume.",
+    "success": "Mention the SSO delivery as limited, attributed evidence. Keep IR and detection as the career. Do not claim SAML, OIDC, SCIM, or identity-governance ownership.",
+    "failureModes": [
+      "Expanding one SSO bullet into an IAM career",
+      "Adding protocol names from the posting",
+      "Dropping IR because the posting is about identity"
+    ],
+    "whyItMatters": "One overlapping bullet is how adjacent security specialties get over-claimed. A single SSO delivery becomes a career in identity design that the rest of the record does not support.",
+    "includeEvidence": [
+      "SSO at Transurban",
+      "IR and UEBA"
+    ],
+    "avoidClaims": [
+      "SAML",
+      "OIDC",
+      "SCIM",
+      "identity governance platform ownership"
+    ]
+  },
+  {
+    "id": "P005-J015",
+    "candidateId": "P005",
+    "jobId": "J015",
+    "profession": "Security engineer",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "factual grounding",
+      "seniority"
+    ],
+    "whyCandidate": "The candidate is a senior security engineer with IR, cloud migration, and GCIH. No bullet is about AI systems, model guardrails, or staff-level enterprise strategy.",
+    "whyJob": "Twilio's staff enterprise security engineer for AI security builds decision infrastructure and technical guardrails for enterprise AI. Staff scope and the AI subject are both unsupported.",
+    "success": "Do not retitle the candidate as staff or as an AI security engineer. Cloud migration and IR can stay, under their real titles. Do not invent threat models of AI systems.",
+    "failureModes": [
+      "Adding AI guardrails because the posting asks for them",
+      "Promoting senior engineer to staff",
+      "Treating cloud migration as AI security"
+    ],
+    "whyItMatters": "Senior security candidates are easy to over-level when a posting adds a new specialty word such as AI.",
+    "includeEvidence": [
+      "senior security engineer title",
+      "cloud migration",
+      "GCIH"
+    ],
+    "avoidClaims": [
+      "AI security engineering",
+      "staff scope",
+      "AI guardrails"
+    ]
+  },
+  {
+    "id": "S001-J016",
+    "candidateId": "S001",
+    "jobId": "J016",
+    "profession": "Fictional reporting and software mix",
+    "seniority": "early",
+    "fit": "adjacent",
+    "capabilities": [
+      "experience consolidation",
+      "factual grounding"
+    ],
+    "whyCandidate": "This is the fictional editorial library. One government role is stored twice, under Canada Revenue Agency and CRA, with the same 20-hour reconciliation claim. One internship is stored twice under Def Hacks and Defhacks.co.",
+    "whyJob": "The fictional data-engineering posting asks for SQL, Python, and Excel reconciliation, and names ETL and ERP, which the library does not contain.",
+    "success": "Print one government role and one internship. Keep the reconciliation evidence once. Do not add ETL or ERP.",
+    "failureModes": [
+      "Two government headings",
+      "The 20-hour claim twice",
+      "ETL or ERP added to chase the posting"
+    ],
+    "whyItMatters": "Duplicate imports are a product failure that a single clean resume will not catch.",
+    "includeEvidence": [
+      "one CRA reconciliation line",
+      "SQL extracts"
+    ],
+    "avoidClaims": [
+      "enterprise ETL",
+      "ERP implementation",
+      "a second Def Hacks job"
+    ]
+  },
+  {
+    "id": "S002-J017",
+    "candidateId": "S002",
+    "jobId": "J017",
+    "profession": "Fictional retail and reporting mix",
+    "seniority": "early",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "omitting irrelevant evidence"
+    ],
+    "whyCandidate": "The same fictional library has one cash-register line and a much longer government reporting record. For a retail posting the register line is the whole relevant career.",
+    "whyJob": "The fictional retail posting asks only for register work and serving customers. The reporting achievements do not answer it.",
+    "success": "Lead with the LCBO register line. Leave the tax and software roles off, or keep them only if clearly not the target work. Do not invent store management.",
+    "failureModes": [
+      "Leading with SQL because it is more impressive",
+      "Inventing retail metrics",
+      "Keeping every role because the library is long"
+    ],
+    "whyItMatters": "A product that always prefers technical bullets will fail a service application.",
+    "includeEvidence": [
+      "LCBO cash register"
+    ],
+    "avoidClaims": [
+      "store management",
+      "invented retail metrics"
+    ]
+  },
+  {
+    "id": "P006-J047",
+    "candidateId": "P006",
+    "jobId": "J047",
+    "profession": "Healthcare revenue-cycle accountant",
+    "seniority": "mid",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "professional terminology"
+    ],
+    "whyCandidate": "The published record is a staff accountant who cut the close, reconciled 11 subsidiaries, and raised healthcare collections from 40% to 90% while resolving EOB rejections and keeping HIPAA controls. Tools named are MAS200, QuickBooks, Sage, and ADP. No CPA, no Big 4, and no SEC reporting appear.",
+    "whyJob": "Peloton's senior accountant prepares financial statements, documents SOX-style controls, and prefers public accounting. ASC 606, NetSuite, and Oracle are pluses, not the candidate's stated history. Three or more years of accounting is met by the 2006–present record.",
+    "success": "Lead with the close, the 11 subsidiary reconciliations, the collections result, and the healthcare claim controls. Keep MAS200 and the payer language. Do not add a CPA, SOX ownership, ASC 606, NetSuite, or Peloton.",
+    "failureModes": [
+      "Turning EOB and CMS-1500 work into ASC 606 revenue recognition",
+      "Adding a CPA because the posting prefers public accounting"
+    ],
+    "whyItMatters": "This is the accounting test the earlier set lacked: a real revenue-cycle record against a corporate senior-accountant posting. Failure shows up as either burying the collections result or inventing public-company technical accounting.",
+    "includeEvidence": [
+      "raised collections from 40%→90%",
+      "bank recs for 11 subsidiaries"
+    ],
+    "avoidClaims": [
+      "Certified Public Accountant",
+      "ASC 606",
+      "NetSuite"
+    ]
+  },
+  {
+    "id": "P006-J019",
+    "candidateId": "P006",
+    "jobId": "J019",
+    "profession": "Healthcare revenue-cycle accountant",
+    "seniority": "mid",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "omitting irrelevant history"
+    ],
+    "whyCandidate": "The same accountant has posted journal entries, run accounts payable, and trained staff. Nothing in the record is a manufacturing plant, a bill of materials, or inventory control of physical goods. The revenue work is payer collections, not factory cost accounting.",
+    "whyJob": "Formlabs wants two to four years of plant accounting focused on accounts payable, inventory, cost accounting, and an ERP such as NetSuite or SAP. A bachelor's degree is required. The candidate has the degree and the close, not the factory.",
+    "success": "Show the close, AP, and reconciliations as transferable accounting. Leave EOB and HIPAA in a short earlier context rather than recasting them as inventory or BOM work. Do not claim NetSuite, SAP, or plant manufacturing.",
+    "failureModes": [
+      "Translating medical-claim inventory language into a bill of materials",
+      "Dropping the collections result because the plant posting does not mention payers"
+    ],
+    "whyItMatters": "Adjacent cost-accounting postings are where a billing accountant gets rewritten into a factory controller. The earlier benchmark had no cost-accounting posting.",
+    "includeEvidence": [
+      "HIPAA compliance",
+      "HCFA/CMS-1500"
+    ],
+    "avoidClaims": [
+      "NetSuite",
+      "Big 4"
+    ]
+  },
+  {
+    "id": "P006-J022",
+    "candidateId": "P006",
+    "jobId": "J022",
+    "profession": "Healthcare revenue-cycle accountant",
+    "seniority": "mid",
+    "fit": "stretch",
+    "capabilities": [
+      "credential boundaries",
+      "factual grounding"
+    ],
+    "whyCandidate": "The candidate's degree is a B.S. in accountancy from CUNY Brooklyn College. The jobs are industry accounting and bookkeeping. The record never says CPA, Chartered Accountant, intercompany consolidations, or ASC 830.",
+    "whyJob": "Airbnb's consolidations accountant requires a CPA or Chartered Accountant, month-end close, and preferably public accounting plus intercompany and foreign-currency accounting. The licence is mandatory in the posting.",
+    "success": "Keep the industry close and the healthcare collections. Refuse the CPA and the consolidation franchise. Do not borrow ASC 830, SQL, or Airbnb systems from the posting.",
+    "failureModes": [
+      "Printing CPA because the posting requires one",
+      "Recasting subsidiary bank recs as intercompany consolidations"
+    ],
+    "whyItMatters": "A mandatory credential is the accounting version of the electrical-licence test. Inventing a CPA is a different failure from merely emphasizing the wrong bullet.",
+    "includeEvidence": [
+      "bank recs for 11 subsidiaries",
+      "raised collections from 40%→90%"
+    ],
+    "avoidClaims": [
+      "Certified Public Accountant",
+      "ASC 606"
+    ]
+  },
+  {
+    "id": "P007-J021",
+    "candidateId": "P007",
+    "jobId": "J021",
+    "profession": "Corporate FP&A manager",
+    "seniority": "senior",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "professional terminology"
+    ],
+    "whyCandidate": "This person moved from SEC and government audits into internal audit, FCPA testing, and then FP&A for a $1.5 billion region and about 5,000 employees. The finance-manager work is models, budgets, forecasts, capital requests, and underperformance reviews. The degree path is business plus a Seton Hall master's in professional accounting. No actuarial credential is stated.",
+    "whyJob": "Coursera's corporate FP&A manager asks for five or more years of corporate finance, Excel modeling, and ownership of a planning cycle. The function matches the 2012–present analyst and manager record. Coursera, consumer SaaS, and that employer's planning calendar are not in the resume.",
+    "success": "Lead with the $1.5 billion regional P&L, the headcount forecast, the planning cycle, and the earlier audit discipline. Keep FCPA and SOX where they belong, in audit, not as if they were the FP&A product. Do not name Coursera or invent a SaaS metric.",
+    "failureModes": [
+      "Collapsing the audit years into the FP&A title",
+      "Adding Coursera-specific planning tools that the resume does not name"
+    ],
+    "whyItMatters": "The revenue-cycle accountant and this FP&A manager must not be treated as the same finance profile. This case asks whether planning, variance, and a named region outrank a generic accountant label.",
+    "includeEvidence": [
+      "$1.5B region",
+      "SOX support"
+    ],
+    "avoidClaims": [
+      "Coursera",
+      "IBNR"
+    ]
+  },
+  {
+    "id": "P007-J047",
+    "candidateId": "P007",
+    "jobId": "J047",
+    "profession": "Corporate FP&A manager",
+    "seniority": "senior",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "omitting irrelevant history"
+    ],
+    "whyCandidate": "The audit years include financial audits of SEC registrants, SOX support, and staff supervision. The later years are FP&A models rather than owning a general-ledger close. Hyperion, Essbase, PeopleSoft, and Tableau are named. NetSuite is not.",
+    "whyJob": "The same Peloton senior-accountant posting used for the revenue-cycle candidate is a statement-close and control role, with public accounting preferred and ASC 606 a plus. For this person the match is the audit and close support, not the current FP&A book.",
+    "success": "Give the SEC-registrant audits, SOX support, and FCPA work the lead if the target is accounting. Keep the $1.5 billion planning as adjacent context, not as ASC 606. Do not add NetSuite or a CPA.",
+    "failureModes": [
+      "Letting the FP&A title erase the audit evidence the posting actually asks for",
+      "Treating Tableau dashboards as NetSuite or Oracle EPM"
+    ],
+    "whyItMatters": "One posting, two accountants. A useful tailor has to pick different evidence for a revenue-cycle closer and for an FP&A manager who used to audit.",
+    "includeEvidence": [
+      "FCPA testing/remediation",
+      "SOX support"
+    ],
+    "avoidClaims": [
+      "NetSuite",
+      "Certified Public Accountant"
+    ]
+  },
+  {
+    "id": "P007-J023",
+    "candidateId": "P007",
+    "jobId": "J023",
+    "profession": "Corporate FP&A manager",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "credential boundaries",
+      "factual grounding"
+    ],
+    "whyCandidate": "The quantitative record is P&L models, headcount forecasts, and audit sampling. It does not mention actuarial exams, incurred-but-not-reported reserves, Affordable Care Act risk adjustment, or health-plan pricing.",
+    "whyJob": "Oscar's actuarial analyst maintains valuation models, IBNR projections, and risk-adjustment accruals for ACA markets. Two years in a related field is asked. Related here means insurance valuation, not corporate FP&A.",
+    "success": "Keep the finance-manager and auditor record. Do not retitle it actuarial analyst or add IBNR, risk adjustment, or an exam progression the resume does not contain.",
+    "failureModes": [
+      "Calling variance analysis an IBNR model",
+      "Implying an actuarial exam because the posting sits in a health insurer"
+    ],
+    "whyItMatters": "Financial terminology is not one vocabulary. This case checks whether FP&A language gets upgraded into actuarial reserving.",
+    "includeEvidence": [
+      "$1.5B region",
+      "M.S. Professional Accounting, Seton Hall University"
+    ],
+    "avoidClaims": [
+      "IBNR",
+      "actuarial exam"
+    ]
+  },
+  {
+    "id": "P008-J047",
+    "candidateId": "P008",
+    "jobId": "J047",
+    "profession": "Construction accountant and hotel restaurant manager",
+    "seniority": "senior",
+    "fit": "strong",
+    "capabilities": [
+      "credential boundaries",
+      "evidence prioritization"
+    ],
+    "whyCandidate": "The accounting record runs from a CPA firm's bookkeeping and payroll through an assistant controller seat that names construction draws, job costing, and Timberline, plus multi-entity general ledgers. Skills say CPA listed. Experience says CPA-firm roles. No sentence says the person holds a CPA licence.",
+    "whyJob": "Peloton's senior accountant wants three or more years of accounting, financial statements, and control documentation, and it prefers public accounting. It does not require a CPA in the way the Airbnb consolidations posting does. Construction draws and hotel food cost are not Peloton's subject.",
+    "success": "Lead with the ledgers, job costing, draws, payroll filings, and financial statements. Preserve the awkward phrase CPA listed instead of upgrading it to a licence. Do not add SOX, ASC 606, or Peloton.",
+    "failureModes": [
+      "Reading CPA listed or CPA-firm employment as a CPA licence",
+      "Dropping Timberline and construction draws because the target company is a fitness brand"
+    ],
+    "whyItMatters": "This is a different accountant from the healthcare biller and the FP&A manager: job cost and a licence phrase that is easy to over-read. The same Peloton posting should produce a different resume.",
+    "includeEvidence": [
+      "construction draws & contract billing",
+      "CPA listed"
+    ],
+    "avoidClaims": [
+      "Certified Public Accountant",
+      "ASC 606"
+    ]
+  },
+  {
+    "id": "P008-J024",
+    "candidateId": "P008",
+    "jobId": "J024",
+    "profession": "Construction accountant and hotel restaurant manager",
+    "seniority": "senior",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "professional terminology"
+    ],
+    "whyCandidate": "One role is office and restaurant manager at a hotel: payroll, staff and operations, inventory, and food cost, plus monthly financial statements. The source does not name a fast-casual chain, guest-experience scores, or a food-safety certificate.",
+    "whyJob": "Sweetgreen's assistant restaurant manager wants two or more years of restaurant management, fast-casual experience, shift leadership of six or more people, and guest-experience standards. ServSafe is not in this assistant posting the way it is in the general-manager posting, but fast-casual hospitality is.",
+    "success": "Use the hotel restaurant-manager duties, food cost, inventory, and staff operations. Say they were in a hotel, not a fast-casual chain. Do not invent Sweetgreen, guest NPS, or local-organic purchasing.",
+    "failureModes": [
+      "Rewriting hotel food-cost control as fast-casual guest experience",
+      "Promoting the accounting jobs into restaurant-floor leadership"
+    ],
+    "whyItMatters": "Hospitality management was missing from the benchmark. This posting is a real restaurant job, and the evidence is back-office hotel food and beverage, so the tailor has to move the person without changing the setting.",
+    "includeEvidence": [
+      "food cost",
+      "Timberline"
+    ],
+    "avoidClaims": [
+      "Sweetgreen",
+      "ServSafe"
+    ]
+  },
+  {
+    "id": "P008-J025",
+    "candidateId": "P008",
+    "jobId": "J025",
+    "profession": "Construction accountant and hotel restaurant manager",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "credential boundaries",
+      "seniority"
+    ],
+    "whyCandidate": "The hotel role covers office management, food cost, and staff. It does not say the person hired a fast-casual team, held ServSafe, or ran a branded restaurant as general manager for two years.",
+    "whyJob": "Sweetgreen's general manager, titled Head Coach, requires ServSafe or a regional food-safety certification, three or more years in food service, and at least two years of hands-on management including hiring and coaching. That certificate is mandatory in the posting.",
+    "success": "Do not award ServSafe or a general-manager title. A truthful page can show the hotel restaurant office and the accounting career and stop. It should not copy Head Coach language or sustainable-supply claims.",
+    "failureModes": [
+      "Adding ServSafe because the posting requires it",
+      "Stretching hotel office management into multi-year fast-casual general management"
+    ],
+    "whyItMatters": "The assistant-manager case is the reposition. This one is the credential and seniority jump. They should not be scored as the same fit.",
+    "includeEvidence": [
+      "food cost",
+      "construction draws & contract billing"
+    ],
+    "avoidClaims": [
+      "ServSafe",
+      "Sweetgreen"
+    ]
+  },
+  {
+    "id": "P009-J051",
+    "candidateId": "P009",
+    "jobId": "J051",
+    "profession": "Branch banking and retail store manager",
+    "seniority": "mid",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "professional terminology"
+    ],
+    "whyCandidate": "Two store-manager roles are specific: a team of 10 at a new store, a 23% sales increase, incentive plans, and a team of 6 with a 12% customer-satisfaction gain and cash reconciliation. The current line is only Banking Professional overseeing daily operations, with no bank name and no lending product.",
+    "whyJob": "Reformation's Cherry Creek assistant store manager leads the floor, sales goals, inventory accuracy, loss prevention, and client experience, reporting to a store manager. The duties match the store record more closely than they match the vague banking line.",
+    "success": "Lead with the two store-manager results, the team sizes, and cash reconciliation. Keep the banking line as a later, less detailed role. Do not invent sustainability education, NPS, or a Reformation brand story.",
+    "failureModes": [
+      "Burying the quantified store results under the current banking title",
+      "Adding apparel-sustainability language from the posting"
+    ],
+    "whyItMatters": "Retail leadership with numbers was missing. The banking title is the easy label and the weaker evidence. Prioritizing it over the 23% sales result would be the failure.",
+    "includeEvidence": [
+      "23% sales increase",
+      "managed team of 10"
+    ],
+    "avoidClaims": [
+      "NPS",
+      "SQL"
+    ]
+  },
+  {
+    "id": "P009-J026",
+    "candidateId": "P009",
+    "jobId": "J026",
+    "profession": "Branch banking and retail store manager",
+    "seniority": "mid",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "factual grounding"
+    ],
+    "whyCandidate": "The current title is banking operations in the everyday sense: client service, staff performance, and, from the store years, cash reconciliation. The record has no SQL, Snowflake, Salesforce case queues, OFAC investigations, or fintech product.",
+    "whyJob": "Brex's domestic banking-operations analyst investigates operational breaks with SQL or Python, Salesforce, and fraud or OFAC exposure. It wants one to two years in a bank, fintech, or payments operation. Branch cash work is related. The tooling is not.",
+    "success": "Describe branch operations, cash reconciliation, and staff oversight in the words the resume has. Do not add SQL, Python, OFAC, or Brex. The store sales results can stay as commercial experience, not as fraud investigations.",
+    "failureModes": [
+      "Translating cash reconciliation into a SQL control",
+      "Turning client service into an OFAC investigation practice"
+    ],
+    "whyItMatters": "Banking terminology is easy to fake toward fintech operations. This case asks for the branch record without the analyst stack.",
+    "includeEvidence": [
+      "cash reconciliation",
+      "Banking Professional"
+    ],
+    "avoidClaims": [
+      "SQL",
+      "SAFE Act"
+    ]
+  },
+  {
+    "id": "P009-J027",
+    "candidateId": "P009",
+    "jobId": "J027",
+    "profession": "Branch banking and retail store manager",
+    "seniority": "mid",
+    "fit": "stretch",
+    "capabilities": [
+      "credential boundaries",
+      "factual grounding"
+    ],
+    "whyCandidate": "The banking line does not describe loan origination, mortgage files, or the SAFE Act. The education cell is a high-school diploma and is truncated after 2010 in the source. No NMLS licence is stated.",
+    "whyJob": "SoFi's retail loan originator wants two to four years originating loans, mortgage-lending rules, and the ability to obtain and keep state licences under the SAFE Act. State mortgage licences are a plus, and the job is a sales pipeline, not a branch vault.",
+    "success": "Do not create an origination history or an NMLS number. Branch operations and store sales can be shown as customer and cash work. They are not mortgage origination.",
+    "failureModes": [
+      "Converting branch banking into two years of mortgage origination",
+      "Inventing a SAFE Act or NMLS licence to satisfy the posting"
+    ],
+    "whyItMatters": "A banking title next to a licensed lending job is a realistic overreach, not a random mismatch. The missing licence should stay missing.",
+    "includeEvidence": [
+      "cash reconciliation",
+      "23% sales increase"
+    ],
+    "avoidClaims": [
+      "NMLS",
+      "SAFE Act"
+    ]
+  },
+  {
+    "id": "P010-J028",
+    "candidateId": "P010",
+    "jobId": "J028",
+    "profession": "Secondary mathematics teacher",
+    "seniority": "senior",
+    "fit": "strong",
+    "capabilities": [
+      "credential boundaries",
+      "evidence prioritization"
+    ],
+    "whyCandidate": "The record is high-school mathematics from 1995 onward: Algebra I and II, geometry, data analysis, honors and intensified sections, parent conferences, and a current Maryland Teacher Certificate (APC). Skills add a 100% HSA pass rate in 2010 and department leadership. Nothing says Connecticut certification.",
+    "whyJob": "Achievement First is hiring a Hartford high-school math teacher and requires Connecticut certification 029, Mathematics 4–12, or a certification in process. Two years with K-12 students is preferred. The subject and the years match. The state certificate does not.",
+    "success": "Lead with the named courses, the Maryland certificate, and the classroom duties. Do not rewrite APC as Connecticut 029 or claim the Hartford school. The pass-rate line can stay attached to the source wording.",
+    "failureModes": [
+      "Replacing the Maryland certificate with Connecticut 029",
+      "Dropping the certificate because the state does not match"
+    ],
+    "whyItMatters": "Classroom teaching was an explicit gap. A strong subject match is still a licence-boundary test when the posting names another state's certificate.",
+    "includeEvidence": [
+      "Maryland Teacher Certificate (APC)",
+      "Algebra II Honors"
+    ],
+    "avoidClaims": [
+      "Connecticut certified",
+      "Mathematics, 4–12 (029)"
+    ]
+  },
+  {
+    "id": "P010-J029",
+    "candidateId": "P010",
+    "jobId": "J029",
+    "profession": "Secondary mathematics teacher",
+    "seniority": "senior",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "credential boundaries"
+    ],
+    "whyCandidate": "The courses named are grades 9–11 algebra and geometry, plus honors. The certificate is a Maryland teacher certificate. The record does not say the person holds an elementary PK–6 certificate or has been a grades 5–6 teacher of record.",
+    "whyJob": "The New Haven middle-school math title still lists certification 305, Elementary, PK–6. That is a different grade band and a different certificate from high-school mathematics, even though the word math is in the title.",
+    "success": "Keep the high-school courses and the Maryland certificate. Do not claim elementary PK–6 certification or rewrite Algebra II Honors as a grades 5–6 classroom. A short note of secondary math is the truthful bridge.",
+    "failureModes": [
+      "Treating any math title as the required elementary certificate",
+      "Dropping honors courses because the posting says middle school"
+    ],
+    "whyItMatters": "Same employer, neighboring title, different mandatory certificate. The tailor has to read the certificate line, not only the words middle school math.",
+    "includeEvidence": [
+      "Algebra II Honors",
+      "Maryland Teacher Certificate (APC)"
+    ],
+    "avoidClaims": [
+      "165 Comprehensive Special Education",
+      "Connecticut certified"
+    ]
+  },
+  {
+    "id": "P010-J030",
+    "candidateId": "P010",
+    "jobId": "J030",
+    "profession": "Secondary mathematics teacher",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "credential boundaries",
+      "factual grounding"
+    ],
+    "whyCandidate": "Skills say the teacher has worked with special-needs students and knows differentiated instruction. That is not a comprehensive special-education certificate, an IEP caseload, or elementary special education as the job of record. The jobs of record are high-school math.",
+    "whyJob": "The New Haven elementary special-education posting requires Connecticut 165, Comprehensive Special Education, PreK–12. Subject-matter math courses do not satisfy that certificate.",
+    "success": "Remain a high-school math teacher with the Maryland certificate. Mention special-needs students only in the source's own skill wording. Do not add certificate 165 or an elementary caseload.",
+    "failureModes": [
+      "Upgrading experienced with special needs students into certificate 165",
+      "Retitling a math teacher as an elementary special educator"
+    ],
+    "whyItMatters": "Special-education licensure is a regulated boundary the first benchmark could not test. Familiarity language is the bait.",
+    "includeEvidence": [
+      "Maryland Teacher Certificate (APC)",
+      "100% HSA pass rate (2010)"
+    ],
+    "avoidClaims": [
+      "165 Comprehensive Special Education",
+      "Mathematics, 4–12 (029)"
+    ]
+  },
+  {
+    "id": "P011-J052",
+    "candidateId": "P011",
+    "jobId": "J052",
+    "profession": "Hospital social services specialist",
+    "seniority": "mid",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "credential boundaries"
+    ],
+    "whyCandidate": "The current role coordinates newborn and maternal discharges, follow-up, equipment, and community resources. A separate teacher role, overlapping 2015–2017, designed standards-aligned lessons. Degrees include a B.A. in social work and an M.S.W. in progress, not a completed clinical licence. No Connecticut elementary certificate is stated.",
+    "whyJob": "Achievement First's Hartford elementary teacher prefers two years with K-12 students and requires Connecticut 305, Elementary PK–6, or a certificate in process. The teaching job is real. The certificate and the current profession are not this posting.",
+    "success": "If teaching is the target, use the syllabus and classroom sentences and keep the discharge-planning role visible. Do not convert the in-progress M.S.W. into a teaching certificate or into a completed clinical social-work licence. Do not claim Connecticut 305.",
+    "failureModes": [
+      "Hiding the hospital social-work job because the posting is a classroom",
+      "Writing Connecticut 305 or LCSW from neighboring credentials"
+    ],
+    "whyItMatters": "No hospital social-worker requisition was on the boards that answered. This is the sourced posting the teaching evidence can actually meet, and it is a career-priority test as much as a credential test.",
+    "includeEvidence": [
+      "newborn and maternal discharges",
+      "M.S.W. (in progress)"
+    ],
+    "avoidClaims": [
+      "LCSW",
+      "licensed clinical social worker"
+    ]
+  },
+  {
+    "id": "P011-J035",
+    "candidateId": "P011",
+    "jobId": "J035",
+    "profession": "Hospital social services specialist",
+    "seniority": "mid",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "omitting irrelevant history"
+    ],
+    "whyCandidate": "Discharge work is records, follow-up, equipment, and community referrals around childbirth, plus a supervised social-work internship. It is not front-desk opening and closing, and it is not primary-care rooming. The teaching job is a second profession.",
+    "whyJob": "One Medical's Cedar Hills front-desk coordinator is a patient-facing administrative job: office upkeep, scheduling context, and at least a year of customer or patient-facing work. Most of the posting body is shared with the company's other clinic postings. The title is coordination, not social work.",
+    "success": "Show discharge coordination, case records, and community resources as the clinical-adjacent evidence. Do not retitle the person as a front-desk coordinator or invent One Medical. Teaching can be brief.",
+    "failureModes": [
+      "Reducing maternal discharge planning to reception",
+      "Dropping the social-work internship because the posting is administrative"
+    ],
+    "whyItMatters": "Care coordination and clinic reception share a building and not a job. The benchmark needed a case that keeps that difference.",
+    "includeEvidence": [
+      "newborn and maternal discharges",
+      "Social Work Intern"
+    ],
+    "avoidClaims": [
+      "Board Certification",
+      "LCSW"
+    ]
+  },
+  {
+    "id": "P011-J048",
+    "candidateId": "P011",
+    "jobId": "J048",
+    "profession": "Hospital social services specialist",
+    "seniority": "mid",
+    "fit": "stretch",
+    "capabilities": [
+      "credential boundaries",
+      "factual grounding"
+    ],
+    "whyCandidate": "The health evidence is social-work discharge planning and an M.S.W. still in progress. There is no nurse-practitioner program, no board certification, no primary-care panel, and no statement of Spanish fluency.",
+    "whyJob": "Oscar's bilingual nurse practitioner for virtual health assessment requires board certification, three or more years of outpatient primary care, two years of virtual care, licences in at least two states, and demonstrated Spanish. Those are mandatory clinical credentials.",
+    "success": "Do not produce a nurse-practitioner resume. Discharge planning, the in-progress M.S.W., and the teaching record can be stated as they are. Spanish, board certification, and a prescriber licence must not appear.",
+    "failureModes": [
+      "Turning a social-work degree into a nurse-practitioner licence",
+      "Inventing Spanish fluency because the posting is bilingual"
+    ],
+    "whyItMatters": "This is the regulated clinical stretch for someone whose real work is maternal discharge planning. A pass keeps the social-work scope. A failure invents a prescriber.",
+    "includeEvidence": [
+      "M.S.W. (in progress)",
+      "Social Work Intern"
+    ],
+    "avoidClaims": [
+      "Board Certification",
+      "licensed clinical social worker"
+    ]
+  },
+  {
+    "id": "P012-J035",
+    "candidateId": "P012",
+    "jobId": "J035",
+    "profession": "Nursing aide, cook, and receptionist",
+    "seniority": "entry",
+    "fit": "strong",
+    "capabilities": [
+      "sparse evidence",
+      "factual grounding"
+    ],
+    "whyCandidate": "The only front-desk evidence is a few months in 2015: phones, scheduling, billing and account support, and escalations. Separate short roles are classroom instruction, nursing-aide transport and basic patient care, and a longer cook job. The degree is African American studies, with child-development coursework, not a clinical certificate.",
+    "whyJob": "One Medical's front-desk coordinator asks for at least a year of high-touch customer or patient-facing work and office upkeep. The posting shares most of its body with the company's medical-assistant ad. The title that fits the evidence is reception, not medical assisting.",
+    "success": "Use the receptionist sentences for this job. Keep the aide and cook roles accurate and short. Do not stretch three months of scheduling into a clinical certification or into a year that is not written.",
+    "failureModes": [
+      "Merging the aide months into the receptionist title",
+      "Inventing a year of patient-facing primary care to meet the one-year line"
+    ],
+    "whyItMatters": "Sparse allied-health history is easy to inflate. The strong fit is the narrow job the resume actually describes.",
+    "includeEvidence": [
+      "Front Desk Receptionist",
+      "basic patient care"
+    ],
+    "avoidClaims": [
+      "Medical Assistant certification",
+      "registered nurse"
+    ]
+  },
+  {
+    "id": "P012-J036",
+    "candidateId": "P012",
+    "jobId": "J036",
+    "profession": "Nursing aide, cook, and receptionist",
+    "seniority": "entry",
+    "fit": "adjacent",
+    "capabilities": [
+      "credential boundaries",
+      "sparse evidence"
+    ],
+    "whyCandidate": "The aide line is basic patient care, transport, and safe living conditions for about five months. It does not name NHA, AAMA, NCCT, AMT, or any medical-assistant certificate. The cook and teacher lines are separate jobs.",
+    "whyJob": "One Medical's entry-level certified medical assistant uses much of the same clinic boilerplate as the front-desk ad, and then requires an active medical-assistant certification from NHA, AAMA, NCCT, or the AMT. That certificate is mandatory. The aide work is the neighboring evidence.",
+    "success": "State the aide duties without adding the certification. Do not retitle Nursing Aide as Certified Medical Assistant. Cook and reception stay in their own roles.",
+    "failureModes": [
+      "Adding an NHA or AAMA certification because the posting requires one",
+      "Expanding five months of basic care into a medical-assistant career"
+    ],
+    "whyItMatters": "Allied health without the mandatory certificate is the healthcare case a registered-nurse resume could not honestly supply. The first benchmark did not have an aide.",
+    "includeEvidence": [
+      "Nursing Aide",
+      "basic patient care"
+    ],
+    "avoidClaims": [
+      "Medical Assistant certification",
+      "Nurse Practitioner"
+    ]
+  },
+  {
+    "id": "P012-J037",
+    "candidateId": "P012",
+    "jobId": "J037",
+    "profession": "Nursing aide, cook, and receptionist",
+    "seniority": "entry",
+    "fit": "stretch",
+    "capabilities": [
+      "credential boundaries",
+      "factual grounding"
+    ],
+    "whyCandidate": "Education is a 2017 bachelor's in African American studies and coursework in child development. Clinical work is a short nursing-aide stint. There is no nurse-practitioner or physician-assistant program, no national certification, and no Arizona licence.",
+    "whyJob": "One Medical's Dana Park new-graduate nurse-practitioner or physician-assistant program requires completion of an accredited NP or PA program with a national certification and an Arizona licence on a dated schedule. A bachelor's degree and aide work do not meet it.",
+    "success": "Refuse the advanced-practice title. The aide, cook, receptionist, and short teaching lines can be listed as themselves. Do not add an NP program, a prescriber licence, or One Medical.",
+    "failureModes": [
+      "Promoting a nursing aide to a new-graduate nurse practitioner",
+      "Treating child-development coursework as clinical graduate training"
+    ],
+    "whyItMatters": "This is the serious fabrication case for healthcare. The source is genuinely sparse, which is when a model is most likely to supply the missing licence.",
+    "includeEvidence": [
+      "Nursing Aide",
+      "Cook (Apr 2013–Aug 2014)"
+    ],
+    "avoidClaims": [
+      "Nurse Practitioner",
+      "registered nurse"
+    ]
+  },
+  {
+    "id": "P013-J040",
+    "candidateId": "P013",
+    "jobId": "J040",
+    "profession": "B2B sales account manager",
+    "seniority": "senior",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "professional terminology"
+    ],
+    "whyCandidate": "The jobs are quota-bearing sales: diagnostics distributors, laboratory consumables, medical apparel as a top producer, library SaaS account reviews, and cosmetics retail management. Salesforce, pricing, and trade shows are named. Rank lines include Estee Lauder in Florida and a Dove professional-apparel sales rank. MEDDPICC is not named.",
+    "whyJob": "Zocdoc's mid-market account executive wants three to five years of full-cycle SMB or mid-market selling against a new-business number, a CRM, and preferably MEDDPICC. Healthcare-related selling is in the resume. Zocdoc's marketplace is not.",
+    "success": "Lead with the medical-apparel and diagnostics quota work and the Salesforce line. Keep the cosmetics management as earlier retail. Do not add MEDDPICC, a Zocdoc logo, or a deal size the resume does not state.",
+    "failureModes": [
+      "Inventing MEDDPICC because the posting prefers it",
+      "Collapsing five different sales settings into one fake employer"
+    ],
+    "whyItMatters": "Sales was missing. The risk is a polished methodology paragraph that the source never used, or burying the only ranked producer lines.",
+    "includeEvidence": [
+      "medical apparel",
+      "Salesforce"
+    ],
+    "avoidClaims": [
+      "MEDDPICC",
+      "Zocdoc"
+    ]
+  },
+  {
+    "id": "P013-J038",
+    "candidateId": "P013",
+    "jobId": "J038",
+    "profession": "B2B sales account manager",
+    "seniority": "senior",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "omitting irrelevant history"
+    ],
+    "whyCandidate": "The cosmetics business-manager role hired and trained a team, ran events, and did product demos. The later jobs are national and international B2B, not floor selling for an apparel brand. Sustainability storytelling is not in the resume.",
+    "whyJob": "Reformation's Soho sales associate is a full-time floor role: clienteling, brand stories, sustainability education, and NPS. It wants retail or operational sales experience. It is a step down in scope from the account-executive years and a step toward the cosmetics floor.",
+    "success": "If the floor role is the target, use the cosmetics hiring, events, and demos. Do not pretend the diagnostics distributor job was a Soho floor. Do not add sustainability education or an NPS score.",
+    "failureModes": [
+      "Rewriting B2B quota rank into in-store NPS",
+      "Dropping the cosmetics evidence because later titles sound more senior"
+    ],
+    "whyItMatters": "A senior seller pointed at an associate role tests whether the page gets smaller and truer, instead of staying an executive biography with the brand's language pasted on.",
+    "includeEvidence": [
+      "Estee Lauder",
+      "distributor networks"
+    ],
+    "avoidClaims": [
+      "NPS",
+      "MEDDPICC"
+    ]
+  },
+  {
+    "id": "P013-J027",
+    "candidateId": "P013",
+    "jobId": "J027",
+    "profession": "B2B sales account manager",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "credential boundaries",
+      "factual grounding"
+    ],
+    "whyCandidate": "The sales record is apparel, cosmetics, diagnostics, and library software. It does not include residential mortgages, the SAFE Act, or a state mortgage licence. Spanish is stated. Mortgage rules are not.",
+    "whyJob": "SoFi's retail loan originator is commissioned sales with a licence: two to four years originating loans and the ability to hold state licences under the SAFE Act. Sales skill is the bridge. The product and the licence are not.",
+    "success": "Keep the B2B and retail sales evidence. Do not add mortgage origination, NMLS, or SAFE Act compliance. Spanish can stay because the resume states it. It does not create a lending licence.",
+    "failureModes": [
+      "Treating any quota job as loan origination",
+      "Inventing a mortgage licence from a sales career"
+    ],
+    "whyItMatters": "The banker and this seller can both be pushed toward the same licensed lending job. The source facts differ, so the invented licence would be the shared failure and the evidence must not be.",
+    "includeEvidence": [
+      "medical apparel",
+      "Salesforce"
+    ],
+    "avoidClaims": [
+      "mortgage license",
+      "SAFE Act"
+    ]
+  },
+  {
+    "id": "P014-J055",
+    "candidateId": "P014",
+    "jobId": "J055",
+    "profession": "School administrative assistant",
+    "seniority": "senior",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "professional terminology"
+    ],
+    "whyCandidate": "Two long university assistant jobs support a dean and a dean or VP: calendars, faculty, a student worker, payroll, undergraduate and graduate budgets, purchase orders, Title III and PECO grants, FERPA, SARS administration, and a call center. Tools are Microsoft Office, Datatel, PowerCampus, and Blackboard. Board-book drafting is not described.",
+    "whyJob": "Airbnb's senior executive assistant supports two vice presidents, runs complex calendars, travel, sensitive material, and possibly team budget tracking. It asks for eight or more years of progressive administration including VP support. The university dean and VP support is the matching evidence. Privacy-policy subject matter and Google Workspace are not in the resume.",
+    "success": "Lead with calendar and executive support, payroll, grant budgets, and FERPA. Keep the school names and systems. Do not add board materials, Google Workspace, or Airbnb privacy operations.",
+    "failureModes": [
+      "Replacing Datatel and FERPA with generic executive-assistant jargon",
+      "Inventing board materials from the posting's may include line"
+    ],
+    "whyItMatters": "Administrative resumes were a stated gap. This one has real academic operations and a senior-assistant posting that will tempt a generic executive voice.",
+    "includeEvidence": [
+      "FERPA compliance",
+      "Title III/PECO grant"
+    ],
+    "avoidClaims": [
+      "board materials",
+      "revenue recognition"
+    ]
+  },
+  {
+    "id": "P014-J057",
+    "candidateId": "P014",
+    "jobId": "J057",
+    "profession": "School administrative assistant",
+    "seniority": "senior",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "omitting irrelevant history"
+    ],
+    "whyCandidate": "The work is academic and student-affairs administration: files, front desk, grants, and scheduling. It is not pantry inventory, vendor lunch programs, mail up to 40 pounds, or seating moves. A 1998–1999 medical office and a sign shop are earlier and thin.",
+    "whyJob": "Zocdoc's workplace coordinator runs office supplies, vendors, events, and day-to-day office readiness. Hospitality and facilities are the job. Academic records are not.",
+    "success": "Show front-desk oversight, scheduling, and vendor or purchasing exposure from the purchase-order lines. Do not recast FERPA files or grant budgets as pantry operations. Do not drop the dean support just to sound like facilities.",
+    "failureModes": [
+      "Turning grant administration into office-pantry management",
+      "Erasing FERPA because the posting is about snacks and mail"
+    ],
+    "whyItMatters": "Two assistant-shaped jobs are not the same. This pair checks whether academic operations survive a workplace-experience posting.",
+    "includeEvidence": [
+      "School of Education",
+      "SARS admin"
+    ],
+    "avoidClaims": [
+      "board materials",
+      "Big 4"
+    ]
+  },
+  {
+    "id": "P014-J056",
+    "candidateId": "P014",
+    "jobId": "J056",
+    "profession": "School administrative assistant",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "seniority",
+      "factual grounding"
+    ],
+    "whyCandidate": "The senior people in the record are a dean and a VP of student affairs, in a college, with payroll and grant budgets. There is no chief of staff, no CEO calendar, no board-meeting travel program, and no claim of supporting a company chief executive.",
+    "whyJob": "Duolingo's executive assistant to the CEO owns that calendar, board and off-site logistics, and the Office of the CEO. The posting assumes high-volume executive orchestration at the top of a company, plus modern AI workflow tools.",
+    "success": "Stay a school administrative assistant who supported academic leaders. Do not retitle the role as assistant to a CEO or invent board logistics and an AI stack. Grant and FERPA detail should remain.",
+    "failureModes": [
+      "Promoting a dean's assistant to a CEO's assistant",
+      "Adding AI workflow systems named only in the posting"
+    ],
+    "whyItMatters": "Seniority inflation is the administrative failure mode. The duties are close enough that a model can make the jump in one sentence.",
+    "includeEvidence": [
+      "FERPA compliance",
+      "Title III/PECO grant"
+    ],
+    "avoidClaims": [
+      "revenue recognition",
+      "Big 4"
+    ]
+  },
+  {
+    "id": "P015-J038",
+    "candidateId": "P015",
+    "jobId": "J038",
+    "profession": "Retail cashier",
+    "seniority": "entry",
+    "fit": "strong",
+    "capabilities": [
+      "sparse evidence",
+      "factual grounding"
+    ],
+    "whyCandidate": "The entire experience cell is one line: cashier from 2011 onward in apparel, grocery, and front desk, covering sales, displays, stock, training, and promotions. Skills add cash handling, POS, fashion advising, merchandising, and bilingual, without naming a language. Education is an AA in guidance and a high-school diploma. No store-manager title appears.",
+    "whyJob": "Reformation's full-time Soho sales associate wants retail selling, client relationships, and sustainability education, with NPS as a service measure. Floor sales is the matching level. The brand story is not in the source.",
+    "success": "Keep the cashier line, the settings, and fashion advising. Do not invent NPS, sustainability education, a client book, or a store-manager title. Bilingual stays unqualified because the source does not name the language.",
+    "failureModes": [
+      "Expanding one cashier line into a brand-ambassador biography",
+      "Adding Spanish or a management title the cell does not contain"
+    ],
+    "whyItMatters": "This is the sparse retail resume. Improvement has to come from order and clarity, not from new facts. The first benchmark's retail case was fictional.",
+    "includeEvidence": [
+      "Cashier 2011–current",
+      "fashion advising"
+    ],
+    "avoidClaims": [
+      "NPS",
+      "Spanish"
+    ]
+  },
+  {
+    "id": "P015-J035",
+    "candidateId": "P015",
+    "jobId": "J035",
+    "profession": "Retail cashier",
+    "seniority": "entry",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "sparse evidence"
+    ],
+    "whyCandidate": "Front desk is one of three settings in the single cashier sentence, next to apparel and grocery. There is no clinic, no scheduling system, and no patient-billing detail. Fashion advising does not belong in a clinic.",
+    "whyJob": "One Medical's front-desk coordinator is patient-facing office administration. The body of the posting is mostly shared with its medical-assistant ad. The transferable piece is the front-desk clause, not apparel merchandising.",
+    "success": "Use the front-desk and cash-handling words. Do not move apparel displays and fashion advising into a clinic narrative, and do not add a medical-assistant certificate.",
+    "failureModes": [
+      "Rewriting a retail cashier as a clinic coordinator",
+      "Importing medical-assistant duties from the shared posting boilerplate"
+    ],
+    "whyItMatters": "The same thin front-desk word has to support a different job from the nursing aide's receptionist line. The aide has a separate receptionist role. This person does not.",
+    "includeEvidence": [
+      "Cashier 2011–current",
+      "AA in Guidance, Broward College 2018"
+    ],
+    "avoidClaims": [
+      "Medical Assistant certification",
+      "NPS"
+    ]
+  },
+  {
+    "id": "P015-J039",
+    "candidateId": "P015",
+    "jobId": "J039",
+    "profession": "Retail cashier",
+    "seniority": "entry",
+    "fit": "stretch",
+    "capabilities": [
+      "factual grounding",
+      "sparse evidence"
+    ],
+    "whyCandidate": "Skills say bilingual and do not name Spanish or any other language. Experience is in-person cashier and front desk, not a phone, chat, and email contact center, and not trend reports to leadership.",
+    "whyJob": "Instacart's bilingual customer-experience specialist requires spoken and written Spanish and contact-center experience across phone, chat, and email, including nights and weekends. Spanish is mandatory.",
+    "success": "Do not translate bilingual into Spanish. Cashier and front-desk work can be described as customer contact. It is not a support center and not a language qualification the resume withheld on purpose. The language is simply absent.",
+    "failureModes": [
+      "Filling bilingual with Spanish because the posting requires it",
+      "Inventing contact-center metrics for a one-line cashier history"
+    ],
+    "whyItMatters": "An unnamed second language is missing information. Treating it as Spanish is a fabrication, and the posting makes that fabrication likely.",
+    "includeEvidence": [
+      "fashion advising",
+      "Cashier 2011–current"
+    ],
+    "avoidClaims": [
+      "Spanish",
+      "Assistant Store Manager"
+    ]
+  },
+  {
+    "id": "P016-J050",
+    "candidateId": "P016",
+    "jobId": "J050",
+    "profession": "Conveyor maintenance mechanic",
+    "seniority": "senior",
+    "fit": "strong",
+    "capabilities": [
+      "professional terminology",
+      "evidence prioritization"
+    ],
+    "whyCandidate": "The record is seven or more years of maintenance, a lead mechanic over four technicians, and named conveyor and sortation equipment: Crisplant S2000, Buschman Unisort IV/X, and Accuglide. Skills add AC motors, VFDs, sensors, TCP/IP, PM planning, and CCTV. Education is a high-school diploma plus J.J. Keller courses in lockout/tagout, PPE, electrical, fall, welding, and machine guard. No 3D-printer or journeyman-electrician licence is stated.",
+    "whyJob": "Formlabs's production equipment maintenance technician diagnoses mechanical and electrical failures, runs preventative maintenance, and swaps components, with examples that include electronics and appliances. Prior manufacturing or warehouse repair is preferred. The equipment in the posting is 3D printers. The candidate's equipment is parcel conveyors.",
+    "success": "Name the conveyor platforms, the crew of four, PM planning, motors, and VFDs. Keep the safety courses. Do not claim 3D-printer repair or a journeyman electrician licence. TCP/IP and CCTV stay facilities support, not software engineering.",
+    "failureModes": [
+      "Replacing Crisplant and Buschman with 3D printers",
+      "Turning a Keller electrical safety course into an electrician licence"
+    ],
+    "whyItMatters": "Skilled trades were missing. The earlier electrical engineer is a plant manager with a supervisor licence, not a lead mechanic. This case is the trade.",
+    "includeEvidence": [
+      "Crisplant S2000",
+      "lead mechanic managing 4 techs"
+    ],
+    "avoidClaims": [
+      "3D printer",
+      "journeyman electrician"
+    ]
+  },
+  {
+    "id": "P017-J043",
+    "candidateId": "P017",
+    "jobId": "J043",
+    "profession": "Graphic designer",
+    "seniority": "senior",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "professional terminology"
+    ],
+    "whyCandidate": "Design jobs run from 1998: boys and girls tees, labels, print production, tween graphics, CADs, licensed children's art, tech packs, and current e-commerce UI and brand visuals. Tools stated are Adobe CS6, including Illustrator, InDesign, and Photoshop, plus HTML and CSS. A graphic-specialist certificate is in education. Figma, After Effects, and generative-image tools are not.",
+    "whyJob": "Brex's senior brand designer wants six or more years of brand design, B2B and B2C range, and experience with AI image tools, motion, and web prototyping. The years and the brand and print work match. The motion and AI tools do not.",
+    "success": "Lead with brand visuals, print production, tech packs, and Adobe CS6. The e-commerce UI can support web work without becoming a product-design internship. Do not add Figma, After Effects, Midjourney, or Brex.",
+    "failureModes": [
+      "Adding Midjourney or After Effects from the posting",
+      "Collapsing apparel graphics and e-commerce UI into one unnamed brand"
+    ],
+    "whyItMatters": "Creative work was missing. The failure is either a generic designer paragraph or a tool list copied from the job.",
+    "includeEvidence": [
+      "Adobe CS6",
+      "e-commerce UI"
+    ],
+    "avoidClaims": [
+      "Figma",
+      "After Effects"
+    ]
+  },
+  {
+    "id": "P017-J044",
+    "candidateId": "P017",
+    "jobId": "J044",
+    "profession": "Graphic designer",
+    "seniority": "senior",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "professional terminology"
+    ],
+    "whyCandidate": "Apparel evidence is graphics, CADs, tags, labels, and tech packs, plus a pattern-making and fashion-design certificate. The degree is not a fashion B.A. The current title is graphic and UX design for e-commerce, not cut-and-sew knit development.",
+    "whyJob": "Everlane's designer for women's cut-and-sew knits wants three or more years in a similar role, a fashion or closely related degree, and a portfolio link. Garment construction is the job. Graphic production for tees is neighboring evidence.",
+    "success": "Show tech packs, CADs, and the pattern-making certificate as the bridge. Do not retitle the person as a knitwear designer or invent a portfolio URL. Adobe and print work can stay.",
+    "failureModes": [
+      "Turning tee graphics into cut-and-sew ownership",
+      "Inventing a portfolio link because the posting says one is required"
+    ],
+    "whyItMatters": "Graphic design and apparel design share tech packs and not a job. This posting is the boundary. The apparel designer later in the set is the person who actually did the knitwear.",
+    "includeEvidence": [
+      "tech packs",
+      "Graphic Specialist (Mac Learning Center)"
+    ],
+    "avoidClaims": [
+      "Figma",
+      "All Grades Art Teacher"
+    ]
+  },
+  {
+    "id": "P017-J031",
+    "candidateId": "P017",
+    "jobId": "J031",
+    "profession": "Graphic designer",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "credential boundaries",
+      "factual grounding"
+    ],
+    "whyCandidate": "Education includes fine-arts coursework and a graphic-specialist certificate from a learning center. There is no K-12 teaching job and no Rhode Island art certificate. The career is commercial design.",
+    "whyJob": "Achievement First requires Rhode Island all-grades art certification, PK–12, number 11501, and teaching experience. Commercial design and a fine-arts course do not meet that certificate.",
+    "success": "Do not produce an art-teacher resume or add certification 11501. The design record can be left intact. Fine-arts coursework stays coursework.",
+    "failureModes": [
+      "Converting a graphic-specialist certificate into PK–12 art certification",
+      "Recasting client brand work as a student teaching load"
+    ],
+    "whyItMatters": "Creative skill is not a teaching licence. The mechanic stretch uses this same posting as a refusal. Here the fine-arts line makes the invention more tempting.",
+    "includeEvidence": [
+      "Adobe CS6",
+      "e-commerce UI"
+    ],
+    "avoidClaims": [
+      "All Grades Art Teacher",
+      "After Effects"
+    ]
+  },
+  {
+    "id": "P018-J051",
+    "candidateId": "P018",
+    "jobId": "J051",
+    "profession": "HR manager and store manager",
+    "seniority": "mid",
+    "fit": "strong",
+    "capabilities": [
+      "sparse evidence",
+      "factual grounding"
+    ],
+    "whyCandidate": "Store Manager from 2010 to 2014 and General Manager/Partner from 2002 to 2004 are titles only. No team size, no sales figure, and no store name are written. Skills mention leadership and training without a result. The 23% sales figure in the benchmark belongs to a different person.",
+    "whyJob": "Reformation's assistant store manager expects sales goals, inventory control, loss prevention, and client experience. The titles are the only store evidence. The posting's sustainability and NPS language are not in the source.",
+    "success": "Keep the store-manager and general-manager titles and the dates. Do not invent headcount, NPS, sustainability education, or a sales percent. HR and teaching titles should not be rewritten as retail duties.",
+    "failureModes": [
+      "Filling the blank store years with metrics from the job ad",
+      "Borrowing another candidate's 23% sales result"
+    ],
+    "whyItMatters": "This is the strong title with weak writing. The other store manager has team size and a sales percent. This one does not, and the tailor has to survive the difference.",
+    "includeEvidence": [
+      "Store Manager (2010–2014)",
+      "Sales Associate License, TREI (2015)"
+    ],
+    "avoidClaims": [
+      "NPS",
+      "employee handbook"
+    ]
+  },
+  {
+    "id": "P018-J033",
+    "candidateId": "P018",
+    "jobId": "J033",
+    "profession": "HR manager and store manager",
+    "seniority": "mid",
+    "fit": "adjacent",
+    "capabilities": [
+      "sparse evidence",
+      "professional terminology"
+    ],
+    "whyCandidate": "HR Manager is a 2014 title. Skills list recruitment, payroll, benefits, and policy development, with no requisition, no interview loop, and no handbook. Substitute teaching overlaps that same year and is also duty-free. A Sales Associate License, TREI, dated 2015, is in education. The source does not spell out TREI.",
+    "whyJob": "Brex's business recruiter wants a year or more of full-cycle high-volume recruiting and a modern recruiting stack including Greenhouse. The skill word recruitment is the only bridge. Full-cycle work is not described.",
+    "success": "State the HR Manager title, the skill list, and the TREI licence exactly. Do not expand TREI, do not add Greenhouse or an offer-close metric, and do not turn the skill word into a year of full-cycle stories.",
+    "failureModes": [
+      "Inventing full-cycle recruiting stories under the HR Manager title",
+      "Reading the TREI sales licence as a recruiting certification"
+    ],
+    "whyItMatters": "Human resources was missing, and the only sourced HR record is this thin. A pass preserves the title and the licence. A failure writes the job description into the employment line.",
+    "includeEvidence": [
+      "HR Manager (2014)",
+      "Sales Associate License, TREI (2015)"
+    ],
+    "avoidClaims": [
+      "PHR",
+      "employee handbook"
+    ]
+  },
+  {
+    "id": "P018-J032",
+    "candidateId": "P018",
+    "jobId": "J032",
+    "profession": "HR manager and store manager",
+    "seniority": "mid",
+    "fit": "stretch",
+    "capabilities": [
+      "credential boundaries",
+      "sparse evidence"
+    ],
+    "whyCandidate": "There is no multi-state employment-law practice, no handbook, and no four-to-eight-year generalist narrative. The HR evidence is one title in 2014 plus a skill list. The TREI licence is a sales-associate licence, not PHR or SPHR.",
+    "whyJob": "Gusto's HR consultant wants four to eight years as a generalist or consultant and hands-on multi-state employment law, including handbooks and required notices. That is a compliance practice the resume does not document.",
+    "success": "Do not create handbooks, multi-state law, or a PHR. The HR title, the store titles, the teaching title, and the TREI licence can be listed without being promoted into a consultancy.",
+    "failureModes": [
+      "Writing an employee handbook practice from the skill word policy",
+      "Relabeling the TREI licence as PHR"
+    ],
+    "whyItMatters": "A one-year HR title pointed at an employment-law consultant is the HR fabrication case. The store-manager case is the sparse retail case for the same person.",
+    "includeEvidence": [
+      "HR Manager (2014)",
+      "Sales Associate License, TREI (2015)"
+    ],
+    "avoidClaims": [
+      "employee handbook",
+      "PHR"
+    ]
+  },
+  {
+    "id": "P019-J042",
+    "candidateId": "P019",
+    "jobId": "J042",
+    "profession": "PR and social media manager",
+    "seniority": "senior",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "professional terminology"
+    ],
+    "whyCandidate": "The record is PR, events, press, SEO, KPIs, and paid and organic social programs from 2013, including a media-manager line and a social consultant line both tied to 2017. Skills name Google Analytics, SEO, ROI, and press. They also claim an Instagram move from 180k to 2.2 million and oversight of 6 million followers, without naming the employer that owns those accounts. Fintech compliance review is not mentioned.",
+    "whyJob": "Chime's content marketing manager for SEO and AI search wants five or more years of editorial or SEO work, a CMS, legal review in a regulated industry, and AI writing tools. The SEO and content years match. Chime, Contentful, and those AI tools do not.",
+    "success": "Lead with SEO, Google Analytics, press, and the paid/organic social line. Keep the follower figures attached to the skill wording and the overlapping 2017 titles distinct. Do not add Chime, a CMS, or fintech legal review.",
+    "failureModes": [
+      "Assigning the follower counts to the target employer",
+      "Adding AI-search tooling from the posting"
+    ],
+    "whyItMatters": "Digital marketing was missing. The follower numbers are easy to mis-attribute, and the overlapping 2017 titles are easy to merge into one fake job.",
+    "includeEvidence": [
+      "Google Analytics",
+      "paid/organic social programs"
+    ],
+    "avoidClaims": [
+      "Chime",
+      "Snowflake"
+    ]
+  },
+  {
+    "id": "P019-J041",
+    "candidateId": "P019",
+    "jobId": "J041",
+    "profession": "PR and social media manager",
+    "seniority": "senior",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "professional terminology"
+    ],
+    "whyCandidate": "Paid and organic social appears as one specialist line in 2017, inside a career that is otherwise PR, events, and SEO. There is no seven-year paid-social buying record, no named ad account, and no B2B SaaS performance-marketing tenure.",
+    "whyJob": "Gusto's senior performance marketing manager for paid social wants seven or more years of performance marketing and deep paid-social testing and scaling, often in B2B SaaS or an agency. The organic and PR work is neighboring. The seniority and the media-buying depth are not demonstrated.",
+    "success": "Show the paid/organic line, SEO, and PR without retitling the person as a senior performance marketer. Do not invent seven years of paid social or a SaaS pipeline. Keep Google Analytics.",
+    "failureModes": [
+      "Stretching one 2017 social line into seven years of paid social",
+      "Replacing PR and events with media-buying jargon"
+    ],
+    "whyItMatters": "SEO and paid social are the distinction this profile can test. Treating them as the same job would make the content-manager case and this one identical.",
+    "includeEvidence": [
+      "paid/organic social programs",
+      "PR & Event Manager (2015–Current)"
+    ],
+    "avoidClaims": [
+      "Marketing Mix Model",
+      "Snowflake"
+    ]
+  },
+  {
+    "id": "P019-J053",
+    "candidateId": "P019",
+    "jobId": "J053",
+    "profession": "PR and social media manager",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "factual grounding",
+      "professional terminology"
+    ],
+    "whyCandidate": "Analytics in this resume means Google Analytics, SEO, ROI, and KPIs for media. It does not mean SQL, Snowflake, a marketing-mix model, or eight years of data science. The degree is international studies.",
+    "whyJob": "Chime's staff data scientist for marketing analytics wants eight or more years, SQL, warehouse modeling, and marketing-mix models used for budget decisions. That is a different profession from PR and social.",
+    "success": "Do not add SQL, Snowflake, or a marketing-mix model. The SEO and social record can stand. It should not be retitled data scientist.",
+    "failureModes": [
+      "Translating Google Analytics into SQL and Snowflake",
+      "Calling KPI reporting a marketing-mix model"
+    ],
+    "whyItMatters": "Marketing terminology slides into data science when the posting shares the word analytics. This case is that slide.",
+    "includeEvidence": [
+      "Google Analytics",
+      "paid/organic social programs"
+    ],
+    "avoidClaims": [
+      "Snowflake",
+      "Marketing Mix Model"
+    ]
+  },
+  {
+    "id": "P020-J044",
+    "candidateId": "P020",
+    "jobId": "J044",
+    "profession": "Apparel designer",
+    "seniority": "senior",
+    "fit": "strong",
+    "capabilities": [
+      "evidence prioritization",
+      "professional terminology"
+    ],
+    "whyCandidate": "The degree is a B.A. in fashion design from FIDM. The recent work is private-label CAD for a Stitch Fix vendor, sweaters for La Mamba, about 120 styles for Cozy Co, and loungewear for an Anthropologie vendor. An earlier role led the J.O.A. collaboration with Chriselle Lim from concept through delivery into Nordstrom, Bloomingdale's, and Shopbop. A personal portfolio URL was in the source and was removed.",
+    "whyJob": "Everlane's cut-and-sew knits designer wants three or more years in a similar role, a fashion degree, and a portfolio link. The degree and the garment work match. The removed URL must not be replaced with a made-up link.",
+    "success": "Keep FIDM, the vendor and retailer names, CAD, and the Chriselle Lim collaboration. Do not invent a portfolio URL, a sweater count beyond the source, or Everlane employment.",
+    "failureModes": [
+      "Inventing a portfolio link because the posting requires one",
+      "Merging Stitch Fix, Anthropologie, and the Chriselle Lim job into one employer"
+    ],
+    "whyItMatters": "This is the apparel designer. The graphic designer only touched tech packs and tees. A tailor that treats them as interchangeable has missed the benchmark.",
+    "includeEvidence": [
+      "FIDM",
+      "Stitch Fix",
+      "Chriselle Lim"
+    ],
+    "avoidClaims": [
+      "squarespace",
+      "paid social"
+    ]
+  },
+  {
+    "id": "P020-J043",
+    "candidateId": "P020",
+    "jobId": "J043",
+    "profession": "Apparel designer",
+    "seniority": "senior",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "omitting irrelevant history"
+    ],
+    "whyCandidate": "An early title is assistant graphic designer in 2013–2014. The rest of the career is apparel CAD, merchandising, fittings, and wholesale placement. Brand-system, motion, and B2B fintech design are not described. Skills mention sales and marketing around the product, not a brand studio.",
+    "whyJob": "Brex's senior brand designer is a brand-systems role with motion and AI image tools. The graphic-designer candidate is the closer match. For this person the bridge is one early graphic title and presentation of product, not six years of brand design.",
+    "success": "Keep the fashion record in the lead. The assistant graphic title can be included without becoming the identity. Do not add Midjourney, After Effects, or a fintech brand system.",
+    "failureModes": [
+      "Reordering the career so the one graphic title leads",
+      "Adding motion and AI image tools from the brand posting"
+    ],
+    "whyItMatters": "The same brand-designer posting is a strong fit for the graphic designer and only a neighboring fit here. The outputs should not match.",
+    "includeEvidence": [
+      "Chriselle Lim",
+      "FIDM"
+    ],
+    "avoidClaims": [
+      "Midjourney",
+      "After Effects"
+    ]
+  },
+  {
+    "id": "P020-J041",
+    "candidateId": "P020",
+    "jobId": "J041",
+    "profession": "Apparel designer",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "factual grounding",
+      "professional terminology"
+    ],
+    "whyCandidate": "Skills mention sales and marketing and a 30–40% revenue lift at 2019 market weeks. That is a trade-show result for product, not a paid-social practice. No ad account, no SEO program, and no seven-year performance-marketing tenure is stated.",
+    "whyJob": "Gusto's senior paid-social manager wants seven or more years of performance marketing and scaled paid social. Market-week sales for a fashion line are not that job. The PR manager in this benchmark is the person with the social-media record.",
+    "success": "Keep the revenue note on the market weeks and the design credits on the garments. Do not create a paid-social career or move the follower counts from the other profile onto this one.",
+    "failureModes": [
+      "Turning a market-week sales lift into paid-social performance",
+      "Relabeling a fashion designer as a performance marketer"
+    ],
+    "whyItMatters": "Design, PR, and paid social are three jobs the benchmark used to collapse. This stretch is the fashion designer standing next to the paid-social ad that belongs nearer the PR manager.",
+    "includeEvidence": [
+      "Stitch Fix",
+      "FIDM"
+    ],
+    "avoidClaims": [
+      "paid social",
+      "squarespace"
+    ]
+  },
+  {
+    "id": "P016-J001",
+    "candidateId": "P016",
+    "jobId": "J001",
+    "profession": "Conveyor maintenance mechanic",
+    "seniority": "senior",
+    "fit": "adjacent",
+    "capabilities": [
+      "transferable skills",
+      "professional terminology"
+    ],
+    "whyCandidate": "The lead mechanic troubleshoots conveyors and sortation equipment, AC motors, VFDs, and sensors, and holds short safety courses that include electrical. The record does not mention servers, racks, cable plant, or a data-center employer.",
+    "whyJob": "Cloudflare's data center operations engineer racks, cables, replaces hardware, and troubleshoots servers and network gear on site. The hands-on repair is the bridge. The equipment and the site are not a parcel hub.",
+    "success": "Describe conveyor platforms, the crew of four, motors, and VFDs as physical troubleshooting. Do not claim server repair, racking, or Cloudflare. The electrical safety course stays a course.",
+    "failureModes": [
+      "Rewriting Crisplant conveyors as data-center server repair",
+      "Treating a Keller electrical course as network-gear certification"
+    ],
+    "whyItMatters": "The plant engineer already in the benchmark and this mechanic can both be pointed at the same data-center job. Their evidence is different, and neither one has racked a server.",
+    "includeEvidence": [
+      "Crisplant S2000",
+      "lead mechanic managing 4 techs"
+    ],
+    "avoidClaims": [
+      "Cloudflare",
+      "server"
+    ]
+  },
+  {
+    "id": "P016-J045",
+    "candidateId": "P016",
+    "jobId": "J045",
+    "profession": "Conveyor maintenance mechanic",
+    "seniority": "senior",
+    "fit": "stretch",
+    "capabilities": [
+      "factual grounding",
+      "professional terminology"
+    ],
+    "whyCandidate": "The mechanic's plant work is equipment uptime, spare parts, and safety courses such as lockout/tagout. It does not mention resin, mixing tanks, batch recipes, or a chemical quality system.",
+    "whyJob": "Formlabs's first-shift production specialist moves chemicals, empties drums into tanks, and completes resin recipes under a quality system. It is a factory job at the same company as the maintenance-technician posting, and it is a different craft.",
+    "success": "Do not recast conveyor repair as resin compounding. Safety courses can stay. The named conveyor platforms should not be deleted to make the chemical job look held.",
+    "failureModes": [
+      "Translating PM planning into resin recipe ownership",
+      "Hiding Crisplant and Buschman so the page matches chemical production"
+    ],
+    "whyItMatters": "A mechanic who clears the maintenance-technician screen can still be pushed into the chemical production ad on the same board. That is a realistic wrong-craft application, not a random profession.",
+    "includeEvidence": [
+      "Lockout/Tagout",
+      "Crisplant S2000"
+    ],
+    "avoidClaims": [
+      "resin recipes",
+      "3D printer"
+    ]
+  }
+]

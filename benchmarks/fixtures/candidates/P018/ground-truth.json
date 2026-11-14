@@ -1,0 +1,48 @@
+{
+  "candidateId": "P018",
+  "profession": "HR manager and store manager",
+  "seniority": "mid",
+  "provenance": "adapted",
+  "writing": "sparse",
+  "datasetDomain": "Apparel",
+  "datasetSeniority": "Mid-level",
+  "source": {
+    "dataset": "CareerCorpus",
+    "resumeId": "5.6151548E7",
+    "excelRow": 216,
+    "licence": "CC-BY-4.0",
+    "acquired": "2026-11-12",
+    "url": "https://data.mendeley.com/datasets/wzzwn37gmd/1",
+    "doi": "10.17632/wzzwn37gmd.1",
+    "sha256": "97b1fa6cca1232912dd3f7bc312d71a2478249787168fd41dfbf6c1da90479d3"
+  },
+  "identityNote": "Public resume example from the LiveCareer collection, as redistributed in CareerCorpus. The publisher anonymized the name and says GPT-5 standardized the text. This is not a verified applicant, and missing dates or duties are missing information rather than proof the work did not happen. The Excel id was stored as a rounded number.",
+  "contradictions": [
+    "Substitute Teacher (2014–2015) and HR Manager (2014) overlap in the published line. No duties are given for either title, so the overlap was not resolved by inventing a schedule."
+  ],
+  "facts": [
+    {
+      "id": "P018.F1",
+      "status": "supported",
+      "text": "HR Manager (2014)",
+      "source": "CareerCorpus 5.6151548E7 Apparel"
+    },
+    {
+      "id": "P018.F2",
+      "status": "supported",
+      "text": "Sales Associate License, TREI (2015)",
+      "source": "CareerCorpus 5.6151548E7 Apparel"
+    },
+    {
+      "id": "P018.F3",
+      "status": "supported",
+      "text": "Store Manager (2010–2014)",
+      "source": "CareerCorpus 5.6151548E7 Apparel"
+    }
+  ],
+  "unsupportedQualifications": [
+    "employee handbook",
+    "PHR",
+    "NPS"
+  ]
+}

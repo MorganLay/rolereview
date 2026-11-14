@@ -1,0 +1,10 @@
+{
+  "jobId": "J017",
+  "title": "Fictional retail associate posting",
+  "company": "Fictional",
+  "location": "",
+  "url": "tests/unit/tailor-editorial-fixture.ts",
+  "sourceId": "editorial-retail",
+  "acquired": "2026-11-12",
+  "licence": "Project test fixture. Not an employer posting."
+}

@@ -1,0 +1,33 @@
+Raghav Chowdary
+Hyderabad
+
+Contact details from the source record were omitted.
+
+Senior Manager (Pega Lead Business Architect) | Cognizant Technology Solutions India Pvt. Ltd.
+- Owned full lifecycle results on Pegasystems solutions for a US state health-agency client under strict compliance norms.
+- Directed rollout of intake and vetting processes onto unified Pegasystems records and rules hubs, cutting turnaround by 27–40% with complete audit trails.
+- Facilitated Pegasystems envisioning and Direct Capture sessions with partners from operations, risk, compliance, and line units.
+- Established performance measures covering throughput, compliance conformance, and defect rework minimisation.
+- Implemented priority queuing and role-tailored process flows.
+- Leveraged Pegasystems design maps to secure upfront partner consensus.
+- Enabled responsible ML and Pega GenAI usage with governance controls.
+- Framed product objectives, theme groups, capabilities, and narratives mapped to compliance and rollout priorities.
+- Coached BA squads in Hyderabad and Bengaluru; supported RFP/bid-stage work.
+
+Lead Consultant (Pega BA / Scrum Lead) | Infosys Limited
+- Facilitated Direct Capture workshops and refined scope details.
+- Managed product queue ordering and effort sizing.
+- Ran scrum events and served as domain expert.
+- Assisted user acceptance testing and QA.
+- Developed strong familiarity with Pegasystems methods, release norms, and large-scale solution patterns.
+
+Associate Product Analyst | Kakatiya Infosolutions Pvt. Ltd.
+- Collected and assessed functional needs of co-operative bank users.
+- Converted needs into backlog narratives.
+- Assisted releases and QA for co-op bank clients (₹2,400 crore deposits).
+
+Education: Mechanical, VNR VJIET, affiliated to JNTU Hyderabad
+
+Certification: Certified Pega Business Architect
+Certification: TOGAF 9 Certified
+Certification: SAFe Scrum Master

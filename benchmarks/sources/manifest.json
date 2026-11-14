@@ -1,0 +1,30 @@
+{
+  "acquired": "2026-11-12",
+  "resumes": [
+    {
+      "id": "Careerflow/ResumeBench",
+      "url": "https://huggingface.co/datasets/Careerflow/ResumeBench",
+      "licence": "CC-BY-4.0",
+      "inspected": 30,
+      "used": 5,
+      "kind": "5 records labeled real-anonymized; 25 synthetic or template records inspected and excluded"
+    },
+    {
+      "id": "CareerCorpus",
+      "url": "https://data.mendeley.com/datasets/wzzwn37gmd/1",
+      "licence": "CC-BY-4.0 claimed on the dataset page",
+      "inspected": 302,
+      "used": 15,
+      "kind": "CC-BY-4.0 public examples, GPT-5 standardized by the publisher. Downloaded from the public-files URL on 2026-11-12. Not verified applicants."
+    }
+  ],
+  "jobs": [
+    {
+      "id": "greenhouse-public-boards",
+      "url": "https://boards-api.greenhouse.io/v1/boards/{token}/jobs/{id}",
+      "licence": "Public posting. Employer copyright retained.",
+      "inspectedBoards": ["cloudflare", "gitlab", "datadog", "elastic", "twilio", "achievementfirst", "onemedical", "oscar", "sweetgreen", "reformation", "formlabs", "brex", "sofi", "coursera", "airbnb", "zocdoc", "chime", "gusto", "everlane", "duolingo", "instacart", "peloton"],
+      "used": 49
+    }
+  ]
+}

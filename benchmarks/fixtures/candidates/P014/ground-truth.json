@@ -1,0 +1,54 @@
+{
+  "candidateId": "P014",
+  "profession": "School administrative assistant",
+  "seniority": "senior",
+  "provenance": "adapted",
+  "writing": "standard",
+  "datasetDomain": "Apparel",
+  "datasetSeniority": "Senior-level",
+  "source": {
+    "dataset": "CareerCorpus",
+    "resumeId": "1.660564E7",
+    "excelRow": 249,
+    "licence": "CC-BY-4.0",
+    "acquired": "2026-11-12",
+    "url": "https://data.mendeley.com/datasets/wzzwn37gmd/1",
+    "doi": "10.17632/wzzwn37gmd.1",
+    "sha256": "97b1fa6cca1232912dd3f7bc312d71a2478249787168fd41dfbf6c1da90479d3"
+  },
+  "identityNote": "Public resume example from the LiveCareer collection, as redistributed in CareerCorpus. The publisher anonymized the name and says GPT-5 standardized the text. This is not a verified applicant, and missing dates or duties are missing information rather than proof the work did not happen. The Excel id was stored as a rounded number.",
+  "contradictions": [
+    "Student Affairs ends 01/2011 and School of Education starts 07/2013. The gap is blank in the source, not filled."
+  ],
+  "facts": [
+    {
+      "id": "P014.F1",
+      "status": "supported",
+      "text": "FERPA compliance",
+      "source": "CareerCorpus 1.660564E7 Apparel"
+    },
+    {
+      "id": "P014.F2",
+      "status": "supported",
+      "text": "Title III/PECO grant",
+      "source": "CareerCorpus 1.660564E7 Apparel"
+    },
+    {
+      "id": "P014.F3",
+      "status": "supported",
+      "text": "School of Education",
+      "source": "CareerCorpus 1.660564E7 Apparel"
+    },
+    {
+      "id": "P014.F4",
+      "status": "supported",
+      "text": "SARS admin",
+      "source": "CareerCorpus 1.660564E7 Apparel"
+    }
+  ],
+  "unsupportedQualifications": [
+    "revenue recognition",
+    "Big 4",
+    "board materials"
+  ]
+}

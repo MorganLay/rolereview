@@ -1,0 +1,10 @@
+Morgan Example
+
+This resume is fictional. It is the same editorial library as S001, used here against a retail posting.
+
+Sales Associate | LCBO
+- Greeted customers and operated the cash register during retail shifts.
+
+Junior Program Officer | Canada Revenue Agency
+- Wrote SQL extracts for business-returns reports.
+- Automated the monthly reconciliation and saved 20 hours a week with Excel VBA.

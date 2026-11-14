@@ -1,0 +1,46 @@
+{
+  "candidateId": "P010",
+  "profession": "Secondary mathematics teacher",
+  "seniority": "senior",
+  "provenance": "adapted",
+  "writing": "specific",
+  "datasetDomain": "TEACHER",
+  "datasetSeniority": "Senior-level",
+  "source": {
+    "dataset": "CareerCorpus",
+    "resumeId": "4.528602E7",
+    "excelRow": 193,
+    "licence": "CC-BY-4.0",
+    "acquired": "2026-11-12",
+    "url": "https://data.mendeley.com/datasets/wzzwn37gmd/1",
+    "doi": "10.17632/wzzwn37gmd.1",
+    "sha256": "97b1fa6cca1232912dd3f7bc312d71a2478249787168fd41dfbf6c1da90479d3"
+  },
+  "identityNote": "Public resume example from the LiveCareer collection, as redistributed in CareerCorpus. The publisher anonymized the name and says GPT-5 standardized the text. This is not a verified applicant, and missing dates or duties are missing information rather than proof the work did not happen. The Excel id was stored as a rounded number.",
+  "contradictions": [],
+  "facts": [
+    {
+      "id": "P010.F1",
+      "status": "supported",
+      "text": "Maryland Teacher Certificate (APC)",
+      "source": "CareerCorpus 4.528602E7 TEACHER"
+    },
+    {
+      "id": "P010.F2",
+      "status": "supported",
+      "text": "Algebra II Honors",
+      "source": "CareerCorpus 4.528602E7 TEACHER"
+    },
+    {
+      "id": "P010.F3",
+      "status": "supported",
+      "text": "100% HSA pass rate (2010)",
+      "source": "CareerCorpus 4.528602E7 TEACHER"
+    }
+  ],
+  "unsupportedQualifications": [
+    "Connecticut certified",
+    "Mathematics, 4–12 (029)",
+    "165 Comprehensive Special Education"
+  ]
+}

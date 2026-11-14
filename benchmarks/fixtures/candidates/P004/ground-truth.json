@@ -1,0 +1,175 @@
+{
+  "candidateId": "P004",
+  "profession": "Education IT support and LMS lead",
+  "seniority": "mid",
+  "provenance": "real-anonymized",
+  "source": {
+    "dataset": "Careerflow/ResumeBench",
+    "resumeId": "4d6cf9fa-0ff1-43e2-9840-8f146d293def",
+    "licence": "CC-BY-4.0",
+    "acquired": "2026-11-12",
+    "url": "https://huggingface.co/datasets/Careerflow/ResumeBench"
+  },
+  "identityNote": "The publisher labels this record real-anonymized. Email, phone, and profile URLs were removed before this copy was stored. The published name is kept. Employers were not independently verified.",
+  "facts": [
+    {
+      "id": "P004.E1",
+      "status": "supported",
+      "text": "Built a corporate site with Drupal.",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience HYBRID CONTRACT @ EMIRCOM"
+    },
+    {
+      "id": "P004.E2",
+      "status": "supported",
+      "text": "Deployed Canvas and configured it on the firm’s server.",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience HYBRID CONTRACT @ EMIRCOM"
+    },
+    {
+      "id": "P004.E3",
+      "status": "supported",
+      "text": "Monitor staff progress.",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience ASSISTANT HEAD OF ICT AND LMS LEAD. @ DUBAI POLICE ACADEMY"
+    },
+    {
+      "id": "P004.E4",
+      "status": "supported",
+      "text": "Oversight of Canvas and training platform",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience ASSISTANT HEAD OF ICT AND LMS LEAD. @ DUBAI POLICE ACADEMY"
+    },
+    {
+      "id": "P004.E5",
+      "status": "supported",
+      "text": "Site administration and training on IMAP use.",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience ASSISTANT HEAD OF ICT AND LMS LEAD. @ DUBAI POLICE ACADEMY"
+    },
+    {
+      "id": "P004.E6",
+      "status": "supported",
+      "text": "Guided faculty to use and connect their official email to ORCID.",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience ASSISTANT HEAD OF ICT AND LMS LEAD. @ DUBAI POLICE ACADEMY"
+    },
+    {
+      "id": "P004.E7",
+      "status": "supported",
+      "text": "Administered the site and trained faculty on the instructor portal.",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience IT SUPPORT @ Dubai Pharmacy College"
+    },
+    {
+      "id": "P004.E8",
+      "status": "supported",
+      "text": "E-learning (managed Canvas platform).",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience IT SUPPORT @ Dubai Pharmacy College"
+    },
+    {
+      "id": "P004.E9",
+      "status": "supported",
+      "text": "Provided technical help for the college journal, its website, and editorial unit.",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience IT SUPPORT @ Dubai Pharmacy College"
+    },
+    {
+      "id": "P004.E10",
+      "status": "supported",
+      "text": "Taught CS courses to Pharmacy students",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience IT SUPPORT @ Dubai Pharmacy College"
+    },
+    {
+      "id": "P004.E11",
+      "status": "supported",
+      "text": "Trained faculty to use and connect official email with ORCID",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience IT SUPPORT @ Dubai Pharmacy College"
+    },
+    {
+      "id": "P004.E12",
+      "status": "supported",
+      "text": "E-learning (trained staff and students on Canvas; managed platform)",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience IT SUPPORT @ Skyline University College"
+    },
+    {
+      "id": "P004.E13",
+      "status": "supported",
+      "text": "Website admin (updates + site ops) managed IMAP.",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience IT SUPPORT @ Skyline University College"
+    },
+    {
+      "id": "P004.E14",
+      "status": "supported",
+      "text": "Administered the ERP and trained staff on usage.",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience IT SUPPORT @ Skyline University College"
+    },
+    {
+      "id": "P004.E15",
+      "status": "supported",
+      "text": "Taught computer apps and modeling and simulation classes",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience IT SUPPORT @ Skyline University College"
+    },
+    {
+      "id": "P004.E16",
+      "status": "supported",
+      "text": "Handled office, student services, and admin processes.",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience OFFICE SECRETARY @ Skyline University College"
+    },
+    {
+      "id": "P004.E17",
+      "status": "supported",
+      "text": "Handled office, student services, and admin processes.",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def experience ACADEMIC SECRETARY @ AJMAN UNIVERSITY"
+    },
+    {
+      "id": "P004.D18",
+      "status": "supported",
+      "text": "INFORMATION SYSTEMS, AJMAN UNIVERSITY",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def education"
+    },
+    {
+      "id": "P004.D19",
+      "status": "supported",
+      "text": "COMPUTER SCIENCE, AJMAN UNIVERSITY",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def education"
+    },
+    {
+      "id": "P004.C20",
+      "status": "supported",
+      "text": "Cisco CCNA",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def certifications"
+    },
+    {
+      "id": "P004.C21",
+      "status": "supported",
+      "text": "SAP TERP10",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def certifications"
+    },
+    {
+      "id": "P004.C22",
+      "status": "supported",
+      "text": "CIW Web Design",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def certifications"
+    },
+    {
+      "id": "P004.C23",
+      "status": "supported",
+      "text": "Office Management Certificate",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def certifications"
+    },
+    {
+      "id": "P004.C24",
+      "status": "supported",
+      "text": "QuickBooks ProAdvisor",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def certifications"
+    },
+    {
+      "id": "P004.C25",
+      "status": "supported",
+      "text": "Online Teaching Certificate",
+      "source": "4d6cf9fa-0ff1-43e2-9840-8f146d293def certifications"
+    }
+  ],
+  "unknown": [
+    "Dates were empty in the published ground truth for this record."
+  ],
+  "unsupportedQualifications": [
+    "Kubernetes",
+    "Terraform",
+    "Ansible",
+    "staff site reliability engineering"
+  ]
+}

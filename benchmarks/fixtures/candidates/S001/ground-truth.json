@@ -1,0 +1,30 @@
+{
+  "candidateId": "S001",
+  "profession": "Fictional mixed library",
+  "seniority": "early",
+  "provenance": "synthetic",
+  "source": {
+    "dataset": "tests/unit/tailor-editorial-fixture.ts",
+    "resumeId": "editorial-morgan-example",
+    "licence": "Project test fixture",
+    "acquired": "2026-11-12",
+    "url": "tests/unit/tailor-editorial-fixture.ts"
+  },
+  "identityNote": "Fictional persona already used by the tailor regression tests. Not an applicant.",
+  "facts": [
+    {
+      "id": "S001.E1",
+      "status": "supported",
+      "text": "Two records describe one Canada Revenue Agency role, with the same 20-hour reconciliation claim.",
+      "source": "editorial fixture E_cra and E_cra_long"
+    },
+    {
+      "id": "S001.E2",
+      "status": "supported",
+      "text": "Two records describe one Def Hacks internship.",
+      "source": "editorial fixture E_def and E_def_short"
+    }
+  ],
+  "unknown": [],
+  "unsupportedQualifications": ["enterprise ETL", "ERP implementation"]
+}

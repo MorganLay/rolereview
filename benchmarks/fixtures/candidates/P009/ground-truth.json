@@ -1,0 +1,54 @@
+{
+  "candidateId": "P009",
+  "profession": "Branch banking and retail store manager",
+  "seniority": "mid",
+  "provenance": "adapted",
+  "writing": "standard",
+  "datasetDomain": "Banking",
+  "datasetSeniority": "Mid-level",
+  "source": {
+    "dataset": "CareerCorpus",
+    "resumeId": "7.9041971E7",
+    "excelRow": 3,
+    "licence": "CC-BY-4.0",
+    "acquired": "2026-11-12",
+    "url": "https://data.mendeley.com/datasets/wzzwn37gmd/1",
+    "doi": "10.17632/wzzwn37gmd.1",
+    "sha256": "97b1fa6cca1232912dd3f7bc312d71a2478249787168fd41dfbf6c1da90479d3"
+  },
+  "identityNote": "Public resume example from the LiveCareer collection, as redistributed in CareerCorpus. The publisher anonymized the name and says GPT-5 standardized the text. This is not a verified applicant, and missing dates or duties are missing information rather than proof the work did not happen. The Excel id was stored as a rounded number.",
+  "contradictions": [
+    "The education line is cut off after 2010 in the published cell. The missing close of that line was not guessed."
+  ],
+  "facts": [
+    {
+      "id": "P009.F1",
+      "status": "supported",
+      "text": "23% sales increase",
+      "source": "CareerCorpus 7.9041971E7 Banking"
+    },
+    {
+      "id": "P009.F2",
+      "status": "supported",
+      "text": "cash reconciliation",
+      "source": "CareerCorpus 7.9041971E7 Banking"
+    },
+    {
+      "id": "P009.F3",
+      "status": "supported",
+      "text": "managed team of 10",
+      "source": "CareerCorpus 7.9041971E7 Banking"
+    },
+    {
+      "id": "P009.F4",
+      "status": "supported",
+      "text": "High School Diploma, Federal Way Senior High School, United States (2010",
+      "source": "CareerCorpus 7.9041971E7 Banking"
+    }
+  ],
+  "unsupportedQualifications": [
+    "NMLS",
+    "SAFE Act",
+    "SQL"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "candidateId": "P008",
+  "profession": "Construction accountant and hotel restaurant manager",
+  "seniority": "senior",
+  "provenance": "adapted",
+  "writing": "specific",
+  "datasetDomain": "ACCOUNTANT",
+  "datasetSeniority": "Senior-level",
+  "source": {
+    "dataset": "CareerCorpus",
+    "resumeId": "1.4470533E7",
+    "excelRow": 114,
+    "licence": "CC-BY-4.0",
+    "acquired": "2026-11-12",
+    "url": "https://data.mendeley.com/datasets/wzzwn37gmd/1",
+    "doi": "10.17632/wzzwn37gmd.1",
+    "sha256": "97b1fa6cca1232912dd3f7bc312d71a2478249787168fd41dfbf6c1da90479d3"
+  },
+  "identityNote": "Public resume example from the LiveCareer collection, as redistributed in CareerCorpus. The publisher anonymized the name and says GPT-5 standardized the text. This is not a verified applicant, and missing dates or duties are missing information rather than proof the work did not happen. The Excel id was stored as a rounded number.",
+  "contradictions": [
+    "Skills say CPA listed. Experience says CPA-firm roles, which is employment at a firm, not a licence. Those are not the same fact."
+  ],
+  "facts": [
+    {
+      "id": "P008.F1",
+      "status": "supported",
+      "text": "construction draws & contract billing",
+      "source": "CareerCorpus 1.4470533E7 ACCOUNTANT"
+    },
+    {
+      "id": "P008.F2",
+      "status": "supported",
+      "text": "food cost",
+      "source": "CareerCorpus 1.4470533E7 ACCOUNTANT"
+    },
+    {
+      "id": "P008.F3",
+      "status": "supported",
+      "text": "CPA listed",
+      "source": "CareerCorpus 1.4470533E7 ACCOUNTANT"
+    },
+    {
+      "id": "P008.F4",
+      "status": "supported",
+      "text": "Timberline",
+      "source": "CareerCorpus 1.4470533E7 ACCOUNTANT"
+    }
+  ],
+  "unsupportedQualifications": [
+    "Certified Public Accountant",
+    "ServSafe",
+    "Sweetgreen"
+  ]
+}

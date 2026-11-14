@@ -1,0 +1,151 @@
+{
+  "candidateId": "P003",
+  "profession": "Business systems analyst",
+  "seniority": "senior",
+  "provenance": "real-anonymized",
+  "source": {
+    "dataset": "Careerflow/ResumeBench",
+    "resumeId": "08200294-a2da-40ad-b618-2a7f8ac4a8f5",
+    "licence": "CC-BY-4.0",
+    "acquired": "2026-11-12",
+    "url": "https://huggingface.co/datasets/Careerflow/ResumeBench"
+  },
+  "identityNote": "The publisher labels this record real-anonymized. Email, phone, and profile URLs were removed before this copy was stored. The published name is kept. Employers were not independently verified.",
+  "facts": [
+    {
+      "id": "P003.E1",
+      "status": "supported",
+      "text": "Owned full lifecycle results on Pegasystems solutions for a US state health-agency client under strict compliance norms.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Senior Manager (Pega Lead Business Architect) @ Cognizant Technology Solutions India Pvt. Ltd."
+    },
+    {
+      "id": "P003.E2",
+      "status": "supported",
+      "text": "Directed rollout of intake and vetting processes onto unified Pegasystems records and rules hubs, cutting turnaround by 27–40% with complete audit trails.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Senior Manager (Pega Lead Business Architect) @ Cognizant Technology Solutions India Pvt. Ltd."
+    },
+    {
+      "id": "P003.E3",
+      "status": "supported",
+      "text": "Facilitated Pegasystems envisioning and Direct Capture sessions with partners from operations, risk, compliance, and line units.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Senior Manager (Pega Lead Business Architect) @ Cognizant Technology Solutions India Pvt. Ltd."
+    },
+    {
+      "id": "P003.E4",
+      "status": "supported",
+      "text": "Established performance measures covering throughput, compliance conformance, and defect rework minimisation.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Senior Manager (Pega Lead Business Architect) @ Cognizant Technology Solutions India Pvt. Ltd."
+    },
+    {
+      "id": "P003.E5",
+      "status": "supported",
+      "text": "Implemented priority queuing and role-tailored process flows.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Senior Manager (Pega Lead Business Architect) @ Cognizant Technology Solutions India Pvt. Ltd."
+    },
+    {
+      "id": "P003.E6",
+      "status": "supported",
+      "text": "Leveraged Pegasystems design maps to secure upfront partner consensus.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Senior Manager (Pega Lead Business Architect) @ Cognizant Technology Solutions India Pvt. Ltd."
+    },
+    {
+      "id": "P003.E7",
+      "status": "supported",
+      "text": "Enabled responsible ML and Pega GenAI usage with governance controls.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Senior Manager (Pega Lead Business Architect) @ Cognizant Technology Solutions India Pvt. Ltd."
+    },
+    {
+      "id": "P003.E8",
+      "status": "supported",
+      "text": "Framed product objectives, theme groups, capabilities, and narratives mapped to compliance and rollout priorities.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Senior Manager (Pega Lead Business Architect) @ Cognizant Technology Solutions India Pvt. Ltd."
+    },
+    {
+      "id": "P003.E9",
+      "status": "supported",
+      "text": "Coached BA squads in Hyderabad and Bengaluru; supported RFP/bid-stage work.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Senior Manager (Pega Lead Business Architect) @ Cognizant Technology Solutions India Pvt. Ltd."
+    },
+    {
+      "id": "P003.E10",
+      "status": "supported",
+      "text": "Facilitated Direct Capture workshops and refined scope details.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Lead Consultant (Pega BA / Scrum Lead) @ Infosys Limited"
+    },
+    {
+      "id": "P003.E11",
+      "status": "supported",
+      "text": "Managed product queue ordering and effort sizing.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Lead Consultant (Pega BA / Scrum Lead) @ Infosys Limited"
+    },
+    {
+      "id": "P003.E12",
+      "status": "supported",
+      "text": "Ran scrum events and served as domain expert.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Lead Consultant (Pega BA / Scrum Lead) @ Infosys Limited"
+    },
+    {
+      "id": "P003.E13",
+      "status": "supported",
+      "text": "Assisted user acceptance testing and QA.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Lead Consultant (Pega BA / Scrum Lead) @ Infosys Limited"
+    },
+    {
+      "id": "P003.E14",
+      "status": "supported",
+      "text": "Developed strong familiarity with Pegasystems methods, release norms, and large-scale solution patterns.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Lead Consultant (Pega BA / Scrum Lead) @ Infosys Limited"
+    },
+    {
+      "id": "P003.E15",
+      "status": "supported",
+      "text": "Collected and assessed functional needs of co-operative bank users.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Associate Product Analyst @ Kakatiya Infosolutions Pvt. Ltd."
+    },
+    {
+      "id": "P003.E16",
+      "status": "supported",
+      "text": "Converted needs into backlog narratives.",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Associate Product Analyst @ Kakatiya Infosolutions Pvt. Ltd."
+    },
+    {
+      "id": "P003.E17",
+      "status": "supported",
+      "text": "Assisted releases and QA for co-op bank clients (₹2,400 crore deposits).",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 experience Associate Product Analyst @ Kakatiya Infosolutions Pvt. Ltd."
+    },
+    {
+      "id": "P003.D18",
+      "status": "supported",
+      "text": "Mechanical, VNR VJIET, affiliated to JNTU Hyderabad",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 education"
+    },
+    {
+      "id": "P003.C19",
+      "status": "supported",
+      "text": "Certified Pega Business Architect",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 certifications"
+    },
+    {
+      "id": "P003.C20",
+      "status": "supported",
+      "text": "TOGAF 9 Certified",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 certifications"
+    },
+    {
+      "id": "P003.C21",
+      "status": "supported",
+      "text": "SAFe Scrum Master",
+      "source": "08200294-a2da-40ad-b618-2a7f8ac4a8f5 certifications"
+    }
+  ],
+  "unknown": [
+    "Dates were empty in the published ground truth for this record."
+  ],
+  "unsupportedQualifications": [
+    "application software engineering",
+    "static analysis",
+    "marketing analytics",
+    "clinical practice"
+  ]
+}

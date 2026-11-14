@@ -1,0 +1,54 @@
+{
+  "candidateId": "P012",
+  "profession": "Nursing aide, cook, and receptionist",
+  "seniority": "entry",
+  "provenance": "adapted",
+  "writing": "sparse",
+  "datasetDomain": "TEACHER",
+  "datasetSeniority": "Entry-level",
+  "source": {
+    "dataset": "CareerCorpus",
+    "resumeId": "2.8063132E7",
+    "excelRow": 156,
+    "licence": "CC-BY-4.0",
+    "acquired": "2026-11-12",
+    "url": "https://data.mendeley.com/datasets/wzzwn37gmd/1",
+    "doi": "10.17632/wzzwn37gmd.1",
+    "sha256": "97b1fa6cca1232912dd3f7bc312d71a2478249787168fd41dfbf6c1da90479d3"
+  },
+  "identityNote": "Public resume example from the LiveCareer collection, as redistributed in CareerCorpus. The publisher anonymized the name and says GPT-5 standardized the text. This is not a verified applicant, and missing dates or duties are missing information rather than proof the work did not happen. The Excel id was stored as a rounded number.",
+  "contradictions": [
+    "Teacher, aide, and receptionist are each a few months in 2015–2016. Short tenure is not the same as a career in any one of those jobs."
+  ],
+  "facts": [
+    {
+      "id": "P012.F1",
+      "status": "supported",
+      "text": "Nursing Aide",
+      "source": "CareerCorpus 2.8063132E7 TEACHER"
+    },
+    {
+      "id": "P012.F2",
+      "status": "supported",
+      "text": "basic patient care",
+      "source": "CareerCorpus 2.8063132E7 TEACHER"
+    },
+    {
+      "id": "P012.F3",
+      "status": "supported",
+      "text": "Front Desk Receptionist",
+      "source": "CareerCorpus 2.8063132E7 TEACHER"
+    },
+    {
+      "id": "P012.F4",
+      "status": "supported",
+      "text": "Cook (Apr 2013–Aug 2014)",
+      "source": "CareerCorpus 2.8063132E7 TEACHER"
+    }
+  ],
+  "unsupportedQualifications": [
+    "Nurse Practitioner",
+    "Medical Assistant certification",
+    "registered nurse"
+  ]
+}

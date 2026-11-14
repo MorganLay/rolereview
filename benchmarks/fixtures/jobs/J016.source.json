@@ -1,0 +1,10 @@
+{
+  "jobId": "J016",
+  "title": "Fictional data engineering posting",
+  "company": "Fictional",
+  "location": "",
+  "url": "tests/unit/tailor-editorial-fixture.ts",
+  "sourceId": "editorial-data-engineer",
+  "acquired": "2026-11-12",
+  "licence": "Project test fixture. Not an employer posting."
+}

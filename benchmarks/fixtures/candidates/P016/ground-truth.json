@@ -1,0 +1,46 @@
+{
+  "candidateId": "P016",
+  "profession": "Conveyor maintenance mechanic",
+  "seniority": "senior",
+  "provenance": "adapted",
+  "writing": "compressed",
+  "datasetDomain": "Apparel",
+  "datasetSeniority": "Senior-level",
+  "source": {
+    "dataset": "CareerCorpus",
+    "resumeId": "1.9070271E7",
+    "excelRow": 215,
+    "licence": "CC-BY-4.0",
+    "acquired": "2026-11-12",
+    "url": "https://data.mendeley.com/datasets/wzzwn37gmd/1",
+    "doi": "10.17632/wzzwn37gmd.1",
+    "sha256": "97b1fa6cca1232912dd3f7bc312d71a2478249787168fd41dfbf6c1da90479d3"
+  },
+  "identityNote": "Public resume example from the LiveCareer collection, as redistributed in CareerCorpus. The publisher anonymized the name and says GPT-5 standardized the text. This is not a verified applicant, and missing dates or duties are missing information rather than proof the work did not happen. The Excel id was stored as a rounded number.",
+  "contradictions": [],
+  "facts": [
+    {
+      "id": "P016.F1",
+      "status": "supported",
+      "text": "Crisplant S2000",
+      "source": "CareerCorpus 1.9070271E7 Apparel"
+    },
+    {
+      "id": "P016.F2",
+      "status": "supported",
+      "text": "lead mechanic managing 4 techs",
+      "source": "CareerCorpus 1.9070271E7 Apparel"
+    },
+    {
+      "id": "P016.F3",
+      "status": "supported",
+      "text": "Lockout/Tagout",
+      "source": "CareerCorpus 1.9070271E7 Apparel"
+    }
+  ],
+  "unsupportedQualifications": [
+    "3D printer",
+    "resin recipes",
+    "journeyman electrician"
+  ]
+}

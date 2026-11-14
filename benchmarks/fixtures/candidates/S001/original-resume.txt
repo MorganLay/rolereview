@@ -1,0 +1,26 @@
+Morgan Example
+
+This resume is fictional. It is the editorial regression library in tests/unit/tailor-editorial-fixture.ts, not an applicant.
+
+Junior Program Officer | Canada Revenue Agency
+- Automated the monthly reconciliation and saved 20 hours a week with Excel VBA.
+- Wrote SQL extracts for business-returns reports.
+
+Junior Program Officer, Special Business Returns Processing | CRA
+- Saved 20 hours each week by automating reconciliation in a workbook.
+- Reconciled special business returns against the source files.
+
+Full-Stack Developer Intern | Def Hacks
+- Built a React registration form and tested the API.
+
+Full Stack Developer Intern | Defhacks.co
+- Built a React registration form.
+
+Sales Associate | LCBO
+- Greeted customers and operated the cash register during retail shifts.
+
+Creator, Product Owner, Full-Stack Developer | RoleRefine
+- Stored application records in PostgreSQL and tested the API.
+- Built the resume editor in TypeScript and React.
+
+Education: Bachelor of Computer Science, Carleton University

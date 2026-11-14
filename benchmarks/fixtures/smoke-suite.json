@@ -1,0 +1,54 @@
+{
+  "id": "smoke-12",
+  "note": "Twelve cases across professions and failure modes. A registered-nurse posting with a licensed nurse, a civil-engineer posting, and a licensed-electrician posting are still absent. One Medical's administrative and medical-assistant ads share most of their body, so only the front-desk and certified-medical-assistant texts are used, and the duplicate float-admin text was not added.",
+  "cases": [
+    {
+      "id": "P005-J013",
+      "theme": "Software and security. Strong incident-response evidence, already generated in the paid run."
+    },
+    {
+      "id": "P012-J037",
+      "theme": "Healthcare. A nursing aide must not become a new-graduate nurse practitioner."
+    },
+    {
+      "id": "P006-J047",
+      "theme": "Accounting. Healthcare collections and reconciliations against a corporate senior-accountant role."
+    },
+    {
+      "id": "P010-J028",
+      "theme": "Education. High-school math with a Maryland certificate against a Connecticut math certificate."
+    },
+    {
+      "id": "P016-J050",
+      "theme": "Skilled trades. Named conveyor equipment against a 3D-printer maintenance job."
+    },
+    {
+      "id": "P013-J040",
+      "theme": "Sales. Quota-bearing medical and diagnostics sales without an invented methodology."
+    },
+    {
+      "id": "P014-J055",
+      "theme": "Administration. A dean's assistant with FERPA and grant budgets."
+    },
+    {
+      "id": "P008-J024",
+      "theme": "Hospitality. Hotel food-cost management against a fast-casual assistant manager."
+    },
+    {
+      "id": "P011-J052",
+      "theme": "Career transition. Hospital discharge planning plus a real teaching job, without a new licence."
+    },
+    {
+      "id": "P015-J038",
+      "theme": "Sparse retail. One cashier line, with fashion advising and no invented brand metrics."
+    },
+    {
+      "id": "P004-J011",
+      "theme": "Strong domain, weak writing. Thin but genuine LMS bullets."
+    },
+    {
+      "id": "P001-J012",
+      "theme": "Stretch with fabrication risk. An electrical supervisor licence must not become staff cloud engineering."
+    }
+  ]
+}

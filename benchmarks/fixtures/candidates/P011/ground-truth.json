@@ -1,0 +1,48 @@
+{
+  "candidateId": "P011",
+  "profession": "Hospital social services specialist",
+  "seniority": "mid",
+  "provenance": "adapted",
+  "writing": "standard",
+  "datasetDomain": "TEACHER",
+  "datasetSeniority": "Mid-level",
+  "source": {
+    "dataset": "CareerCorpus",
+    "resumeId": "1.5899269E7",
+    "excelRow": 187,
+    "licence": "CC-BY-4.0",
+    "acquired": "2026-11-12",
+    "url": "https://data.mendeley.com/datasets/wzzwn37gmd/1",
+    "doi": "10.17632/wzzwn37gmd.1",
+    "sha256": "97b1fa6cca1232912dd3f7bc312d71a2478249787168fd41dfbf6c1da90479d3"
+  },
+  "identityNote": "Public resume example from the LiveCareer collection, as redistributed in CareerCorpus. The publisher anonymized the name and says GPT-5 standardized the text. This is not a verified applicant, and missing dates or duties are missing information rather than proof the work did not happen. The Excel id was stored as a rounded number.",
+  "contradictions": [
+    "Social Services Specialist is dated 05/2014–Present and Teacher is dated 08/2015–07/2017. The published record overlaps those dates. They were not merged."
+  ],
+  "facts": [
+    {
+      "id": "P011.F1",
+      "status": "supported",
+      "text": "newborn and maternal discharges",
+      "source": "CareerCorpus 1.5899269E7 TEACHER"
+    },
+    {
+      "id": "P011.F2",
+      "status": "supported",
+      "text": "M.S.W. (in progress)",
+      "source": "CareerCorpus 1.5899269E7 TEACHER"
+    },
+    {
+      "id": "P011.F3",
+      "status": "supported",
+      "text": "Social Work Intern",
+      "source": "CareerCorpus 1.5899269E7 TEACHER"
+    }
+  ],
+  "unsupportedQualifications": [
+    "LCSW",
+    "Board Certification",
+    "licensed clinical social worker"
+  ]
+}

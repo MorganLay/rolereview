@@ -1,0 +1,144 @@
+{
+  "candidateId": "P002",
+  "profession": "Military logistics officer",
+  "seniority": "mid",
+  "provenance": "real-anonymized",
+  "source": {
+    "dataset": "Careerflow/ResumeBench",
+    "resumeId": "09e3f031-ca5e-4443-8539-b750ce57cc9f",
+    "licence": "CC-BY-4.0",
+    "acquired": "2026-11-12",
+    "url": "https://huggingface.co/datasets/Careerflow/ResumeBench"
+  },
+  "identityNote": "The publisher labels this record real-anonymized. Email, phone, and profile URLs were removed before this copy was stored. The published name is kept. Employers were not independently verified.",
+  "facts": [
+    {
+      "id": "P002.E1",
+      "status": "supported",
+      "text": "Directed end-to-end logistics for a Special Operations unit of 2,260 across five elements, sustaining global readiness without supply-driven delays.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience S4 Logistics Director/Lead Supply Chain Manager/Major (O-4) @ U.S. Army, 10th Special Forces Group"
+    },
+    {
+      "id": "P002.E2",
+      "status": "supported",
+      "text": "Ran day-to-day logistics with 7 program leads overseeing compliance (ITAR/EAR), sourcing and purchasing, logistics moves, vehicle upkeep, inventory control, and asset management. Oversaw reviews that assigned financial liability for more than $4.4M in lost or damaged government assets over two years.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience S4 Logistics Director/Lead Supply Chain Manager/Major (O-4) @ U.S. Army, 10th Special Forces Group"
+    },
+    {
+      "id": "P002.E3",
+      "status": "supported",
+      "text": "Orchestrated multimode freight using internal, strategic, and 3PL providers across road, maritime, and air networks. Used TMS tools (GATES, ICODES) and an SAP-backed logistics ERP (GCSS).",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience S4 Logistics Director/Lead Supply Chain Manager/Major (O-4) @ U.S. Army, 10th Special Forces Group"
+    },
+    {
+      "id": "P002.E4",
+      "status": "supported",
+      "text": "Reviewed OKRs each day to steer operations, ensure regulatory compliance, and deliver reliable, agile logistics support. Drove operational excellence that cut overhead, raised customer satisfaction, and simplified workflows, boosting scores 17% and saving $1M+ per year.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience S4 Logistics Director/Lead Supply Chain Manager/Major (O-4) @ U.S. Army, 10th Special Forces Group"
+    },
+    {
+      "id": "P002.E5",
+      "status": "supported",
+      "text": "Engaged partners and vendors every day to meet targets and uphold customer satisfaction. Worked with the comptroller on deploying the $13.0M annual budget, aligning funding sources, methods, and controls.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience S4 Logistics Director/Lead Supply Chain Manager/Major (O-4) @ U.S. Army, 10th Special Forces Group"
+    },
+    {
+      "id": "P002.E6",
+      "status": "supported",
+      "text": "Served as a direct report to the Commander. Cultivated strong stakeholder ties to advance the Commander’s vision, rolling out systems that aligned teams to enterprise goals. Also led Commander-sponsored initiatives and handled leadership communications.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience S4 Logistics Director/Lead Supply Chain Manager/Major (O-4) @ U.S. Army, 10th Special Forces Group"
+    },
+    {
+      "id": "P002.E7",
+      "status": "supported",
+      "text": "Lead Program Manager for a 20-program portfolio advancing strategic goals with a $2.0M annual budget.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience S4 Logistics Director/Lead Supply Chain Manager/Major (O-4) @ U.S. Army, 10th Special Forces Group"
+    },
+    {
+      "id": "P002.E8",
+      "status": "supported",
+      "text": "Coached, evaluated, and guided 9 cross-functional PMs, with all advancing to higher-responsibility roles. Advised eight units that went on to win multiple enterprise and defense logistics awards in recent fiscal years.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience S4 Logistics Director/Lead Supply Chain Manager/Major (O-4) @ U.S. Army, 10th Special Forces Group"
+    },
+    {
+      "id": "P002.E9",
+      "status": "supported",
+      "text": "Planned and ran joint training across six directorates and 444+ staff over 580 square miles, stress-testing systems in conflict scenarios and raising critical task proficiency by 27% with zero injuries or losses.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience S4 Logistics Director/Lead Supply Chain Manager/Major (O-4) @ U.S. Army, 10th Special Forces Group"
+    },
+    {
+      "id": "P002.E10",
+      "status": "supported",
+      "text": "Directed a 172-person, five-specialty team delivering parachutes to six organizations serving 7,504+ personnel within the 82nd Airborne Division. Accountable for workforce discipline, well-being, morale, and professional growth.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience Company Staff/Logistics Manager/Captain (O-3) @ U.S. Army, 82nd Sustainment Brigade"
+    },
+    {
+      "id": "P002.E11",
+      "status": "supported",
+      "text": "Counseled senior leaders on $1.1M in parachute ops, innovation, safety, output, and use while sustaining 97% readiness, 79% safety, and delivering 20,042+ defect-free canopies.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience Company Staff/Logistics Manager/Captain (O-3) @ U.S. Army, 82nd Sustainment Brigade"
+    },
+    {
+      "id": "P002.E12",
+      "status": "supported",
+      "text": "Converted stakeholder feedback into programs that met goals, lifted morale, boosted output by 27%, and cut misconduct by 38% over 15 months.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience Company Staff/Logistics Manager/Captain (O-3) @ U.S. Army, 82nd Sustainment Brigade"
+    },
+    {
+      "id": "P002.E13",
+      "status": "supported",
+      "text": "Drove org redesign to minimize customer impact over six months and advised executives on disposing $667,236+ in excess assets, avoiding large recurring maintenance costs.",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f experience Company Staff/Logistics Manager/Captain (O-3) @ U.S. Army, 82nd Sustainment Brigade"
+    },
+    {
+      "id": "P002.D14",
+      "status": "supported",
+      "text": "Supply Chain Management, Syracuse University",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f education"
+    },
+    {
+      "id": "P002.D15",
+      "status": "supported",
+      "text": "English, University of Virginia",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f education"
+    },
+    {
+      "id": "P002.D16",
+      "status": "supported",
+      "text": "English, Colorado State University",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f education"
+    },
+    {
+      "id": "P002.C17",
+      "status": "supported",
+      "text": "LSSGB, Lean Six Sigma Green Belt",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f certifications"
+    },
+    {
+      "id": "P002.C18",
+      "status": "supported",
+      "text": "PMI-ACP, Agile Certified Practitioner",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f certifications"
+    },
+    {
+      "id": "P002.C19",
+      "status": "supported",
+      "text": "PMP Candidate",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f certifications"
+    },
+    {
+      "id": "P002.C20",
+      "status": "supported",
+      "text": "Top Secret (SCI)",
+      "source": "09e3f031-ca5e-4443-8539-b750ce57cc9f certifications"
+    }
+  ],
+  "unknown": [
+    "Dates were empty in the published ground truth for this record."
+  ],
+  "unsupportedQualifications": [
+    "network security engineering",
+    "DDoS product support",
+    "web application firewall operation"
+  ]
+}

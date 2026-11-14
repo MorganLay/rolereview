@@ -1,0 +1,24 @@
+{
+  "candidateId": "S002",
+  "profession": "Fictional retail and reporting mix",
+  "seniority": "early",
+  "provenance": "synthetic",
+  "source": {
+    "dataset": "tests/unit/tailor-editorial-fixture.ts",
+    "resumeId": "editorial-morgan-example-retail",
+    "licence": "Project test fixture",
+    "acquired": "2026-11-12",
+    "url": "tests/unit/tailor-editorial-fixture.ts"
+  },
+  "identityNote": "Fictional persona. Not an applicant.",
+  "facts": [
+    {
+      "id": "S002.E1",
+      "status": "supported",
+      "text": "The only customer-facing evidence is the LCBO cash-register line.",
+      "source": "editorial fixture E_lcbo"
+    }
+  ],
+  "unknown": [],
+  "unsupportedQualifications": ["store management", "multi-site retail leadership"]
+}

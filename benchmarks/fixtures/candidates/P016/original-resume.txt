@@ -1,0 +1,11 @@
+Processed public example. Not a verified applicant.
+
+CareerCorpus category as published: Apparel. Workbook id as stored: 1.9070271E7.
+
+The dataset publisher replaced the name and contact details. The publisher says GPT-5 standardized the wording, so this text may differ from the original resume. Employers were not independently verified.
+
+Education: High school diploma, West Deptford High (2004); multiple J.J. Keller safety courses—Lockout/Tagout, PPE, Electrical, Fall, Welding, Machine Guard (2015–2016).
+
+Skills: Expert in electrical and mechanical conveyor repair, AC motors, VFDs, sensors, TCP/IP; skilled in PM program design, CCTV setup, vendor coordination, spare-parts control, leadership, and communication.
+
+Experience: 7+ yrs maintenance; lead mechanic managing 4 techs; conveyor/sortation systems (Crisplant S2000, Buschman Unisort IV/X, Accuglide); facilities maintenance, IT support, PM planning, and troubleshooting.
