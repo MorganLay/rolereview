@@ -90,7 +90,8 @@ export function bulletWordCounts(text: string): number[] {
 }
 
 export function sectionPresent(text: string, heading: "skills" | "education"): boolean {
-  return text.split(/\r?\n/).some((line) => line.trim().toLowerCase() === heading);
+  const pattern = heading === "skills" ? /^skills\b/i : /^education\b/i;
+  return text.split(/\r?\n/).some((line) => pattern.test(line.trim().replace(/:$/, "")));
 }
 
 /** A final bullet that matches a library bullet the draft did not already write. */

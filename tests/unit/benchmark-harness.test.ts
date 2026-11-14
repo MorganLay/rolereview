@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { looseTokenSupported, guardDraft } from "../../benchmarks/lib/grounded-guard";
 import { readFittedCases } from "../../benchmarks/lib/paid";
-import { factTokens, factsKeptIn, summaryFragment } from "../../benchmarks/write-verify/measure";
+import { factTokens, factsKeptIn, sectionPresent, summaryFragment } from "../../benchmarks/write-verify/measure";
 import type { JobAnalysis } from "@/features/jobs/schemas";
 import type { TailorOutput } from "@/features/tailor/schemas";
 import { baselineDocument, canonicalHeading, isDirectHeading } from "../../benchmarks/lib/plain-resume";
@@ -277,6 +277,21 @@ describe("direct resume headings", () => {
       }
     }
     expect(missing).toEqual([]);
+  });
+
+  it("keeps an ampersand education heading as its own section", () => {
+    expect(isDirectHeading("EDUCATION & CERTIFICATES")).toBe(true);
+    expect(isDirectHeading("TEACHING EXPERIENCE")).toBe(true);
+    expect(isDirectHeading("RELATED EXPERIENCE")).toBe(true);
+    const document = baselineDocument(
+      ["SUMMARY", "Designer with 20 years of work.", "EXPERIENCE", "Designer | 2010 – Present", "- Built a site.", "EDUCATION & CERTIFICATES", "BA, Lehman College"].join("\n"),
+    );
+    const education = document.snapshot.entries.filter((entry) => entry.kind === "EDUCATION");
+    expect(education.map((entry) => entry.title)).toEqual(["EDUCATION & CERTIFICATES", "BA, Lehman College"]);
+    expect(document.snapshot.entries.some((entry) => entry.kind === "EXPERIENCE" && entry.title.includes("Lehman"))).toBe(false);
+    const rendered = resumePlainText(document.content, document.snapshot);
+    expect(sectionPresent(rendered, "education")).toBe(true);
+    expect(sectionPresent("SKILLS AND RECOGNITION\nCommunication", "skills")).toBe(true);
   });
 });
 

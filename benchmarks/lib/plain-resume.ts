@@ -8,7 +8,7 @@ import type { LibrarySnapshot } from "@/features/library/schemas";
 import type { ContentBullet, ContentEntry, ResumeContent } from "@/features/tailor/schemas";
 
 const SECTION =
-  /^(?:(?:professional|core|technical|relevant|key|additional|work|career|selected)\s+)*(summary|profile|objective|experience|employment|work history|education|academic background|skills|certifications?|certificates?|licenses?|licences?|projects?|volunteer(?:ing)?|training|qualifications|competencies|activities|affiliations|awards|publications|committee(?:\s+service)?|references)(?:\s+and\s+[a-z]+(?:\s+[a-z]+)?)?$/i;
+  /^(?:[a-z]+\s+){0,3}(summary|profile|objective|experience|employment|work history|education|academic background|skills|certifications?|certificates?|licenses?|licences?|projects?|volunteer(?:ing)?|training|qualifications|competencies|activities|affiliations|awards|publications|committee(?:\s+service)?|references)(?:\s+(?:and|&)\s+[a-z][a-z ]*)?$/i;
 
 type Kind = ContentEntry["kind"];
 

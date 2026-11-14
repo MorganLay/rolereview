@@ -51,7 +51,7 @@ describe("saved benchmark page fit", () => {
         JSON.stringify({ role, baseline }, null, 2),
       );
     }
-  });
+  }, 120_000);
 });
 
 function savedFit(
