@@ -2,6 +2,8 @@
  * Paid outcome-first and write-then-verify drafts, then free replays.
  * Revision is off. One fix call is allowed only for a flagged O-C or W-C resume.
  */
+import "dotenv/config";
+
 import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";

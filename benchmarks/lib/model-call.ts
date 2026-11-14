@@ -73,9 +73,12 @@ export async function callTailor(input: {
     ok = read.ok;
     code = read.code;
     data = read.data;
-  } catch {
+  } catch (error) {
     ok = false;
     code = "AI_FAILED";
+    const name = error instanceof Error ? error.name : "Error";
+    const status = error && typeof error === "object" && "status" in error ? String(error.status) : "";
+    console.info(JSON.stringify({ event: "bench.call_error", refId: input.refId, name, status }));
   }
 
   const costMicros = estimateCostMicros(task.model, usage);
