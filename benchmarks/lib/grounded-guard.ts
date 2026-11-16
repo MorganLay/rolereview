@@ -29,6 +29,7 @@ export type GuardFlag = {
   ref: string;
   token: string;
   text: string;
+  home?: string;
 };
 
 const FLAG_ONLY = new Set(["G4", "G13", "G16", "G12"]);
@@ -91,7 +92,7 @@ function reviewRelaxed(
       }
       const evidence = evidenceFor(entry.ref, known, snapshot, byRef);
       const text = bullet.text;
-      const problem = lineProblem(text, evidence);
+      const problem = lineProblem(text, evidence, snapshot, entry.ref);
       if (text.trim().length === 0 || text.length > RESUME_LIMITS.bullet) {
         const replacement = firstBulletText(known, snapshot) ?? source.title;
         bullets.push({ sourceRefs: known.slice(0, 1), text: replacement, reverted: true });
@@ -99,8 +100,8 @@ function reviewRelaxed(
         issues.push({ code: "G5", ref: known[0] ?? entry.ref });
         continue;
       }
-      if (problem && flagOnly && FLAG_ONLY.has(problem.code)) {
-        flags.push({ code: problem.code, ref: known[0] ?? entry.ref, token: problem.token, text });
+      if (problem && flagOnly && (FLAG_ONLY.has(problem.code) || problem.code === "wrong-entry")) {
+        flags.push({ code: problem.code, ref: known[0] ?? entry.ref, token: problem.token, text, home: problem.home });
         bullets.push({ sourceRefs: known, text, reverted: false });
         continue;
       }
@@ -174,13 +175,19 @@ function cleanSummary(
   const kept: string[] = [];
   let dropped = false;
   for (const sentence of parts) {
-    const problem = summaryProblem(sentence, presence, bullets, sources, tenure);
+    const problem = summaryProblem(sentence, presence, bullets, sources, tenure, snapshot);
     if (!problem) {
       kept.push(sentence);
       continue;
     }
     if (flagOnly) {
-      flags.push({ code: "G12", ref: "summary", token: problem, text: sentence });
+      flags.push({
+        code: problem.startsWith("wrong-entry:") ? "wrong-entry" : "G12",
+        ref: "summary",
+        token: problem.startsWith("wrong-entry:") ? (problem.split(":")[1] ?? problem) : problem,
+        text: sentence,
+        home: problem.startsWith("wrong-entry:") ? problem.split(":")[2] : undefined,
+      });
       kept.push(sentence);
       continue;
     }
@@ -199,22 +206,44 @@ function summaryProblem(
   bullets: readonly string[],
   sources: readonly string[],
   tenure: ReturnType<typeof snapshotTenure>,
+  snapshot: LibrarySnapshot,
 ): string | null {
   const forNumbers = stripEducationDurationPhrases(sentence);
-  if (hasOverstatedTenure(sentence, tenure)) return "tenure";
+  if (hasOverstatedTenure(sentence, tenure) && !tenureIsStated(sentence, snapshot)) return "tenure";
   const number = unsupportedNumberToken(forNumbers, sources);
-  if (number) return number;
+  if (number) {
+    const home = entryWithNumber(snapshot, number, null);
+    if (home) return `wrong-entry:${number}:${home}`;
+    return number;
+  }
   const claim = firstRealClaim(sentence, presence);
   if (claim !== null) return claim;
   return inflatedRole(sentence, bullets) ?? summaryProficiency(sentence, bullets);
 }
 
-function lineProblem(text: string, evidence: readonly string[]): { code: "G4" | "G13" | "G16"; token: string } | null {
+function lineProblem(
+  text: string,
+  evidence: readonly string[],
+  snapshot: LibrarySnapshot,
+  entryRef: string,
+): { code: "G4" | "G13" | "G16" | "wrong-entry"; token: string; home?: string } | null {
+  const source = snapshot.entries.find((entry) => entry.ref === entryRef);
   if (hasUnsupportedNumber(text, evidence)) {
-    return { code: "G4", token: unsupportedNumberToken(text, evidence) ?? "number" };
+    const token = unsupportedNumberToken(text, evidence) ?? "number";
+    const home = entryWithNumber(snapshot, token, entryRef);
+    if (home) return { code: "wrong-entry", token, home };
+    return { code: "G4", token };
   }
   const claim = firstRealClaim(text, evidence);
-  if (claim !== null) return { code: "G13", token: claim };
+  if (claim !== null) {
+    if (source && termInTitleOrOrg(claim, source)) return null;
+    if (snapshot.skills.some((skill) => looseTokenSupported(claim, [skill.name]))) return null;
+    if (isNamedCredential(claim)) {
+      const home = entryWithToken(snapshot, claim, entryRef);
+      if (home) return { code: "wrong-entry", token: claim, home };
+    }
+    return { code: "G13", token: claim };
+  }
   const inflated = inflatedRole(text, evidence) ?? raisedProficiency(text, evidence);
   if (inflated !== null) return { code: "G16", token: inflated };
   return null;
@@ -252,17 +281,70 @@ function firstRealClaim(text: string, evidence: readonly string[]): string | nul
   return null;
 }
 
-/** "MAS 200" supports "MAS200". Spacing, case, and hyphens are ignored. */
+/**
+ * Case, spacing, hyphens, and a trailing plural s do not make a token unsupported.
+ * "MAS 200" matches "MAS200", "kWh" matches "kwh", and "70E" matches "70Es".
+ */
 export function looseTokenSupported(token: string, evidence: readonly string[]): boolean {
-  const needle = compactToken(token);
+  const needle = alnum(token);
   if (needle.length < 2) return false;
-  const hay = compactToken(evidence.join("\n"));
-  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`(?:^|[^a-z0-9])${escaped}(?:[^a-z0-9]|$)`).test(hay);
+  const hay = alnum(evidence.join("\n"));
+  if (hay.includes(needle)) return true;
+  if (needle.endsWith("s") && hay.includes(needle.slice(0, -1))) return true;
+  return hay.includes(`${needle}s`);
 }
 
-function compactToken(value: string): string {
-  return value.toLowerCase().replace(/[\s\-–—]+/g, "");
+function alnum(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+const TENURE_CLAIM =
+  /\b(\d+(?:\.\d+)?)\s*(\+|plus)?\s*(?:~\s*)?(?:years?|yrs)\b|~\s*(\d+(?:\.\d+)?)\s*(?:years?|yrs)\b/gi;
+
+/** A tenure the library already states, or that the dated roles already span. */
+export function tenureIsStated(sentence: string, snapshot: LibrarySnapshot): boolean {
+  const claims = [...sentence.matchAll(TENURE_CLAIM)];
+  if (claims.length === 0) return false;
+  const blob = alnum(libraryPresence(snapshot).join("\n"));
+  const spanned = snapshotTenure(snapshot).experienceYears;
+  return claims.every((match) => {
+    const years = Number(match[1] ?? match[3]);
+    if (!Number.isFinite(years)) return false;
+    const plus = Boolean(match[2]);
+    const stated = blob.includes(alnum(`${years}+ yrs`)) || blob.includes(alnum(`${years}+ years`)) || blob.includes(alnum(`${years} years`)) || blob.includes(alnum(`${years} yrs`)) || blob.includes(alnum(`~${years} years`));
+    if (stated) return true;
+    if (plus && spanned >= years) return true;
+    return spanned >= years && !plus;
+  });
+}
+
+function termInTitleOrOrg(token: string, entry: LibrarySnapshot["entries"][number]): boolean {
+  return looseTokenSupported(token, [entry.title, entry.organization ?? ""]);
+}
+
+function entryWithNumber(snapshot: LibrarySnapshot, token: string, exceptRef: string | null): string | null {
+  const wanted = normalizeNumber(token);
+  for (const entry of snapshot.entries) {
+    if (entry.ref === exceptRef) continue;
+    const blob = [entry.title, ...entry.bullets.map((bullet) => bullet.text)].join(" ");
+    if (numberTokens(blob).some((item) => normalizeNumber(item) === wanted)) return entry.ref;
+  }
+  return null;
+}
+
+function isNamedCredential(token: string): boolean {
+  if (/\d/.test(token)) return true;
+  if ((token.match(/[A-Z]/g) ?? []).length >= 2) return true;
+  return /licen[cs]e|certif/i.test(token);
+}
+
+function entryWithToken(snapshot: LibrarySnapshot, token: string, exceptRef: string): string | null {
+  for (const entry of snapshot.entries) {
+    if (entry.ref === exceptRef) continue;
+    const blob = [entry.title, entry.organization ?? "", ...entry.bullets.map((bullet) => bullet.text)];
+    if (looseTokenSupported(token, blob)) return entry.ref;
+  }
+  return null;
 }
 
 function refsFor(

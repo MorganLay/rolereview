@@ -23,6 +23,12 @@
     "gis:beta": "tsx --conditions=react-server scripts/gis-beta.ts",
     "evals": "tsx --conditions=react-server evals/run.ts",
     "evals:questions": "tsx --conditions=react-server evals/questions/live.ts",
+    "bench:validate": "tsx benchmarks/cli.ts validate",
+    "bench:dry-run": "tsx benchmarks/cli.ts dry-run --suite full",
+    "bench:report": "tsx benchmarks/cli.ts report",
+    "bench:case": "tsx benchmarks/cli.ts execute --suite case",
+    "bench:smoke": "tsx benchmarks/cli.ts execute --suite smoke",
+    "bench:full": "tsx benchmarks/cli.ts execute --suite full",
     "demo:fixtures": "tsx --conditions=react-server evals/demo-fixtures.ts",
     "email:dev": "email dev --dir src/lib/email/templates",
     "postinstall": "prisma generate"

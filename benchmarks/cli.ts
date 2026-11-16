@@ -6,7 +6,8 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { estimateThreeArm, MODEL_LED_SMOKE } from "./model-led/cost";
-import { estimateExperiment } from "./write-verify/estimate";
+import { estimateExperiment, estimateW2, estimateW21, estimateW3, estimateW4, estimateW5 } from "./write-verify/estimate";
+import { estimateCalibration } from "./write-verify/w3-calibrate";
 import { careerLibraryInput } from "./model-led/library";
 import { authorizeSpend, estimateCase, estimateRun } from "./lib/cost";
 import { candidateIds, equalEvidenceInput, loadCase, loadCases, loadSmokeIds } from "./lib/load";
@@ -211,6 +212,157 @@ function writeVerify(args: Args): number | Promise<number> {
   );
 }
 
+function writeVerifyW2(args: Args): number | Promise<number> {
+  const estimate = estimateW2();
+  console.log("W2 planning estimate. No request is sent unless --send is set.");
+  console.log(
+    `Drafts $${estimate.draftUsd.toFixed(2)}. Coverage $${estimate.coverageUsd.toFixed(2)}. Fixes $${estimate.fixUsd.toFixed(2)}. Worst case $${estimate.worstUsd.toFixed(2)}.`,
+  );
+  console.log(estimate.note);
+  if (estimate.worstUsd > 0.75) {
+    console.error(`Worst case $${estimate.worstUsd.toFixed(2)} is over the $0.75 cap. No request was sent.`);
+    return 1;
+  }
+  const gate = authorizeSpend({
+    confirmSpend: args.confirmSpend,
+    maxUsd: args.maxUsd,
+    estimatedUsd: estimate.worstUsd,
+  });
+  if (!args.send) {
+    console.log("Dry run. Pass --confirm-spend --max-usd 0.75 and --send to run W2. No request was sent.");
+    return 0;
+  }
+  if (!gate.ok) {
+    console.error(gate.reason);
+    return 1;
+  }
+  return import("./write-verify/w2-run").then(({ runW2 }) => runW2({ maxUsd: gate.maxUsd }).then(() => 0));
+}
+
+function writeVerifyW21(args: Args): number | Promise<number> {
+  const estimate = estimateW21();
+  console.log("W2.1 planning estimate. No request is sent unless --send is set.");
+  console.log(
+    `Drafts $${estimate.draftUsd.toFixed(2)}. Coverage $${estimate.coverageUsd.toFixed(2)}. Fixes $${estimate.fixUsd.toFixed(2)}. Cuts $${estimate.cutUsd.toFixed(2)}. Imports $${estimate.importUsd.toFixed(2)}. Worst case $${estimate.worstUsd.toFixed(2)}.`,
+  );
+  console.log(estimate.note);
+  const worstCents = Math.round(estimate.worstUsd * 100) / 100;
+  if (worstCents > 1) {
+    console.error(`Worst case $${worstCents.toFixed(2)} is over the $1.00 cap. No request was sent.`);
+    return 1;
+  }
+  console.log(`Unrounded planning sum $${estimate.worstUsd.toFixed(4)}. The run stops before a call that could pass $1.00.`);
+  const gate = authorizeSpend({
+    confirmSpend: args.confirmSpend,
+    maxUsd: args.maxUsd,
+    estimatedUsd: worstCents,
+  });
+  if (!args.send) {
+    console.log("Dry run. Pass --confirm-spend --max-usd 1.00 and --send to run W2.1. No request was sent.");
+    return 0;
+  }
+  if (!gate.ok) {
+    console.error(gate.reason);
+    return 1;
+  }
+  return import("./write-verify/w21-run").then(({ runW21 }) => runW21({ maxUsd: gate.maxUsd }).then(() => 0));
+}
+
+function writeVerifyW3Arm(args: Args): number | Promise<number> {
+  const estimate = estimateW3();
+  console.log("W3 planning estimate. No request is sent unless --send is set.");
+  console.log(
+    `Imports $${estimate.importUsd.toFixed(2)}. W3 $${estimate.w3Usd.toFixed(2)}. Production $${estimate.productionUsd.toFixed(2)}. Unconstrained worst $${estimate.worstUsd.toFixed(2)}.`,
+  );
+  console.log(estimate.note);
+  const gate = authorizeSpend({
+    confirmSpend: args.confirmSpend,
+    maxUsd: args.maxUsd,
+    estimatedUsd: Math.min(estimate.worstUsd, args.maxUsd ?? estimate.worstUsd),
+  });
+  if (!args.send) {
+    console.log("Dry run. Pass --confirm-spend --max-usd 2.00 and --send to run W3. No request was sent.");
+    return 0;
+  }
+  if (!gate.ok) {
+    console.error(gate.reason);
+    return 1;
+  }
+  return import("./write-verify/w3-run").then(({ runW3 }) => runW3({ maxUsd: gate.maxUsd }).then(() => 0));
+}
+
+function writeVerifyW4Arm(args: Args): number | Promise<number> {
+  const estimate = estimateW4();
+  console.log("W4 planning estimate. No request is sent unless --send is set.");
+  console.log(
+    `Prompt test $${estimate.promptUsd.toFixed(2)}. Repair $${estimate.repairUsd.toFixed(2)}. W4 $${estimate.w4Usd.toFixed(2)}. Unconstrained worst $${estimate.worstUsd.toFixed(2)}.`,
+  );
+  console.log(estimate.note);
+  const gate = authorizeSpend({
+    confirmSpend: args.confirmSpend,
+    maxUsd: args.maxUsd,
+    estimatedUsd: Math.min(estimate.worstUsd, args.maxUsd ?? estimate.worstUsd),
+  });
+  if (!args.send) {
+    console.log("Dry run. Pass --confirm-spend --max-usd 1.25 and --send to run W4. No request was sent.");
+    return 0;
+  }
+  if (!gate.ok) {
+    console.error(gate.reason);
+    return 1;
+  }
+  return import("./write-verify/w4-run").then(({ runW4 }) => runW4({ maxUsd: gate.maxUsd }).then(() => 0));
+}
+
+function writeVerifyW5Arm(args: Args): number | Promise<number> {
+  const estimate = estimateW5();
+  console.log("W5 planning estimate. No request is sent unless --send is set.");
+  console.log(
+    `Repair $${estimate.repairUsd.toFixed(2)}. W5 $${estimate.w5Usd.toFixed(2)}. Unconstrained worst $${estimate.worstUsd.toFixed(2)}.`,
+  );
+  console.log(estimate.note);
+  const gate = authorizeSpend({
+    confirmSpend: args.confirmSpend,
+    maxUsd: args.maxUsd,
+    estimatedUsd: Math.min(estimate.worstUsd, args.maxUsd ?? estimate.worstUsd),
+  });
+  if (!args.send) {
+    console.log("Dry run. Pass --confirm-spend --max-usd 1.00 and --send to run W5. No request was sent.");
+    return 0;
+  }
+  if (!gate.ok) {
+    console.error(gate.reason);
+    return 1;
+  }
+  return import("./write-verify/w5-run").then(({ runW5 }) => runW5({ maxUsd: gate.maxUsd }).then(() => 0));
+}
+
+function writeVerifyW3(args: Args): number | Promise<number> {
+  const estimate = estimateCalibration();
+  console.log("W3 calibration estimate. The verifier only. No drafts and no fixes. No request is sent unless --send is set.");
+  console.log(`Worst case $${estimate.usd.toFixed(2)} for 20 checks. Output cap ${1200} tokens each.`);
+  if (estimate.usd > 0.6) {
+    console.error(`Worst case $${estimate.usd.toFixed(2)} is over the $0.60 cap. No request was sent.`);
+    return 1;
+  }
+  const gate = authorizeSpend({
+    confirmSpend: args.confirmSpend,
+    maxUsd: args.maxUsd,
+    estimatedUsd: estimate.usd,
+  });
+  if (!args.send) {
+    console.log("Dry run. Pass --confirm-spend --max-usd 0.60 and --send to calibrate. No request was sent.");
+    return 0;
+  }
+  if (!gate.ok) {
+    console.error(gate.reason);
+    return 1;
+  }
+  return import("./write-verify/w3-calibrate").then(({ runCalibration }) =>
+    runCalibration({ maxUsd: gate.maxUsd }).then(() => 0),
+  );
+}
+
 const parsed = parseArgs(process.argv.slice(2));
 const commands: Record<string, (args: Args) => number | Promise<number>> = {
   validate,
@@ -219,10 +371,16 @@ const commands: Record<string, (args: Args) => number | Promise<number>> = {
   execute,
   "model-led": modelLed,
   "write-verify": writeVerify,
+  w2: writeVerifyW2,
+  w21: writeVerifyW21,
+  "w3-arm": writeVerifyW3Arm,
+  w3: writeVerifyW3,
+  "w4-arm": writeVerifyW4Arm,
+  "w5-arm": writeVerifyW5Arm,
 };
 const run = commands[parsed.command];
 if (!run) {
-  console.error("Use validate, dry-run, report, execute, model-led, or write-verify.");
+  console.error("Use validate, dry-run, report, execute, model-led, write-verify, w2, w21, w3-arm, w3, w4-arm, or w5-arm.");
   process.exitCode = 1;
 } else {
   void Promise.resolve(run(parsed))

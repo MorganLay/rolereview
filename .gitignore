@@ -52,6 +52,10 @@ src/generated/
 # Evals output (fixtures stay tracked)
 evals/out/
 
+# Benchmark runs and raw downloads. Curated fixtures stay tracked.
+/benchmarks/results/
+/benchmarks/raw/
+
 # Generated documents outside fixtures
 *.pdf
 *.docx

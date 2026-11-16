@@ -89,8 +89,7 @@ export function adaptFixtureResume(resume: string): { snapshot: Snapshot; spans:
         if (parsed.achievements.length > 0) {
           entryCount += 1;
           ref = `E${entryCount}`;
-          const [title, ...rest] = parsed.achievements;
-          entries.push(entry(ref, "OTHER", title ?? labelled.body, null, rest, null));
+          entries.push(entry(ref, "OTHER", "", null, parsed.achievements, null));
         }
         spans.push({
           label: "skills",
@@ -360,12 +359,10 @@ function parseSkillLine(body: string): { skills: string[]; achievements: string[
   const skills: string[] = [];
   const achievements: string[] = [];
   for (const clause of splitOutside(body, /[;.]/)) {
-    if (isAchievement(clause)) {
-      achievements.push(clause);
-      continue;
-    }
-    for (const item of splitOutside(clause, /,/)) {
-      if (item.length > 0) skills.push(item);
+    const items = splitOutside(clause, /,/);
+    for (const item of items.length > 0 ? items : [clause]) {
+      if (isAchievement(item)) achievements.push(item);
+      else if (item.length > 0) skills.push(item);
     }
   }
   if (skills.length === 0 && achievements.length === 0 && body.trim().length > 0) {
@@ -509,7 +506,13 @@ function snapshotText(snapshot: Snapshot): string {
 }
 
 function compact(value: string): string {
-  return value.toLowerCase().replace(/[\s|]+/g, "");
+  return value.toLowerCase().replace(/[\s|'"’“”]+/g, "");
+}
+
+/** Words in `text` that the snapshot does not contain. Same folding as evidenceGaps. */
+export function uncoveredWords(snapshot: Snapshot, text: string): string[] {
+  const haystack = compact(snapshotText(snapshot));
+  return contentWords(text).filter((word) => !haystack.includes(compact(word)));
 }
 
 function contentWords(value: string): string[] {

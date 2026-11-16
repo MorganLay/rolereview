@@ -1,0 +1,941 @@
+{
+ "_note": "Draft by Claude for owner approval, 2026-11-14. Each item is a fact a strong resume for THIS posting should carry. An item is kept when every group in allOf has at least one alternative present. Match: lowercase, commas removed, en/em dashes to hyphens, alternatives matched on word boundaries. Scoring diagnostic only until the owner approves the lists.",
+ "P006-J047": [
+  {
+   "label": "Close time cut via consolidation procedures",
+   "allOf": [
+    [
+     "consolidation procedures"
+    ]
+   ]
+  },
+  {
+   "label": "Bank reconciliations for 11 subsidiaries",
+   "allOf": [
+    [
+     "11 subsidiaries"
+    ],
+    [
+     "reconciliations",
+     "reconciliation",
+     "recs"
+    ]
+   ]
+  },
+  {
+   "label": "$10M+ monthly revenue managed",
+   "allOf": [
+    [
+     "$10m",
+     "10 million"
+    ]
+   ]
+  },
+  {
+   "label": "Collections raised 40% to 90%",
+   "allOf": [
+    [
+     "40%"
+    ],
+    [
+     "90%"
+    ]
+   ]
+  },
+  {
+   "label": "General ledger review and journal entries",
+   "allOf": [
+    [
+     "general ledger",
+     "gl"
+    ],
+    [
+     "journal entries",
+     "jes"
+    ]
+   ]
+  },
+  {
+   "label": "Forecasts, budgets, financial statements",
+   "allOf": [
+    [
+     "forecasts",
+     "forecasting"
+    ],
+    [
+     "budgets",
+     "budgeting"
+    ]
+   ]
+  },
+  {
+   "label": "Month/year-end close",
+   "allOf": [
+    [
+     "month-end",
+     "month end",
+     "month and year-end",
+     "month- and year-end",
+     "monthly"
+    ]
+   ]
+  },
+  {
+   "label": "MAS 200",
+   "allOf": [
+    [
+     "mas200",
+     "mas 200"
+    ]
+   ]
+  },
+  {
+   "label": "QuickBooks",
+   "allOf": [
+    [
+     "quickbooks"
+    ]
+   ]
+  },
+  {
+   "label": "B.S. Accountancy",
+   "allOf": [
+    [
+     "accountancy"
+    ]
+   ]
+  }
+ ],
+ "P011-J052": [
+  {
+   "label": "Standards-aligned syllabi and lessons",
+   "allOf": [
+    [
+     "standards-aligned"
+    ]
+   ]
+  },
+  {
+   "label": "Teacher role dated 2015 to 2017",
+   "allOf": [
+    [
+     "2015"
+    ],
+    [
+     "2017"
+    ]
+   ]
+  },
+  {
+   "label": "Relationships with students and parents",
+   "allOf": [
+    [
+     "parents"
+    ]
+   ]
+  },
+  {
+   "label": "Classroom management",
+   "allOf": [
+    [
+     "classroom management"
+    ]
+   ]
+  },
+  {
+   "label": "Lesson planning / curriculum delivery",
+   "allOf": [
+    [
+     "lesson planning",
+     "lesson plans",
+     "lessons"
+    ]
+   ]
+  },
+  {
+   "label": "Two bachelor's degrees: Psychology and Social Work",
+   "allOf": [
+    [
+     "psychology"
+    ],
+    [
+     "social work"
+    ]
+   ]
+  },
+  {
+   "label": "Magna Cum Laude",
+   "allOf": [
+    [
+     "magna cum laude"
+    ]
+   ]
+  },
+  {
+   "label": "Graduate study in progress, named",
+   "allOf": [
+    [
+     "m.s.w",
+     "msw",
+     "master of social work",
+     "forensic psychology"
+    ]
+   ]
+  },
+  {
+   "label": "Newborn and maternal discharge coordination",
+   "allOf": [
+    [
+     "newborn"
+    ],
+    [
+     "maternal"
+    ]
+   ]
+  }
+ ],
+ "P012-J037": [
+  {
+   "label": "Nursing Aide with basic patient care",
+   "allOf": [
+    [
+     "nursing aide"
+    ],
+    [
+     "patient care"
+    ]
+   ]
+  },
+  {
+   "label": "Front desk scheduling and billing support",
+   "allOf": [
+    [
+     "scheduling"
+    ],
+    [
+     "billing"
+    ]
+   ]
+  },
+  {
+   "label": "English and Twi",
+   "allOf": [
+    [
+     "twi"
+    ]
+   ]
+  },
+  {
+   "label": "Top rep, CSAT above 80%",
+   "allOf": [
+    [
+     "80%"
+    ],
+    [
+     "csat"
+    ]
+   ]
+  },
+  {
+   "label": "Salesforce or ServiceNow",
+   "allOf": [
+    [
+     "salesforce",
+     "servicenow"
+    ]
+   ]
+  },
+  {
+   "label": "B.A., The Ohio State University",
+   "allOf": [
+    [
+     "ohio state"
+    ]
+   ]
+  },
+  {
+   "label": "Relevant coursework (child development, nutritional needs)",
+   "allOf": [
+    [
+     "child development",
+     "nutritional"
+    ]
+   ]
+  }
+ ],
+ "P014-J055": [
+  {
+   "label": "Executive support to a Dean and a VP",
+   "allOf": [
+    [
+     "dean"
+    ],
+    [
+     "vice president",
+     "vp"
+    ]
+   ]
+  },
+  {
+   "label": "Calendar and meeting management",
+   "allOf": [
+    [
+     "calendar",
+     "calendars"
+    ]
+   ]
+  },
+  {
+   "label": "Budgets and purchase orders",
+   "allOf": [
+    [
+     "budgets",
+     "budget"
+    ],
+    [
+     "purchase orders",
+     "pos"
+    ]
+   ]
+  },
+  {
+   "label": "Payroll",
+   "allOf": [
+    [
+     "payroll"
+    ]
+   ]
+  },
+  {
+   "label": "Travel",
+   "allOf": [
+    [
+     "travel"
+    ]
+   ]
+  },
+  {
+   "label": "Title III and PECO grant budgets",
+   "allOf": [
+    [
+     "title iii"
+    ],
+    [
+     "peco"
+    ]
+   ]
+  },
+  {
+   "label": "Confidential judiciary files",
+   "allOf": [
+    [
+     "judiciary"
+    ]
+   ]
+  },
+  {
+   "label": "Streamlined the book loan process",
+   "allOf": [
+    [
+     "book loan"
+    ]
+   ]
+  },
+  {
+   "label": "FERPA compliance",
+   "allOf": [
+    [
+     "ferpa"
+    ]
+   ]
+  },
+  {
+   "label": "SARS administrator/trainer",
+   "allOf": [
+    [
+     "sars"
+    ]
+   ]
+  }
+ ],
+ "P001-J001": [
+  {
+   "label": "Plant availability 84% to 92%",
+   "allOf": [
+    [
+     "84%"
+    ],
+    [
+     "92%"
+    ]
+   ]
+  },
+  {
+   "label": "Downtime 1722 to 166 hours",
+   "allOf": [
+    [
+     "1722"
+    ],
+    [
+     "166"
+    ]
+   ]
+  },
+  {
+   "label": "Breakdowns cut 19%",
+   "allOf": [
+    [
+     "19%"
+    ]
+   ]
+  },
+  {
+   "label": "2.7 MTPA plant install and start-up",
+   "allOf": [
+    [
+     "2.7 mtpa"
+    ]
+   ]
+  },
+  {
+   "label": "Work instructions and maintenance plans",
+   "allOf": [
+    [
+     "work instructions",
+     "wis"
+    ],
+    [
+     "maintenance plans"
+    ]
+   ]
+  },
+  {
+   "label": "LOTO / safety programs",
+   "allOf": [
+    [
+     "loto",
+     "lockout"
+    ]
+   ]
+  },
+  {
+   "label": "Spares inventory",
+   "allOf": [
+    [
+     "spares"
+    ]
+   ]
+  },
+  {
+   "label": "Power systems scale (132kV substation or 31MW plant)",
+   "allOf": [
+    [
+     "132kv",
+     "132 kv",
+     "31mw",
+     "31 mw"
+    ]
+   ]
+  },
+  {
+   "label": "PLC/VFD hands-on or Siemens S7 PLC",
+   "allOf": [
+    [
+     "vfds",
+     "vfd",
+     "s7"
+    ]
+   ]
+  },
+  {
+   "label": "Electrical Supervisor Licence",
+   "allOf": [
+    [
+     "electrical supervisor"
+    ]
+   ]
+  }
+ ],
+ "P008-J024": [
+  {
+   "label": "Restaurant management in a hotel",
+   "allOf": [
+    [
+     "restaurant"
+    ],
+    [
+     "hotel"
+    ]
+   ]
+  },
+  {
+   "label": "Staff and operations oversight",
+   "allOf": [
+    [
+     "staff"
+    ]
+   ]
+  },
+  {
+   "label": "Inventory and food cost",
+   "allOf": [
+    [
+     "inventory"
+    ],
+    [
+     "food cost"
+    ]
+   ]
+  },
+  {
+   "label": "Payroll and filings",
+   "allOf": [
+    [
+     "payroll"
+    ]
+   ]
+  },
+  {
+   "label": "Monthly financial statements",
+   "allOf": [
+    [
+     "financial statements"
+    ]
+   ]
+  },
+  {
+   "label": "Job costing as Assistant Controller",
+   "allOf": [
+    [
+     "job costing"
+    ]
+   ]
+  },
+  {
+   "label": "Vendor/subcontractor management",
+   "allOf": [
+    [
+     "vendor",
+     "vendors",
+     "subcontractor",
+     "subcontractors"
+    ]
+   ]
+  },
+  {
+   "label": "Timberline",
+   "allOf": [
+    [
+     "timberline"
+    ]
+   ]
+  },
+  {
+   "label": "QuickBooks",
+   "allOf": [
+    [
+     "quickbooks"
+    ]
+   ]
+  },
+  {
+   "label": "A.A. Business Management, GPA 3.85",
+   "allOf": [
+    [
+     "3.85"
+    ]
+   ]
+  }
+ ],
+ "P010-J028": [
+  {
+   "label": "About 19 years of high school math teaching",
+   "allOf": [
+    [
+     "19 years"
+    ]
+   ]
+  },
+  {
+   "label": "Algebra II Honors",
+   "allOf": [
+    [
+     "algebra ii honors"
+    ]
+   ]
+  },
+  {
+   "label": "Geometry and Data Analysis",
+   "allOf": [
+    [
+     "geometry"
+    ],
+    [
+     "data analysis"
+    ]
+   ]
+  },
+  {
+   "label": "Maryland Teacher Certificate (APC), current",
+   "allOf": [
+    [
+     "maryland"
+    ],
+    [
+     "apc"
+    ]
+   ]
+  },
+  {
+   "label": "Master's degree(s) in education",
+   "allOf": [
+    [
+     "m.a.",
+     "m.a",
+     "master's",
+     "masters",
+     "master of arts"
+    ]
+   ]
+  },
+  {
+   "label": "100% HSA pass rate (2010)",
+   "allOf": [
+    [
+     "100%"
+    ],
+    [
+     "hsa"
+    ]
+   ]
+  },
+  {
+   "label": "Teacher of the Month",
+   "allOf": [
+    [
+     "teacher of the month"
+    ]
+   ]
+  },
+  {
+   "label": "Progress monitoring",
+   "allOf": [
+    [
+     "progress monitoring",
+     "monitoring",
+     "monitored",
+     "monitor"
+    ]
+   ]
+  },
+  {
+   "label": "Differentiated instruction",
+   "allOf": [
+    [
+     "differentiated"
+    ]
+   ]
+  },
+  {
+   "label": "Special needs students",
+   "allOf": [
+    [
+     "special needs"
+    ]
+   ]
+  }
+ ],
+ "P013-J040": [
+  {
+   "label": "#1 Account Executive, Q2, +4% YoY",
+   "allOf": [
+    [
+     "#1 account executive"
+    ],
+    [
+     "4%"
+    ]
+   ]
+  },
+  {
+   "label": "#1 Sales Producer, Dove, 3 years",
+   "allOf": [
+    [
+     "#1 sales producer"
+    ],
+    [
+     "dove"
+    ]
+   ]
+  },
+  {
+   "label": "Territory market share up 40%+",
+   "allOf": [
+    [
+     "40%"
+    ]
+   ]
+  },
+  {
+   "label": "Client churn under 1%",
+   "allOf": [
+    [
+     "1%"
+    ],
+    [
+     "churn"
+    ]
+   ]
+  },
+  {
+   "label": "Hit quarterly targets",
+   "allOf": [
+    [
+     "quarterly targets"
+    ]
+   ]
+  },
+  {
+   "label": "Prospecting and cold calling",
+   "allOf": [
+    [
+     "cold-calling",
+     "cold calling",
+     "cold-called",
+     "cold called",
+     "cold-call",
+     "cold calls"
+    ]
+   ]
+  },
+  {
+   "label": "Built pipeline",
+   "allOf": [
+    [
+     "pipeline"
+    ]
+   ]
+  },
+  {
+   "label": "Pricing negotiation",
+   "allOf": [
+    [
+     "negotiated",
+     "negotiation",
+     "negotiating"
+    ]
+   ]
+  },
+  {
+   "label": "Salesforce",
+   "allOf": [
+    [
+     "salesforce"
+    ]
+   ]
+  },
+  {
+   "label": "Healthcare-adjacent selling (diagnostics or medical apparel)",
+   "allOf": [
+    [
+     "diagnostics",
+     "medical apparel"
+    ]
+   ]
+  }
+ ],
+ "P016-J050": [
+  {
+   "label": "7+ years of maintenance",
+   "allOf": [
+    [
+     "7+ years",
+     "7+ yrs",
+     "more than 7 years",
+     "over 7 years",
+     "seven years"
+    ]
+   ]
+  },
+  {
+   "label": "Lead mechanic over 4 technicians",
+   "allOf": [
+    [
+     "4 techs",
+     "4 technicians",
+     "four technicians",
+     "team of 4",
+     "team of four",
+     "4 maintenance"
+    ]
+   ]
+  },
+  {
+   "label": "Crisplant S2000, Buschman, Accuglide",
+   "allOf": [
+    [
+     "crisplant"
+    ],
+    [
+     "buschman"
+    ],
+    [
+     "accuglide"
+    ]
+   ]
+  },
+  {
+   "label": "AC motors, VFDs, sensors",
+   "allOf": [
+    [
+     "motors"
+    ],
+    [
+     "vfds",
+     "vfd",
+     "variable frequency drives"
+    ]
+   ]
+  },
+  {
+   "label": "Preventive maintenance program design",
+   "allOf": [
+    [
+     "preventive maintenance",
+     "preventative maintenance",
+     "pm program",
+     "pm programs",
+     "pm planning"
+    ]
+   ]
+  },
+  {
+   "label": "Spare-parts control",
+   "allOf": [
+    [
+     "spare-parts",
+     "spare parts"
+    ]
+   ]
+  },
+  {
+   "label": "Troubleshooting",
+   "allOf": [
+    [
+     "troubleshooting",
+     "troubleshot",
+     "troubleshoot"
+    ]
+   ]
+  },
+  {
+   "label": "TCP/IP / IT support",
+   "allOf": [
+    [
+     "tcp/ip",
+     "it support"
+    ]
+   ]
+  },
+  {
+   "label": "Lockout/Tagout safety training",
+   "allOf": [
+    [
+     "lockout"
+    ]
+   ]
+  }
+ ],
+ "P017-J043": [
+  {
+   "label": "Adobe Illustrator, InDesign, Photoshop",
+   "allOf": [
+    [
+     "illustrator"
+    ],
+    [
+     "indesign"
+    ],
+    [
+     "photoshop"
+    ]
+   ]
+  },
+  {
+   "label": "E-commerce UI",
+   "allOf": [
+    [
+     "e-commerce"
+    ]
+   ]
+  },
+  {
+   "label": "Customizer tool",
+   "allOf": [
+    [
+     "customizer"
+    ]
+   ]
+  },
+  {
+   "label": "Brand visuals",
+   "allOf": [
+    [
+     "brand visuals",
+     "brand"
+    ]
+   ]
+  },
+  {
+   "label": "Licensed kids' art",
+   "allOf": [
+    [
+     "licensed"
+    ]
+   ]
+  },
+  {
+   "label": "Tech packs",
+   "allOf": [
+    [
+     "tech packs",
+     "tech pack"
+    ]
+   ]
+  },
+  {
+   "label": "Print production",
+   "allOf": [
+    [
+     "print production"
+    ]
+   ]
+  },
+  {
+   "label": "Packaging",
+   "allOf": [
+    [
+     "packaging"
+    ]
+   ]
+  },
+  {
+   "label": "Web build skills (HTML/CSS)",
+   "allOf": [
+    [
+     "html",
+     "html/css/php",
+     "html/css"
+    ]
+   ]
+  },
+  {
+   "label": "Photography",
+   "allOf": [
+    [
+     "photography"
+    ]
+   ]
+  }
+ ]
+}

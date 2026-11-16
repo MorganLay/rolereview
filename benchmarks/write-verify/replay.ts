@@ -77,6 +77,83 @@ export function applyReplacements(draft: TailorOutput, replacements: readonly { 
   };
 }
 
+/**
+ * Saved drafts cite the refs from the run that produced them.
+ * The corrected adapter can renumber those refs. Match the old library text
+ * onto the new snapshot before the draft is checked again.
+ */
+export function remapSavedDraft(draft: TailorOutput, snapshot: LibrarySnapshot, libraryText: string): TailorOutput {
+  const oldBullets = new Map<string, string>();
+  const oldSkills = new Map<string, string>();
+  for (const line of libraryText.split("\n")) {
+    const bullet = line.match(/^ {2}(E\d+\.B\d+) id=[^:]+: (.*)$/);
+    if (bullet?.[1] && bullet[2]) oldBullets.set(bullet[1], bullet[2].trim());
+    const skill = line.match(/^ {2}(S\d+) id=[^:]+: (.*)$/);
+    if (skill?.[1] && skill[2]) oldSkills.set(skill[1], skill[2].trim());
+  }
+  const bulletRefs = new Map<string, string>();
+  for (const [ref, text] of oldBullets) {
+    for (const entry of snapshot.entries) {
+      const match = entry.bullets.find((item) => item.text.trim() === text);
+      if (match) bulletRefs.set(ref, match.ref);
+    }
+  }
+  const skillRefs = new Map<string, string>();
+  for (const [ref, name] of oldSkills) {
+    const match = snapshot.skills.find((skill) => skill.name.trim() === name || (skill.category ? `${skill.name} (${skill.category})` === name : false));
+    if (match) skillRefs.set(ref, match.ref);
+  }
+  const known = (ref: string) => snapshot.entries.some((entry) => entry.ref === ref || entry.bullets.some((bullet) => bullet.ref === ref));
+  const grouped = new Map<string, TailorOutput["entries"][number]["bullets"]>();
+  for (const entry of draft.entries) {
+    for (const bullet of entry.bullets) {
+      const refs = bullet.sourceRefs.map((ref) => bulletRefs.get(ref) ?? (known(ref) ? ref : null)).filter((ref): ref is string => ref !== null);
+      const entryRef = refs[0]?.split(".")[0] ?? (known(entry.ref) ? entry.ref : null);
+      if (!entryRef) continue;
+      const list = grouped.get(entryRef) ?? [];
+      list.push({ ...bullet, sourceRefs: refs.length > 0 ? refs : [entryRef] });
+      grouped.set(entryRef, list);
+    }
+  }
+  return {
+    ...draft,
+    entries: [...grouped.entries()].map(([ref, bullets]) => ({ ref, bullets })),
+    skills: draft.skills
+      .map((group) => ({
+        ...group,
+        refs: group.refs
+          .map((ref) => skillRefs.get(ref) ?? (snapshot.skills.some((skill) => skill.ref === ref) ? ref : null))
+          .filter((ref): ref is string => ref !== null),
+      }))
+      .filter((group) => group.refs.length > 0),
+  };
+}
+
+/** A fact that lives on another library entry moves there. It is not deleted. */
+export function moveWrongEntry(
+  draft: TailorOutput,
+  flags: readonly GuardFlag[],
+): { draft: TailorOutput; moved: GuardFlag[] } {
+  const moves = flags.filter((flag) => flag.code === "wrong-entry" && flag.home && !flag.home.startsWith("S") && flag.ref !== "summary");
+  if (moves.length === 0) return { draft, moved: [] };
+  const entries = draft.entries.map((entry) => ({ ...entry, bullets: [...entry.bullets] }));
+  for (const flag of moves) {
+    const homeRef = flag.home ?? "";
+    for (const entry of entries) {
+      entry.bullets = entry.bullets.filter((bullet) => bullet.text.trim() !== flag.text.trim());
+    }
+    let home = entries.find((entry) => entry.ref === homeRef);
+    if (!home) {
+      home = { ref: homeRef, bullets: [] };
+      entries.push(home);
+    }
+    if (!home.bullets.some((bullet) => bullet.text.trim() === flag.text.trim())) {
+      home.bullets.push({ sourceRefs: [homeRef], text: flag.text });
+    }
+  }
+  return { draft: { ...draft, entries }, moved: [...moves] };
+}
+
 /** A line that is still flagged after the one fix call is removed. The summary sentence is removed too. */
 export function dropFlagged(draft: TailorOutput, flags: readonly GuardFlag[]): { draft: TailorOutput; dropped: GuardFlag[] } {
   const summaryFlags = new Set(flags.filter((flag) => flag.ref === "summary").map((flag) => flag.text.trim()));

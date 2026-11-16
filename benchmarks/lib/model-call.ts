@@ -40,8 +40,11 @@ export async function callTailor(input: {
   schema: z.ZodType;
   normalize?: (value: unknown) => unknown;
   refId: string;
+  /** IMPORT uses the same Sonnet settings as TAILOR. The row records which prompt it was. */
+  task?: "TAILOR" | "IMPORT";
 }): Promise<SavedCall> {
-  const task = AI_TASKS.TAILOR;
+  const taskName = input.task ?? "TAILOR";
+  const task = AI_TASKS[taskName];
   const client = getAnthropic();
   const started = Date.now();
   let usage: TokenUsage = {
@@ -85,7 +88,7 @@ export async function callTailor(input: {
   await db.aiCall.create({
     data: {
       userId: input.userId,
-      kind: "TAILOR",
+      kind: taskName,
       model: task.model,
       success: ok,
       errorCode: ok ? null : code,

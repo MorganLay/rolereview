@@ -209,12 +209,16 @@ export async function runPaidCases(input: { caseIds: string[]; maxUsd: number })
   console.log(`Saved benchmarks/results/${runId}. Total $${spent.toFixed(4)} of $${input.maxUsd.toFixed(2)}.`);
 }
 
-async function runCase(input: {
+export async function runCase(input: {
   testCase: BenchmarkCase;
   userId: string;
   maxUsd: number;
   spent: () => number;
   add: (usd: number) => void;
+  /** When set, the tailor uses this library instead of the adapter. The rest of the path is the same. */
+  library?: { snapshot: ReturnType<typeof prepareEvidence>["adapted"]["snapshot"]; libraryText: string };
+  /** Saved direct resumes are reused. The baseline model is not called. */
+  skipBaseline?: boolean;
 }): Promise<{
   costUsd: number;
   report: string;
@@ -233,8 +237,8 @@ async function runCase(input: {
   const prepared = prepareEvidence(input.testCase);
   const evidence = prepared.evidence;
   const adapted = prepared.adapted;
-  const snapshot = adapted.snapshot;
-  const libraryText = prepared.libraryText;
+  const snapshot = input.library?.snapshot ?? adapted.snapshot;
+  const libraryText = input.library?.libraryText ?? prepared.libraryText;
   const calls: CallCost[] = [];
   const trace: PipelineTrace = {
     import:
@@ -537,7 +541,7 @@ async function runCase(input: {
   }
 
   let baseline = "Baseline was not called.";
-  if (input.spent() + CALL_RESERVE_USD <= input.maxUsd) {
+  if (!input.skipBaseline && input.spent() + CALL_RESERVE_USD <= input.maxUsd) {
     const prompt = readFileSync(path.join(benchmarkRoot(), "prompts", "direct-baseline-v1.md"), "utf8")
       .split("\n")
       .slice(2)
