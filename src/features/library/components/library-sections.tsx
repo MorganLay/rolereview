@@ -12,6 +12,8 @@ import { useUndoDelete } from "@/lib/use-undo-delete";
 import { deleteEntry, reorderEntry } from "../actions";
 import type { LibraryFocus } from "../health";
 import type { LibraryEntry } from "../types";
+import type { AnswerOriginView } from "@/features/questions/view";
+
 import type { WordingView } from "../wording";
 import { DeleteEntryDialog } from "./delete-entry-dialog";
 import { EntryCard } from "./entry-card";
@@ -21,6 +23,7 @@ type LibrarySectionsProps = {
   entries: LibraryEntry[];
   skills: readonly string[];
   wordings: readonly WordingView[];
+  origins?: readonly AnswerOriginView[];
   kinds?: readonly (typeof ENTRY_KINDS)[number][];
   focus?: LibraryFocus | null;
 };
@@ -31,6 +34,7 @@ export function LibrarySections({
   entries,
   skills,
   wordings,
+  origins = [],
   kinds = ENTRY_KINDS,
   focus = null,
 }: LibrarySectionsProps) {
@@ -112,6 +116,7 @@ export function LibrarySections({
                     entry={entry}
                     skills={skills}
                     wordings={wordings}
+                    origins={origins}
                     canMoveUp={index > 0}
                     canMoveDown={index < section.length - 1}
                     moving={movingId !== null}

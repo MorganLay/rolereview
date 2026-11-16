@@ -58,6 +58,10 @@ export async function loadAccountExport(
     referredBy,
     feedback,
     testimonials,
+    jobQuestionSets,
+    jobQuestions,
+    answerTopics,
+    evidenceOrigins,
   ] = await Promise.all([
     db.user.findFirst({ where: { id: userId } }),
     db.entry.findMany({ where, orderBy: { id: "asc" } }),
@@ -81,6 +85,10 @@ export async function loadAccountExport(
     db.referral.findFirst({ where: { referredUserId: userId } }),
     db.feedback.findMany({ where, orderBy: { id: "asc" } }),
     db.testimonial.findMany({ where, orderBy: { id: "asc" } }),
+    db.jobQuestionSet.findMany({ where, orderBy: { id: "asc" } }),
+    db.jobQuestion.findMany({ where, orderBy: { id: "asc" } }),
+    db.answerTopic.findMany({ where, orderBy: { id: "asc" } }),
+    db.evidenceOrigin.findMany({ where, orderBy: { id: "asc" } }),
   ]);
   if (!user) return null;
 
@@ -106,6 +114,10 @@ export async function loadAccountExport(
     referredBy,
     feedback,
     testimonials,
+    jobQuestionSets,
+    jobQuestions,
+    answerTopics,
+    evidenceOrigins,
   };
 
   return buildAccountExport({ exportedAt, user, collections });

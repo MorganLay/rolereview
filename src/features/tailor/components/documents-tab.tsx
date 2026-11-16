@@ -132,6 +132,7 @@ export function DocumentsTab({
             </p>
           ))}
           <Button
+            id="tailor-resume"
             type="button"
             disabled={reasons.length > 0}
             onClick={() => setOpen(true)}

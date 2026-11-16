@@ -26,6 +26,10 @@ export const ACCOUNT_EXPORT_COLLECTIONS = [
   "referralsMade",
   "feedback",
   "testimonials",
+  "jobQuestionSets",
+  "jobQuestions",
+  "answerTopics",
+  "evidenceOrigins",
 ] as const;
 
 export type AccountExportCollection = (typeof ACCOUNT_EXPORT_COLLECTIONS)[number];

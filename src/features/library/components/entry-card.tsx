@@ -16,6 +16,9 @@ import { cn } from "@/lib/utils";
 
 import type { LibraryFocus } from "../health";
 import { findOverlappingBullets } from "../overlap";
+import { AnswerSource } from "@/features/questions/components/answer-source";
+import type { AnswerOriginView } from "@/features/questions/view";
+
 import type { LibraryEntry } from "../types";
 import type { WordingView } from "../wording";
 import { BulletList } from "./bullet-list";
@@ -25,6 +28,7 @@ type EntryCardProps = {
   entry: LibraryEntry;
   skills: readonly string[];
   wordings: readonly WordingView[];
+  origins?: readonly AnswerOriginView[];
   canMoveUp: boolean;
   canMoveDown: boolean;
   moving: boolean;
@@ -50,6 +54,7 @@ export function EntryCard({
   entry,
   skills,
   wordings,
+  origins = [],
   canMoveUp,
   canMoveDown,
   moving,
@@ -99,6 +104,13 @@ export function EntryCard({
             >
               {entry.title}
             </h3>
+            {origins.find((origin) => origin.entryId === entry.id && !origin.bulletId) ? (
+              <AnswerSource
+                origin={
+                  origins.find((origin) => origin.entryId === entry.id && !origin.bulletId) as AnswerOriginView
+                }
+              />
+            ) : null}
             {entry.bullets.length > 0 ? (
               <span className="text-[0.75rem] text-slate tabular-nums">
                 {copy.bulletCount(entry.bullets.length)}
@@ -239,6 +251,7 @@ export function EntryCard({
             bullets={entry.bullets}
             skills={skills}
             wordings={wordings}
+            origins={origins}
             focusBulletIds={focused ? focus?.bulletIds : undefined}
           />
           <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line/80 pt-3">

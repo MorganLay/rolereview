@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { strings } from "@/copy/strings";
 
+import type { AnswerOriginView } from "@/features/questions/view";
+
 import type { LibraryEntry, LibrarySkill } from "../types";
 import type { WordingView } from "../wording";
 import { LibrarySections } from "./library-sections";
@@ -17,6 +19,7 @@ type LibraryEmptyProps = {
   skills: LibrarySkill[];
   skillNames: readonly string[];
   wordings?: readonly WordingView[];
+  origins?: readonly AnswerOriginView[];
 };
 
 const copy = strings.library.empty;
@@ -27,14 +30,15 @@ export function LibraryEmpty({
   skills,
   skillNames,
   wordings = [],
+  origins = [],
 }: LibraryEmptyProps) {
   const [manual, setManual] = useState(false);
 
   if (manual) {
     return (
       <>
-        <LibrarySections entries={entries} skills={skillNames} wordings={wordings} />
-        <SkillList skills={skills} />
+        <LibrarySections entries={entries} skills={skillNames} wordings={wordings} origins={origins} />
+        <SkillList skills={skills} origins={origins} />
       </>
     );
   }

@@ -122,7 +122,7 @@ export const privacyCopy = {
           ],
           [
             text(
-              "Experience library. Roles, education, projects, dates, employers, bullets, skills, and wording you save or accept.",
+              "Experience library. Roles, education, projects, dates, employers, bullets, skills, wording you save or accept, and a line you accept from an answer, with the question that produced it.",
             ),
           ],
           [
@@ -132,7 +132,7 @@ export const privacyCopy = {
           ],
           [
             text(
-              "Jobs and the search around them. Posting text, title, company, location, a URL you save, salary figures, notes, status, interviews, contacts, reminders, and offers.",
+              "Jobs and the search around them. Posting text, title, company, location, a URL you save, salary figures, notes, status, interviews, contacts, reminders, offers, and questions prepared for a posting, including a yes, a not-yet, and the words you type.",
             ),
           ],
           [
@@ -247,7 +247,7 @@ export const privacyCopy = {
       blocks: [
         paragraph(
           text(
-            "The model is Anthropic’s Claude, called through Anthropic’s commercial API. RoleRefine uses it for resume import, job analysis, resume tailoring, wording suggestions, and cover letters. The public keyword checker uses it for the job posting only.",
+            "The model is Anthropic’s Claude, called through Anthropic’s commercial API. RoleRefine uses it for resume import, job analysis, resume tailoring, wording suggestions, cover letters, and questions about a posting. The public keyword checker uses it for the job posting only.",
           ),
         ),
         paragraph(text("What is sent depends on the step:")),
@@ -270,6 +270,11 @@ export const privacyCopy = {
           ],
           [
             text("Wording. The library context for a headline, a summary, or a bullet."),
+          ],
+          [
+            text(
+              "Questions for a job. The library, the posting, its requirements, and answers you already gave. A question is not saved into the library until you accept a line.",
+            ),
           ],
         ),
         paragraph(
@@ -480,7 +485,7 @@ export const privacyCopy = {
             text("Access. "),
             link("/settings?tab=data", "Settings → Data"),
             text(
-              " downloads rolerefine-export.json. The file includes the profile, experience entries, skills, jobs, application history, generated resumes and letters, contacts, reminders, offers, and AI usage metadata. It does not include waitlist records, the email send log, Stripe’s payment records, or saved wording.",
+              " downloads rolerefine-export.json. The file includes the profile, experience entries, skills, jobs, application history, generated resumes and letters, contacts, reminders, offers, questions and answers for a job, and AI usage metadata. It does not include waitlist records, the email send log, Stripe’s payment records, or saved wording.",
             ),
           ],
           [

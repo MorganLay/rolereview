@@ -462,6 +462,14 @@ T10.2 draws the funnel for that same window. A job with `appliedAt` in the windo
 | Free-tool / public-form rate limit | `FreeToolRun(ipHash, tool, createdAt)` (`KEYWORD_CHECKER`, `PUBLIC_LEAD`, `MAGIC_LINK`) |
 | Email de-duplication | `EmailLog(recipientKey, template, refKey)` unique |
 
+## Job questions
+
+`JobQuestionSet` is one cached set per job (`jobId` unique). `EMPTY` is a cache and the page shows nothing. `FAILED` is not a cache; Try again generates again. `GENERATING` is the in-flight lock. `libraryRevision` is a hash of entry, bullet, and skill ids so Refresh questions appears when the library changed and nothing has been answered.
+
+`JobQuestion` is one hypothesis. `topicKey` is unique per job. A yes stores the person's words in `detail`. A not-yet stores no words and is remembered on `AnswerTopic` (`declined` true, unique per user and topic). Skip deletes that topic only when this job created it. `draftText` is a proposal until the person accepts it.
+
+`EvidenceOrigin` records a saved line: `source` `"answer"`, the question, the answer, the topic, the kind, and the job. One of `bulletId`, `skillId`, or `entryId` is set. Certification answers use `entryId` only, so a role can still have several bullet origins.
+
 ## Migrations
 
 1. `init`: `npx prisma migrate dev --name init` (creates the original 25 tables).
@@ -484,8 +492,9 @@ T10.2 draws the funnel for that same window. A job with `appliedAt` in the windo
    ```
    **Every table added later needs the same line in its migration.**
 3. `20261109074623_wording_variants`: `WordingVariant`, its enums, indexes, and row level security. Canonical bullet, headline, and summary text stay on their existing columns. `jobId` marks wording for one posting. `isDefault` is the reusable headline or summary. `sourceRefs` stores stable library ids.
-4. Never edit an applied migration.
-5. Changing a JSON shape: bump `schemaVersion` and handle old versions on parse, or write a data migration script.
+4. `20261116044053_job_questions`: `JobQuestionSet`, `JobQuestion`, `AnswerTopic`, `EvidenceOrigin`, and `AiCallKind.JOB_QUESTIONS` (not a metered kind). Each new table has `userId` and cascades with the user. `AnswerTopic.jobId` and `EvidenceOrigin.jobId` use `SetNull` so a deleted job does not forget a no or the question text. Row level security is enabled with no policies, the same as every earlier table: the Supabase Data API can read nothing, and Prisma connects as the postgres role, which bypasses RLS.
+5. Never edit an applied migration.
+6. Changing a JSON shape: bump `schemaVersion` and handle old versions on parse, or write a data migration script.
 
 ## Seed data (`prisma/seed.ts`, dev only)
 

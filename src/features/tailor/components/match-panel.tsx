@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -51,6 +52,7 @@ export function MatchPanel({
   readOnly = false,
   revealCount,
   headingLevel = "h2",
+  questionLinks,
 }: {
   content: ResumeContent;
   snapshot: LibrarySnapshot;
@@ -67,6 +69,8 @@ export function MatchPanel({
   /** Requirements at this index and after stay pending. Omit to show every verdict. */
   revealCount?: number;
   headingLevel?: "h2" | "h3";
+  /** Open questions for a partial or missing requirement. */
+  questionLinks?: Readonly<Record<string, string>>;
 }) {
   const [adding, setAdding] = useState<Requirement | null>(null);
   const scoreId = useId();
@@ -171,6 +175,16 @@ export function MatchPanel({
                     >
                       {copy.include}
                     </Button>
+                  ) : null}
+                  {!pending &&
+                  questionLinks?.[requirement.id] &&
+                  (placement.state === "needs_review" || placement.state === "no_evidence") ? (
+                    <Link
+                      href={questionLinks[requirement.id] ?? "#"}
+                      className="mt-1 w-fit text-sm text-pine underline-offset-4 hover:underline"
+                    >
+                      {strings.jobs.questions.answerAbout}
+                    </Link>
                   ) : null}
                   {!readOnly && placement.state === "no_evidence" && !pending ? (
                     <Button

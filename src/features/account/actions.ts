@@ -127,6 +127,7 @@ export async function deleteAccount(input: unknown): Promise<ActionResult<never>
     }
   }
 
+  // Cascades to the library, jobs, question sets, answers, and answer provenance.
   const deleted = await db.user.deleteMany({ where: { id: user.id } });
   if (deleted.count === 0) return fail("NOT_FOUND");
 

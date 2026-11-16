@@ -4,9 +4,11 @@ import { connection } from "next/server";
 
 import { strings } from "@/copy/strings";
 
+import { openQuestionLinks } from "@/features/questions/queries";
 import { ResumeEditor } from "@/features/tailor/components/resume-editor";
 import { getResumeWorkspace } from "@/features/tailor/queries";
 import { requireUser } from "@/lib/auth";
+import { jobQuestionsEnabled } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: strings.pages.resumeWorkspace.title,
@@ -26,10 +28,13 @@ export default async function ResumeWorkspacePage({
   const user = await requireUser();
   const workspace = await getResumeWorkspace(user.id, user.plan, jobId, resumeId);
   if (!workspace) notFound();
+  const questionLinks = jobQuestionsEnabled()
+    ? await openQuestionLinks(user.id, jobId)
+    : undefined;
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6 xl:max-w-none">
-      <ResumeEditor workspace={workspace} />
+      <ResumeEditor workspace={workspace} questionLinks={questionLinks} />
     </div>
   );
 }

@@ -76,7 +76,13 @@ type Phase = "saving" | "saved" | "error";
 type SnapshotEntry = LibrarySnapshot["entries"][number];
 type Direction = "up" | "down";
 
-export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) {
+export function ResumeEditor({
+  workspace,
+  questionLinks,
+}: {
+  workspace: ResumeWorkspaceData;
+  questionLinks?: Readonly<Record<string, string>>;
+}) {
   const router = useRouter();
   const [content, setContent] = useState(workspace.content);
   const [frozen, setFrozen] = useState(workspace.frozen);
@@ -902,6 +908,7 @@ export function ResumeEditor({ workspace }: { workspace: ResumeWorkspaceData }) 
             jobId={workspace.jobId}
             onEvidence={showEvidence}
             onInclude={frozen ? undefined : includeInResume}
+            questionLinks={questionLinks}
           />
         </aside>
       </div>

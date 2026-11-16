@@ -5,6 +5,8 @@ import { connection } from "next/server";
 import { strings } from "@/copy/strings";
 
 import { JobResult } from "@/features/jobs/components/job-result";
+import { getQuestionCard } from "@/features/questions/queries";
+import { jobQuestionsEnabled } from "@/lib/env";
 import type { JobSectionTab } from "@/features/jobs/components/job-sections";
 import { analysesRemaining, getJob } from "@/features/jobs/queries";
 import { getJobLetters } from "@/features/letters/queries";
@@ -54,6 +56,7 @@ export default async function JobDetailPage({
       getJobOffer(user.id, jobId),
     ]);
   if (!job) notFound();
+  const questions = jobQuestionsEnabled() ? await getQuestionCard(user.id, jobId) : null;
   const initialTab = jobTab(query.tab, documents.pending || letters.pending);
 
   return (
@@ -82,6 +85,7 @@ export default async function JobDetailPage({
           hasOffer: offer !== null,
           tab: initialTab,
         })}
+        questions={questions}
       />
     </div>
   );

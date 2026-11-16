@@ -55,6 +55,9 @@ const serverSchema = z.object({
   CRON_SECRET: z.string().min(1).optional(),
 
   SEED_USER_ID: z.string().min(1).optional(),
+
+  /** "1" shows Questions for this job. Unset or any other value keeps it off. */
+  JOB_QUESTIONS_ENABLED: z.string().optional(),
 });
 
 const clientSchema = z.object({
@@ -94,6 +97,7 @@ function loadEnv(): Env {
     IP_HASH_SALT: readOptional("IP_HASH_SALT"),
     CRON_SECRET: readOptional("CRON_SECRET"),
     SEED_USER_ID: readOptional("SEED_USER_ID"),
+    JOB_QUESTIONS_ENABLED: readOptional("JOB_QUESTIONS_ENABLED"),
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
@@ -124,3 +128,8 @@ function loadEnv(): Env {
 }
 
 export const env = loadEnv();
+
+/** Questions for this job stay hidden until this is exactly "1". */
+export function jobQuestionsEnabled(): boolean {
+  return env.JOB_QUESTIONS_ENABLED === "1";
+}

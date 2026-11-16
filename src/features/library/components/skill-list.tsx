@@ -20,17 +20,21 @@ import {
   hasDuplicateSkill,
   resolveCategory,
 } from "../skill-state";
+import { AnswerSource } from "@/features/questions/components/answer-source";
+import type { AnswerOriginView } from "@/features/questions/view";
+
 import type { LibrarySkill } from "../types";
 
 type SkillListProps = {
   skills: LibrarySkill[];
+  origins?: readonly AnswerOriginView[];
 };
 
 type Editor = { mode: "add" } | { mode: "edit"; id: string };
 
 const copy = strings.library.skills;
 
-export function SkillList({ skills }: SkillListProps) {
+export function SkillList({ skills, origins = [] }: SkillListProps) {
   const [optimisticSkills, addOptimistic] = useOptimistic(skills, applySkillAction);
   const [editor, setEditor] = useState<Editor | null>(null);
   const [name, setName] = useState("");
@@ -251,7 +255,7 @@ export function SkillList({ skills }: SkillListProps) {
                       {form}
                     </li>
                   ) : (
-                    <li key={skill.id} className="max-w-full">
+                    <li key={skill.id} className="flex max-w-full flex-col gap-1">
                       <SkillChip
                         skill={skill}
                         canMoveUp={index > 0}
@@ -261,6 +265,11 @@ export function SkillList({ skills }: SkillListProps) {
                         onDelete={() => onDelete(skill.id)}
                         onMove={(direction) => onMove(skill.id, direction)}
                       />
+                      {origins.find((origin) => origin.skillId === skill.id) ? (
+                        <AnswerSource
+                          origin={origins.find((origin) => origin.skillId === skill.id) as AnswerOriginView}
+                        />
+                      ) : null}
                     </li>
                   ),
                 )}

@@ -964,6 +964,19 @@ export const strings = {
       body: "Import a resume, or add roles yourself. What you save here is the only source for a tailored resume.",
       addManually: "Add manually",
     },
+    fromAnswer: {
+      tag: "From your answer",
+      edit: "Edit answer",
+      question: "Question",
+      answer: "Your answer",
+      notYet: "Not yet",
+      save: "Update answer",
+      accept: "Accept line",
+      discard: "Keep the current line",
+      dropped: "We couldn't write this from your answer. Add a little more detail.",
+      removed: "Removed from your library.",
+      saved: "Saved to your library.",
+    },
     profile: {
       edit: "Edit profile",
       title: "Edit profile",
@@ -1444,6 +1457,12 @@ export const strings = {
         entryLocation: "Shortened an entry location to fit.",
         nothing: "Nothing on this resume could be placed. Try pasting the text.",
         keptLevel: "Kept a level the resume stated on a skill, such as basic or coursework.",
+        careerSplit: "Separated jobs that were written in one paragraph.",
+        movedDuty: "Moved a duty onto the job it was written under.",
+        omittedRole: "Kept a job the resume listed on its own entry.",
+        ambiguousRole: "Kept mixed role text together because the resume did not separate the jobs.",
+        inventedLine: "Left out a line that added a number the resume did not state.",
+        organizationUnknown: "Left out an employer the resume did not name.",
       },
     },
     health: {
@@ -1728,6 +1747,60 @@ export const strings = {
       followUp: "Log follow-up / update status",
       interview: "Prepare for next interview",
       decision: "Review decision date",
+    },
+    questions: {
+      title: (count: number) =>
+        count === 1
+          ? "1 question could strengthen this resume"
+          : `${count} questions could strengthen this resume`,
+      body: "About 3 minutes. Your answers are saved to your library.",
+      start: "Answer questions",
+      skip: "Skip and tailor now",
+      added: (count: number) =>
+        count === 1
+          ? "1 answer added to your library."
+          : `${count} answers added to your library.`,
+      review: "Review",
+      reviewReady: (count: number) =>
+        count === 1 ? "1 answer is ready to review." : `${count} answers are ready to review.`,
+      preparing: "Preparing questions",
+      preparingHint: "This usually takes a few seconds.",
+      stages: ["Reading the posting and your library.", "Choosing questions that could change this resume."],
+      failed: "We couldn't prepare questions for this job. You can still tailor your resume.",
+      retry: "Try again",
+      refresh: "Refresh questions",
+      progress: (index: number, count: number) => `${index} of ${count}`,
+      about: (title: string) => `About: ${title}`,
+      yes: "Yes",
+      notYet: "Not yet",
+      skipOne: "Skip",
+      prompt: "What did you do? A sentence or two is enough.",
+      tip: "Tip: name the tool, the size, or what changed.",
+      honesty:
+        "Say yes only to work you did. You should be able to talk about every line in an interview.",
+      back: "Back",
+      next: "Next question",
+      reviewAction: "Review answers",
+      listLabel: "Questions",
+      step: (index: number) => `Question ${index}`,
+      addTitle: "Add to your library",
+      destination: "Add to",
+      fromAnswer: "From your answer",
+      accept: "Accept",
+      edit: "Edit",
+      discard: "Discard",
+      dropped: "We couldn't write this from your answer. Add a little more detail.",
+      updateAnswer: "Update answer",
+      followUp: "One more detail",
+      continue: "Continue",
+      saveTailor: (count: number) =>
+        count === 1 ? "Save 1 line and tailor resume" : `Save ${count} lines and tailor resume`,
+      saveOnly: "Save without tailoring",
+      saved: (count: number) =>
+        count === 1 ? "1 line saved to your library." : `${count} lines saved to your library.`,
+      noneAccepted: "Choose at least one line to save.",
+      answerAbout: "Answer a question about this",
+      detailNeeded: "Add a sentence or two.",
     },
     documents: {
       tabsLabel: "Job sections",

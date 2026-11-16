@@ -10,6 +10,8 @@ import { ENTRY_KINDS } from "@/features/library/schemas";
 import { libraryHealth } from "../health";
 import type { LibraryFocus, ProfileFieldId } from "../health";
 import type { Library } from "../types";
+import type { AnswerOriginView } from "@/features/questions/view";
+
 import type { WordingView } from "../wording";
 import { HealthCard } from "./health-card";
 import { LibraryEmpty } from "./library-empty";
@@ -22,9 +24,11 @@ const REST_KINDS = ENTRY_KINDS.filter((kind) => kind !== "EXPERIENCE");
 export function LibraryScreen({
   library,
   wordings,
+  origins = [],
 }: {
   library: Library;
   wordings: readonly WordingView[];
+  origins?: readonly AnswerOriginView[];
 }) {
   const [focus, setFocus] = useState<{ field: ProfileFieldId; token: number } | null>(null);
   const [libraryFocus, setLibraryFocus] = useState<LibraryFocus | null>(null);
@@ -85,6 +89,7 @@ export function LibraryScreen({
           skills={library.skills}
           skillNames={skillNames}
           wordings={wordings}
+          origins={origins}
         />
       ) : (
         <>
@@ -92,6 +97,7 @@ export function LibraryScreen({
             entries={library.entries}
             skills={skillNames}
             wordings={wordings}
+            origins={origins}
             kinds={["EXPERIENCE"]}
             focus={libraryFocus}
           />
@@ -99,10 +105,11 @@ export function LibraryScreen({
             entries={library.entries}
             skills={skillNames}
             wordings={wordings}
+            origins={origins}
             kinds={REST_KINDS}
             focus={libraryFocus}
           />
-          <SkillList skills={library.skills} />
+          <SkillList skills={library.skills} origins={origins} />
         </>
       )}
     </div>

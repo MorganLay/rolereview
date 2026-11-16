@@ -34,6 +34,10 @@ describe("buildAccountExport", () => {
     expect(body.referredBy).toBeNull();
     expect(body.entries).toEqual([]);
     expect(body.testimonials).toEqual([]);
+    expect(body.jobQuestionSets).toEqual([]);
+    expect(body.jobQuestions).toEqual([]);
+    expect(body.answerTopics).toEqual([]);
+    expect(body.evidenceOrigins).toEqual([]);
     expect(body).not.toHaveProperty("leads");
     expect(body).not.toHaveProperty("emailLogs");
   });

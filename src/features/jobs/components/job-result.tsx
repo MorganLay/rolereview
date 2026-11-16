@@ -10,6 +10,8 @@ import { TabsContent } from "@/components/ui/tabs";
 import { strings } from "@/copy/strings";
 import { LettersSection } from "@/features/letters/components/letters-section";
 import type { JobLetters } from "@/features/letters/status";
+import { QuestionsCard } from "@/features/questions/components/questions-card";
+import type { QuestionCardPhase } from "@/features/questions/view";
 import { DocumentsTab, TailorPoll } from "@/features/tailor/components/documents-tab";
 import type { JobDocuments } from "@/features/tailor/status";
 import { ContactsTab } from "@/features/tracking/components/contacts-tab";
@@ -62,6 +64,7 @@ type JobResultProps = {
   reminderToday: string;
   offer: OfferView | null;
   showOffer: boolean;
+  questions: QuestionCardPhase | null;
 };
 
 export function JobResult({
@@ -84,6 +87,7 @@ export function JobResult({
   reminderToday,
   offer,
   showOffer,
+  questions,
 }: JobResultProps) {
   const ready = job.analysisStatus === "READY";
   const latestReadyResume = newestReadyResume(
@@ -233,6 +237,7 @@ export function JobResult({
           />
         </TabsContent>
         <TabsContent value="documents" className="flex flex-col gap-8 pt-4">
+          <QuestionsCard jobId={job.id} phase={questions} />
           <DocumentsTab
             jobId={job.id}
             analysisReady={ready}

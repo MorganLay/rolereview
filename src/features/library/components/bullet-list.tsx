@@ -18,6 +18,9 @@ import { createBullet, deleteBullet, reorderBullet, updateBullet } from "../acti
 import { applyBulletAction } from "../bullet-state";
 import { bulletOpportunity } from "../opportunity";
 import { bulletRole, bulletStrength } from "../strength";
+import { AnswerSource } from "@/features/questions/components/answer-source";
+import type { AnswerOriginView } from "@/features/questions/view";
+
 import type { LibraryBullet } from "../types";
 import type { WordingView } from "../wording";
 import { BulletAssist } from "./bullet-assist";
@@ -29,6 +32,7 @@ type BulletListProps = {
   bullets: LibraryBullet[];
   skills: readonly string[];
   wordings: readonly WordingView[];
+  origins?: readonly AnswerOriginView[];
   focusBulletIds?: readonly string[];
 };
 
@@ -40,6 +44,7 @@ export function BulletList({
   bullets,
   skills,
   wordings,
+  origins = [],
   focusBulletIds,
 }: BulletListProps) {
   const [optimisticBullets, addOptimistic] = useOptimistic(bullets, applyBulletAction);
@@ -245,6 +250,13 @@ export function BulletList({
                         <span className="sr-only">{copy.edit}: </span>
                         {bullet.text}
                       </button>
+                      {origins.find((origin) => origin.bulletId === bullet.id) ? (
+                        <AnswerSource
+                          origin={
+                            origins.find((origin) => origin.bulletId === bullet.id) as AnswerOriginView
+                          }
+                        />
+                      ) : null}
                       <div className="flex w-full shrink-0 items-center justify-between gap-1 sm:ml-auto sm:w-[9.5rem] sm:justify-end">
                         <StrengthMeter text={bullet.text} skills={skills} role={role} />
                         <RowActions

@@ -6,6 +6,8 @@ import { strings } from "@/copy/strings";
 import { LibraryScreen } from "@/features/library/components/library-screen";
 import { getLibrary } from "@/features/library/queries";
 import { listWordings } from "@/features/library/wording-store";
+import { listAnswerOrigins } from "@/features/questions/queries";
+import { jobQuestionsEnabled } from "@/lib/env";
 import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -24,6 +26,7 @@ export default async function LibraryPage() {
   const library = await getLibrary(user.id);
   if (!library) notFound();
   const wordings = await listWordings(user.id);
+  const origins = jobQuestionsEnabled() ? await listAnswerOrigins(user.id) : [];
 
-  return <LibraryScreen library={library} wordings={wordings} />;
+  return <LibraryScreen library={library} wordings={wordings} origins={origins} />;
 }

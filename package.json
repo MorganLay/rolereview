@@ -22,6 +22,7 @@
     "dev:scenario": "tsx scripts/dev-scenario.ts",
     "gis:beta": "tsx --conditions=react-server scripts/gis-beta.ts",
     "evals": "tsx --conditions=react-server evals/run.ts",
+    "evals:questions": "tsx --conditions=react-server evals/questions/live.ts",
     "demo:fixtures": "tsx --conditions=react-server evals/demo-fixtures.ts",
     "email:dev": "email dev --dir src/lib/email/templates",
     "postinstall": "prisma generate"

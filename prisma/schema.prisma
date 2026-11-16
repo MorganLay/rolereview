@@ -193,6 +193,36 @@ enum AiCallKind {
   PREP_KIT
   BULLET_COACH
   FREE_TOOL
+  /// Questions for one job. Not metered. Does not use the tailor allowance.
+  JOB_QUESTIONS
+}
+
+enum JobQuestionKind {
+  CONFIRM
+  DETAIL
+  SCALE
+  OUTCOME
+  ROLE
+}
+
+enum JobQuestionStatus {
+  OPEN
+  YES
+  NOT_YET
+  SKIPPED
+}
+
+enum QuestionDraftDestination {
+  BULLET
+  SKILL
+  CERTIFICATION
+}
+
+enum JobQuestionSetStatus {
+  GENERATING
+  READY
+  EMPTY
+  FAILED
 }
 
 enum CreditReason {
@@ -293,6 +323,10 @@ model User {
   referredBy      Referral?         @relation("Referred")
   feedback        Feedback[]
   testimonials    Testimonial[]
+  jobQuestionSets JobQuestionSet[]
+  jobQuestions    JobQuestion[]
+  answerTopics    AnswerTopic[]
+  evidenceOrigins EvidenceOrigin[]
 }
 
 // ═════════════════════════════ EXPERIENCE LIBRARY ═════════════════════════════
@@ -313,8 +347,10 @@ model Entry {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bullets Bullet[]
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bullets          Bullet[]
+  jobQuestions     JobQuestion[]
+  evidenceOrigins  EvidenceOrigin[]
 
   @@index([userId, kind, sortOrder])
 }
@@ -331,9 +367,10 @@ model Bullet {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  entry    Entry            @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  wordings WordingVariant[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entry           Entry            @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  wordings        WordingVariant[]
+  evidenceOrigin  EvidenceOrigin?
 
   @@index([entryId, sortOrder])
   @@index([userId])
@@ -379,7 +416,8 @@ model Skill {
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  evidenceOrigin EvidenceOrigin?
 
   @@unique([userId, nameKey])
   @@index([userId, category])
@@ -462,10 +500,114 @@ model Job {
   offer                Offer?
   prepKits             PrepKit[]
   wordings             WordingVariant[]
+  questionSet          JobQuestionSet?
+  questions            JobQuestion[]
+  answerTopics         AnswerTopic[]
+  evidenceOrigins      EvidenceOrigin[]
 
   @@index([userId, status, boardOrder])
   @@index([userId, archivedAt, updatedAt])
   @@index([userId, appliedAt])
+}
+
+/// One cached question set for a job. EMPTY is a real cache. FAILED is not:
+/// the retry link generates again. GENERATING is the in-flight lock.
+model JobQuestionSet {
+  id              String               @id @default(uuid()) @db.Uuid
+  userId          String               @db.Uuid
+  jobId           String               @unique @db.Uuid
+  status          JobQuestionSetStatus
+  libraryRevision String
+  savedAt         DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  questions JobQuestion[]
+
+  @@index([userId])
+}
+
+/// A hypothesis for one posting. Nothing here is library evidence until the person accepts a draft.
+model JobQuestion {
+  id               String                     @id @default(uuid()) @db.Uuid
+  userId           String                     @db.Uuid
+  jobId            String                     @db.Uuid
+  setId            String                     @db.Uuid
+  requirementId    String
+  entryId          String?                    @db.Uuid
+  kind             JobQuestionKind
+  question         String                     @db.Text
+  why              String
+  subject          String
+  topicKey         String
+  position         Int
+  status           JobQuestionStatus          @default(OPEN)
+  detail           String?                    @db.Text
+  followUp         String?                    @db.Text
+  followUpDetail   String?                    @db.Text
+  draftText        String?                    @db.Text
+  draftDestination QuestionDraftDestination?
+  draftDropped     Boolean                    @default(false)
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job   Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  set   JobQuestionSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  entry Entry?         @relation(fields: [entryId], references: [id], onDelete: SetNull)
+
+  @@unique([jobId, topicKey])
+  @@index([userId, topicKey])
+  @@index([setId, position])
+}
+
+/// Cross-job memory. Written for Yes and Not yet. Skip does not write a row.
+model AnswerTopic {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  topicKey  String
+  declined  Boolean
+  jobId     String?  @db.Uuid
+  question  String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, topicKey])
+  @@index([userId])
+}
+
+/// Provenance for a library line saved from a confirmed answer.
+/// source is "answer". Deleting the line removes this row. Deleting the job keeps the question text.
+model EvidenceOrigin {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  bulletId   String?  @unique @db.Uuid
+  skillId    String?  @unique @db.Uuid
+  entryId    String?  @unique @db.Uuid
+  source     String
+  question   String   @db.Text
+  answer     String   @db.Text
+  topicKey   String
+  kind       JobQuestionKind
+  jobId      String?  @db.Uuid
+  questionId String?  @db.Uuid
+  answeredAt DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bullet Bullet? @relation(fields: [bulletId], references: [id], onDelete: Cascade)
+  skill  Skill?  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  entry  Entry?  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  job    Job?    @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([userId, jobId])
 }
 
 /// Timeline entry. Auto-created by actions (status change, tailored resume, interview…) or added manually.
