@@ -4,6 +4,10 @@ Notes from using the live site. Add new ones under **Open**. One note per entry.
 
 ## Open
 
+**Screen:** Admin, and the tailoring checks on the experiment branches.
+**What I did:** Moved the current app onto main so the live snapshot matches this work. Admin is still the placeholder. The tailoring benchmark, the write-then-verify waves, and the acceptance checks are on `bench/write-verify` and `feat/job-questions`.
+**What felt wrong:** I have not gone back through the admin dashboard or those tailoring tests. I want that review later. When this becomes a task, admin is still Phase 20, and the boxes in `docs/12-TAILORING-ACCEPTANCE.md` stay open until someone reads the saved runs.
+
 **Screen:** Jobs. No search page exists yet. The board is the tracker.
 **What I did:** Asked for a jobs board page that searches Indeed and other job boards for roles that fit the person.
 **What felt wrong:** Nothing in 1.0, 1.1, or 1.2 searches job boards. `/jobs` tracks applications already saved. Indeed’s public job-search API is closed, and posting URLs stay stored and unfetched (D-11). Auto-apply stays out of scope (D-25). I want a separate Find page that searches licensed boards, ranks a listing against the library without calling it a match score, and saves a chosen listing as a normal job. When this becomes a task, decide the launch country, whether search is free with a daily cap, and that a short snippet still requires a paste. Adzuna is the first board to check, and a commercial licence and their mark on each card are part of that decision. Job Bank has no public search API.

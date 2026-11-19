@@ -136,6 +136,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-11-19 Admin and tailoring review:** The current app is the main snapshot. Admin is still the placeholder, and the tailoring checks on `bench/write-verify` and `feat/job-questions` have not been reviewed. Not a task yet.
 - **2026-11-18 Find jobs:** A page that searches licensed boards and saves a fitting listing as a normal job is logged in `docs/Feedback.md`. Indeed’s public search API is closed. Not a task yet.
 - **2026-11-15 Offsite tailored resume:** Documents can only add a resume RoleRefine tailored. Uploading one made elsewhere, as the file that was sent, is logged in `docs/Feedback.md`. Not a task yet.
 - **2026-11-14 Outcome-first reading:** The new prompt cost $0.5549 on the same ten cases. It recovered the availability result, Timberline, and several summaries. FERPA and the electrical licence were still missing, and some bullets stayed fragments. Direct Claude and the outcome-first prompt were even. TB.1 stays open.
