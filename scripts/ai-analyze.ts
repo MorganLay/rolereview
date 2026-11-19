@@ -63,7 +63,6 @@ async function main() {
     const result = await runStructured({
       kind: "ANALYZE",
       userId,
-      usedBonusCredit: false,
       system: "Extract the job title from the posting.",
       content: [
         {

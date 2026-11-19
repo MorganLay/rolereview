@@ -20,3 +20,20 @@ What you need:
 - Clear written communication.
 
 You will not design, build, or ship a software product. Java, React, and code review are not part of this role.`;
+
+/** Applied modeling. It does not ask for a web product or operational reporting. */
+export const MODEL_POSTING = `Harbor Labs is hiring a Machine Learning Engineer in Ottawa. The work is applied modeling.
+
+What you will do:
+- Train and evaluate models in Python.
+- Measure accuracy, and explain what the figure does and does not show.
+- Test a data or model change before a result is reported.
+- Write down how a model was trained.
+
+What you need:
+- A project or role where you implemented a model in Python, not only listed Python as a skill.
+- A held-out measure such as accuracy on something you built.
+- Familiarity with a machine-learning library such as TensorFlow.
+- Ability to state a limitation of the result.
+
+This role does not ask you to ship a web application, review React pull requests, or maintain finance reports. Java and OAuth are not part of the work.`;

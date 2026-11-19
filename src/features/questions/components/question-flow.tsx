@@ -23,6 +23,15 @@ import type { JobQuestionView } from "../view";
 const copy = strings.jobs.questions;
 const DETAIL = new Set(["detail", "scale", "outcome", "role"]);
 
+function startIndex(questions: readonly JobQuestionView[], startId: string | null): number {
+  if (startId) {
+    const match = questions.findIndex((question) => question.requirementId === startId);
+    if (match >= 0) return match;
+  }
+  const open = questions.findIndex((question) => question.status === "OPEN");
+  return open >= 0 ? open : 0;
+}
+
 export function QuestionFlow({
   jobId,
   questions,
@@ -40,10 +49,7 @@ export function QuestionFlow({
   canTailor: boolean;
   savedIds?: readonly string[];
 }) {
-  const initial = Math.max(
-    0,
-    questions.findIndex((question) => question.requirementId === startId),
-  );
+  const initial = startIndex(questions, startId);
   if (saved) return <Saved jobId={jobId} questions={questions} />;
   if (review) {
     return (
@@ -230,29 +236,43 @@ function Stepper({
         >
           {current.question}
         </h1>
+        {DETAIL.has(current.kind) ? (
+          <AnswerBox
+            value={current.detail}
+            onChange={(detail) =>
+              setRows((items) =>
+                items.map((item) =>
+                  item.id === current.id
+                    ? {
+                        ...item,
+                        detail,
+                        status: detail.trim().length > 0 ? "YES" : item.status === "YES" ? "OPEN" : item.status,
+                      }
+                    : item,
+                ),
+              )
+            }
+            onKeyDown={onKeyDown}
+          />
+        ) : null}
         <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label={current.question}>
-          <Choice label={copy.yes} selected={current.status === "YES"} onClick={() => void choose("YES")} />
+          {DETAIL.has(current.kind) ? null : (
+            <Choice label={copy.yes} selected={current.status === "YES"} onClick={() => void choose("YES")} />
+          )}
           <Choice label={copy.notYet} selected={current.status === "NOT_YET"} onClick={() => void choose("NOT_YET")} />
           <Choice label={copy.skipOne} selected={current.status === "SKIPPED"} onClick={() => void choose("SKIPPED")} />
         </div>
         {index === 0 ? <p className="mt-3 text-sm text-slate">{copy.honesty}</p> : null}
-        {current.status === "YES" ? (
-          <label className="mt-4 grid gap-1.5 text-sm text-ink">
-            {copy.prompt}
-            <Textarea
-              rows={3}
-              value={current.detail}
-              onChange={(event) =>
-                setRows((items) =>
-                  items.map((item) =>
-                    item.id === current.id ? { ...item, detail: event.target.value } : item,
-                  ),
-                )
-              }
-              onKeyDown={onKeyDown}
-            />
-            <span className="text-xs text-slate">{copy.tip}</span>
-          </label>
+        {!DETAIL.has(current.kind) && current.status === "YES" ? (
+          <AnswerBox
+            value={current.detail}
+            onChange={(detail) =>
+              setRows((items) =>
+                items.map((item) => (item.id === current.id ? { ...item, detail } : item)),
+              )
+            }
+            onKeyDown={onKeyDown}
+          />
         ) : null}
         <div className="mt-6 flex items-center justify-end gap-3">
           <Button type="button" variant="outline" disabled={index === 0 || pending} onClick={() => setIndex(index - 1)}>
@@ -264,6 +284,24 @@ function Stepper({
         </div>
       </section>
     </div>
+  );
+}
+
+function AnswerBox({
+  value,
+  onChange,
+  onKeyDown,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+}) {
+  return (
+    <label className="mt-4 grid gap-1.5 text-sm text-ink">
+      {copy.prompt}
+      <Textarea rows={3} value={value} onChange={(event) => onChange(event.target.value)} onKeyDown={onKeyDown} />
+      <span className="text-xs text-slate">{copy.tip}</span>
+    </label>
   );
 }
 

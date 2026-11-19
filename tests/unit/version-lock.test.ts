@@ -24,7 +24,10 @@ const db = vi.hoisted(() => ({
 
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/auth", () => ({ requireUserForAction }));
-vi.mock("@/lib/ai/run", () => ({ runStructured }));
+vi.mock("@/lib/ai/run", () => ({
+  runStructured,
+  modelFailure: (code: string) => (code === "QUOTA_EXCEEDED" ? code : "AI_FAILED"),
+}));
 vi.mock("@/features/billing/quota", () => ({ checkQuota }));
 vi.mock("@/lib/db", () => ({
   db: {

@@ -1,10 +1,16 @@
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { looseTokenSupported, guardDraft } from "../../benchmarks/lib/grounded-guard";
+import { looseTokenSupported, guardDraft, tenureIsStated } from "../../benchmarks/lib/grounded-guard";
+import { chooseDegreeHeading, clipHeadline, presentedText, printedTitle } from "../../benchmarks/lib/present";
+import { moveWrongEntry, remapSavedDraft } from "../../benchmarks/write-verify/replay";
+import { alternativePresent, mustKeepScore } from "../../benchmarks/write-verify/must-keep";
+import { coverageGaps } from "../../benchmarks/write-verify/coverage";
+import { GOLD, goldFor, phraseOverlaps, scoreGold } from "../../benchmarks/write-verify/verify-meaning";
+import type { ResumeContent } from "@/features/tailor/schemas";
 import { readFittedCases } from "../../benchmarks/lib/paid";
 import { factTokens, factsKeptIn, sectionPresent, summaryFragment } from "../../benchmarks/write-verify/measure";
 import type { JobAnalysis } from "@/features/jobs/schemas";
@@ -72,6 +78,118 @@ describe("fixture skills and dates", () => {
     expect(mixed?.startDate).toBeNull();
     expect(mixed?.endDate).toBeNull();
     expect(mixed?.isCurrent).toBe(false);
+  });
+
+  it("gives every fixture with a skills line at least one skill ref", () => {
+    const ids = readdirSync(fixtures).filter((id) => {
+      const file = path.join(fixtures, id, "original-resume.txt");
+      return /^skills:/im.test(readFileSync(file, "utf8"));
+    });
+    expect(ids.length).toBeGreaterThan(0);
+    for (const id of ids) {
+      const adapted = adaptFixtureResume(resume(id));
+      expect(evidenceGaps(adapted.snapshot, adapted.spans), id).toEqual([]);
+      expect(adapted.snapshot.skills.length, id).toBeGreaterThan(0);
+    }
+    const designer = adaptFixtureResume(resume("P017"));
+    expect(designer.snapshot.skills.some((skill) => /final cut pro/i.test(skill.name))).toBe(true);
+  });
+
+  it("prints a parsed year range once", () => {
+    const job = adaptFixtureResume(resume("P014")).snapshot.entries.find((entry) => entry.title.includes("School of Education"));
+    expect(job?.startDate).toBe("2013-07");
+    expect(job && printedTitle(job)).not.toMatch(/2013/);
+    expect(job?.title).toMatch(/2013/);
+  });
+
+  it("prints rankings under Recognition as bullets", () => {
+    const adapted = adaptFixtureResume(resume("P013"));
+    const other = adapted.snapshot.entries.find((entry) => entry.kind === "OTHER");
+    expect(other?.title).toBe("");
+    expect(other?.bullets.length).toBeGreaterThan(0);
+    const text = presentedText(contentFor(other ? [other.ref] : [], adapted.snapshot), adapted.snapshot);
+    expect(text).toMatch(/^Recognition/m);
+    expect(text).toMatch(/- Ranked #1 Account Executive/);
+    expect(text.split("\n").filter((line) => /Ranked #1/.test(line) && !line.trim().startsWith("-"))).toEqual([]);
+  });
+
+  it("drops an education line that only restates the title", () => {
+    const snapshot = library({
+      entries: [
+        row({
+          ref: "E1",
+          kind: "EDUCATION",
+          title: "B.A. History",
+          startDate: "2014-01",
+          endDate: "2018-05",
+          bullets: [
+            { ref: "E1.B1", id: "E1.B1", text: "B.A. History" },
+            { ref: "E1.B2", id: "E1.B2", text: "State University, cum laude" },
+          ],
+        }),
+      ],
+    });
+    const text = presentedText(contentFor(["E1"], snapshot), snapshot);
+    expect(text).toMatch(/B\.A\. History/);
+    expect(text).not.toMatch(/- B\.A\. History/);
+    expect(text).toMatch(/State University, cum laude/);
+  });
+
+  it("clips a headline on a word boundary", () => {
+    const long = "Executive administrative professional with higher-education leadership support, budgeting, and process improvement experience";
+    const clipped = clipHeadline(long);
+    expect(clipped.length).toBeLessThanOrEqual(90);
+    expect(clipped.endsWith("exper")).toBe(false);
+    expect(clipped.startsWith("Executive administrative professional")).toBe(true);
+    expect(clipHeadline("Accountant")).toBe("Accountant");
+  });
+
+  it("prints one line when the only education line restates the title", () => {
+    const snapshot = library({
+      entries: [
+        row({
+          ref: "E1",
+          kind: "EDUCATION",
+          title: "BA, Hebert H. Lehman College (2012) with fine arts/psychology coursework",
+          bullets: [
+            {
+              ref: "E1.B1",
+              id: "E1.B1",
+              text: "Earned a BA from Hebert H. Lehman College (2012) with fine arts and psychology coursework.",
+            },
+          ],
+        }),
+      ],
+    });
+    const text = presentedText(contentFor(["E1"], snapshot), snapshot);
+    expect(text).toMatch(/Hebert H\. Lehman College/);
+    expect(text).not.toMatch(/^- /m);
+  });
+
+  it("does not print a different degree under another degree's heading", () => {
+    expect(chooseDegreeHeading("B.S. Business Administration, Albright College", ["M.S. (2016)", "B.S. Business Administration, Albright College"])).toMatch(/M\.S/);
+    const snapshot = library({
+      entries: [
+        row({
+          ref: "E1",
+          kind: "EDUCATION",
+          title: "M.A. in Math Education, Southwestern University",
+          bullets: [
+            {
+              ref: "E1.B1",
+              id: "E1.B1",
+              text: "M.A. in Education, Philippine Normal University (2000); B.A. in Secondary Education, Cum Laude (1994).",
+            },
+          ],
+        }),
+      ],
+    });
+    const text = presentedText(contentFor(["E1"], snapshot), snapshot);
+    const lines = text.split(/\n/).filter((line) => line.trim().length > 0);
+    const philippine = lines.find((line) => /Philippine/.test(line)) ?? "";
+    expect(philippine.startsWith("-")).toBe(false);
+    expect(text).toMatch(/Southwestern University/);
+    expect(text).toMatch(/B\.A\. in Secondary Education/);
   });
 });
 
@@ -294,6 +412,216 @@ describe("direct resume headings", () => {
     expect(sectionPresent("SKILLS AND RECOGNITION\nCommunication", "skills")).toBe(true);
   });
 });
+
+describe("matcher precision", () => {
+  const analysis = {
+    title: "Role",
+    company: "",
+    location: null,
+    seniority: "unknown",
+    workMode: "UNKNOWN",
+    employmentType: null,
+    salary: null,
+    referenceNumber: null,
+    summary: "",
+    requirements: [],
+    keywords: [],
+  } as JobAnalysis;
+
+  it("does not flag case, spacing, hyphen, or a trailing plural", () => {
+    expect(looseTokenSupported("kWh", ["Reduced use to 2.0kwh/ton."])).toBe(true);
+    expect(looseTokenSupported("70E", ["Trained on NFPA 70Es."])).toBe(true);
+    expect(looseTokenSupported("MAS 200", ["Reconciled MAS200."])).toBe(true);
+    const energy = guardDraft(
+      draftOn("E1", "Reduced use to 2.0 kWh per ton."),
+      library({
+        entries: [row({ ref: "E1", title: "Operator", bullets: [{ ref: "E1.B1", id: "E1.B1", text: "Reduced use to 2.0kwh/ton." }] })],
+      }),
+      analysis,
+      "C",
+    );
+    expect(energy.flags).toEqual([]);
+    const licence = guardDraft(
+      draftOn("E1", "Trained the crew on NFPA 70E."),
+      library({
+        entries: [row({ ref: "E1", title: "Electrician", bullets: [{ ref: "E1.B1", id: "E1.B1", text: "Trained the crew on NFPA 70Es." }] })],
+      }),
+      analysis,
+      "C",
+    );
+    expect(licence.flags).toEqual([]);
+  });
+
+  it("does not flag a tenure the library states", () => {
+    const snapshot = library({
+      entries: [row({ ref: "E1", title: "Technician", bullets: [{ ref: "E1.B1", id: "E1.B1", text: "7+ yrs on the bench." }] })],
+    });
+    expect(tenureIsStated("Technician with 7+ years on the bench.", snapshot)).toBe(true);
+    const flagged = guardDraft(
+      { ...draftOn("E1", "Kept the bench running."), summary: "Technician with 7+ years on the bench." },
+      snapshot,
+      analysis,
+      "C",
+    );
+    expect(flagged.flags.some((flag) => flag.token === "tenure" || /year/i.test(flag.token))).toBe(false);
+    const long = library({
+      entries: [row({ ref: "E1", title: "Manager", bullets: [{ ref: "E1.B1", id: "E1.B1", text: "About ~19 years in the field." }] })],
+    });
+    expect(tenureIsStated("Manager with ~19 years in the field.", long)).toBe(true);
+  });
+
+  it("does not flag a term that is in the title or organization", () => {
+    const flagged = guardDraft(
+      draftOn("E1", "Priced the bids in Timberline."),
+      library({
+        entries: [row({ ref: "E1", title: "Timberline Estimator", organization: "Northwind", bullets: [{ ref: "E1.B1", id: "E1.B1", text: "Priced the bids." }] })],
+      }),
+      analysis,
+      "C",
+    );
+    expect(flagged.flags).toEqual([]);
+  });
+
+  it("marks a number from another entry as wrong-entry and does not delete it", () => {
+    const snapshot = library({
+      entries: [
+        row({ ref: "E1", title: "Account Executive", organization: "Apparel Co", bullets: [{ ref: "E1.B1", id: "E1.B1", text: "Sold medical apparel." }] }),
+        row({
+          ref: "E2",
+          kind: "OTHER",
+          title: "",
+          bullets: [{ ref: "E2.B1", id: "E2.B1", text: "Maintained <1% client churn." }],
+        }),
+      ],
+    });
+    const draft = draftOn("E1", "Held client churn under 1%.");
+    const flagged = guardDraft(draft, snapshot, analysis, "C");
+    const flag = flagged.flags.find((item) => item.code === "wrong-entry");
+    expect(flag?.home).toBe("E2");
+    expect(flagged.output.entries[0]?.bullets[0]?.text).toContain("1%");
+    const moved = moveWrongEntry(draft, flagged.flags);
+    expect(moved.draft.entries.find((entry) => entry.ref === "E1")?.bullets).toEqual([]);
+    expect(moved.draft.entries.find((entry) => entry.ref === "E2")?.bullets[0]?.text).toContain("1%");
+  });
+
+  it("retargets a saved draft when the skills line is no longer an entry", () => {
+    const snapshot = library({
+      skills: [{ ref: "S1", id: "S1", name: "Final Cut Pro", category: null }],
+      entries: [row({ ref: "E1", title: "Graphic Designer (1998–2002)", bullets: [{ ref: "E1.B1", id: "E1.B1", text: "Designed graphics for tees." }] })],
+    });
+    const libraryText = [
+      "E1 | OTHER | Final Cut Pro | — | — | —",
+      "E2 | EXPERIENCE | Graphic Designer (1998–2002) | — | — | —",
+      "  E2.B1 id=E2.B1: Designed graphics for tees.",
+      "SKILLS",
+    ].join("\n");
+    const draft = draftOn("E2", "Designed graphics for tees and labels.");
+    const remapped = remapSavedDraft(draft, snapshot, libraryText);
+    expect(remapped.entries.map((entry) => entry.ref)).toEqual(["E1"]);
+    expect(remapped.entries[0]?.bullets[0]?.sourceRefs).toEqual(["E1.B1"]);
+  });
+});
+
+describe("meaning check scoring", () => {
+  it("counts the 31 audited lines and matches a quoted phrase", () => {
+    expect(GOLD).toHaveLength(31);
+    expect(goldFor("W2")).toHaveLength(12);
+    expect(goldFor("direct")).toHaveLength(19);
+    expect(phraseOverlaps("with discretion and coordinating faculty support", "with discretion")).toBe(true);
+    expect(phraseOverlaps("prepared monthly financial statements", "to track business performance")).toBe(false);
+    const scored = scoreGold(
+      "P014-J055",
+      [{ lineId: "E2#2", phrase: "with discretion", reason: "The source does not say discretion." }],
+      goldFor("W2"),
+    );
+    expect(scored.hit.filter(Boolean)).toHaveLength(1);
+    expect(scored.missed).toHaveLength(2);
+  });
+});
+
+describe("must-keep matching", () => {
+  it("requires every group and uses word boundaries", () => {
+    expect(alternativePresent("nearly two decades of work", "19 years")).toBe(false);
+    expect(alternativePresent("About 19 years in the role.", "19 years")).toBe(true);
+    const score = mustKeepScore("Held SARS drills and a timberline licence.", [
+      { label: "SARS", allOf: [["sars"]] },
+      { label: "Timberline", allOf: [["timberline"]] },
+      { label: "Both", allOf: [["sars"], ["missing"]] },
+    ]);
+    expect(score.missing).toEqual(["Both"]);
+  });
+
+  it("lists a quantified clause that is absent from the page", () => {
+    const snapshot = library({
+      skills: [{ ref: "S1", id: "S1", name: "Timberline", category: null }],
+      entries: [row({ ref: "E1", title: "Estimator", bullets: [{ ref: "E1.B1", id: "E1.B1", text: "Cut waste by 12%." }] })],
+    });
+    expect(coverageGaps(snapshot, "Estimator who priced jobs.")).toEqual(["E1.B1: Cut waste by 12%.", "S1: Timberline"]);
+    expect(coverageGaps(snapshot, "Cut waste by 12% with Timberline.")).toEqual([]);
+  });
+});
+
+function library(partial: Partial<LibrarySnapshot> & Pick<LibrarySnapshot, "entries">): LibrarySnapshot {
+  return {
+    takenAt: "2026-11-14T00:00:00.000Z",
+    profile: { fullName: "Alex Example", headline: null, email: "", phone: null, location: null, links: [], summary: null },
+    skills: [],
+    ...partial,
+  };
+}
+
+function row(partial: Partial<LibrarySnapshot["entries"][number]> & Pick<LibrarySnapshot["entries"][number], "ref" | "title">): LibrarySnapshot["entries"][number] {
+  return {
+    id: partial.ref,
+    kind: "EXPERIENCE",
+    organization: null,
+    location: null,
+    startDate: null,
+    endDate: null,
+    isCurrent: false,
+    url: null,
+    bullets: [],
+    ...partial,
+  };
+}
+
+function draftOn(ref: string, text: string): TailorOutput {
+  return {
+    summary: "Kept the work moving.",
+    entries: [{ ref, bullets: [{ sourceRefs: [`${ref}.B1`], text }] }],
+    skills: [],
+    requirementMatches: [],
+  };
+}
+
+function contentFor(refs: string[], snapshot: LibrarySnapshot): ResumeContent {
+  return {
+    schemaVersion: 1,
+    summary: { text: "Summary.", included: true },
+    skills: [],
+    entries: refs.map((ref) => {
+      const source = snapshot.entries.find((entry) => entry.ref === ref);
+      return {
+        ref,
+        kind: source?.kind ?? "EXPERIENCE",
+        included: true,
+        bullets: (source?.bullets ?? []).map((bullet) => ({
+          id: bullet.ref,
+          text: bullet.text,
+          included: true,
+          sourceRefs: [bullet.ref],
+          reverted: false,
+          edited: false,
+          originalText: null,
+          suggestion: null,
+          suggestionNote: null,
+          changeWhat: null,
+          requirementIds: [],
+        })),
+      };
+    }),
+  };
+}
 
 function plainLines(text: string): string[] {
   return text

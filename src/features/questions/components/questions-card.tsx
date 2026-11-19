@@ -8,7 +8,7 @@ import { WorkProgress } from "@/components/shell/work-progress";
 import { Button } from "@/components/ui/button";
 import { strings } from "@/copy/strings";
 
-import { prepareJobQuestions, refreshJobQuestions, retryJobQuestions } from "../actions";
+import { prepareJobQuestions, readJobQuestionCard, refreshJobQuestions, retryJobQuestions } from "../actions";
 import type { QuestionCardPhase } from "../view";
 
 const copy = strings.jobs.questions;
@@ -27,26 +27,40 @@ export function QuestionsCard({
   useEffect(() => {
     if (phase?.phase !== "prepare") return;
     let cancelled = false;
-    void prepareJobQuestions({ jobId }).then((result) => {
+    const started = Date.now();
+
+    void (async () => {
+      const result = await prepareJobQuestions({ jobId });
       if (cancelled) return;
-      setPending(false);
       if (!result.ok) {
         setError(true);
+        return;
+      }
+      if (result.data.status !== "generating") {
         router.refresh();
         return;
       }
-      if (result.data.status === "generating") {
-        window.setTimeout(() => {
-          if (!cancelled) router.refresh();
-        }, 2000);
-        return;
+      while (!cancelled && Date.now() - started < 3 * 60 * 1000) {
+        await new Promise((resolve) => window.setTimeout(resolve, 2000));
+        if (cancelled) return;
+        const card = await readJobQuestionCard({ jobId });
+        if (cancelled) return;
+        if (!card.ok) {
+          setError(true);
+          return;
+        }
+        if (card.data.phase !== "prepare") {
+          router.refresh();
+          return;
+        }
       }
-      router.refresh();
-    });
+      if (!cancelled) setError(true);
+    })();
+
     return () => {
       cancelled = true;
     };
-  }, [jobId, phase, router]);
+  }, [jobId, phase?.phase, router]);
 
   if (!phase && !error) return null;
   if (phase?.phase === "prepare" || pending) {

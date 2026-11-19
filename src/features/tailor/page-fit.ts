@@ -107,6 +107,20 @@ async function layoutFits(
   return false;
 }
 
+/** Page count of the classic layout. This does not remove lines. */
+export async function measureResumePages(
+  content: ResumeContent,
+  snapshot: LibrarySnapshot,
+): Promise<{ pages: number; extraLines: number } | null> {
+  try {
+    const pdf = await renderFitLayout(resumePdfModel(content, snapshot), "classic", REGULAR);
+    const pages = pdfPageCount(pdf);
+    return { pages, extraLines: pages <= 1 ? 0 : linesAfterFirstPage(pdf) };
+  } catch {
+    return null;
+  }
+}
+
 async function measure(
   content: ResumeContent,
   snapshot: LibrarySnapshot,

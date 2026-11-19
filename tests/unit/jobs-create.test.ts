@@ -46,6 +46,7 @@ vi.mock("@/features/billing/quota", () => ({
 
 vi.mock("@/lib/ai/run", () => ({
   runStructured,
+  modelFailure: (code: string) => (code === "QUOTA_EXCEEDED" ? code : "AI_FAILED"),
 }));
 
 vi.mock("@/lib/auth", () => ({

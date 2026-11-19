@@ -43,7 +43,10 @@ vi.mock("@/lib/db", () => ({
 }));
 
 vi.mock("@/features/billing/quota", () => ({ checkQuota }));
-vi.mock("@/lib/ai/run", () => ({ runStructured }));
+vi.mock("@/lib/ai/run", () => ({
+  runStructured,
+  modelFailure: (code: string) => (code === "QUOTA_EXCEEDED" ? code : "AI_FAILED"),
+}));
 vi.mock("@/lib/auth", () => ({ requireUserForAction }));
 vi.mock("@/features/library/queries", () => ({ getLibrary }));
 
@@ -198,7 +201,6 @@ describe("tailorResume", () => {
       expect.objectContaining({
         kind: "TAILOR",
         userId: user.id,
-        usedBonusCredit: true,
         refId: resumeId,
       }),
     );
@@ -261,7 +263,6 @@ describe("tailorResume", () => {
     expect(bullet.suggestionNote).toContain("reporting");
     expect(saved.guardReverts).toBe(0);
     expect(runStructured).toHaveBeenCalledTimes(2);
-    expect(runStructured.mock.calls[1]?.[0].usedBonusCredit).toBe(false);
     expect(runStructured.mock.calls[1]?.[0].countsTowardQuota).toBe(false);
   });
 
@@ -355,7 +356,6 @@ describe("tailorResume", () => {
     expect(agile?.text).toContain("14 reports");
     expect(runStructured).toHaveBeenCalledTimes(2);
     expect(runStructured.mock.calls[1]?.[0].countsTowardQuota).toBe(false);
-    expect(runStructured.mock.calls[1]?.[0].usedBonusCredit).toBe(false);
     expect(source.entries.flatMap((entry) => entry.bullets.map((bullet) => bullet.text))).toEqual(
       original,
     );

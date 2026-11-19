@@ -63,7 +63,6 @@ export async function runModelLedCases(input: { caseIds: string[]; maxUsd: numbe
     const generated = await runStructured({
       kind: "TAILOR",
       userId,
-      usedBonusCredit: false,
       countsTowardQuota: false,
       system: modelLedPrompt(),
       content: [{ type: "text", text: message.text }],
@@ -167,7 +166,6 @@ async function reviseOnce(
   const revised = await runStructured({
     kind: "TAILOR",
     userId,
-    usedBonusCredit: false,
     countsTowardQuota: false,
     system: modelLedPrompt(),
     content: [{ type: "text", text: message.text }],

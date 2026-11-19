@@ -1,6 +1,5 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 
 import { postProcessAnalyze } from "@/features/jobs/analyze";
@@ -14,7 +13,8 @@ import { clientIpForLimit, hashClientIp } from "@/lib/iphash";
 import { fail, ok, type ActionResult } from "@/lib/result";
 import { verifyTurnstile } from "@/lib/turnstile";
 
-import { isKeywordCheckerLimited, topMustHaveTexts } from "./limit";
+import { reserveKeywordRun, settleKeywordRun } from "./reserve";
+import { topMustHaveTexts } from "./limit";
 import { checkKeywordSchema, type KeywordReport } from "./schemas";
 
 export async function checkKeywordCoverage(
@@ -35,34 +35,27 @@ export async function checkKeywordCoverage(
   const ipHash = hashClientIp(remoteIp);
   if (!ipHash) return fail("INTERNAL");
 
-  const runCount = await db.freeToolRun.count({
-    where: { ipHash, tool: "KEYWORD_CHECKER" },
-  });
-  if (isKeywordCheckerLimited(runCount)) return fail("RATE_LIMITED");
+  const reserved = await reserveKeywordRun(ipHash);
+  if (!reserved.ok) return fail("RATE_LIMITED");
 
-  const runId = randomUUID();
   const result = await runStructured({
     kind: "FREE_TOOL",
     userId: null,
     system: SYSTEM,
     content: buildContent(parsed.data.posting),
     schema: OutputSchema,
-    refId: runId,
+    refId: reserved.id,
   });
 
   const call = await db.aiCall.findFirst({
-    where: { kind: "FREE_TOOL", refId: runId },
+    where: { kind: "FREE_TOOL", refId: reserved.id },
     select: { inputTokens: true, outputTokens: true },
   });
 
-  await db.freeToolRun.create({
-    data: {
-      tool: "KEYWORD_CHECKER",
-      ipHash,
-      success: result.ok,
-      inputTokens: call?.inputTokens ?? 0,
-      outputTokens: call?.outputTokens ?? 0,
-    },
+  await settleKeywordRun(reserved.id, {
+    success: result.ok,
+    inputTokens: call?.inputTokens ?? 0,
+    outputTokens: call?.outputTokens ?? 0,
   });
 
   if (!result.ok) return fail("AI_FAILED");

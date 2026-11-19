@@ -310,7 +310,6 @@ async function extractFile(userId: string, filePath: string): Promise<ExtractedR
   const result = await runStructured({
     kind: "IMPORT",
     userId,
-    usedBonusCredit: false,
     countsTowardQuota: false,
     system: SYSTEM,
     content,

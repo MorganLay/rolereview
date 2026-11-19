@@ -14,6 +14,7 @@ import {
 } from "../library/schemas";
 import { parseSkillQualifier, restoreSkillQualifiers } from "../library/skill-qualifier";
 import { skillNameKey } from "../library/skill-state";
+import { normalizeCareerEntries } from "./career";
 import {
   DOCX_MIME,
   IMPORT_LIMITS,
@@ -108,7 +109,10 @@ export function postProcessImport(raw: ImportOutput, sourceText = ""): Extracted
   }
 
   const profile = cleanProfile(raw.profile, warnings);
-  const entries = cleanEntries(raw.entries, warnings);
+  const cleaned = cleanEntries(raw.entries, warnings);
+  const career = normalizeCareerEntries(cleaned, sourceText);
+  const entries = career.entries;
+  warnings.push(...career.warnings);
   const corpus = [
     sourceText,
     ...raw.warnings,

@@ -68,10 +68,13 @@ and the product can be secondary. Decide from this posting and these records.
 - positioning: the strongest positioning the library can defend for that work.
 - qualifications: each requirement you will use, with weight mandatory, differentiating, or
   secondary. A mandatory item the library cannot show belongs in gaps, not here.
-- evidence: the experiences and projects you compared. ref is the heading entry. use is lead,
-  support, or omit. bullets is how many lines that entry should have on this page (0 only when
-  use is omit). because is one sentence saying why this entry outranks or loses to a specific
-  other entry for this job. Include the entries you omit when they were real alternatives.
+- evidence: one row for every experience, project, education, certification, volunteer, and
+  other heading in the library. ref is the heading entry. use is lead, support, or omit.
+  lead and support mean the entry belongs on this resume. omit means you considered it and
+  left it off. A heading you leave out of this list was not decided. bullets is how many
+  lines that entry should have on this page (0 only when use is omit). because is one
+  sentence. For a lead, a support, or a close omission, say why it outranks or loses to a
+  specific other entry. For a batch of clear omissions, one short reason each is enough.
   Do not give every entry the same count. A lead may take more lines than a support. Omit an
   entry that only repeats a qualification a stronger entry already establishes. Keep an entry
   that is the only evidence for a qualification the posting actually needs. A second project

@@ -231,7 +231,6 @@ async function runPair(input: {
   const analyzed = await runStructured({
     kind: "ANALYZE",
     userId: input.user.id,
-    usedBonusCredit: analyzeQuota.useBonus,
     system: ANALYZE_SYSTEM,
     content: buildAnalyzeContent(input.posting.text),
     schema: AnalyzeSchema,
@@ -291,7 +290,6 @@ async function runPair(input: {
   const tailored = await runStructured({
     kind: "TAILOR",
     userId: input.user.id,
-    usedBonusCredit: tailorQuota.useBonus,
     system: TAILOR_SYSTEM,
     content: buildTailorContent({
       libraryText: libraryPromptText(input.library.snapshot),
@@ -419,7 +417,6 @@ async function runLetter(input: {
   const generated = await runStructured({
     kind: "COVER_LETTER",
     userId: input.user.id,
-    usedBonusCredit: quota.useBonus,
     system: LETTER_SYSTEM,
     content: buildLetterContent({
       libraryText: libraryPromptText(input.snapshot),

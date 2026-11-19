@@ -4,7 +4,7 @@ import { strings } from "@/copy/strings";
 import { checkQuota } from "@/features/billing/quota";
 import type { SessionUser } from "@/lib/auth";
 import { buildContent, OutputSchema, SYSTEM } from "@/lib/ai/prompts/import";
-import { runStructured } from "@/lib/ai/run";
+import { modelFailure, runStructured } from "@/lib/ai/run";
 import { fail, ok, type ActionFailure, type ActionResult } from "@/lib/result";
 
 import { visibleFileText } from "../library/skill-qualifier";
@@ -36,12 +36,11 @@ export async function extractResumeForUser(
   const result = await runStructured({
     kind: "IMPORT",
     userId: user.id,
-    usedBonusCredit: quota.useBonus,
     system: SYSTEM,
     content: prepared.content,
     schema: OutputSchema,
   });
-  if (!result.ok) return fail("AI_FAILED");
+  if (!result.ok) return fail(modelFailure(result.code));
   return ok(postProcessImport(result.data, prepared.sourceText));
 }
 

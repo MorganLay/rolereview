@@ -25,6 +25,7 @@ vi.mock("@/features/billing/quota", () => ({
 
 vi.mock("@/lib/ai/run", () => ({
   runStructured,
+  modelFailure: (code: string) => (code === "QUOTA_EXCEEDED" ? code : "AI_FAILED"),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -412,7 +413,6 @@ describe("extractResumeForUser", () => {
       expect.objectContaining({
         kind: "IMPORT",
         userId: user.id,
-        usedBonusCredit: false,
         schema: OutputSchema,
         content: [
           expect.objectContaining({
@@ -425,7 +425,7 @@ describe("extractResumeForUser", () => {
     );
   });
 
-  it("reads a docx with mammoth and passes a bonus credit through", async () => {
+  it("reads a docx with mammoth", async () => {
     checkQuota.mockResolvedValue({ allowed: true, useBonus: true });
     extractRawText.mockResolvedValue({ value: "Word resume. ".repeat(40) });
     const result = await extractResumeForUser(user, {
@@ -440,9 +440,7 @@ describe("extractResumeForUser", () => {
     });
     const content = runStructured.mock.calls[0]?.[0].content as { text?: string }[];
     expect(content[0]?.text).toContain("<resume>");
-    expect(runStructured).toHaveBeenCalledWith(
-      expect.objectContaining({ usedBonusCredit: true }),
-    );
+    expect(runStructured.mock.calls[0]?.[0].usedBonusCredit).toBeUndefined();
   });
 
   it("rejects a Word file mammoth cannot read", async () => {

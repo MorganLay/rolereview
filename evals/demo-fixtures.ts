@@ -152,7 +152,6 @@ async function runPair(
   const analyzed = await runStructured({
     kind: "ANALYZE",
     userId: user.id,
-    usedBonusCredit: analyzeQuota.useBonus,
     system: ANALYZE_SYSTEM,
     content: buildAnalyzeContent(pair.postingText),
     schema: AnalyzeSchema,
@@ -179,7 +178,6 @@ async function runPair(
   const tailored = await runStructured({
     kind: "TAILOR",
     userId: user.id,
-    usedBonusCredit: tailorQuota.useBonus,
     system: TAILOR_SYSTEM,
     content: buildTailorContent({
       libraryText: libraryPromptText(pair.snapshot),

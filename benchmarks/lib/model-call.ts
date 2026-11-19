@@ -99,7 +99,6 @@ export async function callTailor(input: {
       durationMs: Date.now() - started,
       costMicros,
       refId: input.refId,
-      usedBonusCredit: false,
     },
   });
   console.info(

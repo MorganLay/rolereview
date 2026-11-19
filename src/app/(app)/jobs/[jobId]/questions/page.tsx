@@ -38,11 +38,13 @@ export default async function JobQuestionsPage({
   ]);
   if (!questions || questions.length === 0) notFound();
   const requirement = queryValue(query.requirement) ?? null;
-  const review = queryValue(query.view) === "review";
   const unsavedYes = questions.some(
     (question) => question.status === "YES" && !savedIds.includes(question.id),
   );
   const showSaved = card?.phase === "saved" && !unsavedYes;
+  const review =
+    !showSaved &&
+    (queryValue(query.view) === "review" || card?.phase === "review");
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-4">
@@ -53,7 +55,7 @@ export default async function JobQuestionsPage({
         jobId={jobId}
         questions={questions}
         startId={requirement}
-        review={!showSaved && (review || card?.phase === "review" || unsavedYes)}
+        review={review}
         saved={showSaved}
         canTailor={documents.canTailor}
         savedIds={savedIds}

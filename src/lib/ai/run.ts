@@ -5,7 +5,8 @@ import { jsonSchemaOutputFormat } from "@anthropic-ai/sdk/helpers/json-schema";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 
-import { selectBonusCredit } from "@/features/billing/quota";
+import { METERED_KINDS, type MeteredKind } from "@/features/billing/plans";
+import { reserveMeteredCall, settleMeteredCall } from "@/features/billing/hold";
 import { Prisma } from "@/generated/prisma/client";
 import type { AiCallKind } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
@@ -28,7 +29,6 @@ import {
 export type RunArgs<S extends z.ZodType> = {
   kind: AiCallKind;
   userId: string | null;
-  usedBonusCredit?: boolean;
   system: string;
   content: Anthropic.ContentBlockParam[];
   schema: S;
@@ -40,11 +40,24 @@ export type RunArgs<S extends z.ZodType> = {
    * The row stays successful for cost, and it does not count as another allowance use.
    */
   countsTowardQuota?: boolean;
+  /** Quota clock. Callers omit it. Tests pin the month. */
+  now?: Date;
 };
+
+export type ModelFailureCode = "AI_FAILED" | "AI_REFUSED" | "AI_TRUNCATED" | "QUOTA_EXCEEDED";
 
 export type RunResult<T> =
   | { ok: true; data: T }
-  | { ok: false; code: "AI_FAILED" | "AI_REFUSED" | "AI_TRUNCATED" };
+  | { ok: false; code: ModelFailureCode };
+
+/** Quota misses stay quota misses. Every other model failure is AI_FAILED. */
+export function modelFailure(code: ModelFailureCode): "AI_FAILED" | "QUOTA_EXCEEDED" {
+  return code === "QUOTA_EXCEEDED" ? "QUOTA_EXCEEDED" : "AI_FAILED";
+}
+
+function asMetered(kind: RunArgs<z.ZodType>["kind"]): MeteredKind | null {
+  return (METERED_KINDS as readonly string[]).includes(kind) ? (kind as MeteredKind) : null;
+}
 
 export async function runStructured<S extends z.ZodType>(
   args: RunArgs<S>,
@@ -57,6 +70,33 @@ export async function runStructured<S extends z.ZodType>(
   }
 
   const task = AI_TASKS[args.kind];
+  const metered = asMetered(args.kind);
+  const holdQuota = args.countsTowardQuota !== false && args.userId !== null && metered !== null;
+  let hold: { id: string } | null = null;
+  if (holdQuota && metered && args.userId) {
+    const reserved = await reserveMeteredCall({
+      userId: args.userId,
+      kind: metered,
+      model: task.model,
+      refId: args.refId,
+      now: args.now,
+    });
+    if (!reserved.ok) {
+      console.info(
+        JSON.stringify({
+          event: "ai.call",
+          kind: args.kind,
+          userId: args.userId,
+          refId: args.refId ?? null,
+          code: "QUOTA_EXCEEDED",
+          stage: "quota",
+        }),
+      );
+      return { ok: false, code: "QUOTA_EXCEEDED" };
+    }
+    hold = { id: reserved.id };
+  }
+
   const client = getAnthropic();
   const started = Date.now();
   let usage: TokenUsage = EMPTY_USAGE;
@@ -98,7 +138,24 @@ export async function runStructured<S extends z.ZodType>(
   }
 
   const durationMs = Date.now() - started;
-  await recordCall(args, task.model, outcome, usage, durationMs);
+  if (hold && metered && args.userId) {
+    await settleMeteredCall({
+      id: hold.id,
+      userId: args.userId,
+      kind: metered,
+      success: outcome.ok,
+      errorCode: outcome.ok ? null : outcome.code,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+      cacheReadTokens: usage.cacheReadTokens,
+      cacheWriteTokens: cacheWriteTokens(usage),
+      durationMs,
+      costMicros: estimateCostMicros(task.model, usage),
+      now: args.now,
+    });
+  } else {
+    await recordCall(args, task.model, outcome, usage, durationMs);
+  }
   console.info(
     JSON.stringify({
       event: "ai.call",
@@ -227,35 +284,8 @@ async function recordCall<T>(
 ): Promise<void> {
   const success = outcome.ok;
   const exempt = args.countsTowardQuota === false;
-  const wantsBonus =
-    success && !exempt && args.usedBonusCredit === true && args.userId !== null;
   const write = () =>
     db.$transaction(async (tx) => {
-      let usedBonusCredit = false;
-      if (wantsBonus && args.userId) {
-        const now = new Date();
-        const credits = await tx.bonusCredit.findMany({
-          where: {
-            userId: args.userId,
-            kind: args.kind,
-            remaining: { gt: 0 },
-            OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-          },
-          select: { id: true, remaining: true, expiresAt: true, createdAt: true },
-        });
-        const picked = selectBonusCredit(credits, now);
-        if (picked) {
-          const updated = await tx.bonusCredit.updateMany({
-            where: { id: picked.id, userId: args.userId, remaining: { gt: 0 } },
-            data: { remaining: { decrement: 1 } },
-          });
-          usedBonusCredit = updated.count === 1;
-        }
-        // No credit left to decrement (already spent, or lost a race).
-        // Still mark the row so the call does not also consume the plan allowance.
-        if (!usedBonusCredit) usedBonusCredit = true;
-      }
-      if (exempt) usedBonusCredit = true;
       await tx.aiCall.create({
         data: {
           userId: args.userId,
@@ -270,7 +300,7 @@ async function recordCall<T>(
           durationMs,
           costMicros: estimateCostMicros(model, usage),
           refId: args.refId ?? null,
-          usedBonusCredit,
+          usedBonusCredit: exempt,
         },
       });
     });

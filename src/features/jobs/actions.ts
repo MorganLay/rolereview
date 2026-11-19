@@ -6,7 +6,6 @@ import { strings } from "@/copy/strings";
 import {
   checkQuota,
   releaseUnsavedAnalysis,
-  type QuotaDecision,
 } from "@/features/billing/quota";
 import { zodFieldErrors } from "@/features/library/schemas";
 import { deadlineReminderTitle } from "@/features/tracking/reminders";
@@ -79,7 +78,7 @@ export async function createJob(
     deadline,
   });
 
-  return analyzeAndSave(user, jobId, data.rawText, blankColumns(), data.url, quota);
+  return analyzeAndSave(user, jobId, data.rawText, blankColumns(), data.url);
 }
 
 /** Run analysis again on a FAILED job, or one stuck PENDING for 5 minutes. */
@@ -135,7 +134,6 @@ export async function retryAnalysis(
     existing.rawText,
     columnsFrom(existing),
     existing.url,
-    quota,
   );
 }
 
@@ -254,12 +252,10 @@ async function analyzeAndSave(
   rawText: string,
   current: JobDetailColumns,
   currentUrl: string | null,
-  quota: QuotaDecision,
 ): Promise<ActionResult<JobWriteResult>> {
   const result = await runStructured({
     kind: "ANALYZE",
     userId: user.id,
-    usedBonusCredit: quota.useBonus,
     system: SYSTEM,
     content: buildContent(rawText),
     schema: OutputSchema,
@@ -269,6 +265,7 @@ async function analyzeAndSave(
   if (!result.ok) {
     await markAnalysisFailed(user.id, jobId);
     revalidateJob(jobId);
+    if (result.code === "QUOTA_EXCEEDED") return fail("QUOTA_EXCEEDED");
     return ok({ jobId, analysisStatus: "FAILED" });
   }
 

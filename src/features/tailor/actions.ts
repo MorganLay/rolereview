@@ -32,7 +32,7 @@ import { buildContent, normalizeTailorOutput, OutputSchema, SYSTEM } from "@/lib
 import { settlePageLength } from "@/features/tailor/page-fit";
 import { lineageText } from "@/features/tailor/canonical";
 import { sameRoleText } from "@/features/tailor/stints";
-import { runStructured } from "@/lib/ai/run";
+import { modelFailure, runStructured } from "@/lib/ai/run";
 import { requireUserForAction } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fail, ok, type ActionResult } from "@/lib/result";
@@ -144,7 +144,6 @@ export async function tailorResume(
     const result = await runStructured({
       kind: "TAILOR",
       userId: user.id,
-      usedBonusCredit: quota.useBonus,
       system: SYSTEM,
       content: buildContent({
         libraryText: serialized.text,
@@ -167,7 +166,7 @@ export async function tailorResume(
     if (!result.ok) {
       await markFailed(user.id, resumeId, result.code);
       revalidateJob(job.id);
-      return fail("AI_FAILED");
+      return fail(modelFailure(result.code));
     }
 
     const prepared = preferSavedWording(result.data, savedWordings, serialized.snapshot);
@@ -183,7 +182,6 @@ export async function tailorResume(
         const repair = await runStructured({
           kind: "TAILOR",
           userId: user.id,
-          usedBonusCredit: false,
           countsTowardQuota: false,
           system: REPAIR_SYSTEM,
           content: buildRepairContent({
@@ -239,7 +237,6 @@ export async function tailorResume(
         const revised = await runStructured({
           kind: "TAILOR",
           userId: user.id,
-          usedBonusCredit: false,
           countsTowardQuota: false,
           system: EDITORIAL_SYSTEM,
           content: buildEditorialContent({
@@ -309,7 +306,6 @@ export async function tailorResume(
         const revised = await runStructured({
           kind: "TAILOR",
           userId: user.id,
-          usedBonusCredit: false,
           countsTowardQuota: false,
           system: REVISE_SYSTEM,
           content: buildReviseContent({

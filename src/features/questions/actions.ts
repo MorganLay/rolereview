@@ -10,6 +10,7 @@ import { fail, ok, type ActionResult } from "@/lib/result";
 import { draftConfirmed, draftSingle, guardEditedLine, skillKey } from "./draft";
 import type { QuestionKind } from "./filter";
 import { generateJobQuestions } from "./prepare";
+import { getQuestionCard } from "./queries";
 import {
   applyRevisionSchema,
   followUpSchema,
@@ -42,6 +43,18 @@ export async function prepareJobQuestions(
   if (!result.ok) return fail(result.code);
   revalidatePath(`/jobs/${parsed.data.jobId}`);
   return ok({ status: result.status });
+}
+
+export async function readJobQuestionCard(
+  input: unknown,
+): Promise<ActionResult<{ phase: string | null }>> {
+  const user = await requireUserForAction();
+  if (!user) return fail("UNAUTHENTICATED");
+  if (!jobQuestionsEnabled()) return fail("NOT_FOUND");
+  const parsed = jobIdSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION");
+  const card = await getQuestionCard(user.id, parsed.data.jobId);
+  return ok({ phase: card?.phase ?? null });
 }
 
 export async function retryJobQuestions(

@@ -7,12 +7,12 @@ alwaysApply: false
 
 Spec: docs/05-AI.md. Read the relevant section before editing.
 
-- Call the model ONLY via `runStructured({ kind, userId, system, content, schema, normalize, refId, usedBonusCredit, countsTowardQuota })` from `@/lib/ai/run`. It logs an `AiCall` (tokens, costMicros) for every attempt. `normalize` repairs optional fields before the schema check. A validation failure still records the returned token counts and does not count toward quota. `countsTowardQuota: false` is only for a repair or revision of a resume already charged.
+- Call the model ONLY via `runStructured({ kind, userId, system, content, schema, normalize, refId, countsTowardQuota, now })` from `@/lib/ai/run`. A metered call reserves its `AiCall` slot before the model runs and settles it after. `QUOTA_EXCEEDED` does not call the model. `normalize` repairs optional fields before the schema check. A validation failure still records the returned token counts and releases the slot, so it does not count toward quota. `countsTowardQuota: false` is only for a repair or revision of a resume already charged.
 - `userId` may be null ONLY for kind FREE_TOOL (anonymous keyword checker, after Turnstile + IP-hash limit).
 - Model IDs / effort / max_tokens only in `@/lib/ai/models.ts`; prices only in `@/lib/ai/pricing.ts`.
 - Each prompt module `src/lib/ai/prompts/<name>.ts` exports `SYSTEM`, `buildContent(...)`, `OutputSchema`.
 - AI output schemas are LOOSE: only z.object/string/boolean/array/enum/nullable. No .min/.max/.url/.regex/.default/.optional. Enforce limits in code after the call.
-- Check quota BEFORE calling (`checkQuota`). Failed calls never count.
+- Check quota BEFORE calling (`checkQuota`). The reserve inside `runStructured` is the decision that counts. Pass `QUOTA_EXCEEDED` through; do not report it as `AI_FAILED`. Failed calls never count.
 - Generation rows (Tailor, CoverLetter, PrepKit) are created PENDING before the call and set READY/FAILED after; PENDING > 5 min = FAILED.
 - The model outputs refs (E1, E1.B2, S4, POSTING, WHY) — never titles, employers, dates or skill names. Code resolves refs against the library snapshot.
 - Run the matching guard before saving: `validateTailorOutput` (G1–G12), `validateLetterOutput` (L1–L4), prep/coach guards. No unsupported numbers ever reach the user.

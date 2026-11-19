@@ -19,7 +19,7 @@ import {
 import { Prisma } from "@/generated/prisma/client";
 import { buildContent, OutputSchema, SYSTEM } from "@/lib/ai/prompts/letter";
 import { POSTING_MAX } from "@/lib/ai/prompts/tailor";
-import { runStructured } from "@/lib/ai/run";
+import { modelFailure, runStructured } from "@/lib/ai/run";
 import { requireUserForAction } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fail, ok, type ActionResult } from "@/lib/result";
@@ -126,7 +126,6 @@ export async function writeCoverLetter(
     const result = await runStructured({
       kind: "COVER_LETTER",
       userId: user.id,
-      usedBonusCredit: quota.useBonus,
       system: SYSTEM,
       content: buildContent({
         libraryText: serialized.text,
@@ -148,7 +147,7 @@ export async function writeCoverLetter(
     if (!result.ok) {
       await markFailed(user.id, letterId, result.code);
       revalidateJob(job.id);
-      return fail("AI_FAILED");
+      return fail(modelFailure(result.code));
     }
 
     const guard = validateLetterOutput(result.data, {

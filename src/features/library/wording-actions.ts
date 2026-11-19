@@ -23,7 +23,7 @@ import {
   DraftSchema,
 } from "@/lib/ai/prompts/strengthen";
 import { requireUserForAction } from "@/lib/auth";
-import { runStructured } from "@/lib/ai/run";
+import { modelFailure, runStructured } from "@/lib/ai/run";
 import { db } from "@/lib/db";
 import { fail, ok, type ActionResult } from "@/lib/result";
 
@@ -69,13 +69,12 @@ export async function proposeBulletRewrite(
   const result = await runStructured({
     kind: "BULLET_COACH",
     userId: user.id,
-    usedBonusCredit: quota.useBonus,
     system: REWRITE_SYSTEM,
     content: buildRewrite({ bullet: bullet.text, context: libraryContext(library, entry.id) }),
     schema: RewriteSchema,
     refId: bullet.id,
   });
-  if (!result.ok) return fail("AI_FAILED");
+  if (!result.ok) return fail(modelFailure(result.code));
 
   const reviewed = reviewRewrite({
     text: result.data.text,
@@ -229,7 +228,6 @@ export async function proposeStrengthQuestions(
   const result = await runStructured({
     kind: "BULLET_COACH",
     userId: user.id,
-    usedBonusCredit: quota.useBonus,
     system: DISCOVER_SYSTEM,
     content: buildDiscover({
       title: entry.title,
@@ -240,7 +238,7 @@ export async function proposeStrengthQuestions(
     schema: DiscoverSchema,
     refId: entry.id,
   });
-  if (!result.ok) return fail("AI_FAILED");
+  if (!result.ok) return fail(modelFailure(result.code));
   return ok({
     questions: reviewQuestions(result.data.questions, libraryEvidence(library), 6),
   });
@@ -271,7 +269,6 @@ export async function draftStrengthenedBullet(input: unknown): Promise<
   const result = await runStructured({
     kind: "BULLET_COACH",
     userId: user.id,
-    usedBonusCredit: quota.useBonus,
     system: DRAFT_SYSTEM,
     content: buildDraft({
       title: entry.title,
@@ -282,7 +279,7 @@ export async function draftStrengthenedBullet(input: unknown): Promise<
     schema: DraftSchema,
     refId: entry.id,
   });
-  if (!result.ok) return fail("AI_FAILED");
+  if (!result.ok) return fail(modelFailure(result.code));
 
   const followUps = parsed.followUpRound
     ? []
@@ -365,7 +362,6 @@ export async function suggestProfileWording(
   const result = await runStructured({
     kind: "BULLET_COACH",
     userId: user.id,
-    usedBonusCredit: quota.useBonus,
     system: WORDING_SYSTEM,
     content: buildWording({
       kind,
@@ -376,7 +372,7 @@ export async function suggestProfileWording(
     schema: WordingSchema,
     refId: user.id,
   });
-  if (!result.ok) return fail("AI_FAILED");
+  if (!result.ok) return fail(modelFailure(result.code));
 
   const evidence = libraryEvidence(library);
   const titles = entryTitles(library);

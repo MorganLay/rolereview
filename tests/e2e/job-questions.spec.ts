@@ -45,7 +45,6 @@ test.describe("job questions", () => {
     await page.getByRole("link", { name: copy.start }).click();
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("booking validation");
-    await page.getByRole("button", { name: copy.yes, exact: true }).click();
     await page.getByLabel(copy.prompt).fill(ANSWER);
     await page.getByRole("button", { name: copy.next }).click();
     await page.getByRole("button", { name: copy.next }).click();

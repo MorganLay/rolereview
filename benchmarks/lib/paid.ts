@@ -303,7 +303,6 @@ export async function runCase(input: {
   const analyzed = await runStructured({
     kind: "ANALYZE",
     userId: input.userId,
-    usedBonusCredit: false,
     countsTowardQuota: false,
     system: ANALYZE_SYSTEM,
     content: buildAnalyzeContent(evidence.job),
@@ -336,7 +335,6 @@ export async function runCase(input: {
       const generated = await runStructured({
         kind: "TAILOR",
         userId: input.userId,
-        usedBonusCredit: false,
         countsTowardQuota: false,
         system: TAILOR_SYSTEM,
         content: buildTailorContent({
@@ -375,7 +373,6 @@ export async function runCase(input: {
           const repair = await runStructured({
             kind: "TAILOR",
             userId: input.userId,
-            usedBonusCredit: false,
             countsTowardQuota: false,
             system: REPAIR_SYSTEM,
             content: buildRepairContent({
@@ -416,7 +413,6 @@ export async function runCase(input: {
           const revised = await runStructured({
             kind: "TAILOR",
             userId: input.userId,
-            usedBonusCredit: false,
             countsTowardQuota: false,
             system: EDITORIAL_SYSTEM,
             content: buildEditorialContent({
@@ -471,7 +467,6 @@ export async function runCase(input: {
           const revised = await runStructured({
             kind: "TAILOR",
             userId: input.userId,
-            usedBonusCredit: false,
             countsTowardQuota: false,
             system: REVISE_SYSTEM,
             content: buildReviseContent({
@@ -551,7 +546,6 @@ export async function runCase(input: {
     const written = await runStructured({
       kind: "TAILOR",
       userId: input.userId,
-      usedBonusCredit: false,
       countsTowardQuota: false,
       system: prompt,
       content: [{ type: "text", text: `ORIGINAL RESUME:\n${evidence.resume}\n\nJOB DESCRIPTION:\n${evidence.job}` }],

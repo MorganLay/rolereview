@@ -113,9 +113,19 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **TS.5** New job paste and a blank form
 - T13.4b waits until TS.2–TS.5 are ticked.
 
-## Phase R — Library and tailoring
-- [ ] **TR.1** Grounded bullet rewrite
-- The formal beta waits until this phase is done. Further library and tailoring notes become the next task here, one at a time.
+## Phase R — Before the formal beta
+- [x] **TR.1** Grounded bullet rewrite
+- [ ] **TR.2** Choose the wording for this job
+- [ ] **TR.3** Resume email
+- [ ] **TR.4** Messy import opens the review
+- [ ] **TR.5** Default apply-by date
+- [ ] **TR.6** Plan & billing spacing
+- [ ] **TR.7** Start from an empty library
+- The formal beta waits until this phase is done. A linked inbox stays a note.
+
+## Tailoring experiment (not the beta queue)
+- [ ] **TB.1** Model-led resume tailoring
+- TR.2 stays the next beta task. This experiment does not change the live tailor.
 
 ## Production and launch
 - [x] **T13.4b** Separate production environment
@@ -126,7 +136,23 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Notes
 
+- **2026-11-18 Find jobs:** A page that searches licensed boards and saves a fitting listing as a normal job is logged in `docs/Feedback.md`. Indeed’s public search API is closed. Not a task yet.
+- **2026-11-15 Offsite tailored resume:** Documents can only add a resume RoleRefine tailored. Uploading one made elsewhere, as the file that was sent, is logged in `docs/Feedback.md`. Not a task yet.
+- **2026-11-14 Outcome-first reading:** The new prompt cost $0.5549 on the same ten cases. It recovered the availability result, Timberline, and several summaries. FERPA and the electrical licence were still missing, and some bullets stayed fragments. Direct Claude and the outcome-first prompt were even. TB.1 stays open.
+
+- **2026-11-13 Outcome-first prompt:** The model-led experiment now uses the outcome-first editorial prompt (`outcome-first-v1`). Production tailoring still uses its own prompt. No paid call was sent for the new prompt.
+
+- **2026-11-13 Ten-case reading:** Arms A and B cost $0.7293 and arm C cost $0.4504. Every fitted resume measured one page and the fitter dropped nothing. Direct Claude kept more quantified evidence on the longer careers. Model-led avoided several broken summaries and headings. FERPA, the 84% to 92% availability result, and Timberline were still missing on model-led pages. TB.1 stays open.
+
+- **2026-11-13 Evaluation plan:** Ten cases share one normalized library for both RoleRefine arms and the original resume for direct Claude. The worst-case estimate is about $3.55. No paid call was sent. TB.1 stays open.
+
+- **2026-11-13 Model-led composer:** The experiment keeps Claude’s validated lines, including two grounded lines that share a source, and records an omit, a duplicate, or a missing draft. It does not score keywords or apply an estimated page budget. A claimed skills section is checked and sent back to the model. Page count is measured before any line is removed. Production composition is unchanged. Not a close of TB.1.
+
+- **2026-11-13 Tailoring acceptance:** TB.1 is judged against `docs/12-TAILORING-ACCEPTANCE.md`. The boxes stay open. Production composition still drops a second grounded line that shares a source. The model-led arm on the four diagnostic cases cost $0.1610 and is not a close of the task.
+
+- **2026-11-11 Phase R:** TR.1 is done. The library rewrite, Find missing details, headlines and summaries, and saved wording shipped on 2026-11-09. The tailor already chooses a saved variant, the library bullet, or a new line. Still to build, in order: the person chooses that combination (TR.2), a resume email separate from sign-in (TR.3), a messy import opening the review (TR.4), a 7-day apply-by default (TR.5), Plan & billing spacing (TR.6), and a guided empty library (TR.7). A linked inbox stays a note.
 - **2026-11-11 Privacy policy:** `/privacy` now describes the live flows: production database in AWS ca-central-1, Vercel functions in `iad1`, Anthropic commercial API terms checked the same day, PostHog click tracking left on, and deletion that leaves Stripe, feedback, testimonials, the send log, and waitlist emails. No public privacy mailbox and no mailing address are published. Terms were left as they were.
+- **2026-11-10 Strategy:** The tailor records a job-specific strategy before the bullets: which entries lead, support, or stay off, and how many lines each one should have. Composition follows that allocation. Keyword ranking does not replace it. One editorial call can change the selection when the draft disagrees with the strategy or the ranking is a close call. A draft that already matches a clear strategy makes no extra call. The library is not written.
 - **2026-11-10 Same role:** Imported records of one job or project stay in the library and share one resume heading. A bullet may cite facts from any of those records. A second project stays off a one-page resume when stronger entries already show that evidence, and a shipped project outranks one that only shares a keyword. On one page, a role that matches the posting less keeps two bullets. The regular PDF layout is measured against the chosen length. The library is not merged or deleted.
 - **2026-11-10 Tailoring:** A bullet may combine up to five sources from the same entry. The guard keeps the line when every claim is in those sources, and puts the sources back when it is not. Familiarity, use, coursework, a project, and professional experience stay distinct. A summary sentence needs the same support and may combine roles. Page space follows relevance, with a 14- or 22-line budget. One revision call runs when a must-have requirement has direct evidence the draft left off, or a selected line hides job-relevant facts its sources state. Restoring a combined line splits it back into those sources. The library is not written. Repair and revision do not use a second tailored-resume allowance.
 - **2026-11-09 Tailoring:** A tailor now saves a finished resume. Rewritten bullets are already the page wording, with a specific why when one was recorded. A vague note is dropped. One repair call can replace a line the guard reverted, and it does not take a second credit. The library is not written. The match labels are Met, Not on this resume, Needs review, and Not demonstrated. Live `npm run evals` was not re-run.

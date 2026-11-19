@@ -17,6 +17,7 @@ import { sameWording } from "./grounding";
 import { chooseEducationKeepers, canonicalUrl, classifyLink } from "./identity";
 import { termAppears, normalizeMatchText } from "./keywords";
 import { jobHeadline } from "./presentation";
+import { planDispositions } from "./plan-completeness";
 import { groupMembers } from "./stints";
 import type { EntryKind } from "./resume-shape";
 import { resumeSectionOrder } from "./resume-shape";
@@ -288,6 +289,14 @@ export function composeResume(input: {
   selectSkills(skills, input.snapshot, terms, review);
   pruneUnevidencedSkills(skills, input.snapshot, selected, input.analysis, review);
 
+  const dispositions = planDispositions(input.snapshot.entries, input.output.plan?.evidence);
+  const plannedOmit = new Set(
+    dispositions.filter((row) => row.disposition === "omit").map((row) => row.ref),
+  );
+  const decided = new Set(
+    dispositions.filter((row) => row.disposition !== "unresolved").map((row) => row.ref),
+  );
+
   for (const entry of input.snapshot.entries) {
     const row = selected.get(entry.ref);
     if (row) {
@@ -304,7 +313,7 @@ export function composeResume(input: {
       ? "same_degree"
       : sameRole.has(entry.ref)
         ? "same_role"
-        : strategyOmit.has(entry.ref)
+        : strategyOmit.has(entry.ref) || plannedOmit.has(entry.ref)
           ? "strategy_omit"
           : marginal.has(entry.ref)
             ? "no_marginal_value"
@@ -316,7 +325,9 @@ export function composeResume(input: {
               ? "lower_relevance"
               : missing
                 ? "missing_source"
-                : "not_selected";
+                : directed && !decided.has(entry.ref)
+                  ? "unresolved"
+                  : "not_selected";
     review.push({
       code: "ENTRY_EXCLUDED",
       severity: reason === "page_budget" ? "warning" : "note",

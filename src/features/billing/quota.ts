@@ -1,8 +1,10 @@
 import "server-only";
 
+import type { Prisma } from "@/generated/prisma/client";
 import type { Plan } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
+import { dayUseWhere, planUseWhere } from "./hold-rules";
 import { limitDailyCap, PLANS, type MeteredKind, type QuotaPeriod } from "./plans";
 
 /**
@@ -111,6 +113,28 @@ export function selectBonusCredit<T extends BonusCreditCandidate>(
   return usable[0] ?? null;
 }
 
+/**
+ * Credits to refill after a hold is released. Soonest expiry first, same order
+ * as spending. Only a credit that has been partly used can take a point back.
+ */
+export function planBonusRestore(
+  credits: ReadonlyArray<BonusCreditCandidate & { amount: number }>,
+  count: number,
+): Array<{ id: string; remaining: number }> {
+  let left = count;
+  const ordered = credits
+    .filter((credit) => credit.remaining < credit.amount)
+    .sort(compareBonusCredits);
+  const updates: Array<{ id: string; remaining: number }> = [];
+  for (const credit of ordered) {
+    if (left === 0) break;
+    const give = Math.min(credit.amount - credit.remaining, left);
+    updates.push({ id: credit.id, remaining: credit.remaining + give });
+    left -= give;
+  }
+  return updates;
+}
+
 function compareBonusCredits(a: BonusCreditCandidate, b: BonusCreditCandidate): number {
   if (a.expiresAt === null && b.expiresAt === null) {
     return a.createdAt.getTime() - b.createdAt.getTime();
@@ -129,13 +153,7 @@ async function loadQuotaCounts(
 ): Promise<{ used: number; allowance: number; bonus: number }> {
   const { start, end } = periodBounds(kind, now);
   const used = await db.aiCall.count({
-    where: {
-      userId: user.id,
-      kind,
-      success: true,
-      usedBonusCredit: false,
-      createdAt: { gte: start, lt: end },
-    },
+    where: planUseWhere(user.id, kind, start, end, now),
   });
   const bonus = await db.bonusCredit.aggregate({
     where: {
@@ -162,12 +180,7 @@ export async function checkQuota(
   if (cap != null) {
     const day = utcDayBounds(now);
     const dayUsed = await db.aiCall.count({
-      where: {
-        userId: user.id,
-        kind,
-        success: true,
-        createdAt: { gte: day.start, lt: day.end },
-      },
+      where: dayUseWhere(user.id, kind, day.start, day.end, now),
     });
     if (dailyCapBlocks(dayUsed, cap)) {
       return { allowed: false, useBonus: false, limit: "day" };
@@ -190,12 +203,7 @@ export async function callsRemaining(
   if (cap == null) return monthly;
   const day = utcDayBounds(now);
   const dayUsed = await db.aiCall.count({
-    where: {
-      userId: user.id,
-      kind,
-      success: true,
-      createdAt: { gte: day.start, lt: day.end },
-    },
+    where: dayUseWhere(user.id, kind, day.start, day.end, now),
   });
   return Math.min(monthly, Math.max(0, cap - dayUsed));
 }
@@ -224,31 +232,39 @@ export async function releaseUnsavedAnalysis(userId: string, refId: string): Pro
     if (rows.length === 0) return;
     await tx.aiCall.updateMany({
       where: { userId, id: { in: rows.map((row) => row.id) } },
-      data: { success: false, errorCode: "AI_FAILED" },
+      data: { success: false, errorCode: "AI_FAILED", heldUntil: null },
     });
-    let restore = rows.filter((row) => row.usedBonusCredit).length;
+    const restore = rows.filter((row) => row.usedBonusCredit).length;
     if (restore === 0) return;
-    const credits = await tx.bonusCredit.findMany({
-      where: { userId, kind: "ANALYZE" },
-      select: {
-        id: true,
-        remaining: true,
-        amount: true,
-        expiresAt: true,
-        createdAt: true,
-      },
-    });
-    const ordered = credits
-      .filter((credit) => credit.remaining < credit.amount)
-      .sort(compareBonusCredits);
-    for (const credit of ordered) {
-      if (restore === 0) break;
-      const give = Math.min(credit.amount - credit.remaining, restore);
-      const updated = await tx.bonusCredit.updateMany({
-        where: { id: credit.id, userId, remaining: credit.remaining },
-        data: { remaining: { increment: give } },
-      });
-      if (updated.count === 1) restore -= give;
-    }
+    await restoreBonusCredits(tx, userId, "ANALYZE", restore);
   });
+}
+
+/** Put `count` bonus points back. Used when a hold fails, expires, or an analysis is discarded. */
+export async function restoreBonusCredits(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  kind: MeteredKind,
+  count: number,
+): Promise<void> {
+  if (count <= 0) return;
+  const credits = await tx.bonusCredit.findMany({
+    where: { userId, kind },
+    select: {
+      id: true,
+      remaining: true,
+      amount: true,
+      expiresAt: true,
+      createdAt: true,
+    },
+  });
+  for (const update of planBonusRestore(credits, count)) {
+    const previous = credits.find((credit) => credit.id === update.id);
+    if (!previous) continue;
+    const written = await tx.bonusCredit.updateMany({
+      where: { id: update.id, userId, remaining: previous.remaining },
+      data: { remaining: update.remaining },
+    });
+    if (written.count !== 1) continue;
+  }
 }

@@ -97,7 +97,6 @@ export async function runGisTailor(input: {
   const analyzed = await runStructured({
     kind: "ANALYZE",
     userId: input.userId,
-    usedBonusCredit: false,
     countsTowardQuota: false,
     system: ANALYZE_SYSTEM,
     content: buildAnalyzeContent(input.posting),
@@ -117,7 +116,6 @@ export async function runGisTailor(input: {
   const generated = await runStructured({
     kind: "TAILOR",
     userId: input.userId,
-    usedBonusCredit: false,
     countsTowardQuota: false,
     system: TAILOR_SYSTEM,
     content: buildTailorContent({
@@ -146,7 +144,6 @@ export async function runGisTailor(input: {
     const repair = await runStructured({
       kind: "TAILOR",
       userId: input.userId,
-      usedBonusCredit: false,
       countsTowardQuota: false,
       system: REPAIR_SYSTEM,
       content: buildRepairContent({
@@ -185,7 +182,6 @@ export async function runGisTailor(input: {
     const revised = await runStructured({
       kind: "TAILOR",
       userId: input.userId,
-      usedBonusCredit: false,
       countsTowardQuota: false,
       system: EDITORIAL_SYSTEM,
       content: buildEditorialContent({
@@ -247,7 +243,6 @@ export async function runGisTailor(input: {
     const revised = await runStructured({
       kind: "TAILOR",
       userId: input.userId,
-      usedBonusCredit: false,
       countsTowardQuota: false,
       system: REVISE_SYSTEM,
       content: buildReviseContent({

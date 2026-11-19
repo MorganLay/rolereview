@@ -22,6 +22,7 @@ import {
   utcDayBounds,
   quotaRemaining,
   selectBonusCredit,
+  planBonusRestore,
   type BonusCreditCandidate,
 } from "@/features/billing/quota";
 
@@ -220,6 +221,31 @@ describe("selectBonusCredit", () => {
   });
 });
 
+describe("planBonusRestore", () => {
+  it("puts a spent point back on the soonest credit and skips a full one", () => {
+    const updates = planBonusRestore(
+      [
+        {
+          id: "full",
+          remaining: 2,
+          amount: 2,
+          expiresAt: new Date("2026-12-01T00:00:00.000Z"),
+          createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+        {
+          id: "spent",
+          remaining: 0,
+          amount: 1,
+          expiresAt: null,
+          createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      ],
+      1,
+    );
+    expect(updates).toEqual([{ id: "spent", remaining: 1 }]);
+  });
+});
+
 describe("checkQuota", () => {
   beforeEach(() => {
     count.mockReset();
@@ -235,11 +261,14 @@ describe("checkQuota", () => {
       where: {
         userId: "user-1",
         kind: "ANALYZE",
-        success: true,
         createdAt: {
           gte: new Date("2026-10-19T00:00:00.000Z"),
           lt: new Date("2026-10-20T00:00:00.000Z"),
         },
+        OR: [
+          { success: true },
+          { success: false, heldUntil: { gt: NOW } },
+        ],
       },
     });
     expect(aggregate).not.toHaveBeenCalled();
@@ -253,12 +282,15 @@ describe("checkQuota", () => {
       where: {
         userId: "user-1",
         kind: "ANALYZE",
-        success: true,
         usedBonusCredit: false,
         createdAt: {
           gte: new Date("2026-10-01T00:00:00.000Z"),
           lt: new Date("2026-11-01T00:00:00.000Z"),
         },
+        OR: [
+          { success: true },
+          { success: false, heldUntil: { gt: NOW } },
+        ],
       },
     });
   });

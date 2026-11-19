@@ -835,8 +835,9 @@ model PrepKit {
 
 // ═════════════════════════════ METERING & BILLING ═════════════════════════════
 
-/// One row per AI request. Quotas count success = true; also cost tracking.
+/// One row per AI request. Quotas count success = true, plus an open hold.
 /// userId is null only for FREE_TOOL calls from anonymous visitors.
+/// heldUntil set and success false: a slot taken before the model returns.
 model AiCall {
   id               String     @id @default(uuid()) @db.Uuid
   userId           String?    @db.Uuid
@@ -852,11 +853,13 @@ model AiCall {
   costMicros       Int        @default(0) /// Estimated cost in millionths of a USD, from lib/ai/pricing.ts
   refId            String? /// jobId / resumeId / coverLetterId / prepKitId
   usedBonusCredit  Boolean    @default(false)
+  heldUntil        DateTime? /// Open slot. Counts until this time, then the next reserve releases it.
   createdAt        DateTime   @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, kind, success, createdAt])
+  @@index([userId, kind, heldUntil])
   @@index([createdAt])
 }
 

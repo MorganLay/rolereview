@@ -6,10 +6,18 @@ type CallRow = {
   userId: string | null;
   refId: string | null;
   kind: string;
+  model: string;
   success: boolean;
   usedBonusCredit: boolean;
   errorCode: string | null;
+  heldUntil: Date | null;
   createdAt: Date;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  durationMs: number;
+  costMicros: number;
 };
 
 type CreditRow = {
@@ -43,15 +51,31 @@ function matches(row: Record<string, unknown>, where: Record<string, unknown>): 
     }
     const value = row[key];
     if (isRecord(expected)) {
-      if ("in" in expected && !((expected.in as unknown[]).includes(value))) return false;
-      if ("gt" in expected && !(typeof value === "number" && value > (expected.gt as number))) {
+      if ("not" in expected && expected.not === null && (value === null || value === undefined)) {
         return false;
       }
-      if ("gte" in expected && !(value instanceof Date) || (value instanceof Date && expected.gte instanceof Date && value < expected.gte)) {
-        if ("gte" in expected) return false;
+      if ("in" in expected && !((expected.in as unknown[]).includes(value))) return false;
+      if ("gt" in expected) {
+        const above =
+          value instanceof Date && expected.gt instanceof Date
+            ? value > expected.gt
+            : typeof value === "number" && typeof expected.gt === "number" && value > expected.gt;
+        if (!above) return false;
       }
-      if ("lt" in expected && !(value instanceof Date && expected.lt instanceof Date && value < expected.lt)) {
-        if ("lt" in expected) return false;
+      if ("gte" in expected) {
+        if (!(value instanceof Date && expected.gte instanceof Date && value >= expected.gte)) {
+          return false;
+        }
+      }
+      if ("lt" in expected) {
+        if (!(value instanceof Date && expected.lt instanceof Date && value < expected.lt)) {
+          return false;
+        }
+      }
+      if ("lte" in expected) {
+        if (!(value instanceof Date && expected.lte instanceof Date && value <= expected.lte)) {
+          return false;
+        }
       }
       continue;
     }
@@ -93,17 +117,29 @@ vi.mock("@/lib/db", () => ({
     },
     $transaction: async (fn: (tx: unknown) => Promise<void>) =>
       fn({
+        $executeRaw: async () => 0,
+        user: {
+          findFirst: async () => ({ plan: "FREE" as const }),
+        },
         aiCall: {
-          create: async ({ data }: { data: Omit<CallRow, "id" | "createdAt"> & { createdAt?: Date } }) => {
+          create: async ({ data }: { data: Partial<CallRow> & Pick<CallRow, "kind" | "success"> }) => {
             const row: CallRow = {
-              id: `call-${nextId++}`,
-              userId: data.userId,
-              refId: data.refId,
+              id: data.id ?? `call-${nextId++}`,
+              userId: data.userId ?? null,
+              refId: data.refId ?? null,
               kind: data.kind,
+              model: data.model ?? "",
               success: data.success,
-              usedBonusCredit: data.usedBonusCredit,
-              errorCode: data.errorCode,
+              usedBonusCredit: data.usedBonusCredit ?? false,
+              errorCode: data.errorCode ?? null,
+              heldUntil: data.heldUntil ?? null,
               createdAt: data.createdAt ?? NOW,
+              inputTokens: data.inputTokens ?? 0,
+              outputTokens: data.outputTokens ?? 0,
+              cacheReadTokens: data.cacheReadTokens ?? 0,
+              cacheWriteTokens: data.cacheWriteTokens ?? 0,
+              durationMs: data.durationMs ?? 0,
+              costMicros: data.costMicros ?? 0,
             };
             calls.push(row);
             return row;
@@ -159,6 +195,7 @@ const baseArgs = {
   content: [{ type: "text" as const, text: "<posting>Office assistant.</posting>" }],
   schema,
   refId: "job-1",
+  now: NOW,
 };
 
 function message() {
@@ -218,6 +255,27 @@ describe("analysis quota", () => {
   });
 
   it("restores a bonus credit when the unsaved analysis had spent one", async () => {
+    const earlier = new Date("2026-10-01T12:00:00.000Z");
+    for (let index = 0; index < 30; index += 1) {
+      calls.push({
+        id: `seed-${index}`,
+        userId: "user-1",
+        refId: `old-${index}`,
+        kind: "ANALYZE",
+        model: "claude-haiku-5-5",
+        success: true,
+        usedBonusCredit: false,
+        errorCode: null,
+        heldUntil: null,
+        createdAt: earlier,
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
+        durationMs: 0,
+        costMicros: 0,
+      });
+    }
     credits.push({
       id: "credit-1",
       userId: "user-1",
@@ -228,14 +286,14 @@ describe("analysis quota", () => {
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
     });
     create.mockResolvedValue(message());
-    await runStructured({ ...baseArgs, refId: "job-4", usedBonusCredit: true });
+    await runStructured({ ...baseArgs, refId: "job-4" });
     expect(credits[0]?.remaining).toBe(0);
-    expect(await usedToday()).toBe(0);
+    expect(await usedToday()).toBe(30);
 
     await releaseUnsavedAnalysis("user-1", "job-4");
     expect(credits[0]?.remaining).toBe(1);
-    expect(await usedToday()).toBe(0);
+    expect(await usedToday()).toBe(30);
     const snapshot = await quotaSnapshot({ id: "user-1", plan: "FREE" }, "ANALYZE", NOW);
-    expect(snapshot.remaining).toBe(31);
+    expect(snapshot.remaining).toBe(1);
   });
 });

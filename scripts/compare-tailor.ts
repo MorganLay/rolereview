@@ -26,7 +26,15 @@ import {
   mergeRepair,
   repairTargets,
 } from "@/features/tailor/repair";
-import { acceptRevision, mergeRevision, notesForAccepted, revisionTargets } from "@/features/tailor/revise";
+import {
+  acceptEditorial,
+  acceptRevision,
+  editorialLibrary,
+  mergeRevision,
+  notesForAccepted,
+  notesForEditorial,
+  revisionRoute,
+} from "@/features/tailor/revise";
 import { ResumeContent } from "@/features/tailor/schemas";
 import { validateTailorOutput } from "@/features/tailor/validate";
 import { preferSavedWording } from "@/features/tailor/variants";
@@ -41,7 +49,10 @@ import {
   REPAIR_SYSTEM,
 } from "@/lib/ai/prompts/tailor-repair";
 import {
+  buildEditorialContent,
   buildReviseContent,
+  EDITORIAL_SYSTEM,
+  EditorialSchema,
   ReviseSchema,
   REVISE_SYSTEM,
 } from "@/lib/ai/prompts/tailor-revise";
@@ -54,7 +65,7 @@ import { runStructured } from "@/lib/ai/run";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 
-import { ANALYST_POSTING, HOOTSUITE_POSTING } from "../tests/unit/hootsuite-posting";
+import { ANALYST_POSTING, HOOTSUITE_POSTING, MODEL_POSTING } from "../tests/unit/hootsuite-posting";
 
 const PREVIOUS_RESUME_ID = "e60b1950-2235-42af-8904-375ac828b5e9";
 
@@ -131,6 +142,19 @@ async function main() {
   });
   console.log("NEW REPORTING ANALYST RESUME");
   printRun(analyst);
+  console.log("");
+
+  const modeling = await tailorPosting({
+    userId: previous.userId,
+    snapshot,
+    libraryText,
+    posting: MODEL_POSTING,
+    fallbackTitle: "Machine Learning Engineer",
+    fallbackCompany: "Harbor Labs",
+    length,
+  });
+  console.log("NEW MACHINE LEARNING RESUME");
+  printRun(modeling);
 }
 
 function postingBody(raw: string): string {
@@ -156,13 +180,14 @@ async function tailorPosting(input: {
   calls: CallRow[];
   requirements: string[];
   pages: number;
+  strategy: unknown;
+  editorial: boolean;
 }> {
   const calls: CallRow[] = [];
   const analyzed = await tracked("analyze", (refId) =>
     runStructured({
       kind: "ANALYZE",
       userId: input.userId,
-      usedBonusCredit: false,
       countsTowardQuota: false,
       system: ANALYZE_SYSTEM,
       content: buildAnalyzeContent(input.posting),
@@ -179,19 +204,29 @@ async function tailorPosting(input: {
       calls,
       requirements: [],
       pages: 0,
+      strategy: null,
+      editorial: false,
     };
   }
   const analysis = postProcessAnalyze(analyzed.result.data, input.posting);
   const checked = JobAnalysis.safeParse(analysis);
   if (!checked.success) {
-    return { text: "Analysis did not match the schema.", issues: [], reverts: 0, calls, requirements: [], pages: 0 };
+    return {
+      text: "Analysis did not match the schema.",
+      issues: [],
+      reverts: 0,
+      calls,
+      requirements: [],
+      pages: 0,
+      strategy: null,
+      editorial: false,
+    };
   }
 
   const generated = await tracked("generate", (refId) =>
     runStructured({
       kind: "TAILOR",
       userId: input.userId,
-      usedBonusCredit: false,
       countsTowardQuota: false,
       system: TAILOR_SYSTEM,
       content: buildTailorContent({
@@ -219,6 +254,8 @@ async function tailorPosting(input: {
       calls,
       requirements: checked.data.requirements.map((item) => item.text),
       pages: 0,
+      strategy: null,
+      editorial: false,
     };
   }
 
@@ -231,7 +268,6 @@ async function tailorPosting(input: {
       runStructured({
         kind: "TAILOR",
         userId: input.userId,
-        usedBonusCredit: false,
         countsTowardQuota: false,
         system: REPAIR_SYSTEM,
         content: buildRepairContent({
@@ -261,17 +297,84 @@ async function tailorPosting(input: {
     }
   }
 
-  const gaps = revisionTargets({
+  const route = revisionRoute({
     output: guard.output,
     snapshot: input.snapshot,
     analysis: checked.data,
   });
-  if (gaps.length > 0) {
+  let editorial = false;
+  let editorialApplied = false;
+  if (route.kind === "editorial" && guard.output.plan) {
+    editorial = true;
+    const revised = await tracked("editorial", (refId) =>
+      runStructured({
+        kind: "TAILOR",
+        userId: input.userId,
+        countsTowardQuota: false,
+        system: EDITORIAL_SYSTEM,
+        content: buildEditorialContent({
+          title: checked.data.title || input.fallbackTitle,
+          company: checked.data.company || input.fallbackCompany,
+          length: input.length,
+          strategy: guard.output.plan!,
+          doubts: route.doubts,
+          draft: guard.output.entries.map((entry) => ({
+            ref: entry.ref,
+            bullets: entry.bullets.map((bullet) => ({
+              sourceRefs: bullet.sourceRefs,
+              text: bullet.text,
+            })),
+          })),
+          library: editorialLibrary({
+            output: guard.output,
+            snapshot: input.snapshot,
+            targets: route.targets,
+          }),
+          sameRole: sameRoleText(input.snapshot.entries, input.snapshot.takenAt),
+        }),
+        schema: EditorialSchema,
+        refId,
+      }),
+    );
+    calls.push(revised.call);
+    const parsed = revised.result.ok ? EditorialSchema.safeParse(revised.result.data) : null;
+    if (parsed?.success && parsed.data.changed) {
+      const second = validateTailorOutput(
+        {
+          ...guard.output,
+          summary: parsed.data.summary,
+          entries: parsed.data.entries.map((entry) => ({
+            ref: entry.ref,
+            bullets: entry.bullets.map((bullet) => ({
+              sourceRefs: bullet.sourceRefs,
+              text: bullet.text,
+            })),
+          })),
+          requirementMatches: guard.output.requirementMatches.map((match) => ({
+            requirementId: match.requirementId,
+            verdict: match.verdict === "unassessed" ? "missing" : match.verdict,
+            evidenceRefs: [...match.evidenceRefs],
+            note: match.note,
+          })),
+        },
+        input.snapshot,
+        checked.data,
+      );
+      const chosen = acceptEditorial(guard.output, second.output);
+      if (chosen.accepted && second.reverts <= guard.reverts) {
+        editorialApplied = true;
+        guard = { output: chosen.output, reverts: second.reverts, issues: second.issues };
+        notes = notesForEditorial(notes, parsed.data.entries);
+      }
+    }
+  }
+  if (!editorialApplied && route.kind !== "none" && route.targets.length > 0) {
+    const gaps = route.targets;
+    if (gaps.length > 0) {
     const revised = await tracked("revision", (refId) =>
       runStructured({
         kind: "TAILOR",
         userId: input.userId,
-        usedBonusCredit: false,
         countsTowardQuota: false,
         system: REVISE_SYSTEM,
         content: buildReviseContent({
@@ -303,6 +406,7 @@ async function tailorPosting(input: {
       }
     }
   }
+  }
 
   const composition = composeResume({
     output: guard.output,
@@ -325,6 +429,8 @@ async function tailorPosting(input: {
     calls,
     requirements: checked.data.requirements.map((item) => `[${item.importance}] ${item.text}`),
     pages: fitted.pages,
+    strategy: guard.output.plan ?? null,
+    editorial,
   };
 }
 
@@ -383,6 +489,8 @@ function printRun(run: {
   calls: CallRow[];
   requirements: string[];
   pages: number;
+  strategy: unknown;
+  editorial: boolean;
 }) {
   console.log("REQUIREMENTS");
   for (const requirement of run.requirements) console.log(`- ${requirement}`);
@@ -390,8 +498,10 @@ function printRun(run: {
   for (const row of run.calls) printCall(row);
   const cost = run.calls.reduce((sum, row) => sum + row.costMicros, 0);
   console.log(
-    `reverts ${run.reverts} issues ${JSON.stringify(run.issues)} pages ${run.pages} costUSD ${(cost / 1_000_000).toFixed(4)}`,
+    `reverts ${run.reverts} issues ${JSON.stringify(run.issues)} pages ${run.pages} editorial ${run.editorial} costUSD ${(cost / 1_000_000).toFixed(4)}`,
   );
+  console.log("STRATEGY");
+  console.log(JSON.stringify(run.strategy, null, 2));
   console.log(run.text);
 }
 

@@ -7,7 +7,7 @@ import { describe, it } from "vitest";
 import { main } from "../../scripts/compare-tailor";
 
 describe.skipIf(process.env.LIVE_TAILOR !== "1")("live tailor comparison", () => {
-  it("reruns Hootsuite and the reporting analyst on the saved library", async () => {
+  it("reruns Hootsuite, the reporting analyst, and the modeling role on the saved library", async () => {
     const lines: string[] = [];
     const write = console.log;
     console.log = (...args: unknown[]) => {
@@ -20,5 +20,5 @@ describe.skipIf(process.env.LIVE_TAILOR !== "1")("live tailor comparison", () =>
       console.log = write;
       writeFileSync(path.join(tmpdir(), "rolerefine-compare.txt"), lines.join("\n"), "utf8");
     }
-  }, 300_000);
+  }, 480_000);
 });

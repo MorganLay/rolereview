@@ -74,7 +74,7 @@ All user-owned rows carry `userId` and cascade-delete with the user (feedback an
 | `TailoredResume.label` / `CoverLetter.label` | Optional version name, at most 80 characters. Blank shows "{Company} — {date}" from `createdAt` in the user's timezone. |
 | `TailoredResume.librarySnapshot` | Source traceability survives later library edits. |
 | `aiOutput` (immutable) vs `content` (editable) | Compare AI output to user edits for evals and prompt tuning. |
-| Quotas counted from `AiCall`; bonus credits as a ledger with `remaining` | No counter drift; failures are free; full audit trail. |
+| Quotas counted from `AiCall`; an in-flight call holds a slot; a failure or a hold older than eight minutes is released | No counter drift; failures are free; full audit trail. |
 | Milestone definitions live in code; streaks are computed | No balance tuning in the DB; nothing to farm. |
 | No uploaded files stored | Privacy and simplicity. |
 | `Lead` separate from `User` | Waitlist and free-tool emails exist before accounts do. |
@@ -405,23 +405,38 @@ export const PrepQuestion = z.object({
 export const PrepKitContent = z.object({ schemaVersion: z.literal(1), questions: z.array(PrepQuestion) });
 ```
 
-## Quotas & bonus credits (`features/billing/quota.ts`)
+## Quotas & bonus credits (`features/billing/quota.ts`, `features/billing/hold.ts`)
+
+A metered call takes its slot before the model runs. `runStructured` inserts an `AiCall` with `success` false and `heldUntil` eight minutes ahead, inside a transaction that locks the user row (`SELECT … FOR UPDATE`) only for the count and the insert. The lock is not held while Claude runs. `countsTowardQuota: false` (a repair or revision) does not take a slot. It is stored with `usedBonusCredit` true and does not decrement a bonus credit.
+
+`checkQuota` uses the same rules, so the screen and the reserve agree. The reserve is the one that decides. Two requests that both pass the early check still cannot both take the last slot.
 
 ```
 period(kind) = UTC calendar month
-used         = count(AiCall where userId, kind, success = true, usedBonusCredit = false, createdAt in period)
-A repair or revision for a resume already charged is stored with `usedBonusCredit` true and does not decrement a bonus credit, so it is outside `used`.
+open hold    = success false AND heldUntil > now
+used         = count(AiCall where userId, kind, usedBonusCredit = false, createdAt in period,
+                     AND (success = true OR open hold))
+A repair or revision is stored with `usedBonusCredit` true, so it is outside `used`.
 allowance    = PLANS[user.plan].limits[kind]
 bonus        = sum(BonusCredit.remaining where userId, kind, (expiresAt null or > now))
-dailyCap     = optional abuse ceiling. ANALYZE counts every successful call in the UTC day, including calls that used a bonus credit. Bonus credits do not raise it.
+dailyCap     = optional abuse ceiling. ANALYZE counts every successful call in the UTC day,
+               plus every open hold that day, including calls that used a bonus credit.
+               Bonus credits do not raise it.
 
 canUse  = under the daily cap, and (used < allowance  OR  bonus > 0)
-on success:
-  if used < allowance → AiCall(usedBonusCredit = false)
-  else → decrement the oldest-expiring BonusCredit with remaining > 0 (same transaction), AiCall(usedBonusCredit = true)
+on reserve, before the model call:
+  if used < allowance → AiCall(usedBonusCredit = false, heldUntil = now + 8 minutes)
+  else → decrement the oldest-expiring BonusCredit with remaining > 0, AiCall(usedBonusCredit = true, heldUntil = now + 8 minutes)
+on settle:
+  success → success true, heldUntil null. The bonus decrement stays.
+  failure → success false, heldUntil null, and a bonus point is put back.
 ```
 
-Soonest `expiresAt` first. `expiresAt` null (no expiry) is last. The same expiry uses the oldest `createdAt`. `expiresAt` equal to now is already expired. If that credit is gone when the row is written, the successful `AiCall` is still stored with `usedBonusCredit` true so it does not also count against the plan allowance.
+An open hold counts until it settles or until `heldUntil`. The next reserve for that person and kind releases a hold whose time has passed (`errorCode` `EXPIRED`) and puts a bonus point back. A settle that arrives after that does nothing: a late success does not charge a slot that was already given back, and a bonus point is not restored twice. A call that finishes after eight minutes can therefore be a free generation. The Claude client waits 120 seconds and retries twice, so a live call finishes inside the window. A process that dies keeps the slot until the deadline.
+
+Soonest `expiresAt` first. `expiresAt` null (no expiry) is last. The same expiry uses the oldest `createdAt`. `expiresAt` equal to now is already expired. Restoring a point uses that same order, and only a credit that has been partly used can take a point back.
+
+The anonymous keyword checker uses the same shape on `FreeToolRun`. The transaction takes `pg_advisory_xact_lock(hashtext(ipHash))`, counts rows for that hash, and inserts `success` false before the model call. The daily limit is three, including failures. A crash still consumes the attempt. There is no refund.
 
 `User.billingCurrency` is `USD` or `CAD`, copied from the current Stripe Price. A legacy Price does not set it. Checkout does not use a legacy Price.
 
@@ -457,7 +472,7 @@ T10.2 draws the funnel for that same window. A job with `appliedAt` in the windo
 | Timeline | `JobEvent(jobId, occurredAt)` |
 | Today's reminders | `Reminder(userId, completedAt, dueAt)` |
 | Upcoming interviews | `Interview(userId, scheduledAt)` |
-| Quota counts | `AiCall(userId, kind, success, createdAt)` |
+| Quota counts | `AiCall(userId, kind, heldUntil)` and `AiCall(userId, kind, success, createdAt)` |
 | Bonus credit lookup | `BonusCredit(userId, kind, remaining)` |
 | Free-tool / public-form rate limit | `FreeToolRun(ipHash, tool, createdAt)` (`KEYWORD_CHECKER`, `PUBLIC_LEAD`, `MAGIC_LINK`) |
 | Email de-duplication | `EmailLog(recipientKey, template, refKey)` unique |
@@ -493,8 +508,9 @@ T10.2 draws the funnel for that same window. A job with `appliedAt` in the windo
    **Every table added later needs the same line in its migration.**
 3. `20261109074623_wording_variants`: `WordingVariant`, its enums, indexes, and row level security. Canonical bullet, headline, and summary text stay on their existing columns. `jobId` marks wording for one posting. `isDefault` is the reusable headline or summary. `sourceRefs` stores stable library ids.
 4. `20261116044053_job_questions`: `JobQuestionSet`, `JobQuestion`, `AnswerTopic`, `EvidenceOrigin`, and `AiCallKind.JOB_QUESTIONS` (not a metered kind). Each new table has `userId` and cascades with the user. `AnswerTopic.jobId` and `EvidenceOrigin.jobId` use `SetNull` so a deleted job does not forget a no or the question text. Row level security is enabled with no policies, the same as every earlier table: the Supabase Data API can read nothing, and Prisma connects as the postgres role, which bypasses RLS.
-5. Never edit an applied migration.
-6. Changing a JSON shape: bump `schemaVersion` and handle old versions on parse, or write a data migration script.
+5. `20261118190000_ai_call_hold`: `AiCall.heldUntil` and its index. An open hold is a slot taken before the model call. Null once the call settles or the next reserve releases it.
+6. Never edit an applied migration.
+7. Changing a JSON shape: bump `schemaVersion` and handle old versions on parse, or write a data migration script.
 
 ## Seed data (`prisma/seed.ts`, dev only)
 

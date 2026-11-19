@@ -1,15 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-const { create, aiCallCreate, bonusFindMany, bonusUpdateMany } = vi.hoisted(() => ({
+const { create, aiCallCreate, reserveMeteredCall, settleMeteredCall } = vi.hoisted(() => ({
   create: vi.fn(),
   aiCallCreate: vi.fn(),
-  bonusFindMany: vi.fn(),
-  bonusUpdateMany: vi.fn(),
+  reserveMeteredCall: vi.fn(),
+  settleMeteredCall: vi.fn(),
 }));
 
 vi.mock("@/lib/ai/client", () => ({
   getAnthropic: () => ({ messages: { create } }),
+}));
+
+vi.mock("@/features/billing/hold", () => ({
+  reserveMeteredCall,
+  settleMeteredCall,
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -17,7 +22,6 @@ vi.mock("@/lib/db", () => ({
     $transaction: async (fn: (tx: unknown) => Promise<void>) =>
       fn({
         aiCall: { create: aiCallCreate },
-        bonusCredit: { findMany: bonusFindMany, updateMany: bonusUpdateMany },
       }),
   },
 }));
@@ -62,11 +66,11 @@ describe("runStructured", () => {
   beforeEach(() => {
     create.mockReset();
     aiCallCreate.mockReset();
-    bonusFindMany.mockReset();
-    bonusUpdateMany.mockReset();
+    reserveMeteredCall.mockReset();
+    settleMeteredCall.mockReset();
     aiCallCreate.mockResolvedValue({ id: "call-1" });
-    bonusFindMany.mockResolvedValue([]);
-    bonusUpdateMany.mockResolvedValue({ count: 0 });
+    reserveMeteredCall.mockResolvedValue({ ok: true, id: "hold-1", useBonus: false });
+    settleMeteredCall.mockResolvedValue(undefined);
     vi.spyOn(console, "info").mockImplementation(() => {});
   });
 
@@ -82,6 +86,12 @@ describe("runStructured", () => {
     const result = await runStructured(baseArgs);
 
     expect(result).toEqual({ ok: true, data: { title: "Analyst" } });
+    expect(reserveMeteredCall.mock.invocationCallOrder[0]).toBeLessThan(
+      create.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(create.mock.invocationCallOrder[0]).toBeLessThan(
+      settleMeteredCall.mock.invocationCallOrder[0] ?? 0,
+    );
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "claude-haiku-5-5",
@@ -90,21 +100,19 @@ describe("runStructured", () => {
         output_config: expect.objectContaining({ effort: "low" }),
       }),
     );
-    expect(bonusFindMany).not.toHaveBeenCalled();
-    expect(aiCallCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({
+    expect(aiCallCreate).not.toHaveBeenCalled();
+    expect(settleMeteredCall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "hold-1",
         userId: "user-1",
         kind: "ANALYZE",
-        model: "claude-haiku-5-5",
         success: true,
         errorCode: null,
         inputTokens: 100,
         outputTokens: 20,
-        refId: "job-1",
-        usedBonusCredit: false,
         costMicros: 20,
       }),
-    });
+    );
     const logged = JSON.stringify(vi.mocked(console.info).mock.calls);
     expect(logged).not.toContain("Office assistant");
     expect(logged).not.toContain("Analyst");
@@ -115,19 +123,18 @@ describe("runStructured", () => {
       message({ stop_reason: "refusal", parsed_output: null, input_tokens: 50, output_tokens: 10 }),
     );
 
-    const result = await runStructured({ ...baseArgs, usedBonusCredit: true });
+    const result = await runStructured(baseArgs);
 
     expect(result).toEqual({ ok: false, code: "AI_REFUSED" });
-    expect(bonusUpdateMany).not.toHaveBeenCalled();
-    expect(aiCallCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({
+    expect(settleMeteredCall).toHaveBeenCalledWith(
+      expect.objectContaining({
         success: false,
         errorCode: "AI_REFUSED",
         inputTokens: 50,
         outputTokens: 10,
-        usedBonusCredit: false,
       }),
-    });
+    );
+    expect(aiCallCreate).not.toHaveBeenCalled();
   });
 
   it("maps max_tokens to AI_TRUNCATED", async () => {
@@ -138,28 +145,26 @@ describe("runStructured", () => {
     const result = await runStructured(baseArgs);
 
     expect(result).toEqual({ ok: false, code: "AI_TRUNCATED" });
-    expect(aiCallCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({ success: false, errorCode: "AI_TRUNCATED" }),
-    });
+    expect(settleMeteredCall).toHaveBeenCalledWith(
+      expect.objectContaining({ success: false, errorCode: "AI_TRUNCATED" }),
+    );
   });
 
   it("maps a thrown SDK error and a bad response to AI_FAILED", async () => {
     create.mockRejectedValue(
       Object.assign(new Error("overloaded"), { status: 529, error: { type: "overloaded_error" } }),
     );
-    const thrown = await runStructured({ ...baseArgs, usedBonusCredit: true });
+    const thrown = await runStructured(baseArgs);
     expect(thrown).toEqual({ ok: false, code: "AI_FAILED" });
-    expect(bonusUpdateMany).not.toHaveBeenCalled();
-    expect(aiCallCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({
+    expect(settleMeteredCall).toHaveBeenCalledWith(
+      expect.objectContaining({
         success: false,
         errorCode: "AI_FAILED",
         inputTokens: 0,
         outputTokens: 0,
         costMicros: 0,
-        usedBonusCredit: false,
       }),
-    });
+    );
     expect(lastLog()).toContain('"stage":"provider"');
     expect(lastLog()).toContain('"status":529');
     expect(lastLog()).toContain('"errorType":"overloaded_error"');
@@ -168,18 +173,16 @@ describe("runStructured", () => {
     create.mockResolvedValue(
       message({ stop_reason: "end_turn", text: "not-json", input_tokens: 12, output_tokens: 3 }),
     );
-    const malformed = await runStructured({ ...baseArgs, usedBonusCredit: true });
+    const malformed = await runStructured(baseArgs);
     expect(malformed).toEqual({ ok: false, code: "AI_FAILED" });
-    expect(bonusUpdateMany).not.toHaveBeenCalled();
-    expect(aiCallCreate).toHaveBeenLastCalledWith({
-      data: expect.objectContaining({
+    expect(settleMeteredCall).toHaveBeenLastCalledWith(
+      expect.objectContaining({
         success: false,
         errorCode: "AI_FAILED",
         inputTokens: 12,
         outputTokens: 3,
-        usedBonusCredit: false,
       }),
-    });
+    );
     expect(lastLog()).toContain('"stage":"validation"');
     expect(lastLog()).toContain('"code":"json"');
     expect(lastLog()).not.toContain("not-json");
@@ -209,46 +212,32 @@ describe("runStructured", () => {
     });
 
     expect(result).toEqual({ ok: true, data: { title: "Analyst" } });
-    expect(aiCallCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({ success: true, inputTokens: 100, outputTokens: 20 }),
-    });
+    expect(settleMeteredCall).toHaveBeenCalledWith(
+      expect.objectContaining({ success: true, inputTokens: 100, outputTokens: 20 }),
+    );
   });
 
-  it("decrements the chosen bonus credit on success", async () => {
+  it("refuses the model call when the allowance is already held", async () => {
+    reserveMeteredCall.mockResolvedValue({ ok: false });
+
+    const result = await runStructured(baseArgs);
+
+    expect(result).toEqual({ ok: false, code: "QUOTA_EXCEEDED" });
+    expect(create).not.toHaveBeenCalled();
+    expect(settleMeteredCall).not.toHaveBeenCalled();
+    expect(lastLog()).toContain('"code":"QUOTA_EXCEEDED"');
+    expect(lastLog()).not.toContain("Office assistant");
+  });
+
+  it("records a repair without taking another slot", async () => {
     create.mockResolvedValue(
       message({ stop_reason: "end_turn", parsed_output: { title: "Analyst" } }),
     );
-    bonusFindMany.mockResolvedValue([
-      {
-        id: "credit-1",
-        remaining: 2,
-        expiresAt: null,
-        createdAt: new Date("2026-01-01T00:00:00.000Z"),
-      },
-    ]);
-    bonusUpdateMany.mockResolvedValue({ count: 1 });
 
-    const result = await runStructured({ ...baseArgs, usedBonusCredit: true });
+    const result = await runStructured({ ...baseArgs, countsTowardQuota: false });
 
     expect(result.ok).toBe(true);
-    expect(bonusUpdateMany).toHaveBeenCalledWith({
-      where: { id: "credit-1", userId: "user-1", remaining: { gt: 0 } },
-      data: { remaining: { decrement: 1 } },
-    });
-    expect(aiCallCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({ success: true, usedBonusCredit: true }),
-    });
-  });
-
-  it("still marks usedBonusCredit when the credit row is already gone", async () => {
-    create.mockResolvedValue(
-      message({ stop_reason: "end_turn", parsed_output: { title: "Analyst" } }),
-    );
-    bonusFindMany.mockResolvedValue([]);
-
-    await runStructured({ ...baseArgs, usedBonusCredit: true });
-
-    expect(bonusUpdateMany).not.toHaveBeenCalled();
+    expect(reserveMeteredCall).not.toHaveBeenCalled();
     expect(aiCallCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({ success: true, usedBonusCredit: true }),
     });
