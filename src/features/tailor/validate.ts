@@ -165,16 +165,18 @@ function clipPlan(
   };
 }
 
-/** A gap stored as "r2" is shown as that requirement's text. An unknown id is dropped. */
+/** A gap stored as "r2" is shown as that requirement's full text. An unknown id is dropped. */
 function gapLabel(value: string, analysis: JobAnalysis): string {
-  const trimmed = value.trim();
+  const trimmed = value.replace(/\s+/g, " ").trim();
   if (/^r\d+$/i.test(trimmed)) {
-    const text =
-      analysis.requirements.find((item) => item.id.toLowerCase() === trimmed.toLowerCase())
-        ?.text ?? "";
-    return clip(text, 80);
+    return (
+      analysis.requirements.find((item) => item.id.toLowerCase() === trimmed.toLowerCase())?.text.replace(
+        /\s+/g,
+        " ",
+      ).trim() ?? ""
+    );
   }
-  return clip(trimmed, 80);
+  return trimmed;
 }
 
 /**

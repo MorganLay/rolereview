@@ -2190,8 +2190,8 @@ export const strings = {
       noRequirements: "No requirements were found.",
       keywords: "Keywords",
       noKeywords: "No keywords were found.",
-      must: "Must",
-      nice: "Nice to have",
+      must: "Must-have",
+      nice: "Preferred",
       kinds: {
         skill: "Skill",
         experience: "Experience",
@@ -2329,6 +2329,7 @@ export const strings = {
       overview: {
         thisRole: "this role",
         title: "Tailoring overview",
+        reviewDecisions: "Review tailoring decisions",
         expand: "Show the editorial decisions",
         collapse: "Hide the editorial decisions",
         noFurther: "No further editorial notes for this version.",
@@ -2344,6 +2345,14 @@ export const strings = {
         summaryMetric: "Summary rewritten",
         rewrittenMetric: (count: number) =>
           count === 1 ? "1 bullet rewritten" : `${count} bullets rewritten`,
+        composedMetric: (count: number) =>
+          count === 1
+            ? "1 line composed from evidence"
+            : `${count} lines composed from evidence`,
+        leftOffMetric: (count: number) =>
+          count === 1 ? "1 item left off this resume" : `${count} items left off this resume`,
+        conflictMetric: (count: number) =>
+          count === 1 ? "1 fact conflict" : `${count} fact conflicts`,
         projectsMetric: (count: number) => (count === 1 ? "1 project" : `${count} projects`),
         retainedMetric: (count: number) =>
           count === 1 ? "1 kept as written" : `${count} kept as written`,
@@ -2365,6 +2374,10 @@ export const strings = {
           count === 1
             ? `1 bullet in ${label} was rewritten.`
             : `${count} bullets in ${label} were rewritten.`,
+        composedIn: (count: number, label: string) =>
+          count === 1
+            ? `1 line in ${label} was composed from more than one library bullet.`
+            : `${count} lines in ${label} were composed from more than one library bullet.`,
         tiedTo: (requirement: string) => `Tied to ${requirement}.`,
         rewriteUnspecified: "Rewritten from the library bullet.",
         projectsHeading: "Projects",
@@ -2389,6 +2402,7 @@ export const strings = {
           count === 1
             ? "1 bullet on the included roles was left off."
             : `${count} bullets on the included roles were left off.`,
+        omittedStays: "Leaving an item off this resume does not remove it from your library.",
         gapsHeading: "Not claimed",
         gapsBody: (items: string) =>
           `The library does not support ${items}. Those requirements are left off this version.`,
@@ -2397,6 +2411,13 @@ export const strings = {
           count === 1
             ? "One role has two records that disagree. This version does not pick the conflicting fact."
             : `${count} roles have records that disagree. This version does not pick the conflicting facts.`,
+        conflictsUnnamed: (count: number) =>
+          count === 1
+            ? "One saved note says two records disagree, but it does not name both values. Compare those records in your library before you submit. This version does not pick a fact."
+            : `${count} saved notes say records disagree, but they do not name both values. Compare those records in your library before you submit. This version does not pick a fact.`,
+        conflictValue: (record: string, value: string) => `${record}: ${value}`,
+        conflictDetail: (role: string, field: string, values: string) =>
+          `${role}. ${field} disagrees. ${values}. This version does not pick one. Review both records before you submit.`,
         lengthHeading: "Length",
         shorterThanAllowance:
           "This version stays inside the two-page allowance. It does not add weaker entries to fill the page.",
@@ -2484,19 +2505,24 @@ export const strings = {
       panelLabel: "Match",
       states: {
         in_resume: "Met",
-        in_library: "Not on this resume",
-        needs_review: "Needs review",
-        no_evidence: "Not demonstrated",
+        in_library: "In your library",
+        needs_review: "Partially supported",
+        no_evidence: "Not evidenced",
+        confirm: "Needs confirmation",
       },
       stateHint: {
-        in_library: "Your library has related evidence that this resume leaves out.",
-        needs_review: "Related experience does not fully demonstrate this requirement.",
-        no_evidence: "Your library does not demonstrate this. Rewriting will not add it.",
+        in_library:
+          "Your library has related evidence. This resume does not show it. Including it does not remove it from the library.",
+        needs_review:
+          "Some related evidence is here. It does not establish the full requirement.",
+        confirm: "This requirement was not fully checked. Review it before you submit.",
+        no_evidence:
+          "Nothing in the library establishes this. Rewriting the resume will not add it.",
       },
       includeFor: (text: string) => `Include in this resume: ${text}`,
       howScored: "How this is scored",
       howScoredBody:
-        "This score reflects your library when this resume was tailored. It is not a chance of getting hired. A word on the resume does not by itself meet a requirement. Requirement wording varies, so the lines below follow the resume you are editing.",
+        "This is evidence alignment, not a chance of an interview, an offer, or an applicant-tracking pass. A must-have counts twice a preferred requirement. Full support counts fully, partial support counts half, and no support counts nothing. A requirement that was not assessed is left out. The number is the share of that weight your library covered when this resume was tailored. Editing the resume does not change it. The lines below follow the resume you are editing, so library evidence and resume evidence stay separate.",
       notAssessed: "Not assessed.",
       noRequirements: "This posting has no requirements to score.",
       pending: "Pending",
@@ -2507,6 +2533,8 @@ export const strings = {
       addToLibrary: "Add to library",
       addToLibraryFor: (text: string) => `Add to library: ${text}`,
       showEvidence: (label: string) => `Show ${label} on the resume`,
+      showRequirement: "Show the full requirement",
+      showLess: "Show less",
       quickAddTitle: "Add to library",
       quickAddBody: (requirement: string) =>
         `This role asks for ${requirement}. Write the bullet in your own words.`,

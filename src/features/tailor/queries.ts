@@ -3,6 +3,7 @@ import "server-only";
 import { can } from "@/features/billing/entitlements";
 import { quotaSnapshot } from "@/features/billing/quota";
 import { formatJobInstant } from "@/features/jobs/format";
+import { recoverRequirements } from "@/features/jobs/requirement-text";
 import { JobAnalysis } from "@/features/jobs/schemas";
 import { ENTRY_KINDS, LibrarySnapshot } from "@/features/library/schemas";
 import type { Plan } from "@/generated/prisma/enums";
@@ -120,6 +121,7 @@ export async function getResumeWorkspace(
           select: {
             title: true,
             company: true,
+            rawText: true,
             analysis: true,
             status: true,
             submittedResumeId: true,
@@ -160,7 +162,9 @@ export async function getResumeWorkspace(
     content: content.data,
     snapshot: snapshot.data,
     match: report.success ? report.data : { verdicts: [], score: null },
-    requirements: analysis.success ? analysis.data.requirements : [],
+    requirements: analysis.success
+      ? recoverRequirements(analysis.data.requirements, row.job.rawText)
+      : [],
     keywords: analysis.success ? analysis.data.keywords : [],
     libraryEntries: sortLibraryEntries(entries),
     templateId: resolveResumeTemplate(null, row.templateId, {

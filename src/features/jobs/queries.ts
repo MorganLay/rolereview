@@ -16,6 +16,7 @@ import { formatDeadlineDate } from "./dates";
 import { earlierBoardCue, type BoardCardRecord } from "./format";
 import type { JobListQuery, JobListRecord } from "./list-params";
 import { newestReadyResume, type LatestReadyResume } from "./next-action";
+import { recoverRequirements } from "./requirement-text";
 import {
   JobAnalysis,
   type JobAnalysis as JobAnalysisData,
@@ -328,7 +329,7 @@ export async function getJob(
     retryable: canRetryAnalysis(row.analysisStatus, row.updatedAt, now),
     summary: analysis?.summary ?? "",
     seniority: analysis?.seniority ?? null,
-    requirements: analysis?.requirements ?? [],
+    requirements: analysis ? recoverRequirements(analysis.requirements, row.rawText) : [],
     keywords: analysis?.keywords ?? [],
   };
 }

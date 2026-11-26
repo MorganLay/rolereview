@@ -15,7 +15,12 @@ import {
   requirementState,
   type RequirementStateName,
 } from "@/features/tailor/requirement-state";
-import type { RequirementVerdict, ResumeContent } from "@/features/tailor/schemas";
+import {
+  NOT_ASSESSED_NOTE,
+  type RequirementVerdict,
+  type ResumeContent,
+  type StoredVerdict,
+} from "@/features/tailor/schemas";
 import { cn } from "@/lib/utils";
 
 import { QuickAddBulletDialog } from "./quick-add-bullet-dialog";
@@ -127,16 +132,18 @@ export function MatchPanel({
                     >
                       <span aria-hidden>{pending ? "○" : stateMark[placement.state]}</span>
                       <span className="break-words">
-                        {pending ? copy.pending : copy.states[placement.state]}
+                        {pending ? copy.pending : stateLabel(placement.state, verdict)}
                       </span>
                     </span>
                     <span className="text-xs text-slate">
                       {requirement.importance === "must" ? resultCopy.must : resultCopy.nice}
                     </span>
                   </div>
-                  <p className="text-sm break-words text-ink">{requirement.text}</p>
+                  <RequirementText text={requirement.text} />
                   {!pending && placement.state !== "in_resume" ? (
-                    <p className="text-xs text-slate">{copy.stateHint[placement.state]}</p>
+                    <p className="text-xs text-slate">
+                      {copy.stateHint[hintKey(placement.state, verdict)]}
+                    </p>
                   ) : null}
                   {!pending && verdict.note ? (
                     <p className="text-sm break-words text-slate">{verdict.note}</p>
@@ -238,6 +245,45 @@ export function MatchPanel({
       )}
     </div>
   );
+}
+
+function RequirementText({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  const long = text.length > 220;
+  return (
+    <div>
+      <p className={cn("text-sm break-words text-ink", long && !open && "line-clamp-3")}>{text}</p>
+      {long ? (
+        <button
+          type="button"
+          className="mt-1 text-sm text-pine underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          aria-expanded={open}
+          onClick={() => setOpen((current) => !current)}
+        >
+          {open ? copy.showLess : copy.showRequirement}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function stateLabel(state: RequirementStateName, verdict: RequirementVerdict): string {
+  if (state === "needs_review" && isUnassessed(verdict)) return copy.states.confirm;
+  return copy.states[state];
+}
+
+function hintKey(
+  state: RequirementStateName,
+  verdict: RequirementVerdict,
+): keyof typeof copy.stateHint {
+  if (state === "needs_review" && isUnassessed(verdict)) return "confirm";
+  if (state === "in_resume") return "needs_review";
+  return state;
+}
+
+function isUnassessed(verdict: RequirementVerdict): boolean {
+  const stored: StoredVerdict = verdict.verdict;
+  return stored === "unassessed" || (stored === "missing" && verdict.note === NOT_ASSESSED_NOTE);
 }
 
 function KeywordChips({

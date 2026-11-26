@@ -9,9 +9,11 @@ import { strings } from "@/copy/strings";
 import type { Requirement } from "@/features/jobs/schemas";
 import type { LibrarySnapshot } from "@/features/library/schemas";
 
+import { factConflictDetails, type FactConflictDetail } from "./conflicts";
 import { bulletElementId, entryElementId } from "./evidence";
 import { groupMembers } from "./stints";
 import { sameWording } from "./grounding";
+import { restoreGapText } from "@/features/jobs/requirement-text";
 import { shownEntry } from "./presentation";
 import { bulletReview, type BulletReview } from "./review";
 import type { ContentBullet, ResumeContent } from "./schemas";
@@ -21,7 +23,6 @@ const copy = strings.jobs.workspace.overview;
 const MAX_METRICS = 4;
 const MAX_NAMED = 4;
 const MAX_REWRITE_GROUPS = 3;
-const REQUIREMENT_MAX = 90;
 
 const METRIC_PRIORITY = ["summary", "rewritten", "projects", "omitted", "retained"] as const;
 const METRIC_DISPLAY = ["summary", "rewritten", "projects", "retained", "omitted"] as const;
@@ -47,6 +48,8 @@ export type OverviewDecision = {
 
 export type TailoringOverview = {
   strategy: string;
+  /** Compact counts. The long explanation stays in `decisions`. */
+  line: string;
   metrics: OverviewMetric[];
   decisions: OverviewDecision[];
 };
@@ -60,6 +63,7 @@ type BulletFact = {
   elementId: string;
   entryKey: string;
   entryLabel: string;
+  composed: boolean;
   review: BulletReview;
 };
 
@@ -84,7 +88,9 @@ export function tailoringOverview(input: {
   const lead = entries.find((entry) => entry.included && entry.kind === "EXPERIENCE") ?? null;
   const projects = entries.filter((entry) => entry.included && entry.kind === "PROJECT");
   const omittedEntries = entries.filter((entry) => !entry.included);
-  const rewritten = includedBullets(entries).filter((bullet) => bullet.review.state === "applied");
+  const changed = includedBullets(entries).filter((bullet) => bullet.review.state === "applied");
+  const rewritten = changed.filter((bullet) => !bullet.composed);
+  const composed = changed.filter((bullet) => bullet.composed);
   const retained = includedBullets(entries).filter(
     (bullet) =>
       !bullet.reverted && (bullet.review.state === "none" || bullet.review.state === "restored"),
@@ -97,14 +103,33 @@ export function tailoringOverview(input: {
   const strategy = strategyText({
     role,
     summaryUpdated,
-    rewritten: rewritten.length,
+    rewritten: changed.length,
     lead,
     projects,
     emphasis: emphasisLabel(input.content, entries, input.snapshot),
   });
 
+  const conflictDetails = factConflictDetails(input.content, input.snapshot);
+  const conflictCount =
+    conflictDetails.length > 0
+      ? conflictDetails.length
+      : (input.content.review ?? []).filter(
+          (item) => item.reason === "fact_conflict" || item.reason === "unresolved_dates",
+        ).length;
+  const gaps = (input.content.plan?.gaps ?? [])
+    .map((gap) => restoreGapText(gap, input.requirements))
+    .filter((gap) => gap.length > 0)
+    .slice(0, 3);
+
   return {
     strategy,
+    line: summaryLine({
+      rewritten: rewritten.length,
+      composed: composed.length,
+      projects: projects.length,
+      omitted: omittedEntries.length + omittedBullets.length,
+      conflicts: conflictCount,
+    }),
     metrics: metrics({
       summaryUpdated,
       rewritten: rewritten.length,
@@ -120,7 +145,7 @@ export function tailoringOverview(input: {
       lead,
       includedExperience: entries.filter((entry) => entry.included && entry.kind === "EXPERIENCE"),
       projects,
-      rewritten,
+      rewritten: changed,
       omittedEntries,
       omittedBullets: omittedBullets.length,
       combinedRefs: new Set(
@@ -130,10 +155,9 @@ export function tailoringOverview(input: {
       ),
       pageNote: pageNote(input.content),
       reverted,
-      gaps: (input.content.plan?.gaps ?? []).map((gap) => gap.trim()).filter((gap) => gap.length > 0).slice(0, 3),
-      conflicts: (input.content.review ?? []).filter(
-        (item) => item.reason === "fact_conflict" || item.reason === "unresolved_dates",
-      ).length,
+      gaps,
+      conflicts: conflictDetails,
+      conflictFallback: conflictDetails.length === 0 ? conflictCount : 0,
       shorter:
         input.content.pageLimit === 2 &&
         (input.content.review ?? []).some((item) => item.reason === "within_ceiling"),
@@ -245,7 +269,8 @@ function decisions(input: {
   pageNote: string;
   reverted: BulletFact[];
   gaps: string[];
-  conflicts: number;
+  conflicts: FactConflictDetail[];
+  conflictFallback: number;
   shorter: boolean;
   automatic: "one" | "two" | "sparse" | null;
 }): OverviewDecision[] {
@@ -315,15 +340,24 @@ function decisions(input: {
     items.push({
       id: "gaps",
       heading: copy.gapsHeading,
-      body: copy.gapsBody(joinAnd(input.gaps.map((gap) => clip(gap, REQUIREMENT_MAX)))),
+      body: copy.gapsBody(joinAnd(input.gaps)),
       links: [],
     });
   }
-  if (input.conflicts > 0) {
+  if (input.conflicts.length > 0) {
     items.push({
       id: "conflicts",
       heading: copy.conflictsHeading,
-      body: copy.conflictsBody(input.conflicts),
+      body: input.conflicts.map((conflict) => conflictBody(conflict)).join(" "),
+      links: input.conflicts.flatMap((conflict) =>
+        conflict.sides.map((side) => ({ label: side.label, elementId: side.elementId })),
+      ),
+    });
+  } else if (input.conflictFallback > 0) {
+    items.push({
+      id: "conflicts",
+      heading: copy.conflictsHeading,
+      body: copy.conflictsUnnamed(input.conflictFallback),
       links: [],
     });
   }
@@ -376,7 +410,7 @@ function citedRequirement(entry: EntryFact): string {
   for (const bullet of entry.bullets) {
     if (!bullet.included || bullet.review.state !== "applied") continue;
     const requirement = bullet.review.requirements[0];
-    if (requirement) return clip(requirement, REQUIREMENT_MAX);
+    if (requirement) return requirement.replace(/\s+/g, " ").trim();
   }
   return "";
 }
@@ -409,6 +443,7 @@ function omittedBody(
     namedOmission(combined, true),
     bullets > 0 ? copy.bulletsOmitted(bullets) : "",
     page,
+    copy.omittedStays,
   ];
   return sentences.filter((part) => part.length > 0).join(" ");
 }
@@ -439,20 +474,44 @@ function groupRewrites(bullets: BulletFact[]): { body: string; link: OverviewLin
     if (!first) continue;
     const noted = list.find((bullet) => bullet.review.what || bullet.review.requirements[0]) ?? first;
     groups.push({
-      body: rewriteBody(first.entryLabel, list.length, noted.review),
+      body: rewriteBody(first.entryLabel, list.length, noted.review, list.every((bullet) => bullet.composed)),
       link: { label: first.entryLabel, elementId: first.elementId },
     });
   }
   return groups;
 }
 
-function rewriteBody(label: string, count: number, review: BulletReview): string {
-  const lead = copy.rewrittenIn(count, label);
+function summaryLine(input: {
+  rewritten: number;
+  composed: number;
+  projects: number;
+  omitted: number;
+  conflicts: number;
+}): string {
+  const parts = [
+    input.rewritten > 0 ? copy.rewrittenMetric(input.rewritten) : "",
+    input.composed > 0 ? copy.composedMetric(input.composed) : "",
+    input.projects > 0 ? copy.projectsMetric(input.projects) : "",
+    input.omitted > 0 ? copy.leftOffMetric(input.omitted) : "",
+    input.conflicts > 0 ? copy.conflictMetric(input.conflicts) : "",
+  ].filter((part) => part.length > 0);
+  return parts.join(" · ");
+}
+
+function conflictBody(conflict: FactConflictDetail): string {
+  const values = conflict.sides.map((side) => copy.conflictValue(side.label, side.value));
+  return copy.conflictDetail(conflict.role, conflict.field, joinAnd(values));
+}
+
+function rewriteBody(label: string, count: number, review: BulletReview, composed: boolean): string {
+  const lead = composed ? copy.composedIn(count, label) : copy.rewrittenIn(count, label);
   const what = review.what ? ensurePeriod(review.what) : "";
-  const requirement = review.requirements[0] ? clip(review.requirements[0], REQUIREMENT_MAX) : "";
+  const requirement = review.requirements[0]?.replace(/\s+/g, " ").trim() ?? "";
   const tied = requirement ? copy.tiedTo(requirement) : "";
   const detail = [what, tied].filter((part) => part.length > 0).join(" ");
-  return detail.length > 0 ? `${lead} ${detail}` : `${lead} ${copy.rewriteUnspecified}`;
+  if (detail.length > 0) return `${lead} ${detail}`;
+  if (composed) return lead;
+  return `${lead} ${copy.rewriteUnspecified}`;
 }
 
 function entryFacts(
@@ -480,6 +539,7 @@ function entryFacts(
           elementId: bulletElementId(bullet.id),
           entryKey: entry.ref,
           entryLabel: label,
+          composed: bullet.sourceRefs.length > 1,
           review: bulletReview(bullet, libraryText(bullet, source), requirements),
         })),
       },

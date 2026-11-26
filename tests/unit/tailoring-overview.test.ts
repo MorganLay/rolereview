@@ -263,6 +263,52 @@ describe("tailoring overview", () => {
     expect(text).toContain("Rewritten from the library bullet.");
   });
 
+  it("does not call a changed line unchanged, and keeps a long requirement whole", () => {
+    const long =
+      "3+ years of experience in hockey analytics and/or professional software development.";
+    const page = content({
+      plan: { narrative: "", priorities: [], gaps: [long.slice(0, 80)] },
+      entries: [
+        {
+          ref: "E1",
+          kind: "EXPERIENCE",
+          included: true,
+          bullets: [
+            bullet({
+              text: "Shipped the booking site with React.",
+              suggestion: "Shipped the booking site with React.",
+              changeWhat: "The line was kept unchanged.",
+              requirementIds: ["r-long"],
+            }),
+          ],
+        },
+        {
+          ref: "E2",
+          kind: "PROJECT",
+          included: false,
+          bullets: [],
+        },
+        {
+          ref: "E3",
+          kind: "EXPERIENCE",
+          included: false,
+          bullets: [],
+        },
+      ],
+    });
+    const overview = tailoringOverview({
+      jobTitle: "Analyst",
+      content: page,
+      snapshot: snapshot(),
+      requirements: [{ id: "r-long", text: long, kind: "experience", importance: "must" }],
+    });
+    const text = JSON.stringify(overview);
+    expect(overview.line).toContain("1 bullet rewritten");
+    expect(text).not.toContain("kept unchanged");
+    expect(text).toContain(long);
+    expect(text).not.toContain("developm.");
+  });
+
   it("stays quiet when nothing was rewritten or left off", () => {
     const page = content({
       entries: [

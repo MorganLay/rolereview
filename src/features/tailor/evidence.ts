@@ -95,5 +95,8 @@ export function resolveEvidenceRef(
 function linkLabel(text: string): string {
   const flat = text.replace(/\s+/g, " ").trim();
   if (flat.length <= LABEL_MAX) return flat;
-  return `${flat.slice(0, LABEL_MAX - 1)}…`;
+  const slice = flat.slice(0, LABEL_MAX);
+  const space = slice.lastIndexOf(" ");
+  const cut = space > 40 ? slice.slice(0, space) : slice;
+  return `${cut.trimEnd()}…`;
 }

@@ -3,6 +3,7 @@ import "server-only";
 import { can } from "@/features/billing/entitlements";
 import { quotaSnapshot } from "@/features/billing/quota";
 import { formatJobInstant } from "@/features/jobs/format";
+import { recoverRequirements } from "@/features/jobs/requirement-text";
 import { JobAnalysis } from "@/features/jobs/schemas";
 import { LibrarySnapshot } from "@/features/library/schemas";
 import type { Plan } from "@/generated/prisma/enums";
@@ -127,6 +128,7 @@ export async function getLetterWorkspace(
         select: {
           title: true,
           company: true,
+          rawText: true,
           analysis: true,
           submittedCoverLetterId: true,
         },
@@ -144,7 +146,9 @@ export async function getLetterWorkspace(
   const analysis = JobAnalysis.safeParse(row.job.analysis);
   const addressed = new Set(content.data.requirementIdsAddressed);
   const requirements = analysis.success
-    ? analysis.data.requirements.filter((item) => addressed.has(item.id))
+    ? recoverRequirements(analysis.data.requirements, row.job.rawText).filter((item) =>
+        addressed.has(item.id),
+      )
     : [];
 
   return {

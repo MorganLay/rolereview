@@ -1,6 +1,7 @@
 import "server-only";
 
 import { db } from "@/lib/db";
+import { recoverRequirements } from "@/features/jobs/requirement-text";
 import { JobAnalysis } from "@/features/jobs/schemas";
 
 import { libraryRevision } from "./revision";
@@ -172,7 +173,12 @@ export async function loadJobLibrary(userId: string, jobId: string) {
   const analysis = JobAnalysis.safeParse(job.analysis);
   return {
     job,
-    analysis: analysis.success ? analysis.data : null,
+    analysis: analysis.success
+      ? {
+          ...analysis.data,
+          requirements: recoverRequirements(analysis.data.requirements, job.rawText),
+        }
+      : null,
     entries,
     skills,
     entryCount: entries.length,

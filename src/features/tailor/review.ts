@@ -48,6 +48,22 @@ export type TailorDigest = {
   gaps: number;
 };
 
+/**
+ * A model note that contradicts the wording on the page is dropped.
+ * "Kept unchanged" cannot describe a line that differs, and a rewrite
+ * note cannot describe a line that matches the library.
+ */
+export function noteAgrees(note: string | null, changed: boolean): string | null {
+  if (!note) return null;
+  const saysKept =
+    /\b(kept|unchanged|not changed|left as written|original wording|same wording)\b/i.test(note);
+  const saysChanged =
+    /\b(rewr(?:ote|itten)|rephras\w*|reword\w*|combined|shortened|condensed)\b/i.test(note);
+  if (changed && saysKept && !saysChanged) return null;
+  if (!changed && saysChanged && !saysKept) return null;
+  return note;
+}
+
 /** Drop a note that does not name a real editorial reason. */
 export function specificReason(value: string | null | undefined): string | null {
   const text = value?.trim() ?? "";
@@ -75,8 +91,9 @@ export function bulletReview(
       : "";
   const tailoredText = storedTailored || legacyTailored;
   const hasTailored = tailoredText.length > 0 && !sameWording(tailoredText, original);
-  const what = specificReason(bullet.changeWhat);
-  const why = specificReason(bullet.suggestionNote);
+  const changed = !sameWording(current, original);
+  const what = noteAgrees(specificReason(bullet.changeWhat), changed);
+  const why = noteAgrees(specificReason(bullet.suggestionNote), changed);
   const named = requirementLines(bullet.requirementIds ?? [], requirements);
 
   if (hasTailored && sameWording(current, tailoredText)) {

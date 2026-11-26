@@ -12,6 +12,7 @@ import { LibrarySnapshot, zodFieldErrors } from "@/features/library/schemas";
 import { serializeLibrary } from "@/features/library/serialize";
 import { approvedBulletWordings } from "@/features/library/wording-store";
 import type { Library } from "@/features/library/types";
+import { recoverRequirements } from "@/features/jobs/requirement-text";
 import { JobAnalysis } from "@/features/jobs/schemas";
 import { Prisma } from "@/generated/prisma/client";
 import type { JobStatus } from "@/generated/prisma/enums";
@@ -102,11 +103,18 @@ export async function tailorResume(
   });
   if (!job) return fail("NOT_FOUND");
 
-  const analysis =
+  const parsedAnalysis =
     job.analysisStatus === "READY" ? JobAnalysis.safeParse(job.analysis) : null;
-  if (!analysis?.success) {
+  if (!parsedAnalysis?.success) {
     return fail("VALIDATION", { job: [copy.disabledAnalysis] });
   }
+  const analysis = {
+    success: true as const,
+    data: {
+      ...parsedAnalysis.data,
+      requirements: recoverRequirements(parsedAnalysis.data.requirements, job.rawText),
+    },
+  };
 
   const library = await getLibrary(user.id);
   if (!library) return fail("NOT_FOUND");

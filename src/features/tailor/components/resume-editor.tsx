@@ -619,10 +619,10 @@ export function ResumeEditor({
             submittedOn={workspace.submittedOn}
           />
         ) : null}
-        <h1 className="font-serif text-2xl font-semibold tracking-tight break-words text-ink md:text-3xl">
+        <h1 className="font-serif text-xl font-semibold tracking-tight break-words text-ink md:text-2xl">
           {workspace.jobTitle}
+          <span className="mt-0.5 block text-sm font-normal text-slate">{workspace.company}</span>
         </h1>
-        <p className="text-sm text-slate">{workspace.company}</p>
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm text-slate">{copy.templateLook(resumeTemplateLabel(templateId))}</p>
           <Button
@@ -669,7 +669,6 @@ export function ResumeEditor({
         <ResumePreview resumeId={workspace.resumeId} templateId={templateId} />
       ) : (
       <>
-      <SectionJump label={copy.jumpLabel} targets={jumpTargets} onJump={jumpTo} />
       <TailoringOverviewPanel
         resumeId={workspace.resumeId}
         overview={tailoringOverview({
@@ -680,6 +679,7 @@ export function ResumeEditor({
         })}
         onOpen={showEvidence}
       />
+      <SectionJump label={copy.jumpLabel} targets={jumpTargets} onJump={jumpTo} />
       <ProfileHeader
         profile={workspace.snapshot.profile}
         headline={shownHeadline(content, workspace.snapshot.profile)}
