@@ -8,6 +8,6 @@ alwaysApply: false
 - Unit tests (Vitest) in `tests/unit/<area>-<module>.test.ts`. Required for: tailor validate/assemble/score/keywords/plainText, letters validate/assemble, library serialize/strength, import extract, billing quota (incl. bonus credits and in-flight holds)/entitlements/webhook mapping, jobs pipeline (every side effect) and board-order, Insights metrics, lib/result, ai/run error mapping, email idempotency. `tests/unit/billing-hold.test.ts` hits Postgres only when `QUOTA_DB=1`. CI does not set that.
 - Table-driven tests with nasty cases (empty arrays, unknown refs, numbers with commas/%/$, timezone boundaries for periods and reminders).
 - Never call the real Anthropic, Stripe or Resend APIs in unit tests — mock them.
-- E2E (Playwright): happy path only; run manually/nightly.
+- E2E (Playwright): public smoke (`npm run e2e:smoke`) runs in CI against a production server and needs no secrets. Signed-in specs stay manual. They need Supabase, and the happy path also needs Anthropic.
 - Fixtures are fake people only. Never commit a real resume.
 - Signed-in UI checks use the seed account, not a new login per screen. Follow `docs/11-MANUAL-TESTING.md`. Loading a snapshot replaces that account’s library and jobs.

@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import { defineConfig, devices } from "@playwright/test";
 
-const port = 3000;
+const port = "3000";
 
 /**
  * Session cookies are host-only. Use the same origin as NEXT_PUBLIC_APP_URL
@@ -24,6 +24,7 @@ function localBaseURL(): string {
 }
 
 const baseURL = localBaseURL();
+const listenPort = new URL(baseURL).port || port;
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -37,10 +38,12 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    // Smoke only (not in CI). Dev server avoids a full production build.
-    command: "npm run dev",
+    // CI builds and serves production. Local runs keep the dev server.
+    command: process.env.CI
+      ? `npm run build && npx next start -H 127.0.0.1 -p ${listenPort}`
+      : "npm run dev",
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
+    timeout: process.env.CI ? 600_000 : 180_000,
   },
 });

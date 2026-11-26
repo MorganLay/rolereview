@@ -100,4 +100,4 @@ These do not need a snapshot or a sign-in: `/`, `/pricing`, `/demo`, `/sign-in`,
 
 ## What this guide is not
 
-Unit tests are `npm run test`. The browser suite is `npm run e2e`, and it is the happy path only. Model checks are `npm run evals`. None of those replace walking a screen yourself.
+Unit tests are `npm run test`. CI also runs the public browser smoke (`npm run e2e:smoke`). `npm run e2e` adds the signed-in specs, which need Supabase, and the happy path, which also needs Anthropic. Model checks are `npm run evals`. None of those replace walking a screen yourself.

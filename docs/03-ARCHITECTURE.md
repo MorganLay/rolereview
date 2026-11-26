@@ -274,7 +274,7 @@ All cron handlers require `Authorization: Bearer ${CRON_SECRET}` and are idempot
 - `vercel.json` build command: `npm run db:deploy && next build` (applies Prisma migrations, then `next build`). Cron entries in 1.1.
 - Vercel Production (`main` → `https://www.rolerefine.ca`): Supabase project `rolerefine-prod`. The production database address resolves to AWS ca-central-1 (Montreal), checked November 11, 2026. Vercel serverless region is `iad1` (Washington, D.C.). Pooled `DATABASE_URL` (port 6543) and session `DIRECT_URL` (port 5432). Stripe live mode; webhook `https://www.rolerefine.ca/api/stripe/webhook` for `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`. The founding coupon is not applied to new checkouts. Two live Prices, each with USD and CAD: US$24 or CA$29 a month, and US$59 or CA$75 every 90 days. Checkout sends the selected currency. Resend on verified `mail.rolerefine.ca`, `EMAIL_FROM` `RoleRefine <hello@mail.rolerefine.ca>`. Auth Site URL `https://www.rolerefine.ca`; redirect allow list `https://www.rolerefine.ca/auth/callback` and `https://rolerefine.ca/auth/callback`. Google authorized origin `https://www.rolerefine.ca` and the Supabase callback. PostHog production project, cookieless. `SEED_USER_ID` unset. Hobby is non-commercial — switch the Vercel project to Pro before a live charge.
 - Vercel Preview: `rolerefine-dev` and Stripe test keys. Email is not sent. A live Stripe secret is refused.
-- CI: lint, typecheck, unit tests on every PR. E2E is not in CI (`npm run e2e`, Chromium). Smoke always runs. The happy path (sign in → import fixture → job → tailored resume → letter → export PDF → board Move to Applied) needs `ANTHROPIC_API_KEY` and `SUPABASE_SECRET_KEY`; it creates a throwaway user in `rolerefine-dev` and deletes that user after. Four live model calls; about 2 minutes. Skip the spec if those secrets are unset.
+- CI: lint, typecheck, and unit tests on every PR. A second job runs the public browser smoke (`npm run e2e:smoke`) against `next build` and `next start`, with placeholder env and no database. It covers the homepage, pricing, demo, about, privacy, terms, sign-in, the branded 404, and the signed-out redirect from `/dashboard`. `npm run e2e` still runs the rest locally. The signed-in specs need `SUPABASE_SECRET_KEY` and `DIRECT_URL`. The happy path (sign in → import fixture → job → tailored resume → letter → export PDF → board Move to Applied) also needs `ANTHROPIC_API_KEY`; it creates a throwaway user in `rolerefine-dev` and deletes that user after. Four live model calls; about 2 minutes. Those specs skip when the secrets are unset, and they are not in CI.
 - Fixed costs at launch ≈ Vercel Pro $20 + Supabase Pro $25 + domain; Resend and PostHog free tiers.
 
 ## npm scripts
@@ -282,7 +282,7 @@ All cron handlers require `Authorization: Bearer ${CRON_SECRET}` and are idempot
 {
   "dev": "next dev", "build": "next build", "start": "next start",
   "lint": "eslint .", "typecheck": "tsc --noEmit",
-  "test": "vitest run", "test:watch": "vitest", "e2e": "playwright test",
+  "test": "vitest run", "test:watch": "vitest", "e2e": "playwright test", "e2e:smoke": "playwright test tests/e2e/smoke.spec.ts",
   "db:migrate": "prisma migrate dev", "db:deploy": "prisma migrate deploy",
   "db:studio": "prisma studio", "db:generate": "prisma generate", "db:seed": "prisma db seed",
   "dev:login": "tsx scripts/dev-login.ts", "dev:scenario": "tsx scripts/dev-scenario.ts",
